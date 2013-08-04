@@ -25,7 +25,7 @@
      ; use same requires as top of main.rkt 
      ; (can't import them from surrounding module due to submodule rules)
      (require (planet mb/pollen/tools)
-              (planet mb/pollen/main-helper)) ; for split-metas and get-here
+              (planet mb/pollen/main-helper))
      (require-and-provide-extras) ; brings in the project require files
      
      ; #%top binding catches ids that aren't defined
@@ -53,7 +53,7 @@
    
    (provide main)
    
-   (module+ main 
+   (module+ main
      (print main)
      (displayln "")
      (displayln (format "named-xexpr? ~a" (named-xexpr? main)))))) 

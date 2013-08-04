@@ -5,9 +5,8 @@
          (planet mb/pollen/world))
 
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Look for a pp-requires directory local to the source file.
+;; Look for a EXTRAS_DIR directory local to the source file.
 ;; If it exists, get list of rkt files 
 ;; and require + provide them.
 ;; This will be resolved in the context of current-directory.
@@ -28,7 +27,7 @@
       (letrec 
           ([files (map make-complete-path (filter is-rkt-file? (directory-list EXTRAS_DIR)))]
            [files-in-require-form 
-            (map (ƒ(x) `(file ,(path->string x))) files)]) 
+            (map (λ(x) `(file ,(path->string x))) files)]) 
         (datum->syntax stx 
                        `(begin
                           (require ,@files-in-require-form)
@@ -43,7 +42,7 @@
       (letrec 
           ([files (map make-complete-path (filter is-rkt-file? (directory-list EXTRAS_DIR)))]
            [files-in-require-form 
-            (map (ƒ(x) `(file ,(path->string x))) files)]) 
+            (map (λ(x) `(file ,(path->string x))) files)]) 
         (datum->syntax stx 
                        `(begin
                           (require ,@files-in-require-form))))
@@ -63,14 +62,14 @@
         (set! ccr (car ccr)))  ; in which case, just grab the path from the front
       (if (equal? 'pollen-lang-module ccr) ; what happens if the file isn't yet saved in drracket
           'nowhere ; thus you are nowhere
-          (let-values ([(here-dir here-name ignored) (split-path ccr)])
-            (path->string (remove-ext here-name)))))))
+          (match-let-values ([(_ here-name _) (split-path ccr)])
+                            (path->string (remove-all-ext here-name)))))))
 
 ; then, apply a separate syntax transform to the identifier itself
 ; can't do this in one step, because if the macro goes from identifier to function definition,
 ; macro processor will evaluate the body at compile-time, not runtime.
 (define-syntax here
-  (ƒ(stx) (datum->syntax stx '(get-here))))
+  (λ(stx) (datum->syntax stx '(get-here))))
 
 
 ; function to strip metas out of body and consolidate them separately
@@ -90,3 +89,7 @@
   (values (remove-empty (&split-metas body)) (reverse meta-list))) 
 
 (provide (all-defined-out))
+
+(module+ test
+  (require rackunit)
+  (check-equal? (get-here) "test-main-helper"))
