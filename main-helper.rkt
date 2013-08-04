@@ -4,6 +4,8 @@
 (require (planet mb/pollen/tools)
          (planet mb/pollen/world))
 
+(module+ test (require rackunit))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Look for a EXTRAS_DIR directory local to the source file.
@@ -65,6 +67,9 @@
           (match-let-values ([(_ here-name _) (split-path ccr)])
                             (path->string (remove-all-ext here-name)))))))
 
+(module+ test
+  (check-equal? (get-here) "test-main-helper"))
+
 ; then, apply a separate syntax transform to the identifier itself
 ; can't do this in one step, because if the macro goes from identifier to function definition,
 ; macro processor will evaluate the body at compile-time, not runtime.
@@ -82,14 +87,11 @@
          (set! meta-list (cons x meta-list))
          empty)]
       [(named-xexpr? x) ; handle named-xexpr
-       (let-values([(name attr body) (xexplode x)]) 
-         (make-xexpr name attr (&split-metas body)))]
+       (let-values([(name attr body) (break-named-xexpr x)]) 
+         (make-named-xexpr name attr (&split-metas body)))]
       [(list? x) (map &split-metas x)]
       [else x]))
   (values (remove-empty (&split-metas body)) (reverse meta-list))) 
 
 (provide (all-defined-out))
 
-(module+ test
-  (require rackunit)
-  (check-equal? (get-here) "test-main-helper"))

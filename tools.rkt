@@ -3,6 +3,7 @@
 (require racket/contract racket/match)
 (require (only-in racket/path filename-extension))
 (require (only-in racket/format ~a))
+(require (only-in racket/list empty empty? second filter-not))
 (require (only-in xml xexpr?))
 (provide (all-defined-out))
 
@@ -109,3 +110,74 @@
   (check-false (named-xexpr? '(p "foo" "bar" ((key "value"))))) ; malformed
   (check-false (named-xexpr? '("p" "foo" "bar"))) ; no name
   (check-false (named-xexpr? '(p 123)))) ; content is a number
+
+;; helper for comparison of values
+;; normal function won't work for this. Has to be syntax-rule
+(define-syntax-rule (values->list vs)
+  (call-with-values (λ() vs) list))
+
+
+;; create named-xexpr from parts (opposite of break-named-xexpr)
+(define/contract (make-named-xexpr name [attr empty] [content empty])
+  ((symbol?) (xexpr-attr? xexpr-content?) . ->* . named-xexpr?)
+  (filter-not empty? `(,name ,attr ,@content)))
+
+(module+ test
+  (check-equal? (make-named-xexpr 'p) '(p))
+  (check-equal? (make-named-xexpr 'p '((key "value"))) '(p ((key "value"))))
+  (check-equal? (make-named-xexpr 'p empty '("foo" "bar")) '(p "foo" "bar"))
+  (check-equal? (make-named-xexpr 'p '((key "value")) (list "foo" "bar")) 
+                '(p ((key "value")) "foo" "bar")))
+
+
+;; decompose named-xexpr into parts (opposite of make-named-xexpr)
+(define/contract (break-named-xexpr nx)
+  (named-xexpr? . -> . (values symbol? xexpr-attr? xexpr-content?))
+  (match 
+      ; named-xexpr may or may not have attr
+      ; if not, add empty attr so that decomposition only handles one case
+      (match nx
+        [(list _ (? xexpr-attr?) _ ...) nx]
+        [else `(,(car nx) ,empty ,@(cdr nx))])
+    [(list name attr content ...) (values name attr content)]))
+
+(module+ test
+  (check-equal? (values->list (break-named-xexpr '(p))) 
+                (values->list (values 'p empty empty)))
+  (check-equal? (values->list (break-named-xexpr '(p "foo"))) 
+                (values->list (values 'p empty '("foo"))))
+  (check-equal? (values->list (break-named-xexpr '(p ((key "value"))))) 
+                (values->list (values 'p '((key "value")) empty)))
+  (check-equal? (values->list (break-named-xexpr '(p ((key "value")) "foo"))) 
+                (values->list (values 'p '((key "value")) '("foo")))))
+
+
+;; apply filter proc recursively
+(define/contract (filter-tree proc tree)
+  (procedure? list? . -> . list?)
+  (define (remove-empty x)
+    (cond
+      [(list? x) (map remove-empty (filter-not empty? x))]
+      [else x]))
+  
+  (define (filter-tree-inner proc tree)
+    (cond
+      [(list? tree) (map (λ(item) (filter-tree-inner proc item)) tree)]
+      [else (if (proc tree) tree empty)]))
+  
+  (remove-empty (filter-tree-inner proc tree)))
+
+(module+ test
+  (check-equal? (filter-tree string? '(p)) empty)
+  (check-equal? (filter-tree string? '(p "foo" "bar")) '("foo" "bar"))
+  (check-equal? (filter-tree string? '(p "foo" (p "bar"))) '("foo" ("bar"))))
+
+;; apply filter-not proc recursively
+(define/contract (filter-not-tree proc tree)
+  (procedure? list? . -> . list?)
+  (filter-tree (λ(item) (not (proc item))) tree))
+
+(module+ test
+  (check-equal? (filter-not-tree string? '(p)) '(p))
+  (check-equal? (filter-not-tree string? '(p "foo" "bar")) '(p))
+  (check-equal? (filter-not-tree string? '(p "foo" (p "bar"))) '(p (p))))
