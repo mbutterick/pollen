@@ -23,9 +23,10 @@
   (and ext-of-path (equal? (bytes->string/utf-8 ext-of-path) (as-string ext))))
 
 (module+ test
-  (check-equal? (has-ext? foo-path 'txt) #f)
-  (check-equal? (has-ext? foo.txt-path 'txt) #t)
-  (check-equal? (has-ext? foo.bar.txt-path 'txt) #t))
+  (check-false (has-ext? foo-path 'txt)) 
+  (check-true (has-ext? foo.txt-path 'txt))
+  (check-true (has-ext? foo.bar.txt-path 'txt))
+  (check-false (has-ext? foo.bar.txt-path 'doc))) ; wrong extension
 
 
 ;; take one extension off path
@@ -36,7 +37,8 @@
 (module+ test  
   (check-equal? (remove-ext foo-path) foo-path)
   (check-equal? (remove-ext foo.txt-path) foo-path)
-  (check-equal? (remove-ext foo.bar.txt-path) foo.bar-path))
+  (check-equal? (remove-ext foo.bar.txt-path) foo.bar-path)
+  (check-not-equal? (remove-ext foo.bar.txt-path) foo-path)) ; does not remove all extensions
 
 
 ;; take all extensions off path
@@ -50,22 +52,44 @@
 (module+ test  
   (check-equal? (remove-all-ext foo-path) foo-path)
   (check-equal? (remove-all-ext foo.txt-path) foo-path)
+  (check-not-equal? (remove-all-ext foo.bar.txt-path) foo.bar-path) ; removes more than one ext
   (check-equal? (remove-all-ext foo.bar.txt-path) foo-path))
 
 
 ;; is it an xexpr attributes?
-(define/contract (xexpr-attrs? x)
+(define/contract (xexpr-attr? x)
   (any/c . -> . boolean?)
-  (define (attr-pair? x)
-    ; list with two elements: first element is a symbol, second is a string
-    (and (list? x) (= (length x) 2) (symbol? (car x)) (string? (cadr x))))   
-  ; a list where elements are attr pairs
-  (and (list? x) (andmap attr-pair? x)))
+  (match x
+    ; list of symbol + string pairs
+    [(list (list (? symbol? key) (? string? value)) ...) #t]
+    [else #f]))
+
+(module+ test  
+  (check-true (xexpr-attr? '((key "value"))))
+  (check-true (xexpr-attr? '((key "value") (foo "bar"))))
+  (check-false (xexpr-attr? '((key "value") "foo" "bar"))) ; content, not attr
+  (check-false (xexpr-attr? '(key "value"))) ; not a nested list
+  (check-false (xexpr-attr? '(("key" "value")))) ; two strings
+  (check-false (xexpr-attr? '((key value))))) ; two symbols
+
 
 ;; is it xexpr content?
 (define/contract (xexpr-content? x)
   (any/c . -> . boolean?)
-  (and (list? x) (andmap xexpr? x)))
+  (match x
+    ;; this is more strict than xexpr definition in xml module
+    ;; don't allow symbols or numbers to be part of content
+    [(list elem ...) (andmap (λ(e) (or (string? e) (named-xexpr? e))) elem)]
+    [else #f]))
+
+(module+ test  
+  (check-true (xexpr-content? '("p" "foo" "123")))
+  (check-false (xexpr-content? "foo")) ; not a list
+  (check-false (xexpr-content? '("p" "foo" 123))) ; includes number
+  (check-false (xexpr-content? '(p "foo" "123"))) ; includes symbol
+  (check-false (xexpr-content? '(((key "value")) "foo" "bar"))) ; includes attr
+  (check-false (xexpr-content? '("foo" "bar" ((key "value")))))) ; malformed
+
 
 ;; is it a named x-expression?
 ;; todo: rewrite this recurively so errors can be pinpointed (for debugging)
@@ -75,13 +99,13 @@
        (match x
          [(list (? symbol? name) rest ...) ; is a list starting with a symbol
           (or (xexpr-content? rest) ; the rest is content or ...
-              (and (xexpr-attrs? (car rest)) (xexpr-content? (cdr rest))))] ; attributes followed by content
+              (and (xexpr-attr? (car rest)) (xexpr-content? (cdr rest))))] ; attr + content 
          [else #f])))
 
 (module+ test  
-  (check-equal? (named-xexpr? "foo") #f)
-  (check-equal? (named-xexpr? '(p "foo" "bar")) #t)
-  (check-equal? (named-xexpr? '(p ((key "value")) "foo" "bar")) #t)
-  (check-equal? (named-xexpr? '(p "foo" "bar" ((key "value")))) #f)
-  (check-equal? (named-xexpr? '("p" "foo" "bar")) #f)
-  (check-equal? (named-xexpr? '(p 123)) #t)) ; why is this so?
+  (check-true (named-xexpr? '(p "foo" "bar")))
+  (check-true (named-xexpr? '(p ((key "value")) "foo" "bar")))
+  (check-false (named-xexpr? "foo")) ; not a list with symbol
+  (check-false (named-xexpr? '(p "foo" "bar" ((key "value"))))) ; malformed
+  (check-false (named-xexpr? '("p" "foo" "bar"))) ; no name
+  (check-false (named-xexpr? '(p 123)))) ; content is a number
