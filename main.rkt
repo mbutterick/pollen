@@ -26,7 +26,7 @@
      ; (can't import them from surrounding module due to submodule rules)
      (require (planet mb/pollen/tools)
               (planet mb/pollen/main-helper))
-     (require-and-provide-extras) ; brings in the project require files
+     (require-extras #:provide #t) ; brings in the project require files
      
      ; #%top binding catches ids that aren't defined
      ; here, convert them to basic xexpr
@@ -37,18 +37,17 @@
        (λ x `(id ,@x)))
      
      expr ... ; body of module   
-     (define inner-here here) ; set up a hook for 'here (different name to avoid macrofication)
+     (define inner-here here) ; set up a hook for identifier 'here' (different name to avoid macrofication)
      (provide (all-defined-out))) 
    
    (require 'pollen-inner) ; provides 'doc
    
-   (define text (as-list doc)) ; if single line, text will be a string
+   (define text (merge-newlines (as-list doc))) ; if single line, text will be a string
    (define main (append
-                 (merge-newlines 
                  ; different setup depending on whether we have
                  (if (named-xexpr? text) 
                      `(main ,text) ; a whole xexpr or
-                     `(main ,@text))) ; just xexpr content 
+                     `(main ,@text)) ; just xexpr content 
                  (list (meta "here" inner-here)))) ; append inner-here as meta
    
    (provide main)

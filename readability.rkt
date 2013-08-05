@@ -60,6 +60,4 @@
   (check-equal? (len (list->vector '(1 2 3))) 3)
   (check-not-equal? (len (list->vector '(1 2))) 3) ; len 2
   (check-equal? (len (make-hash '((a 1) (b 2) (c 3)))) 3)
-  (check-not-equal? (len (make-hash '((a 1) (b 2) (b 3)))) 3) ; len 2
-
-  )
+  (check-not-equal? (len (make-hash '((a 1) (b 2) (b 3)))) 3)) ; len 2

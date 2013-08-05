@@ -3,9 +3,10 @@
 (require racket/contract racket/match)
 (require (only-in racket/path filename-extension))
 (require (only-in racket/format ~a))
-(require (only-in racket/list empty empty? second filter-not))
+(require (only-in racket/list empty empty? second filter-not splitf-at takef dropf))
+(require (only-in racket/string string-join))
 (require (only-in xml xexpr?))
-(provide (all-defined-out))
+(provide (all-defined-out) (all-from-out "readability.rkt"))
 
 ;; setup for test cases
 (module+ test
@@ -80,7 +81,7 @@
   (match x
     ;; this is more strict than xexpr definition in xml module
     ;; don't allow symbols or numbers to be part of content
-    [(list elem ...) (andmap (λ(e) (or (string? e) (named-xexpr? e))) elem)]
+    [(list elem ...) (andmap (λ(i) (or (string? i) (named-xexpr? i))) elem)]
     [else #f]))
 
 (module+ test  
@@ -162,7 +163,7 @@
   
   (define (filter-tree-inner proc tree)
     (cond
-      [(list? tree) (map (λ(item) (filter-tree-inner proc item)) tree)]
+      [(list? tree) (map (λ(i) (filter-tree-inner proc i)) tree)]
       [else (if (proc tree) tree empty)]))
   
   (remove-empty (filter-tree-inner proc tree)))
@@ -175,9 +176,42 @@
 ;; apply filter-not proc recursively
 (define/contract (filter-not-tree proc tree)
   (procedure? list? . -> . list?)
-  (filter-tree (λ(item) (not (proc item))) tree))
+  (filter-tree (λ(i) (not (proc i))) tree))
 
 (module+ test
   (check-equal? (filter-not-tree string? '(p)) '(p))
   (check-equal? (filter-not-tree string? '(p "foo" "bar")) '(p))
   (check-equal? (filter-not-tree string? '(p "foo" (p "bar"))) '(p (p))))
+
+
+;; Find adjacent newline characters in a list and merge them into one item
+;; Scribble, by default, makes each newline a separate list item
+;; In practice, this is worthless.
+(define/contract (merge-newlines x)
+  (list? . -> . list?)
+  (define (newline? x)
+    (and (string? x) (equal? "\n" x)))
+  (define (not-newline? x)
+    (not (newline? x)))
+  
+  (define (really-merge-newlines xs [acc '()])
+    (if (empty? xs)
+        acc
+        ;; Try to peel the newlines off the front.
+        (let-values ([(leading-newlines remainder) (splitf-at xs newline?)])
+          (if (not (empty? leading-newlines)) ; if you got newlines ...
+              ;; combine them into a string and append them to the accumulator, 
+              ;; and recurse on the rest
+              (really-merge-newlines remainder (append acc (list (string-join leading-newlines ""))))
+              ;; otherwise peel off elements up to the next newline, append them to accumulator,
+              ;; and recurse on the rest
+              (really-merge-newlines (dropf remainder not-newline?) 
+                               (append acc (takef remainder not-newline?)))))))
+  
+  (cond
+    [(list? x) (really-merge-newlines (map merge-newlines x))]
+    [else x]))
+
+(module+ test
+  (check-equal? (merge-newlines '(p "\n" "foo" "\n" "\n" "bar" (em "\n" "\n" "\n"))) 
+                '(p "\n" "foo" "\n\n" "bar" (em "\n\n\n"))))
