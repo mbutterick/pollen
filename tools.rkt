@@ -1,12 +1,13 @@
 #lang racket/base
-(require "readability.rkt")
 (require racket/contract racket/match)
 (require (only-in racket/path filename-extension))
 (require (only-in racket/format ~a))
 (require (only-in racket/list empty empty? second filter-not splitf-at takef dropf))
 (require (only-in racket/string string-join))
 (require (only-in xml xexpr?))
-(provide (all-defined-out) (all-from-out "readability.rkt"))
+
+(require "readability.rkt" "debug.rkt")
+(provide (all-defined-out) (all-from-out "readability.rkt" "debug.rkt"))
 
 ;; setup for test cases
 (module+ test
@@ -158,7 +159,7 @@
   (procedure? list? . -> . list?)
   (define (remove-empty x)
     (cond
-      [(list? x) (map remove-empty (filter-not empty? x))]
+      [(list? x) (filter-not empty? (map remove-empty x))]
       [else x]))
   
   (define (filter-tree-inner proc tree)
@@ -171,7 +172,8 @@
 (module+ test
   (check-equal? (filter-tree string? '(p)) empty)
   (check-equal? (filter-tree string? '(p "foo" "bar")) '("foo" "bar"))
-  (check-equal? (filter-tree string? '(p "foo" (p "bar"))) '("foo" ("bar"))))
+  (check-equal? (filter-tree string? '(p "foo" (p "bar"))) '("foo" ("bar")))
+  (check-equal? (filter-tree (λ(i) (and (string? i) (equal? i "\n"))) '("\n" (foo "bar") "\n")) '("\n" "\n"))) 
 
 ;; apply filter-not proc recursively
 (define/contract (filter-not-tree proc tree)
@@ -184,34 +186,4 @@
   (check-equal? (filter-not-tree string? '(p "foo" (p "bar"))) '(p (p))))
 
 
-;; Find adjacent newline characters in a list and merge them into one item
-;; Scribble, by default, makes each newline a separate list item
-;; In practice, this is worthless.
-(define/contract (merge-newlines x)
-  (list? . -> . list?)
-  (define (newline? x)
-    (and (string? x) (equal? "\n" x)))
-  (define (not-newline? x)
-    (not (newline? x)))
-  
-  (define (really-merge-newlines xs [acc '()])
-    (if (empty? xs)
-        acc
-        ;; Try to peel the newlines off the front.
-        (let-values ([(leading-newlines remainder) (splitf-at xs newline?)])
-          (if (not (empty? leading-newlines)) ; if you got newlines ...
-              ;; combine them into a string and append them to the accumulator, 
-              ;; and recurse on the rest
-              (really-merge-newlines remainder (append acc (list (string-join leading-newlines ""))))
-              ;; otherwise peel off elements up to the next newline, append them to accumulator,
-              ;; and recurse on the rest
-              (really-merge-newlines (dropf remainder not-newline?) 
-                               (append acc (takef remainder not-newline?)))))))
-  
-  (cond
-    [(list? x) (really-merge-newlines (map merge-newlines x))]
-    [else x]))
 
-(module+ test
-  (check-equal? (merge-newlines '(p "\n" "foo" "\n" "\n" "bar" (em "\n" "\n" "\n"))) 
-                '(p "\n" "foo" "\n\n" "bar" (em "\n\n\n"))))

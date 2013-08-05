@@ -17,6 +17,7 @@
      ;; So when called from outside the project directory, 
      ;; current-directory must be properly set with 'parameterize'
      (define (make-complete-path path)
+       ;; todo: document why this function is necessary (it definitely is, but I forgot why)
        (define-values (start_dir name _ignore) (split-path (path->complete-path path)))
        (build-path start_dir EXTRAS_DIR name))
      (define files (map make-complete-path (filter (λ(i) (has-ext? i 'rkt)) (directory-list EXTRAS_DIR))))
