@@ -4,7 +4,7 @@
 (require (only-in racket/format ~a))
 (require (only-in racket/list empty empty? second filter-not splitf-at takef dropf))
 (require (only-in racket/string string-join))
-(require (only-in xml xexpr?))
+(require (only-in xml xexpr? xexpr/c))
 
 (require "readability.rkt" "debug.rkt")
 (provide (all-defined-out) (all-from-out "readability.rkt" "debug.rkt"))
@@ -113,6 +113,8 @@
   (check-false (named-xexpr? '("p" "foo" "bar"))) ; no name
   (check-false (named-xexpr? '(p 123)))) ; content is a number
 
+
+
 ;; helper for comparison of values
 ;; normal function won't work for this. Has to be syntax-rule
 (define-syntax-rule (values->list vs)
@@ -152,6 +154,29 @@
                 (values->list (values 'p '((key "value")) empty)))
   (check-equal? (values->list (break-named-xexpr '(p ((key "value")) "foo"))) 
                 (values->list (values 'p '((key "value")) '("foo")))))
+
+
+;; convenience functions to retrieve only one part of named-xexpr
+(define (named-xexpr-name nx)
+  (named-xexpr? . -> . symbol?)
+  (define-values (name attr content) (break-named-xexpr nx))
+  name)
+
+(define (named-xexpr-attr nx)
+  (named-xexpr? . -> . xexpr-attr?)
+  (define-values (name attr content) (break-named-xexpr nx))
+  attr)
+
+(define (named-xexpr-content nx)
+  (named-xexpr? . -> . xexpr-content?)
+  (define-values (name attr content) (break-named-xexpr nx))
+  content)
+
+(module+ test
+  (check-equal? (named-xexpr-name '(p ((key "value"))"foo" "bar" (em "square"))) 'p)
+  (check-equal? (named-xexpr-attr '(p ((key "value"))"foo" "bar" (em "square"))) '((key "value")))
+  (check-equal? (named-xexpr-content '(p ((key "value"))"foo" "bar" (em "square"))) 
+                '("foo" "bar" (em "square"))))
 
 
 ;; apply filter proc recursively

@@ -3,7 +3,6 @@
 (require racket/string)
 (require racket/format)
 
-(require "readability.rkt")
 
 (provide (all-defined-out))
 
