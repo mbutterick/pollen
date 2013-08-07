@@ -103,8 +103,7 @@
   (define (&decode x)
     x)
   
-  (&decode nx)
-  )
+  (&decode nx))
 
 ;(decode `(p ((key "value")) ,decode))
 
