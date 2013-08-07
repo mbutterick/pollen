@@ -8,9 +8,6 @@
 
 (define (root . items)
   (named-xexpr? . -> . named-xexpr?)
-  `(root ,@(merge-newlines items)))
-
-(module+ test
-  (check-equal? (root "foo" "\n" "\n") '(root "foo" "\n\n")))
+  (decode `(root ,@items)))
 
 (define foo "bar")

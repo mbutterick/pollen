@@ -10,7 +10,7 @@
 (provide (all-defined-out))
 
 ;; general way of coercing to string
-(define/contract (as-string x)
+(define/contract (->string x)
   (any/c . -> . string?)
   (cond 
     [(string? x) x]
@@ -22,23 +22,23 @@
     [else (error (format "Can't make ~a into string" x))]))
 
 (module+ test
-  (check-equal? (as-string "foo") "foo")
-  (check-equal? (as-string '()) "")
-  (check-equal? (as-string 'foo) "foo")
-  (check-equal? (as-string 123) "123")
+  (check-equal? (->string "foo") "foo")
+  (check-equal? (->string '()) "")
+  (check-equal? (->string 'foo) "foo")
+  (check-equal? (->string 123) "123")
   (define file-name-as-text "foo.txt")
-  (check-equal? (as-string (string->path file-name-as-text)) file-name-as-text)
-  (check-equal? (as-string #\¶) "¶"))
+  (check-equal? (->string (string->path file-name-as-text)) file-name-as-text)
+  (check-equal? (->string #\¶) "¶"))
 
 
 ;; general way of coercing to symbol
-(define (as-symbol thing)
+(define (->symbol thing)
   ; todo: on bad input, it will pop a string error rather than symbol error
-  (string->symbol (as-string thing))) 
+  (string->symbol (->string thing))) 
 
 
 ;; general way of coercing to a list
-(define (as-list x)
+(define (->list x)
   (any/c . -> . list?)
   (cond 
     [(list? x) x]
@@ -46,24 +46,24 @@
     [else (list x)])) 
 
 (module+ test
-  (check-equal? (as-list '(1 2 3)) '(1 2 3))
-  (check-equal? (as-list (list->vector '(1 2 3))) '(1 2 3))
-  (check-equal? (as-list "foo") (list "foo")))
+  (check-equal? (->list '(1 2 3)) '(1 2 3))
+  (check-equal? (->list (list->vector '(1 2 3))) '(1 2 3))
+  (check-equal? (->list "foo") (list "foo")))
 
 
 ;; general way of coercing to boolean
-(define (as-boolean x)
+(define (->boolean x)
   (any/c . -> . boolean?)
   ;; in Racket, everything but #f is true
   (if x #t #f))
 
 (module+ test
-  (check-true (as-boolean #t))
-  (check-false (as-boolean #f))
-  (check-true (as-boolean "#f")) 
-  (check-true (as-boolean "foo"))
-  (check-true (as-boolean '()))
-  (check-true (as-boolean '(1 2 3))))
+  (check-true (->boolean #t))
+  (check-false (->boolean #f))
+  (check-true (->boolean "#f")) 
+  (check-true (->boolean "foo"))
+  (check-true (->boolean '()))
+  (check-true (->boolean '(1 2 3))))
 
 
 
@@ -73,7 +73,7 @@
   (cond
     [(list? x) (length x)]
     [(string? x) (string-length x)]
-    [(symbol? x) (len (as-string x))]
+    [(symbol? x) (len (->string x))]
     [(vector? x) (vector-length x)]
     [(hash? x) (len (hash-keys x))]
     [else #f]))
@@ -93,39 +93,41 @@
 
 
 ;; general way of fetching an item from a container
-(define/contract (get container item [up-to #f])
+(define/contract (get container start [end #f])
   ((any/c any/c) ((λ(i)(or (integer? i) (and (symbol? i) (equal? i 'end))))) 
                  . ->* . any/c)
   
   (define (sliceable-container? container)
     (ormap (λ(proc) (proc container)) (list list? string? vector?)))
   
-  (when (sliceable-container? container)
-    (set! up-to
-          (cond 
-            ;; treat negative lengths as offset from end (Python style)
-            [(and (integer? up-to) (< up-to 0)) (+ (len container) up-to)]
-            ;; 'end slices to the end
-            [(equal? up-to 'end) (len container)]
-            ;; default to slice length of 1 (i.e, single-item retrieval)
-            [(equal? up-to #f) (add1 item)]
-            [else up-to])))
+  (set! end
+        (if (sliceable-container? container)
+            (cond 
+              ;; treat negative lengths as offset from end (Python style)
+              [(and (integer? end) (< end 0)) (+ (len container) end)]
+              ;; 'end slices to the end
+              [(equal? end 'end) (len container)]
+              ;; default to slice length of 1 (i.e, single-item retrieval)
+              [(equal? end #f) (add1 start)]
+              [else end])
+            end))
   
   (define result (cond
                    ;; for sliceable containers, make a slice
-                   [(list? container) (for/list ([i (range item up-to)]) 
+                   [(list? container) (for/list ([i (range start end)]) 
                                         (list-ref container i))]
-                   [(vector? container) (for/vector ([i (range item up-to)])
+                   [(vector? container) (for/vector ([i (range start end)])
                                           (vector-ref container i))] 
-                   [(string? container) (substring container item up-to)]
-                   [(symbol? container) (as-symbol (get (as-string container) item up-to))] 
+                   [(string? container) (substring container start end)]
+                   [(symbol? container) (->symbol (get (->string container) start end))] 
                    ;; for hash, just get item
-                   [(hash? container) (hash-ref container item)]
+                   [(hash? container) (let ([hash-key start])
+                                        (hash-ref container hash-key))]
                    [else #f]))
   
   ;; don't return single-item results inside a list
   (if (and (sliceable-container? result) (= (len result) 1))
-      (car (as-list result))
+      (car (->list result))
       result))
 
 (module+ test
@@ -155,13 +157,13 @@
     [(vector? container) (vector-member item container)] ; returns #f or zero-based item index
     [(hash? container) 
      (and (hash-has-key? container item) (get container item))] ; returns #f or hash value
-    [(string? container) (let ([result (in (map as-string (string->list container)) (as-string item))])
+    [(string? container) (let ([result (in (map ->string (string->list container)) (->string item))])
                            (if result
                                (string-join result "")
                                #f))] ; returns #f or substring beginning with item
-    [(symbol? container) (let ([result (in (as-string container) (as-string item))])
+    [(symbol? container) (let ([result (in (->string container) (->string item))])
                            (if result
-                               (as-symbol result)
+                               (->symbol result)
                                result))] ; returns #f or subsymbol (?!) beginning with item
     [else #f]))
 

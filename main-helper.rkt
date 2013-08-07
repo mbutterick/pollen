@@ -22,7 +22,7 @@
        (build-path start_dir EXTRAS_DIR name))
      (define files (map make-complete-path (filter (λ(i) (has-ext? i 'rkt)) (directory-list EXTRAS_DIR))))
      (define files-in-require-form 
-       (map (λ(file) `(file ,(as-string file))) files)) 
+       (map (λ(file) `(file ,(->string file))) files)) 
      (datum->syntax stx 
                     (if provide
                         `(begin
@@ -55,7 +55,7 @@
                                   [(equal? 'pollen-lang-module ccr) 'nowhere] 
                                   [else ccr])])
                       (match-let-values ([(_ here-name _) (split-path ccr)])
-                                        (as-string (remove-all-ext here-name)))))))
+                                        (->string (remove-all-ext here-name)))))))
 
 (module+ test
   (check-equal? (get-here) "main-helper"))

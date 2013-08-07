@@ -5,6 +5,7 @@
 (require (only-in racket/format ~a))
 (require (only-in racket/bool nor))
 (require (only-in xml xexpr/c))
+(require (prefix-in scribble: (only-in scribble/decode whitespace?)))
 (module+ test (require rackunit))
 
 (require "tools.rkt" "library/html.rkt")
@@ -51,7 +52,7 @@
   ;; todo: make sure this is what I want.
   ;; this is, however, more consistent with browser behavior
   ;; (browsers assume that tags are inline by default)
-  (as-boolean (in block-tags (named-xexpr-name nx))))
+  (->boolean (in block-tags (named-xexpr-name nx))))
 
 (module+ test
   (check-true (block-xexpr? '(p "foo")))
@@ -59,13 +60,50 @@
   (check-false (block-xexpr? '(em "foo")))
   (check-false (block-xexpr? '(barfoo "foo"))))
 
-;; start here Tues 6
+
+(define (stringify x) ; convert numbers to strings
+  (map-tree (λ(i) (if (number? i) (->string i) i)) x))
+
+(module+ test
+  (check-equal? (stringify '(p 1 2 "foo" (em 4 "bar"))) '(p "1" "2" "foo" (em "4" "bar"))))
+
+
+
+; trim from beginning & end of list
+(define (trim items test-proc)
+  (dropf-right (dropf items test-proc) test-proc))
+
+(module+ test
+  (check-equal? (trim (list "\n" " " 1 2 3 "\n") whitespace?) '(1 2 3))
+  (check-equal? (trim (list 1 3 2 4 5 6 8 9 13) odd?) '(2 4 5 6 8)))
+
+;; recursive whitespace test
+;; Scribble's version misses whitespace in a list
+(define (whitespace? x)
+  (cond
+    [(list? x) (andmap whitespace? x)]
+    [else (scribble:whitespace? x)]))
+
+(module+ test
+  (check-false (scribble:whitespace? (list "\n" " " "\n"))) ; scribble result is too surprising
+  (check-true (whitespace? " "))
+  (check-false (whitespace? "foo"))
+  (check-false (whitespace? " ")) ; a nonbreaking space
+  (check-true (whitespace? "\n \n"))
+  (check-true (whitespace? (list "\n" " " "\n")))
+  (check-true (whitespace? (list "\n" " " "\n" (list "\n" "\n")))))
+
+
 ;; default content decoder for pollen
 (define/contract (decode nx)
-  ;; use xexpr/c for contact because it gives better error messages
+  ;; use xexpr/c for contract because it gives better error messages
   (xexpr/c . -> . named-xexpr?)
-  nx
   
+  ;; weds aug 7: start here
+  (define (&decode x)
+    x)
+  
+  (&decode nx)
   )
 
 ;(decode `(p ((key "value")) ,decode))

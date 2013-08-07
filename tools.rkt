@@ -23,7 +23,7 @@
 (define/contract (has-ext? path ext)
   (path? symbol? . -> . boolean?)
   (define ext-of-path (filename-extension path))
-  (and ext-of-path (equal? (bytes->string/utf-8 ext-of-path) (as-string ext))))
+  (and ext-of-path (equal? (bytes->string/utf-8 ext-of-path) (->string ext))))
 
 (module+ test
   (check-false (has-ext? foo-path 'txt)) 
@@ -210,5 +210,15 @@
   (check-equal? (filter-not-tree string? '(p "foo" "bar")) '(p))
   (check-equal? (filter-not-tree string? '(p "foo" (p "bar"))) '(p (p))))
 
+
+(define/contract (map-tree proc tree)
+  (procedure? list? . -> . list?)
+  (cond 
+    [(list? tree) (map (λ(i) (map-tree proc i)) tree)]
+    [else (proc tree)]))
+
+(module+ test
+  (check-equal? (map-tree (λ(i) (if (number? i) (* 2 i) i)) '(p 1 2 3 (em 4 5))) '(p 2 4 6 (em 8 10)))
+    (check-equal? (map-tree (λ(i) (if (symbol? i) 'foo i)) '(p 1 2 3 (em 4 5))) '(foo 1 2 3 (foo 4 5))))
 
 
