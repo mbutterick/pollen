@@ -58,6 +58,10 @@
   (check-not-equal? (remove-all-ext foo.bar.txt-path) foo.bar-path) ; removes more than one ext
   (check-equal? (remove-all-ext foo.bar.txt-path) foo-path))
 
+;; is it an xexpr name?
+(define/contract (xexpr-name? x)
+  (any/c . -> . boolean?)
+  (symbol? x)) 
 
 ;; is it an xexpr attributes?
 (define/contract (xexpr-attr? x)
@@ -219,6 +223,6 @@
 
 (module+ test
   (check-equal? (map-tree (λ(i) (if (number? i) (* 2 i) i)) '(p 1 2 3 (em 4 5))) '(p 2 4 6 (em 8 10)))
-    (check-equal? (map-tree (λ(i) (if (symbol? i) 'foo i)) '(p 1 2 3 (em 4 5))) '(foo 1 2 3 (foo 4 5))))
+  (check-equal? (map-tree (λ(i) (if (symbol? i) 'foo i)) '(p 1 2 3 (em 4 5))) '(foo 1 2 3 (foo 4 5))))
 
 

@@ -150,32 +150,34 @@
   (check-equal? (get (make-hash '((a . 1) (b . 2) (c  . 3))) 'a) 1))
 
 ;; general way of testing for membership (à la Python 'in')
-(define/contract (in container item)
+;; put item as first arg so function can use infix notation
+;; (item . in . container)
+(define/contract (in item container)
   (any/c any/c . -> . any/c)
   (cond
     [(list? container) (member item container)] ; returns #f or sublist beginning with item
     [(vector? container) (vector-member item container)] ; returns #f or zero-based item index
     [(hash? container) 
      (and (hash-has-key? container item) (get container item))] ; returns #f or hash value
-    [(string? container) (let ([result (in (map ->string (string->list container)) (->string item))])
+    [(string? container) (let ([result ((->string item) . in . (map ->string (string->list container)))])
                            (if result
                                (string-join result "")
                                #f))] ; returns #f or substring beginning with item
-    [(symbol? container) (let ([result (in (->string container) (->string item))])
+    [(symbol? container) (let ([result ((->string item) . in . (->string container))])
                            (if result
                                (->symbol result)
                                result))] ; returns #f or subsymbol (?!) beginning with item
     [else #f]))
 
 (module+ test
-  (check-equal? (in '(1 2 3) 2) '(2 3))
-  (check-false (in '(1 2 3) 4))
-  (check-equal? (in (list->vector '(1 2 3)) 2) 1)
-  (check-false (in (list->vector '(1 2 3)) 4))
-  (check-equal? (in (make-hash '((a . 1) (b . 2) (c  . 3))) 'a) 1)
-  (check-false (in (make-hash '((a . 1) (b . 2) (c  . 3))) 'x))
-  (check-equal? (in "foobar" "o") "oobar")
-  (check-false (in "foobar" "z"))
-  (check-equal? (in 'foobar 'o) 'oobar)
-  (check-false (in 'foobar 'z))
-  (check-false (in #\F "F")))
+  (check-equal? (2 . in . '(1 2 3)) '(2 3))
+  (check-false (4 . in . '(1 2 3)))
+  (check-equal? (2 . in . (list->vector '(1 2 3))) 1)
+  (check-false (4 . in . (list->vector '(1 2 3))))
+  (check-equal? ('a . in . (make-hash '((a . 1) (b . 2) (c  . 3)))) 1)
+  (check-false ('x . in . (make-hash '((a . 1) (b . 2) (c  . 3)))))
+  (check-equal? ("o" . in . "foobar") "oobar")
+  (check-false ("z" . in . "foobar"))
+  (check-equal? ('o . in . 'foobar) 'oobar)
+  (check-false ('z . in . 'foobar))
+  (check-false ("F" . in . #\F)))

@@ -1,7 +1,5 @@
 #lang racket/base
-(require racket/contract)
-(require racket/list)
-(require racket/string)
+(require racket/contract racket/list racket/string racket/match)
 (require (only-in racket/format ~a))
 (require (only-in racket/bool nor))
 (require (only-in xml xexpr/c))
@@ -52,7 +50,7 @@
   ;; todo: make sure this is what I want.
   ;; this is, however, more consistent with browser behavior
   ;; (browsers assume that tags are inline by default)
-  (->boolean (in block-tags (named-xexpr-name nx))))
+  (->boolean ((named-xexpr-name nx) . in . block-tags)))
 
 (module+ test
   (check-true (block-xexpr? '(p "foo")))
@@ -61,7 +59,9 @@
   (check-false (block-xexpr? '(barfoo "foo"))))
 
 
-(define (stringify x) ; convert numbers to strings
+;; convert numbers to strings
+;; maybe this isn't necessary
+(define (stringify x)
   (map-tree (λ(i) (if (number? i) (->string i) i)) x))
 
 (module+ test
@@ -94,18 +94,91 @@
   (check-true (whitespace? (list "\n" " " "\n" (list "\n" "\n")))))
 
 
-;; default content decoder for pollen
-(define/contract (decode nx)
-  ;; use xexpr/c for contract because it gives better error messages
-  (xexpr/c . -> . named-xexpr?)
-  
-  ;; weds aug 7: start here
-  (define (&decode x)
-    x)
-  
-  (&decode nx))
+#|
 
-;(decode `(p ((key "value")) ,decode))
+(define (make-meta-hash x)
+  (define keys (se-path*/list '(meta #:name) x))
+  (define values (se-path*/list '(meta #:content) x))
+  (define meta-hash (make-hash))
+  ;todo: convert this to for/list because map does not guarantee ordering
+  ; probably want to keep it in sequence
+  (map (ƒ(key value) (change meta-hash (as-symbol key) (as-string value))) keys values)
+  meta-hash)
+
+|#
+
+
+;; decoder wireframe
+(define/contract (decode nx
+                         #:exclude-xexpr-names [excluded-xexpr-names '()]
+                         #:xexpr-name-proc [xexpr-name-proc (λ(x)x)]
+                         #:xexpr-attr-proc [xexpr-attr-proc (λ(x)x)]
+                         #:xexpr-content-proc [xexpr-content-proc #f] ; set this to &decode later
+                         #:block-xexpr-proc [block-xexpr-proc (λ(x)x)]
+                         #:inline-xexpr-proc [inline-xexpr-proc (λ(x)x)]
+                         #:string-proc [string-proc (λ(x)x)]
+                         #:meta-proc [meta-proc (λ(x)x)])
+  ;; use xexpr/c for contract because it gives better error messages
+  ((xexpr/c) (#:exclude-xexpr-names (λ(i) (or (symbol? i) (list? i)))
+                                    #:xexpr-name-proc procedure?
+                                    #:xexpr-attr-proc procedure?
+                                    #:xexpr-content-proc procedure?
+                                    #:block-xexpr-proc procedure?
+                                    #:inline-xexpr-proc procedure?
+                                    #:string-proc procedure?
+                                    #:meta-proc procedure?)
+             . ->* . named-xexpr?)
+  (when (not (named-xexpr? nx))
+    (error (format "decode: ~v not a full named-xexpr" nx)))
+  
+  (define metas (list))
+  (define/contract (is-meta? x)
+    (any/c . -> . (λ(i) (or (boolean? i) (list? i))))
+    (match x
+      [`(meta ,(? string? key) ,(? string? value)) (list key value)]
+      [else #f]))
+  
+  (define (&decode x)
+    (cond
+      [(named-xexpr? x) (let-values([(name attr content) (break-named-xexpr x)]) 
+                          (if (name . in . (->list excluded-xexpr-names))    
+                              x
+                              (let ([decoded-xexpr 
+                                     (apply make-named-xexpr (map &decode (list name attr content)))])
+                                (if (block-xexpr? decoded-xexpr)
+                                    (block-xexpr-proc decoded-xexpr)
+                                    (inline-xexpr-proc decoded-xexpr)))))]
+      [(xexpr-name? x) (xexpr-name-proc x)]
+      [(xexpr-attr? x) (xexpr-attr-proc x)]
+      [(xexpr-content? x) (let ([xexpr-content-proc (or xexpr-content-proc (λ(x) (map &decode x)))])
+                            (xexpr-content-proc x))]
+      [(string? x) (string-proc x)]
+      [else x]))
+  
+  ;; function to strip metas
+  ;; todo: would this be simpler using se-path*/list?
+  (define (split-metas nx)
+    (define meta-list '())
+    (define (&split-metas x)
+      (cond
+        [(and (named-xexpr? x) (equal? 'meta (car x)))
+         (begin
+           (set! meta-list (cons x meta-list))
+           empty)]
+        [(named-xexpr? x) ; handle named-xexpr
+         (let-values([(name attr body) (break-named-xexpr x)]) 
+           (make-named-xexpr name attr (&split-metas body)))]
+        [(list? x) (filter-not empty? (map &split-metas x))]
+        [else x]))
+    (values (&split-metas nx) (reverse meta-list))) 
+  
+  ;; put metas back on the end
+  (define (append-metas nx metas)
+    (named-xexpr? . -> . named-xexpr?)
+    (append nx (map meta-proc metas)))
+  
+  (let-values ([(nx metas) (split-metas nx)])
+    (append-metas (&decode nx) metas)))
 
 #|
 ;; default content decoder for pollen
