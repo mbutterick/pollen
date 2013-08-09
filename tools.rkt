@@ -191,12 +191,13 @@
       [(list? x) (filter-not empty? (map remove-empty x))]
       [else x]))
   
-  (define (filter-tree-inner proc tree)
+  (define (filter-tree-inner proc x)
     (cond
-      [(list? tree) (map (λ(i) (filter-tree-inner proc i)) tree)]
-      [else (if (proc tree) tree empty)]))
+      [(list? x) (map (λ(i) (filter-tree-inner proc i)) x)]
+      [else (if (proc x) x empty)]))
   
   (remove-empty (filter-tree-inner proc tree)))
+
 
 (module+ test
   (check-equal? (filter-tree string? '(p)) empty)
@@ -212,7 +213,9 @@
 (module+ test
   (check-equal? (filter-not-tree string? '(p)) '(p))
   (check-equal? (filter-not-tree string? '(p "foo" "bar")) '(p))
-  (check-equal? (filter-not-tree string? '(p "foo" (p "bar"))) '(p (p))))
+  (check-equal? (filter-not-tree string? '(p "foo" (p "bar"))) '(p (p)))
+  ;(check-equal? (filter-tree (λ(i) (and (named-xexpr? i) (equal? 'em (car i)))) '(p "foo" (em "bar"))) '(p "foo"))
+  )
 
 
 (define/contract (map-tree proc tree)

@@ -94,20 +94,33 @@
   (check-true (whitespace? (list "\n" " " "\n" (list "\n" "\n")))))
 
 
-#|
 
-(define (make-meta-hash x)
-  (define keys (se-path*/list '(meta #:name) x))
-  (define values (se-path*/list '(meta #:content) x))
-  (define meta-hash (make-hash))
-  ;todo: convert this to for/list because map does not guarantee ordering
-  ; probably want to keep it in sequence
-  (map (ƒ(key value) (change meta-hash (as-symbol key) (as-string value))) keys values)
-  meta-hash)
+;; function to strip metas
+;; todo: make this more recursive?
+(define/contract (extract-tag-from-xexpr tag nx)
+  (xexpr-name? named-xexpr? . -> . (values named-xexpr? xexpr-content?))
+  (define matches '())
+  (define (extract-tag x)
+    (cond
+      [(and (named-xexpr? x) (equal? tag (car x)))
+       ; stash matched tag but return empty value
+       (begin
+         (set! matches (cons x matches))
+         empty)]
+      [(named-xexpr? x) (let-values([(name attr body) (break-named-xexpr x)]) 
+                          (make-named-xexpr name attr (extract-tag body)))]
+      [(xexpr-content? x) (filter-not empty? (map extract-tag x))]
+      [else x]))
+  (values (extract-tag nx) (reverse matches))) 
 
-|#
 
-
+(module+ test
+  (define x '(root (meta "foo" "bar") "hello" "world" (meta "foo2" "bar2") 
+                   (em "goodnight" "moon" (meta "foo3" "bar3"))))
+  
+  (check-equal? (values->list (extract-tag-from-xexpr 'meta x)) 
+                (list '(root "hello" "world" (em "goodnight" "moon"))
+                      '((meta "foo" "bar") (meta "foo2" "bar2") (meta "foo3" "bar3")))))
 ;; decoder wireframe
 (define/contract (decode nx
                          #:exclude-xexpr-names [excluded-xexpr-names '()]
@@ -155,30 +168,9 @@
       [(string? x) (string-proc x)]
       [else x]))
   
-  ;; function to strip metas
-  ;; todo: would this be simpler using se-path*/list?
-  (define (split-metas nx)
-    (define meta-list '())
-    (define (&split-metas x)
-      (cond
-        [(and (named-xexpr? x) (equal? 'meta (car x)))
-         (begin
-           (set! meta-list (cons x meta-list))
-           empty)]
-        [(named-xexpr? x) ; handle named-xexpr
-         (let-values([(name attr body) (break-named-xexpr x)]) 
-           (make-named-xexpr name attr (&split-metas body)))]
-        [(list? x) (filter-not empty? (map &split-metas x))]
-        [else x]))
-    (values (&split-metas nx) (reverse meta-list))) 
   
-  ;; put metas back on the end
-  (define (append-metas nx metas)
-    (named-xexpr? . -> . named-xexpr?)
-    (append nx (map meta-proc metas)))
-  
-  (let-values ([(nx metas) (split-metas nx)])
-    (append-metas (&decode nx) metas)))
+  (let-values ([(nx metas) (extract-tag-from-xexpr 'meta nx)])
+    (append (&decode nx) (map meta-proc metas))))
 
 #|
 ;; default content decoder for pollen
