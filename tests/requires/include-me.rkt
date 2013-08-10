@@ -14,15 +14,16 @@
 (module+ test
   (check-equal? (meta-proc '(meta "key" "value")) '(meta ((name "key")(content "value")))))
 
-
-;; how a paragraph break is denoted: a string of two or more newlines
+;; is x a paragraph break?
 (define/contract (paragraph-break? x)
   (any/c . -> . boolean?)
+  ;; paragraph break = a string of two or more newlines
   (and (string? x) (>= (len x) 2) (equal? x (make-string (len x) #\newline))))
-  
+
 (module+ test
   (check-false (paragraph-break? "foo"))
   (check-false (paragraph-break? "\n"))
+  (check-false (paragraph-break? "\n \n"))
   (check-true (paragraph-break? "\n\n"))
   (check-true (paragraph-break? "\n\n\n")))
 
