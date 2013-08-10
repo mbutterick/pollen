@@ -9,6 +9,19 @@
 (require "tools.rkt" "library/html.rkt")
 (provide (all-defined-out))
 
+
+;; split list into list of sublists using test
+;; todo: contract & unit tests
+(define (splitf-at* pieces test)
+  (define (splitf-at*-inner pieces [acc '()]) ; use acc for tail recursion
+    (if (empty? pieces) 
+        acc
+        (let-values ([(item rest) 
+                      (splitf-at (dropf pieces test) (compose1 not test))])
+          (splitf-at*-inner rest `(,@acc ,item)))))
+  (splitf-at*-inner (trim pieces test)))
+
+
 ;; Find adjacent newline characters in a list and merge them into one item
 ;; Scribble, by default, makes each newline a separate list item
 ;; In practice, this is worthless.
@@ -43,14 +56,14 @@
 
 
 ;; is the named-xexpr a block element (as opposed to inline)
-(define/contract (block-xexpr? nx)
-  (named-xexpr? . -> . boolean?)
+(define/contract (block-xexpr? x)
+  (any/c . -> . boolean?)
   ;; this is a change in behavior since first pollen
   ;; blocks are only the ones on the html block tag list.
   ;; todo: make sure this is what I want.
   ;; this is, however, more consistent with browser behavior
   ;; (browsers assume that tags are inline by default)
-  (->boolean ((named-xexpr-name nx) . in . block-tags)))
+  ((named-xexpr? x) . and . (->boolean ((named-xexpr-name x) . in . block-tags))))
 
 (module+ test
   (check-true (block-xexpr? '(p "foo")))
@@ -68,14 +81,6 @@
   (check-equal? (stringify '(p 1 2 "foo" (em 4 "bar"))) '(p "1" "2" "foo" (em "4" "bar"))))
 
 
-
-; trim from beginning & end of list
-(define (trim items test-proc)
-  (dropf-right (dropf items test-proc) test-proc))
-
-(module+ test
-  (check-equal? (trim (list "\n" " " 1 2 3 "\n") whitespace?) '(1 2 3))
-  (check-equal? (trim (list 1 3 2 4 5 6 8 9 13) odd?) '(2 4 5 6 8)))
 
 ;; recursive whitespace test
 ;; Scribble's version misses whitespace in a list
@@ -95,8 +100,27 @@
 
 
 
-;; function to strip metas
-;; todo: make this more recursive?
+;; trim from beginning & end of list
+(define (trim items test-proc)
+  (list? procedure? . -> . list?)
+  (dropf-right (dropf items test-proc) test-proc))
+
+(module+ test
+  (check-equal? (trim (list "\n" " " 1 2 3 "\n") whitespace?) '(1 2 3))
+  (check-equal? (trim (list 1 3 2 4 5 6 8 9 13) odd?) '(2 4 5 6 8)))
+
+
+
+;; test for well-formed meta
+(define/contract (meta-xexpr? x)
+  (any/c . -> . (λ(i) (or (boolean? i) (list? i))))
+  (match x
+    [`(meta ,(? string? key) ,(? string? value)) (list key value)]
+    [else #f]))
+
+
+
+;; function to strip metas (or any tag)
 (define/contract (extract-tag-from-xexpr tag nx)
   (xexpr-name? named-xexpr? . -> . (values named-xexpr? xexpr-content?))
   (define matches '())
@@ -126,7 +150,7 @@
                          #:exclude-xexpr-names [excluded-xexpr-names '()]
                          #:xexpr-name-proc [xexpr-name-proc (λ(x)x)]
                          #:xexpr-attr-proc [xexpr-attr-proc (λ(x)x)]
-                         #:xexpr-content-proc [xexpr-content-proc #f] ; set this to &decode later
+                         #:xexpr-content-proc [xexpr-content-proc (λ(x)x)]
                          #:block-xexpr-proc [block-xexpr-proc (λ(x)x)]
                          #:inline-xexpr-proc [inline-xexpr-proc (λ(x)x)]
                          #:string-proc [string-proc (λ(x)x)]
@@ -145,11 +169,6 @@
     (error (format "decode: ~v not a full named-xexpr" nx)))
   
   (define metas (list))
-  (define/contract (is-meta? x)
-    (any/c . -> . (λ(i) (or (boolean? i) (list? i))))
-    (match x
-      [`(meta ,(? string? key) ,(? string? value)) (list key value)]
-      [else #f]))
   
   (define (&decode x)
     (cond
@@ -158,13 +177,12 @@
                               x
                               (let ([decoded-xexpr 
                                      (apply make-named-xexpr (map &decode (list name attr content)))])
-                                (if (block-xexpr? decoded-xexpr)
-                                    (block-xexpr-proc decoded-xexpr)
-                                    (inline-xexpr-proc decoded-xexpr)))))]
+                                ((if (block-xexpr? decoded-xexpr)
+                                     block-xexpr-proc
+                                     inline-xexpr-proc) decoded-xexpr))))]
       [(xexpr-name? x) (xexpr-name-proc x)]
       [(xexpr-attr? x) (xexpr-attr-proc x)]
-      [(xexpr-content? x) (let ([xexpr-content-proc (or xexpr-content-proc (λ(x) (map &decode x)))])
-                            (xexpr-content-proc x))]
+      [(xexpr-content? x) (map &decode (xexpr-content-proc x))]
       [(string? x) (string-proc x)]
       [else x]))
   

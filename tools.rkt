@@ -2,7 +2,7 @@
 (require racket/contract racket/match)
 (require (only-in racket/path filename-extension))
 (require (only-in racket/format ~a))
-(require (only-in racket/list empty empty? second filter-not splitf-at takef dropf))
+(require (only-in racket/list empty empty? second filter-not splitf-at takef dropf dropf-right))
 (require (only-in racket/string string-join))
 (require (only-in xml xexpr? xexpr/c))
 
@@ -227,5 +227,3 @@
 (module+ test
   (check-equal? (map-tree (λ(i) (if (number? i) (* 2 i) i)) '(p 1 2 3 (em 4 5))) '(p 2 4 6 (em 8 10)))
   (check-equal? (map-tree (λ(i) (if (symbol? i) 'foo i)) '(p 1 2 3 (em 4 5))) '(foo 1 2 3 (foo 4 5))))
-
-
