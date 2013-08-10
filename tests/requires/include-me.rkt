@@ -16,9 +16,9 @@
 
 
 ;; how a paragraph break is denoted: two or more newlines
-(define/contract (paragraph-break? str)
-  (string? . -> . boolean?)
-  (->boolean (regexp-match #px"^\n{2,}$" str)))
+(define/contract (paragraph-break? x)
+  (any/c . -> . boolean?)
+  (and (string? x) (->boolean (regexp-match #px"^\n{2,}$" x))))
   
 (module+ test
   (check-false (paragraph-break? "foo"))
