@@ -2,14 +2,18 @@
 
 ◊meta["metakey" "metavalue"]
 
-Hello world
+◊;todo: make this recognized as a block.
+◊bloq{In a block}
+
+"Hello" world, aren't you --- yes, you — about 1--2 inches tall?
    
 ◊em{Love}
 
-Goodnight
-moon
-
 ◊foo
+
+Goodnight
+moon light
+
 
 
 
