@@ -55,9 +55,14 @@
                 '(p "\n" "foo" "\n\n" "bar" (em "\n\n\n"))))
 
 
+<<<<<<< HEAD
 (define block-names block-tags)
 (define (register-block-name tag)
   (set! block-names (cons tag block-names)))
+=======
+;; todo: add native support for list-xexpr
+;; decode triple newlines to list items
+>>>>>>> ad16d8ea380dadc4facd64a2e41f0d252eeaa31b
 
 ;; is the named-xexpr a block element (as opposed to inline)
 (define/contract (block-xexpr? x)
@@ -172,8 +177,6 @@
   (when (not (named-xexpr? nx))
     (error (format "decode: ~v not a full named-xexpr" nx)))
   
-  (define metas (list))
-  
   (define (&decode x)
     (cond
       [(named-xexpr? x) (let-values([(name attr content) (break-named-xexpr x)]) 
@@ -193,40 +196,3 @@
   
   (let-values ([(nx metas) (extract-tag-from-xexpr 'meta nx)])
     (append (&decode nx) (map meta-proc metas))))
-
-#|
-;; default content decoder for pollen
-(define/contract (decode x)
-  (named-xexpr? . -> . named-xexpr?)
-  
-  (define (&decode x)
-    (cond
-      [(named-xexpr? x)
-       (let-values([(name attr content) (break-named-xexpr x)]) 
-         (define decoded-x (make-named-xexpr name attr (&decode content)))
-         (if (block-xexpr? decoded-x)
-             ; add nonbreaking-last-space to the next line when ready
-             (wrap-hanging-quotes (nonbreaking-last-space decoded-x)) ; do special processing for block xexprs
-             decoded-x))]
-      [(xexpr-content? x) ; a list of xexprs
-       (let ([x (prep-paragraph-flow x)]) 
-         (map &decode (if (ormap paragraph-break? x) ; need this condition to prevent infinite recursion
-                          (map wrap-paragraph (splitf-at* x paragraph-break?)) ; split into ¶¶
-                          x)))]     
-      [(string? x) (typogrify x)]
-      [else x]))
-  
-  (define (stringify x) ; convert numbers to strings
-    (cond
-      [(list? x) (map stringify x)]
-      [(number? x) (~a x)]
-      [else x]))
-  
-  (let* ([x (stringify x)]
-         [x (trim-whitespace x)])
-    (if (named-xexpr? x)
-        (&decode x)
-        ;todo: improve this error message, more specific location
-        ; now, it just spits out the whole defective content
-        (error (format "decode: ~v not a full named-xexpr" x)))))
-|#
