@@ -55,14 +55,12 @@
                 '(p "\n" "foo" "\n\n" "bar" (em "\n\n\n"))))
 
 
-<<<<<<< HEAD
 (define block-names block-tags)
 (define (register-block-name tag)
   (set! block-names (cons tag block-names)))
-=======
+
 ;; todo: add native support for list-xexpr
 ;; decode triple newlines to list items
->>>>>>> ad16d8ea380dadc4facd64a2e41f0d252eeaa31b
 
 ;; is the named-xexpr a block element (as opposed to inline)
 (define/contract (block-xexpr? x)
@@ -177,6 +175,8 @@
   (when (not (named-xexpr? nx))
     (error (format "decode: ~v not a full named-xexpr" nx)))
   
+  (define metas (list))
+  
   (define (&decode x)
     (cond
       [(named-xexpr? x) (let-values([(name attr content) (break-named-xexpr x)]) 
@@ -196,3 +196,4 @@
   
   (let-values ([(nx metas) (extract-tag-from-xexpr 'meta nx)])
     (append (&decode nx) (map meta-proc metas))))
+
