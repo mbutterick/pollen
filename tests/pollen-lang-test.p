@@ -2,7 +2,7 @@
 
 ◊meta["metakey" "metavalue"]
 
-Hello world
+◊boqi{Hello world}
    
 ◊em{Love}
 

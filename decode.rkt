@@ -55,6 +55,10 @@
                 '(p "\n" "foo" "\n\n" "bar" (em "\n\n\n"))))
 
 
+(define block-names block-tags)
+(define (register-block-name tag)
+  (set! block-names (cons tag block-names)))
+
 ;; is the named-xexpr a block element (as opposed to inline)
 (define/contract (block-xexpr? x)
   (any/c . -> . boolean?)
@@ -63,7 +67,7 @@
   ;; todo: make sure this is what I want.
   ;; this is, however, more consistent with browser behavior
   ;; (browsers assume that tags are inline by default)
-  ((named-xexpr? x) . and . (->boolean ((named-xexpr-name x) . in . block-tags))))
+  ((named-xexpr? x) . and . (->boolean ((named-xexpr-name x) . in . block-names))))
 
 (module+ test
   (check-true (block-xexpr? '(p "foo")))

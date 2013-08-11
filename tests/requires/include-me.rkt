@@ -6,6 +6,8 @@
 
 (module+ test (require rackunit))
 
+(register-block-name 'boqi)
+
 ;; todo: contracts & unit tests
 (define/contract (meta-proc meta)
   (meta-xexpr? . -> . named-xexpr?)
