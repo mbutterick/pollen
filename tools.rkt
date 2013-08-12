@@ -58,8 +58,8 @@
   (check-not-equal? (remove-all-ext foo.bar.txt-path) foo.bar-path) ; removes more than one ext
   (check-equal? (remove-all-ext foo.bar.txt-path) foo-path))
 
-;; is it an xexpr name?
-(define/contract (xexpr-name? x)
+;; is it an xexpr tag?
+(define/contract (xexpr-tag? x)
   (any/c . -> . boolean?)
   (symbol? x)) 
 
@@ -81,41 +81,41 @@
 
 
 ;; is it xexpr content?
-(define/contract (xexpr-content? x)
+(define/contract (xexpr-elements? x)
   (any/c . -> . boolean?)
   (match x
     ;; this is more strict than xexpr definition in xml module
     ;; don't allow symbols or numbers to be part of content
-    [(list elem ...) (andmap (λ(i) (or (string? i) (named-xexpr? i))) elem)]
+    [(list elem ...) (andmap (λ(i) (or (string? i) (tagged-xexpr? i))) elem)]
     [else #f]))
 
 (module+ test  
-  (check-true (xexpr-content? '("p" "foo" "123")))
-  (check-false (xexpr-content? "foo")) ; not a list
-  (check-false (xexpr-content? '("p" "foo" 123))) ; includes number
-  (check-false (xexpr-content? '(p "foo" "123"))) ; includes symbol
-  (check-false (xexpr-content? '(((key "value")) "foo" "bar"))) ; includes attr
-  (check-false (xexpr-content? '("foo" "bar" ((key "value")))))) ; malformed
+  (check-true (xexpr-elements? '("p" "foo" "123")))
+  (check-false (xexpr-elements? "foo")) ; not a list
+  (check-false (xexpr-elements? '("p" "foo" 123))) ; includes number
+  (check-false (xexpr-elements? '(p "foo" "123"))) ; includes symbol
+  (check-false (xexpr-elements? '(((key "value")) "foo" "bar"))) ; includes attr
+  (check-false (xexpr-elements? '("foo" "bar" ((key "value")))))) ; malformed
 
 
 ;; is it a named x-expression?
 ;; todo: rewrite this recurively so errors can be pinpointed (for debugging)
-(define/contract (named-xexpr? x)
+(define/contract (tagged-xexpr? x)
   (any/c . -> . boolean?)
   (and (xexpr? x) ; meets basic xexpr contract
        (match x
          [(list (? symbol? name) rest ...) ; is a list starting with a symbol
-          (or (xexpr-content? rest) ; the rest is content or ...
-              (and (xexpr-attr? (car rest)) (xexpr-content? (cdr rest))))] ; attr + content 
+          (or (xexpr-elements? rest) ; the rest is content or ...
+              (and (xexpr-attr? (car rest)) (xexpr-elements? (cdr rest))))] ; attr + content 
          [else #f])))
 
 (module+ test  
-  (check-true (named-xexpr? '(p "foo" "bar")))
-  (check-true (named-xexpr? '(p ((key "value")) "foo" "bar")))
-  (check-false (named-xexpr? "foo")) ; not a list with symbol
-  (check-false (named-xexpr? '(p "foo" "bar" ((key "value"))))) ; malformed
-  (check-false (named-xexpr? '("p" "foo" "bar"))) ; no name
-  (check-false (named-xexpr? '(p 123)))) ; content is a number
+  (check-true (tagged-xexpr? '(p "foo" "bar")))
+  (check-true (tagged-xexpr? '(p ((key "value")) "foo" "bar")))
+  (check-false (tagged-xexpr? "foo")) ; not a list with symbol
+  (check-false (tagged-xexpr? '(p "foo" "bar" ((key "value"))))) ; malformed
+  (check-false (tagged-xexpr? '("p" "foo" "bar"))) ; no name
+  (check-false (tagged-xexpr? '(p 123)))) ; content is a number
 
 
 
@@ -125,61 +125,61 @@
   (call-with-values (λ() vs) list))
 
 
-;; create named-xexpr from parts (opposite of break-named-xexpr)
-(define/contract (make-named-xexpr name [attr empty] [content empty])
-  ((symbol?) (xexpr-attr? xexpr-content?) . ->* . named-xexpr?)
+;; create tagged-xexpr from parts (opposite of break-tagged-xexpr)
+(define/contract (make-tagged-xexpr name [attr empty] [content empty])
+  ((symbol?) (xexpr-attr? xexpr-elements?) . ->* . tagged-xexpr?)
   (filter-not empty? `(,name ,attr ,@content)))
 
 (module+ test
-  (check-equal? (make-named-xexpr 'p) '(p))
-  (check-equal? (make-named-xexpr 'p '((key "value"))) '(p ((key "value"))))
-  (check-equal? (make-named-xexpr 'p empty '("foo" "bar")) '(p "foo" "bar"))
-  (check-equal? (make-named-xexpr 'p '((key "value")) (list "foo" "bar")) 
+  (check-equal? (make-tagged-xexpr 'p) '(p))
+  (check-equal? (make-tagged-xexpr 'p '((key "value"))) '(p ((key "value"))))
+  (check-equal? (make-tagged-xexpr 'p empty '("foo" "bar")) '(p "foo" "bar"))
+  (check-equal? (make-tagged-xexpr 'p '((key "value")) (list "foo" "bar")) 
                 '(p ((key "value")) "foo" "bar")))
 
 
-;; decompose named-xexpr into parts (opposite of make-named-xexpr)
-(define/contract (break-named-xexpr nx)
-  (named-xexpr? . -> . (values symbol? xexpr-attr? xexpr-content?))
+;; decompose tagged-xexpr into parts (opposite of make-tagged-xexpr)
+(define/contract (break-tagged-xexpr nx)
+  (tagged-xexpr? . -> . (values symbol? xexpr-attr? xexpr-elements?))
   (match 
-      ; named-xexpr may or may not have attr
+      ; tagged-xexpr may or may not have attr
       ; if not, add empty attr so that decomposition only handles one case
       (match nx
         [(list _ (? xexpr-attr?) _ ...) nx]
         [else `(,(car nx) ,empty ,@(cdr nx))])
-    [(list name attr content ...) (values name attr content)]))
+    [(list tag attr content ...) (values tag attr content)]))
 
 (module+ test
-  (check-equal? (values->list (break-named-xexpr '(p))) 
+  (check-equal? (values->list (break-tagged-xexpr '(p))) 
                 (values->list (values 'p empty empty)))
-  (check-equal? (values->list (break-named-xexpr '(p "foo"))) 
+  (check-equal? (values->list (break-tagged-xexpr '(p "foo"))) 
                 (values->list (values 'p empty '("foo"))))
-  (check-equal? (values->list (break-named-xexpr '(p ((key "value"))))) 
+  (check-equal? (values->list (break-tagged-xexpr '(p ((key "value"))))) 
                 (values->list (values 'p '((key "value")) empty)))
-  (check-equal? (values->list (break-named-xexpr '(p ((key "value")) "foo"))) 
+  (check-equal? (values->list (break-tagged-xexpr '(p ((key "value")) "foo"))) 
                 (values->list (values 'p '((key "value")) '("foo")))))
 
 
-;; convenience functions to retrieve only one part of named-xexpr
-(define (named-xexpr-name nx)
-  (named-xexpr? . -> . symbol?)
-  (define-values (name attr content) (break-named-xexpr nx))
-  name)
+;; convenience functions to retrieve only one part of tagged-xexpr
+(define (tagged-xexpr-tag nx)
+  (tagged-xexpr? . -> . xexpr-tag?)
+  (define-values (tag attr content) (break-tagged-xexpr nx))
+  tag)
 
-(define (named-xexpr-attr nx)
-  (named-xexpr? . -> . xexpr-attr?)
-  (define-values (name attr content) (break-named-xexpr nx))
+(define (tagged-xexpr-attr nx)
+  (tagged-xexpr? . -> . xexpr-attr?)
+  (define-values (tag attr content) (break-tagged-xexpr nx))
   attr)
 
-(define (named-xexpr-content nx)
-  (named-xexpr? . -> . xexpr-content?)
-  (define-values (name attr content) (break-named-xexpr nx))
-  content)
+(define (tagged-xexpr-elements nx)
+  (tagged-xexpr? . -> . xexpr-elements?)
+  (define-values (tag attrt elements) (break-tagged-xexpr nx))
+  elements)
 
 (module+ test
-  (check-equal? (named-xexpr-name '(p ((key "value"))"foo" "bar" (em "square"))) 'p)
-  (check-equal? (named-xexpr-attr '(p ((key "value"))"foo" "bar" (em "square"))) '((key "value")))
-  (check-equal? (named-xexpr-content '(p ((key "value"))"foo" "bar" (em "square"))) 
+  (check-equal? (tagged-xexpr-tag '(p ((key "value"))"foo" "bar" (em "square"))) 'p)
+  (check-equal? (tagged-xexpr-attr '(p ((key "value"))"foo" "bar" (em "square"))) '((key "value")))
+  (check-equal? (tagged-xexpr-elements '(p ((key "value"))"foo" "bar" (em "square"))) 
                 '("foo" "bar" (em "square"))))
 
 
@@ -214,7 +214,7 @@
   (check-equal? (filter-not-tree string? '(p)) '(p))
   (check-equal? (filter-not-tree string? '(p "foo" "bar")) '(p))
   (check-equal? (filter-not-tree string? '(p "foo" (p "bar"))) '(p (p)))
-  ;(check-equal? (filter-tree (λ(i) (and (named-xexpr? i) (equal? 'em (car i)))) '(p "foo" (em "bar"))) '(p "foo"))
+  ;(check-equal? (filter-tree (λ(i) (and (tagged-xexpr? i) (equal? 'em (car i)))) '(p "foo" (em "bar"))) '(p "foo"))
   )
 
 

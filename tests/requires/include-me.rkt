@@ -8,13 +8,13 @@
 
 
 ;; register custom block tags
-(register-block-name 'bloq)
-(register-block-name 'fooble)
+(register-block-tag 'bloq)
+(register-block-tag 'fooble)
 
 
 ;; handle meta tags
 (define/contract (meta-proc meta)
-  (meta-xexpr? . -> . named-xexpr?)
+  (meta-xexpr? . -> . tagged-xexpr?)
   `(meta ((name ,(second meta))(content ,(third meta)))))
 
 (module+ test
@@ -35,7 +35,7 @@
 
 
 (define/contract (convert-linebreaks xc #:newline [newline "\n"])
-  ((xexpr-content?) (#:newline string?) . ->* . xexpr-content?)
+  ((xexpr-elements?) (#:newline string?) . ->* . xexpr-elements?)
   ;; todo: should this test be not block + not whitespace?
   (define not-block? (λ(i) (not (block-xexpr? i))))
   (filter-not empty?
@@ -61,9 +61,9 @@
   (check-equal? (convert-linebreaks '("foo" "moo" "bar") #:newline "moo") '("foo" (br) "bar"))
   (check-equal? (convert-linebreaks '("foo" "\n\n" "bar")) '("foo" "\n\n" "bar")))
 
-;; prepare content for paragraph testing
+;; prepare elements for paragraph testing
 (define/contract (prep-paragraph-flow xc)
-  (xexpr-content? . -> . xexpr-content?)
+  (xexpr-elements? . -> . xexpr-elements?)
   (convert-linebreaks (merge-newlines (trim xc whitespace?))))
 
 (module+ test
@@ -72,14 +72,14 @@
 
 ;; apply paragraph tag
 (define/contract (wrap-paragraph xc #:tag [tag 'p]) 
-  ((xexpr-content?) (#:tag symbol?) . ->* . block-xexpr?)
+  ((xexpr-elements?) (#:tag symbol?) . ->* . block-xexpr?)
   (match xc
     [(list (? block-xexpr? bx)) bx] ; leave a single block xexpr alone
-    [else (make-named-xexpr tag empty xc)])) ; otherwise wrap in p tag
+    [else (make-tagged-xexpr tag empty xc)])) ; otherwise wrap in p tag
 
 (module+ test
   (check-equal? (wrap-paragraph '("foo" "bar")) '(p "foo" "bar"))
-  (check-equal? (begin (register-block-name 'para) (wrap-paragraph #:tag 'para '("foo" "bar"))) 
+  (check-equal? (begin (register-block-tag 'para) (wrap-paragraph #:tag 'para '("foo" "bar"))) 
                 '(para "foo" "bar"))
   (check-equal? (wrap-paragraph '((p "bar" "foo"))) '(p "bar" "foo"))
   (check-equal? (wrap-paragraph '((div "bar" "foo") "Hi" )) '(p (div "bar" "foo") "Hi")))
@@ -87,42 +87,44 @@
 
 ;; detect paragraphs
 ;; todo: unit tests
-(define/contract (xexpr-content-proc content)
-  (xexpr-content? . -> . xexpr-content?)
-  (let ([content (prep-paragraph-flow content)]) 
-    (if (ormap paragraph-break? content) ; need this condition to prevent infinite recursion
-        (map wrap-paragraph (splitf-at* content paragraph-break?)) ; split into ¶¶
-        content)))
+(define/contract (xexpr-elements-proc elements)
+  (xexpr-elements? . -> . xexpr-elements?)
+  (let ([elements (prep-paragraph-flow elements)]) 
+    (if (ormap paragraph-break? elements) ; need this condition to prevent infinite recursion
+        (map wrap-paragraph (splitf-at* elements paragraph-break?)) ; split into ¶¶
+        elements)))
 
 
 ;; insert nbsp between last two words
-(define/contract (nonbreaking-last-space x #:nbsp-char [nbsp #\ ])
-  ((named-xexpr?) (#:nbsp-char char?) . ->* . named-xexpr?)
-  (define minimum-word-length (add1 5)) ; add1 to account for final punctuation
-  ; todo: parameterize this, as it will be different for each project
+(define/contract (nonbreaking-last-space x 
+                                         #:nbsp [nbsp (->string #\u00A0)] 
+                                         #:minimum-word-length [minimum-word-length 6])
+  ((tagged-xexpr?) (#:nbsp string? #:minimum-word-length integer?) . ->* . tagged-xexpr?)
+  ;; todo: parameterize this, as it will be different for each project
   (define tags-to-pay-attention-to '(p aside)) ; only apply to paragraphs
   
   (define (replace-last-space str)
     (if (#\space . in . str)
-        (let ([reversed-str-list (reverse (string->list str))])
+        (let ([reversed-str-list (reverse (string->list str))]
+              [reversed-nbsp (reverse (string->list nbsp))])
           (define-values (last-word-chars other-chars) 
             (splitf-at reversed-str-list (λ(i) (not (eq? i #\space)))))
           (list->string (reverse (append last-word-chars 
                                          ; OK for long words to be on their own line.
                                          (if (< (len last-word-chars) minimum-word-length)
                                              ; first char of other-chars will be the space, so use cdr
-                                             (cons nbsp (cdr other-chars))
+                                             (append reversed-nbsp (cdr other-chars))
                                              other-chars)))))
         str))
   
   (define (find-last-word-space x) ; recursively traverse xexpr
     (cond
       [(string? x) (replace-last-space x)] 
-      [(named-xexpr? x) 
-       (let-values([(name attr content) (break-named-xexpr x)])
-         (if (> (length content) 0) ; content is list of xexprs
-             (let-values ([(all-but-last last) (split-at content (sub1 (length content)))]) 
-               (make-named-xexpr name attr `(,@all-but-last ,(find-last-word-space (car last)))))
+      [(tagged-xexpr? x) 
+       (let-values([(tag attr elements) (break-tagged-xexpr x)])
+         (if (> (length elements) 0) ; elements is list of xexprs
+             (let-values ([(all-but-last last) (split-at elements (sub1 (length elements)))]) 
+               (make-tagged-xexpr tag attr `(,@all-but-last ,(find-last-word-space (car last)))))
              x))]
       [else x]))
   
@@ -132,23 +134,26 @@
 
 ;; todo: make some tougher tests, it gets flaky with edge cases
 (module+ test
-  (check-equal? (nonbreaking-last-space '(p "Hi there")) '(p "Hi there")) ; nbsp in between last two words
-  (check-equal? (nonbreaking-last-space '(p "Hi there") #:nbsp-char #\Ø) '(p "HiØthere")) ; but let's make it visible
-  (check-equal? (nonbreaking-last-space '(p "Hi here" (em "ho there")) #:nbsp-char #\Ø) '(p "Hi here" (em "hoØthere")))) 
+  (check-equal? (nonbreaking-last-space '(p "Hi there")) '(p "Hi there")) ; nbsp in between last two words
+  (check-equal? (nonbreaking-last-space '(p "Hi there") #:nbsp "Ø") '(p "HiØthere")) ; but let's make it visible
+  (check-equal? (nonbreaking-last-space '(p "Hi there") #:nbsp "_up_") '(p "Hi_up_there")) 
+  (check-equal? (nonbreaking-last-space '(p "Hi there") #:nbsp "_up_" #:minimum-word-length 3) 
+                '(p "Hi there")) 
+  (check-equal? (nonbreaking-last-space '(p "Hi here" (em "ho there")) #:nbsp "Ø") '(p "Hi here" (em "hoØthere")))) 
 
 
 ; wrap initial quotes for hanging punctuation
 ; todo: improve this
 ; does not handle <p>“<em>thing</em> properly
 (define/contract (wrap-hanging-quotes nx)
-  (named-xexpr? . -> . named-xexpr?)
+  (tagged-xexpr? . -> . tagged-xexpr?)
   (define two-char-string? (λ(i) (and (string? i) (>= (len i) 2))))
-  (define-values (name attr content) (break-named-xexpr nx))
-  (define new-car-content
-    (match (car content)
-      [(? two-char-string? str)
-       (define str-first (get str 0))
-       (define str-rest (get str 1 'end))
+  (define-values (tag attr elements) (break-tagged-xexpr nx))
+  (define new-car-elements
+    (match (car elements)
+      [(? two-char-string? tcs)
+       (define str-first (get tcs 0))
+       (define str-rest (get tcs 1 'end))
        (cond
          [(str-first . in . '("\"" "“"))
           ;; can wrap with any inline tag
@@ -156,10 +161,10 @@
           `(hang-double-quote ,(->string #\“) ,str-rest)]
          [(str-first . in . '("\'" "‘")) 
           `(hang-single-quote ,(->string #\‘) ,str-rest)]
-         [else str])]
-      [(? named-xexpr? nx) (wrap-hanging-quotes nx)]
-      [else (car content)]))
-  (make-named-xexpr name attr (cons new-car-content (cdr content))))
+         [else tcs])]
+      [(? tagged-xexpr? nx) (wrap-hanging-quotes nx)]
+      [else (car elements)]))
+  (make-tagged-xexpr tag attr (cons new-car-elements (cdr elements))))
 
 
 (module+ test
@@ -168,7 +173,7 @@
 
 
 (define (block-xexpr-proc bx)
-  (named-xexpr? . -> . named-xexpr?)
+  (tagged-xexpr? . -> . tagged-xexpr?)
   (wrap-hanging-quotes (nonbreaking-last-space bx)))
 
 
@@ -216,12 +221,12 @@
 
 
 (define (root . items)
-  (named-xexpr? . -> . named-xexpr?)
+  (tagged-xexpr? . -> . tagged-xexpr?)
   (decode (cons 'root items)
-          ;          #:exclude-xexpr-names 'em
-          ;          #:xexpr-name-proc [xexpr-name-proc (λ(x)x)]
+          ;          #:exclude-xexpr-tags 'em
+          ;          #:xexpr-tag-proc [xexpr-tag-proc (λ(x)x)]
           ;          #:xexpr-attr-proc [xexpr-attr-proc (λ(x)x)]
-          #:xexpr-content-proc xexpr-content-proc
+          #:xexpr-elements-proc xexpr-elements-proc
           #:block-xexpr-proc block-xexpr-proc
           ;          #:inline-xexpr-proc [inline-xexpr-proc (λ(x)x)]
           #:string-proc string-proc

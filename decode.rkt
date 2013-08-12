@@ -6,7 +6,8 @@
 (require (prefix-in scribble: (only-in scribble/decode whitespace?)))
 (module+ test (require rackunit))
 
-(require "tools.rkt" "library/html.rkt")
+(require "tools.rkt")
+(require (prefix-in html: "library/html.rkt"))
 (provide (all-defined-out))
 
 
@@ -55,14 +56,14 @@
                 '(p "\n" "foo" "\n\n" "bar" (em "\n\n\n"))))
 
 
-(define block-names block-tags)
-(define (register-block-name tag)
-  (set! block-names (cons tag block-names)))
+(define block-tags html:block-tags)
+(define (register-block-tag tag)
+  (set! block-tags (cons tag block-tags)))
 
 ;; todo: add native support for list-xexpr
 ;; decode triple newlines to list items
 
-;; is the named-xexpr a block element (as opposed to inline)
+;; is the tagged-xexpr a block element (as opposed to inline)
 (define/contract (block-xexpr? x)
   (any/c . -> . boolean?)
   ;; this is a change in behavior since first pollen
@@ -70,7 +71,7 @@
   ;; todo: make sure this is what I want.
   ;; this is, however, more consistent with browser behavior
   ;; (browsers assume that tags are inline by default)
-  ((named-xexpr? x) . and . (->boolean ((named-xexpr-name x) . in . block-names))))
+  ((tagged-xexpr? x) . and . (->boolean ((tagged-xexpr-tag x) . in . block-tags))))
 
 (module+ test
   (check-true (block-xexpr? '(p "foo")))
@@ -129,18 +130,18 @@
 
 ;; function to strip metas (or any tag)
 (define/contract (extract-tag-from-xexpr tag nx)
-  (xexpr-name? named-xexpr? . -> . (values named-xexpr? xexpr-content?))
+  (xexpr-tag? tagged-xexpr? . -> . (values tagged-xexpr? xexpr-elements?))
   (define matches '())
   (define (extract-tag x)
     (cond
-      [(and (named-xexpr? x) (equal? tag (car x)))
+      [(and (tagged-xexpr? x) (equal? tag (car x)))
        ; stash matched tag but return empty value
        (begin
          (set! matches (cons x matches))
          empty)]
-      [(named-xexpr? x) (let-values([(name attr body) (break-named-xexpr x)]) 
-                          (make-named-xexpr name attr (extract-tag body)))]
-      [(xexpr-content? x) (filter-not empty? (map extract-tag x))]
+      [(tagged-xexpr? x) (let-values([(tag attr body) (break-tagged-xexpr x)]) 
+                          (make-tagged-xexpr tag attr (extract-tag body)))]
+      [(xexpr-elements? x) (filter-not empty? (map extract-tag x))]
       [else x]))
   (values (extract-tag nx) (reverse matches))) 
 
@@ -154,42 +155,42 @@
                       '((meta "foo" "bar") (meta "foo2" "bar2") (meta "foo3" "bar3")))))
 ;; decoder wireframe
 (define/contract (decode nx
-                         #:exclude-xexpr-names [excluded-xexpr-names '()]
-                         #:xexpr-name-proc [xexpr-name-proc (λ(x)x)]
+                         #:exclude-xexpr-tags [excluded-xexpr-tags '()]
+                         #:xexpr-tag-proc [xexpr-tag-proc (λ(x)x)]
                          #:xexpr-attr-proc [xexpr-attr-proc (λ(x)x)]
-                         #:xexpr-content-proc [xexpr-content-proc (λ(x)x)]
+                         #:xexpr-elements-proc [xexpr-elements-proc (λ(x)x)]
                          #:block-xexpr-proc [block-xexpr-proc (λ(x)x)]
                          #:inline-xexpr-proc [inline-xexpr-proc (λ(x)x)]
                          #:string-proc [string-proc (λ(x)x)]
                          #:meta-proc [meta-proc (λ(x)x)])
   ;; use xexpr/c for contract because it gives better error messages
-  ((xexpr/c) (#:exclude-xexpr-names (λ(i) (or (symbol? i) (list? i)))
-                                    #:xexpr-name-proc procedure?
+  ((xexpr/c) (#:exclude-xexpr-tags (λ(i) (or (symbol? i) (list? i)))
+                                    #:xexpr-tag-proc procedure?
                                     #:xexpr-attr-proc procedure?
-                                    #:xexpr-content-proc procedure?
+                                    #:xexpr-elements-proc procedure?
                                     #:block-xexpr-proc procedure?
                                     #:inline-xexpr-proc procedure?
                                     #:string-proc procedure?
                                     #:meta-proc procedure?)
-             . ->* . named-xexpr?)
-  (when (not (named-xexpr? nx))
-    (error (format "decode: ~v not a full named-xexpr" nx)))
+             . ->* . tagged-xexpr?)
+  (when (not (tagged-xexpr? nx))
+    (error (format "decode: ~v not a full tagged-xexpr" nx)))
   
   (define metas (list))
   
   (define (&decode x)
     (cond
-      [(named-xexpr? x) (let-values([(name attr content) (break-named-xexpr x)]) 
-                          (if (name . in . (->list excluded-xexpr-names))    
+      [(tagged-xexpr? x) (let-values([(tag attr elements) (break-tagged-xexpr x)]) 
+                          (if (tag . in . (->list excluded-xexpr-tags))    
                               x
                               (let ([decoded-xexpr 
-                                     (apply make-named-xexpr (map &decode (list name attr content)))])
+                                     (apply make-tagged-xexpr (map &decode (list tag attr elements)))])
                                 ((if (block-xexpr? decoded-xexpr)
                                      block-xexpr-proc
                                      inline-xexpr-proc) decoded-xexpr))))]
-      [(xexpr-name? x) (xexpr-name-proc x)]
+      [(xexpr-tag? x) (xexpr-tag-proc x)]
       [(xexpr-attr? x) (xexpr-attr-proc x)]
-      [(xexpr-content? x) (map &decode (xexpr-content-proc x))]
+      [(xexpr-elements? x) (map &decode (xexpr-elements-proc x))]
       [(string? x) (string-proc x)]
       [else x]))
   

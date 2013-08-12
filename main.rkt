@@ -51,12 +51,12 @@
    ;; One of the annoyances of Scribble is its insistence on decoding.
    ;; Better just to pass through the minimally processed data.
    ;; Root is treated as a function. 
-   ;; If it's not defined elsewhere, it just hits #%top and becomes a named-xexpr.
+   ;; If it's not defined elsewhere, it just hits #%top and becomes a tagged-xexpr.
    (define main (apply root
                         (append 
                          (cond
                            [(string? doc) (list doc)] ; doc is probably a list, but might be a single string
-                           [(named-xexpr? doc) (list doc)] ; if it's a single nx, just leave it
+                           [(tagged-xexpr? doc) (list doc)] ; if it's a single nx, just leave it
                            [(list? doc) doc]) ; if it's nx content, splice it in
                          (list `(meta "here" ,inner-here))))) ; append inner-here as meta
    
@@ -67,4 +67,4 @@
    (module+ main
      (print main)
      (displayln "")
-     (displayln (format "named-xexpr? ~a" (named-xexpr? main)))))) 
+     (displayln (format "tagged-xexpr? ~a" (tagged-xexpr? main)))))) 
