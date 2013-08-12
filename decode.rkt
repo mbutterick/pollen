@@ -3,7 +3,6 @@
 (require (only-in racket/format ~a))
 (require (only-in racket/bool nor))
 (require (only-in xml xexpr/c))
-(require (prefix-in scribble: (only-in scribble/decode whitespace?)))
 (module+ test (require rackunit))
 
 (require "tools.rkt")
@@ -92,12 +91,7 @@
 
 
 
-;; recursive whitespace test
-;; Scribble's version misses whitespace in a list
-(define (whitespace? x)
-  (cond
-    [(list? x) (andmap whitespace? x)]
-    [else (scribble:whitespace? x)]))
+
 
 (module+ test
   (check-false (scribble:whitespace? (list "\n" " " "\n"))) ; scribble result is too surprising

@@ -5,6 +5,8 @@
 (require (only-in racket/list empty empty? second filter-not splitf-at takef dropf dropf-right))
 (require (only-in racket/string string-join))
 (require (only-in xml xexpr? xexpr/c))
+(require (prefix-in scribble: (only-in scribble/decode whitespace?)))
+
 
 (require "readability.rkt" "debug.rkt")
 (provide (all-defined-out) (all-from-out "readability.rkt" "debug.rkt"))
@@ -17,6 +19,18 @@
   ;; test the sample paths before using them for other tests
   (define foo-paths (list foo-path foo.txt-path foo.bar-path foo.bar.txt-path))
   (for-each check-equal? (map path->string foo-paths) foo-path-strings))
+
+
+;; recursive whitespace test
+;; Scribble's version misses whitespace in a list
+(define (whitespace? x)
+  (cond
+    [(list? x) (andmap whitespace? x)]
+    [else (scribble:whitespace? x)]))
+
+; make these independent of local includes
+(define (map-topic topic . subtopics)
+  `(,(string->symbol topic) ,@(filter-not whitespace? subtopics)))
 
 
 ;; does path have a certain extension

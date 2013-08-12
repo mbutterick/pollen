@@ -3,12 +3,9 @@
 (require web-server/servlet-env)
 (require web-server/dispatch web-server/dispatchers/dispatch)
 (require racket/rerequire)
-(require (planet mb/pollen/tools))
-(require (planet mb/pollen/world))
-(require (planet mb/pollen/regenerate))
-(require (planet mb/pollen/template))
 (require xml)
 (require xml/path)
+(require "tools.rkt" "world.rkt" "regenerate.rkt" "template.rkt")
 
 (displayln "Pollen server starting...")
 
