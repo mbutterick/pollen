@@ -145,8 +145,10 @@
 ; wrap initial quotes for hanging punctuation
 ; todo: improve this
 ; does not handle <p>“<em>thing</em> properly
-(define/contract (wrap-hanging-quotes nx)
-  (tagged-xexpr? . -> . tagged-xexpr?)
+(define/contract (wrap-hanging-quotes nx 
+                                      #:single-prepend [single-pp '(squo)]
+                                      #:double-prepend  [double-pp '(dquo)])
+  ((tagged-xexpr?) (#:single-prepend list? #:double-prepend list?) . ->* . tagged-xexpr?)
   (define two-char-string? (λ(i) (and (string? i) (>= (len i) 2))))
   (define-values (tag attr elements) (break-tagged-xexpr nx))
   (define new-car-elements
@@ -158,9 +160,9 @@
          [(str-first . in . '("\"" "“"))
           ;; can wrap with any inline tag
           ;; so that linebreak detection etc still works
-          `(hang-double-quote ,(->string #\“) ,str-rest)]
+          `(,@double-pp ,(->string #\“) ,str-rest)]
          [(str-first . in . '("\'" "‘")) 
-          `(hang-single-quote ,(->string #\‘) ,str-rest)]
+          `(,@single-pp ,(->string #\‘) ,str-rest)]
          [else tcs])]
       [(? tagged-xexpr? nx) (wrap-hanging-quotes nx)]
       [else (car elements)]))
@@ -168,8 +170,10 @@
 
 
 (module+ test
-  (check-equal? (wrap-hanging-quotes '(p "\"Hi\" there")) '(p (hang-double-quote "“" "Hi\" there")))
-  (check-equal? (wrap-hanging-quotes '(p "'Hi' there")) '(p (hang-single-quote "‘" "Hi' there"))))
+  (check-equal? (wrap-hanging-quotes '(p "\"Hi\" there")) '(p (dquo "“" "Hi\" there")))
+  (check-equal? (wrap-hanging-quotes '(p "'Hi' there")) '(p (squo "‘" "Hi' there")))
+  (check-equal? (wrap-hanging-quotes '(p "'Hi' there") #:single-prepend '(foo ((bar "ino")))) 
+                '(p (foo ((bar "ino")) "‘" "Hi' there"))))
 
 
 (define (block-xexpr-proc bx)

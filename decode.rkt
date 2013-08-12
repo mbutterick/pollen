@@ -11,16 +11,21 @@
 (provide (all-defined-out))
 
 
-;; split list into list of sublists using test
-;; todo: contract & unit tests
-(define (splitf-at* pieces test)
-  (define (splitf-at*-inner pieces [acc '()]) ; use acc for tail recursion
+;; split list into list of sublists using test-proc
+(define/contract (splitf-at* xs test-proc)
+  (list? procedure? . -> . (λ(i) (match i [(list (? list?) ...) #t][else #f])))
+  (define (&splitf-at* pieces [acc '()]) ; use acc for tail recursion
     (if (empty? pieces) 
         acc
         (let-values ([(item rest) 
-                      (splitf-at (dropf pieces test) (compose1 not test))])
-          (splitf-at*-inner rest `(,@acc ,item)))))
-  (splitf-at*-inner (trim pieces test)))
+                      (splitf-at (dropf pieces test-proc) (compose1 not test-proc))])
+          (&splitf-at* rest `(,@acc ,item)))))
+  (&splitf-at* (trim xs test-proc)))
+
+(module+ test
+  (check-equal? (splitf-at* '(1 2 3 4 5 6) even?) '((1)(3)(5)))
+  (check-equal? (splitf-at* '("foo" " " "bar" "\n" "\n" "ino") whitespace?) '(("foo")("bar")("ino"))))
+
 
 
 ;; Find adjacent newline characters in a list and merge them into one item
@@ -64,20 +69,17 @@
 ;; decode triple newlines to list items
 
 ;; is the tagged-xexpr a block element (as opposed to inline)
+;; tags are inline unless they're registered as block tags.
 (define/contract (block-xexpr? x)
   (any/c . -> . boolean?)
-  ;; this is a change in behavior since first pollen
-  ;; blocks are only the ones on the html block tag list.
-  ;; todo: make sure this is what I want.
-  ;; this is, however, more consistent with browser behavior
-  ;; (browsers assume that tags are inline by default)
   ((tagged-xexpr? x) . and . (->boolean ((tagged-xexpr-tag x) . in . block-tags))))
 
 (module+ test
   (check-true (block-xexpr? '(p "foo")))
   (check-true (block-xexpr? '(div "foo")))
   (check-false (block-xexpr? '(em "foo")))
-  (check-false (block-xexpr? '(barfoo "foo"))))
+  (check-false (block-xexpr? '(barfoo "foo")))
+  (check-true (begin (register-block-tag 'barfoo) (block-xexpr? '(barfoo "foo")))))
 
 
 ;; convert numbers to strings
@@ -121,11 +123,15 @@
 
 ;; test for well-formed meta
 (define/contract (meta-xexpr? x)
-  (any/c . -> . (λ(i) (or (boolean? i) (list? i))))
+  (any/c . -> . boolean?)
   (match x
-    [`(meta ,(? string? key) ,(? string? value)) (list key value)]
+    [`(meta ,(? string? key) ,(? string? value)) #t]
     [else #f]))
 
+(module+ test
+  (check-true (meta-xexpr? '(meta "key" "value")))
+  (check-false (meta-xexpr? '(meta "key" "value" "foo")))
+  (check-false (meta-xexpr? '(meta))))
 
 
 ;; function to strip metas (or any tag)
@@ -140,7 +146,7 @@
          (set! matches (cons x matches))
          empty)]
       [(tagged-xexpr? x) (let-values([(tag attr body) (break-tagged-xexpr x)]) 
-                          (make-tagged-xexpr tag attr (extract-tag body)))]
+                           (make-tagged-xexpr tag attr (extract-tag body)))]
       [(xexpr-elements? x) (filter-not empty? (map extract-tag x))]
       [else x]))
   (values (extract-tag nx) (reverse matches))) 
@@ -165,13 +171,13 @@
                          #:meta-proc [meta-proc (λ(x)x)])
   ;; use xexpr/c for contract because it gives better error messages
   ((xexpr/c) (#:exclude-xexpr-tags (λ(i) (or (symbol? i) (list? i)))
-                                    #:xexpr-tag-proc procedure?
-                                    #:xexpr-attr-proc procedure?
-                                    #:xexpr-elements-proc procedure?
-                                    #:block-xexpr-proc procedure?
-                                    #:inline-xexpr-proc procedure?
-                                    #:string-proc procedure?
-                                    #:meta-proc procedure?)
+                                   #:xexpr-tag-proc procedure?
+                                   #:xexpr-attr-proc procedure?
+                                   #:xexpr-elements-proc procedure?
+                                   #:block-xexpr-proc procedure?
+                                   #:inline-xexpr-proc procedure?
+                                   #:string-proc procedure?
+                                   #:meta-proc procedure?)
              . ->* . tagged-xexpr?)
   (when (not (tagged-xexpr? nx))
     (error (format "decode: ~v not a full tagged-xexpr" nx)))
@@ -181,13 +187,13 @@
   (define (&decode x)
     (cond
       [(tagged-xexpr? x) (let-values([(tag attr elements) (break-tagged-xexpr x)]) 
-                          (if (tag . in . (->list excluded-xexpr-tags))    
-                              x
-                              (let ([decoded-xexpr 
-                                     (apply make-tagged-xexpr (map &decode (list tag attr elements)))])
-                                ((if (block-xexpr? decoded-xexpr)
-                                     block-xexpr-proc
-                                     inline-xexpr-proc) decoded-xexpr))))]
+                           (if (tag . in . (->list excluded-xexpr-tags))    
+                               x
+                               (let ([decoded-xexpr 
+                                      (apply make-tagged-xexpr (map &decode (list tag attr elements)))])
+                                 ((if (block-xexpr? decoded-xexpr)
+                                      block-xexpr-proc
+                                      inline-xexpr-proc) decoded-xexpr))))]
       [(xexpr-tag? x) (xexpr-tag-proc x)]
       [(xexpr-attr? x) (xexpr-attr-proc x)]
       [(xexpr-elements? x) (map &decode (xexpr-elements-proc x))]
