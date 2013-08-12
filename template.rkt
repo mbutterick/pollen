@@ -26,16 +26,19 @@
   (any/c . -> . boolean?)
   (tagged-xexpr? x))
 
-;; insert parents into pmap tree as attrs
+;; recursively processes tree, converting atoms & their parents into xexprs of this shape:
+;; '(atom ((parent "parent")))
 (define/contract (add-parents x [parent empty])
   ((pmap-tree?) (xexpr-tag?) . ->* . pmap-tree?)
   ; disallow main as parent tag
   (when (equal? parent 'map-main) (set! parent empty)) 
   (match x
-    [(list (? xexpr-tag? tag) elements ...) ; next level in hierarchy 
-     (let-values ([(tag attr _) (break-tagged-xexpr (add-parents tag parent))])
+    ;; this pattern signifies next level in hierarchy 
+    ;; where first element is new parent, and rest are children.
+    [(list (? xexpr-tag? next-parent) children ...)
+     (let-values ([(tag attr _) (break-tagged-xexpr (add-parents next-parent parent))])
        ;; xexpr with tag as name, parent as attr, children as elements with tag as next parent
-       (make-tagged-xexpr tag attr (map (λ(e) (add-parents e tag)) elements)))]
+       (make-tagged-xexpr tag attr (map (λ(c) (add-parents c tag)) children)))]
     ;; single map entry: convert to xexpr with parent
     [else (make-tagged-xexpr (->symbol x) (make-xexpr-attr 'parent (->string parent)))]))
 
