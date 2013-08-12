@@ -2,7 +2,7 @@
 (require racket/contract racket/match)
 (require (only-in racket/path filename-extension))
 (require (only-in racket/format ~a))
-(require (only-in racket/list empty empty? second filter-not splitf-at takef dropf dropf-right))
+(require racket/list)
 (require (only-in racket/string string-join))
 (require (only-in xml xexpr? xexpr/c))
 (require (prefix-in scribble: (only-in scribble/decode whitespace?)))
@@ -137,6 +137,36 @@
 ;; normal function won't work for this. Has to be syntax-rule
 (define-syntax-rule (values->list vs)
   (call-with-values (λ() vs) list))
+
+
+;; convert list of alternating keys & values to attr
+;; todo: make contract. Which is somewhat complicated:
+;; list of items, made of xexpr-attr or even numbers of symbol/string pairs
+;; use splitf*-at with xexpr-attr? as test, then check lengths of resulting lists
+(define/contract (make-xexpr-attr . items)
+  (() #:rest (listof (λ(i) (or (xexpr-attr? i) (symbol? i) (string? i)))) . ->* . xexpr-attr?)
+  
+  ;; need this function to make sure that 'foo and "foo" are treated as the same hash key
+  (define (make-attr-list items)
+    (if (empty? items)
+        empty
+        (let ([key (->symbol (first items))]
+              [value (->string (second items))]
+              [rest (drop items 2)])
+          (append (list key value) (make-attr-list rest)))))
+  
+  ;; use flatten to splice xexpr-attrs into list
+  (define attr-hash (apply hash (make-attr-list (flatten items))))
+  `(,@(map (λ(k v) (list k v)) (hash-keys attr-hash) (hash-values attr-hash))))
+
+(module+ test
+  (check-equal? (make-xexpr-attr 'foo "bar") '((foo "bar")))
+  (check-equal? (make-xexpr-attr "foo" 'bar) '((foo "bar")))
+  (check-equal? (make-xexpr-attr "foo" "bar" "goo" "gar") '((foo "bar")(goo "gar")))
+  (check-equal? (make-xexpr-attr '((foo "bar")(goo "gar")) "hee" "haw") 
+                '((foo "bar")(goo "gar")(hee "haw")))
+  (check-equal? (make-xexpr-attr '((foo "bar")(goo "gar")) "foo" "haw") '((foo "haw")(goo "gar")))
+)
 
 
 ;; create tagged-xexpr from parts (opposite of break-tagged-xexpr)
