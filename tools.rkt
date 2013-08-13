@@ -262,6 +262,7 @@
   )
 
 
+;; todo: doc this function
 (define/contract (map-tree proc tree)
   (procedure? list? . -> . list?)
   (cond 

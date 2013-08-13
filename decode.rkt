@@ -94,7 +94,6 @@
 
 
 (module+ test
-  (check-false (scribble:whitespace? (list "\n" " " "\n"))) ; scribble result is too surprising
   (check-true (whitespace? " "))
   (check-false (whitespace? "foo"))
   (check-false (whitespace? " ")) ; a nonbreaking space

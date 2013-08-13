@@ -21,16 +21,17 @@
       (set! files (map remove-ext (filter (λ(x) (has-ext? x POLLEN_SOURCE_EXT)) files)))
       (set! map-main (make-tagged-xexpr 'map-main empty (map path->string files)))))
 
-;; todo: restrict this test
+;; todo: restrict this test 
+;; all names must be unique
 (define/contract (pmap-tree? x)
   (any/c . -> . boolean?)
   (tagged-xexpr? x))
 
-;; recursively processes tree, converting atoms & their parents into xexprs of this shape:
-;; '(atom ((parent "parent")))
+;; recursively processes tree, converting map locations & their parents into xexprs of this shape:
+;; '(location ((parent "parent")))
 (define/contract (add-parents x [parent empty])
   ((pmap-tree?) (xexpr-tag?) . ->* . pmap-tree?)
-  ; disallow main as parent tag
+  ; disallow map-main as parent tag
   (when (equal? parent 'map-main) (set! parent empty)) 
   (match x
     ;; this pattern signifies next level in hierarchy 
@@ -43,105 +44,130 @@
     [else (make-tagged-xexpr (->symbol x) (make-xexpr-attr 'parent (->string parent)))]))
 
 (module+ test
-  (define stt `(map-main "foo" ,(map-topic "one" (map-topic "two" "three"))))
-  (check-equal? (add-parents stt) 
+  (define test-map `(map-main "foo" ,(map-topic "one" (map-topic "two" "three"))))
+  (check-equal? (add-parents test-map) 
                 '(map-main ((parent "")) (foo ((parent ""))) (one ((parent "")) 
                                                                   (two ((parent "one")) (three ((parent "two"))))))))
 
-(define (remove-parents x)  
-  (cond
-    [(list? x) `(,(car x) ,@(map remove-parents (cddr x)))]
+;; remove parents from tree (i.e., just remove attrs)
+;; is not the inverse of add-parents, i.e., you do not get back your original input.
+(define/contract (remove-parents x) 
+  (pmap-tree? . -> . tagged-xexpr?)
+  (match x
+    [(? tagged-xexpr?) (let-values ([(tag attr elements) (break-tagged-xexpr x)])
+                         (make-tagged-xexpr tag empty (remove-parents elements)))]
+    [(? list?) (map remove-parents x)]
     [else x]))
 
+(module+ test
+  (check-equal? (remove-parents 
+                 '(map-main ((parent "")) (foo ((parent ""))) 
+                            (one ((parent "")) (two ((parent "one")) (three ((parent "two")))))))
+                '(map-main (foo) (one (two (three))))))
 
+;; todo: what is this for?
 (define (main->tree main)
   (add-parents main))
 
-
-
-
+;; todo: what is this for? to have default input?
 (define tree (main->tree map-main))
 
-(define (get-parent x [xexpr tree])
-  (if (empty? x)
-      empty
-      (let ([result (se-path* `(,(->symbol x) #:parent) xexpr)])
-        (if (not result) ; se-path* returns #f if nothing found
-            empty ; but don't pass #f up through the chain.
-            (->string result)))))
+
+;; return the parent of a given name
+(define/contract (get-parent element [tree tree])
+  (((λ(i) (or (symbol? i) (string? i)))) (pmap-tree?) . ->* . (or/c string? boolean?)) 
+  (and element (let ([result (se-path* `(,(->symbol element) #:parent) tree)])
+                 (and result (->string result))))) ; se-path* returns #f if nothing found
+
+
+(module+ test
+  (define test-tree (main->tree test-map))
+  (check-equal? (get-parent 'three test-tree) "two")
+  (check-equal? (get-parent "three" test-tree) "two")
+  (check-false (get-parent 'fooburger test-tree)))
+
+
 
 ; algorithm to find children
-(define (get-children x [xexpr tree])
-  (if (empty? x)
-      empty
-      ; find contents of node. 
-      (let ([node-contents (se-path*/list `(,(->symbol x)) xexpr)])
-        ; If there are sublists, just take first element
-        (map (λ(i) (->string (if (list? i) (car i) i))) node-contents))))
+(define/contract (get-children element [tree tree])
+  (((λ(i) (or (symbol? i) (string? i)))) (pmap-tree?) . ->* . (or/c list? boolean?)) 
+  ;; find contents of node. 
+  ;; se-path*/list returns '() if nothing found
+  (and element  (let ([children (se-path*/list `(,(->symbol element)) tree)])
+                  ; If there are sublists, just take first element
+                  (and (not (empty? children)) (map (λ(i) (->string (if (list? i) (car i) i))) children)))))
+
+
+(module+ test
+  (check-equal? (get-children 'one test-tree) (list "two"))
+  (check-equal? (get-children 'two test-tree) (list "three"))
+  (check-false (get-children 'three test-tree))
+  (check-false (get-children 'fooburger test-tree)))
+
+
+;; todo next
 
 ; find all siblings on current level: go up to parent and ask for children
-(define (get-all-siblings x [xexpr tree])
-  (get-children (get-parent x xexpr) xexpr))
+(define (get-all-siblings x [tree tree])
+  (get-children (get-parent x tree) tree))
 
-(define (get-adjacent-siblings x [xexpr tree])
+(define (get-adjacent-siblings x [tree tree])
   (define-values (left right)
-    (splitf-at (get-all-siblings x xexpr) (λ(y) (not (equal? (->string x) (->string y))))))
+    (splitf-at (get-all-siblings x tree) (λ(y) (not (equal? (->string x) (->string y))))))
   ; use cdr because right piece includes x itself at front
   (values left (if (empty? right)
                    empty
                    (cdr right))))
 
-(define (get-left-siblings x [xexpr tree])
-  (define-values (left right) (get-adjacent-siblings x xexpr))
+(define (get-left-siblings x [tree tree])
+  (define-values (left right) (get-adjacent-siblings x tree))
   left)
 
-(define (get-right-siblings x [xexpr tree])
-  (define-values (left right) (get-adjacent-siblings x xexpr))
+(define (get-right-siblings x [tree tree])
+  (define-values (left right) (get-adjacent-siblings x tree))
   right)
 
-(define (get-left x [xexpr tree])
-  (if (empty? (get-left-siblings x xexpr))
+(define (get-left x [tree tree])
+  (if (empty? (get-left-siblings x tree))
       empty
-      (last (get-left-siblings x xexpr))))
+      (last (get-left-siblings x tree))))
 
-(define (get-right x [xexpr tree])
-  (if (empty? (get-right-siblings x xexpr))
+(define (get-right x [tree tree])
+  (if (empty? (get-right-siblings x tree))
       empty
-      (first (get-right-siblings x xexpr))))
+      (first (get-right-siblings x tree))))
 
 
-(define (make-page-sequence [xexpr tree])
+(define (make-page-sequence [tree tree])
   ; use cdr to get rid of body tag at front
   ; todo: calculate exclusions?
-  (map ->string (cdr (flatten (remove-parents xexpr))))) 
+  (map ->string (cdr (flatten (remove-parents tree))))) 
 
-(define (get-adjacent-pages x [xexpr tree])
+(define (get-adjacent-pages x [tree tree])
   (define-values (left right)
-    (splitf-at (make-page-sequence xexpr) (λ(y) (not (equal? (->string x) (->string y))))))
+    (splitf-at (make-page-sequence tree) (λ(y) (not (equal? (->string x) (->string y))))))
   ; use cdr because right piece includes x itself at front
   (values left (if (empty? right)
                    empty
                    (cdr right))))
 
-(define (get-previous-pages x [xexpr tree])
-  (define-values (left right) (get-adjacent-pages x xexpr))
+(define (get-previous-pages x [tree tree])
+  (define-values (left right) (get-adjacent-pages x tree))
   left)
 
-(define (get-next-pages x [xexpr tree])
-  (define-values (left right) (get-adjacent-pages x xexpr))
+(define (get-next-pages x [tree tree])
+  (define-values (left right) (get-adjacent-pages x tree))
   right)
 
-(define (get-previous x [xexpr tree])
-  (if (empty? (get-previous-pages x xexpr))
+(define (get-previous x [tree tree])
+  (if (empty? (get-previous-pages x tree))
       empty
-      (last (get-previous-pages x xexpr))))
+      (last (get-previous-pages x tree))))
 
-(define (get-next x [xexpr tree])
-  (if (empty? (get-next-pages x xexpr))
+(define (get-next x [tree tree])
+  (if (empty? (get-next-pages x tree))
       empty
-      (first (get-next-pages x xexpr))))
-
-
+      (first (get-next-pages x tree))))
 
 
 
