@@ -1,5 +1,6 @@
 #lang racket/base
 (require xml xml/path racket/list racket/string racket/contract racket/match)
+;; todo: why is this require here?
 (require (except-in web-server/templates in))
 (require "tools.rkt" "world.rkt")
 
@@ -44,10 +45,9 @@
     [else (make-tagged-xexpr (->symbol x) (make-xexpr-attr 'parent (->string parent)))]))
 
 (module+ test
-  (define test-map `(map-main "foo" ,(map-topic "one" (map-topic "two" "three"))))
+  (define test-map `(map-main "foo" "bar" ,(map-topic "one" (map-topic "two" "three"))))
   (check-equal? (add-parents test-map) 
-                '(map-main ((parent "")) (foo ((parent "map-main"))) (one ((parent "map-main")) 
-                                                                          (two ((parent "one")) (three ((parent "two"))))))))
+                '(map-main ((parent "")) (foo ((parent "map-main"))) (bar ((parent "map-main"))) (one ((parent "map-main")) (two ((parent "one")) (three ((parent "two"))))))))
 
 ;; remove parents from tree (i.e., just remove attrs)
 ;; is not the inverse of add-parents, i.e., you do not get back your original input.
@@ -61,9 +61,9 @@
 
 (module+ test
   (check-equal? (remove-parents 
-                 '(map-main ((parent "")) (foo ((parent ""))) 
+                 '(map-main ((parent "")) (foo ((parent ""))) (bar ((parent ""))) 
                             (one ((parent "")) (two ((parent "one")) (three ((parent "two")))))))
-                '(map-main (foo) (one (two (three))))))
+                '(map-main (foo) (bar) (one (two (three))))))
 
 ;; todo: what is this for?
 (define (main->tree main)
@@ -89,7 +89,7 @@
   (define test-tree (main->tree test-map))
   (check-equal? (get-parent 'three test-tree) "two")
   (check-equal? (get-parent "three" test-tree) "two")
-  (check-false (get-parent 'fooburger test-tree)))
+  (check-false (get-parent 'nonexistent-name test-tree)))
 
 
 
@@ -101,13 +101,11 @@
                   ; If there are sublists, just take first element
                   (and (not (empty? children)) (map (λ(i) (->string (if (list? i) (car i) i))) children)))))
 
-
 (module+ test
   (check-equal? (get-children 'one test-tree) (list "two"))
   (check-equal? (get-children 'two test-tree) (list "three"))
   (check-false (get-children 'three test-tree))
   (check-false (get-children 'fooburger test-tree)))
-
 
 
 ;; find all siblings on current level: go up to parent and ask for children
@@ -118,75 +116,122 @@
   (get-children (get-parent element tree) tree))
 
 (module+ test
-  (check-equal? (get-all-siblings 'one test-tree) '("foo" "one"))
-  (check-equal? (get-all-siblings 'foo test-tree) '("foo" "one"))
+  (check-equal? (get-all-siblings 'one test-tree) '("foo" "bar" "one"))
+  (check-equal? (get-all-siblings 'foo test-tree) '("foo" "bar" "one"))
   (check-equal? (get-all-siblings 'two test-tree) '("two"))
   (check-false (get-all-siblings 'invalid-key test-tree)))
 
+;; helper function
+(define/contract (get-side-siblings side element [tree tree])
+  ((symbol? map-key?) (pmap-tree?) . ->* . (or/c list? boolean?))
+  (define result ((if (equal? side 'left) takef takef-right) 
+                  (get-all-siblings element tree) 
+                  (λ(i) (not (equal? (->string element) (->string i))))))
+  (and (not (empty? result)) result))
+
 
 ;; siblings to the left of target element (i.e., precede in map order)
-(define/contract (get-left-siblings element [tree tree])
-  ((map-key?) (pmap-tree?) . ->* . (or/c list? boolean?))
-  (takef (get-all-siblings element tree) (λ(i) (not (equal? (->string element) (->string i))))))
+(define (get-left-siblings element [tree tree])
+  (get-side-siblings 'left element tree))
 
 (module+ test
-  (check-equal? (get-left-siblings 'one test-tree) '("foo"))
-  (check-equal? (get-left-siblings 'foo test-tree) '()))
+  (check-equal? (get-left-siblings 'one test-tree) '("foo" "bar"))
+  (check-false (get-left-siblings 'foo test-tree)))
 
 ;; siblings to the right of target element (i.e., follow in map order)
-(define/contract (get-right-siblings element [tree tree])
-  ((map-key?) (pmap-tree?) . ->* . (or/c list? boolean?))
-  (takef-right (get-all-siblings element tree) (λ(i) (not (equal? (->string element) (->string i))))))
+(define (get-right-siblings element [tree tree])
+  (get-side-siblings 'right element tree))
 
 (module+ test
-  (check-equal? (get-right-siblings 'one test-tree) '())
-  (check-equal? (get-right-siblings 'foo test-tree) '("one")))
-
-;;;;;;;;;;;;;;;;;;;
-;; todo next
-
-(define (get-left element [tree tree])
-  (if (empty? (get-left-siblings element tree))
-      empty
-      (last (get-left-siblings element tree))))
-
-(define (get-right element [tree tree])
-  (if (empty? (get-right-siblings element tree))
-      empty
-      (first (get-right-siblings element tree))))
+  (check-false (get-right-siblings 'one test-tree))
+  (check-equal? (get-right-siblings 'foo test-tree) '("bar" "one")))
 
 
-(define (make-page-sequence [tree tree])
-  ; use cdr to get rid of body tag at front
-  ; todo: calculate exclusions?
+;; get element immediately to the left in map
+(define/contract (get-left element [tree tree])
+  ((map-key?) (pmap-tree?) . ->* . (or/c string? boolean?))
+  (define siblings (get-left-siblings element tree))
+  (and siblings (last siblings)))
+
+(module+ test
+  (check-equal? (get-left 'bar test-tree) "foo")
+  (check-false (get-left 'foo test-tree)))
+
+;; get element immediately to the right in map
+(define/contract (get-right element [tree tree])
+  ((map-key?) (pmap-tree?) . ->* . (or/c string? boolean?))
+  (define siblings (get-right-siblings element tree))
+  (and siblings (first siblings)))
+
+(module+ test
+  (check-equal? (get-right 'foo test-tree) "bar")
+  (check-false (get-right 'one test-tree)))
+
+
+;; flatten tree to sequence
+(define/contract (make-page-sequence [tree tree])
+  (pmap-tree? . -> . (listof string?))
+  ; use cdr to get rid of main-map tag at front
   (map ->string (cdr (flatten (remove-parents tree))))) 
 
-(define (get-adjacent-pages element [tree tree])
-  (define-values (left right)
-    (splitf-at (make-page-sequence tree) (λ(y) (not (equal? (->string element) (->string y))))))
-  ; use cdr because right piece includes x itself at front
-  (values left (if (empty? right)
-                   empty
-                   (cdr right))))
+(module+ test
+  (check-equal? (make-page-sequence test-tree) '("foo" "bar" "one" "two" "three")))
 
-(define (get-previous-pages element [tree tree])
-  (define-values (left right) (get-adjacent-pages element tree))
-  left)
+;; helper function for get-previous-pages and get-next-pages
+(define/contract (get-adjacent-pages side element [tree tree])
+  ((map-key? symbol?) (pmap-tree?) . ->* . (or/c list? boolean?))
+  (define result ((if (equal? side 'left) takef takef-right)
+                  (make-page-sequence tree) (λ(y) (not (equal? (->string element) (->string y))))))
+  (and (not (empty? result)) result))
 
+(module+ test
+  (check-equal? (get-adjacent-pages 'left 'one test-tree) '("foo" "bar"))
+  (check-equal? (get-adjacent-pages 'left 'three test-tree) '("foo" "bar" "one" "two"))
+  (check-false (get-adjacent-pages 'left 'foo test-tree)))
+
+
+;; get sequence of earlier pages
+(define/contract (get-previous-pages element [tree tree])
+  ((map-key?) (pmap-tree?) . ->* . (or/c list? boolean?))
+  (get-adjacent-pages 'left element tree))
+
+(module+ test
+  (check-equal? (get-previous-pages 'one test-tree) '("foo" "bar"))
+  (check-equal? (get-previous-pages 'three test-tree) '("foo" "bar" "one" "two"))
+  (check-false (get-previous-pages 'foo test-tree)))
+
+
+;; get sequence of next pages
 (define (get-next-pages element [tree tree])
-  (define-values (left right) (get-adjacent-pages element tree))
-  right)
+   ((map-key?) (pmap-tree?) . ->* . (or/c list? boolean?))
+  (get-adjacent-pages 'right element tree))
 
-(define (get-previous element [tree tree])
-  (if (empty? (get-previous-pages element tree))
-      empty
-      (last (get-previous-pages element tree))))
+(module+ test
+  (check-equal? (get-next-pages 'foo test-tree) '("bar" "one" "two" "three"))
+  (check-equal? (get-next-pages 'one test-tree) '("two" "three"))
+  (check-false (get-next-pages 'three test-tree)))
 
+;; get page immediately previous
+(define/contract (get-previous element [tree tree])
+  ((map-key?) (pmap-tree?) . ->* . (or/c string? boolean?))
+  (define result (get-previous-pages element tree))
+  (and result (last result)))
+
+(module+ test
+  (check-equal? (get-previous 'one test-tree) "bar")
+  (check-equal? (get-previous 'three test-tree) "two")
+  (check-false (get-previous 'foo test-tree)))
+
+;; get page immediately next
 (define (get-next element [tree tree])
-  (if (empty? (get-next-pages element tree))
-      empty
-      (first (get-next-pages element tree))))
+  ((map-key?) (pmap-tree?) . ->* . (or/c string? boolean?))
+  (define result (get-next-pages element tree))
+  (and result (first result)))
 
+(module+ test
+  (check-equal? (get-next 'foo test-tree) "bar")
+  (check-equal? (get-next 'one test-tree) "two")
+  (check-false (get-next 'three test-tree)))
 
-
+;; todo: why is this re-exporting web-server/templates?
 (provide (all-defined-out) (all-from-out web-server/templates))

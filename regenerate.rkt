@@ -1,8 +1,6 @@
 #lang racket
 (require xml/path)
-(require (planet mb/pollen/world))
-(require (planet mb/pollen/tools))
-(require (planet mb/pollen/template))
+(require "world.rkt" "tools.rkt" "map.rkt")
 (require racket/rerequire)
 
 ; hash of mod-dates takes lists of paths as keys,

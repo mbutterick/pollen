@@ -5,7 +5,7 @@
 (require racket/rerequire)
 (require xml)
 (require xml/path)
-(require "tools.rkt" "world.rkt" "regenerate.rkt" "template.rkt")
+(require "tools.rkt" "world.rkt" "regenerate.rkt" "map.rkt")
 
 (displayln "Pollen server starting...")
 
