@@ -32,7 +32,7 @@
 (define/contract (add-parents x [parent empty])
   ((pmap-tree?) (xexpr-tag?) . ->* . pmap-tree?)
   ; disallow map-main as parent tag
-  (when (equal? parent 'map-main) (set! parent empty)) 
+  ;  (when (equal? parent 'map-main) (set! parent empty)) 
   (match x
     ;; this pattern signifies next level in hierarchy 
     ;; where first element is new parent, and rest are children.
@@ -46,8 +46,8 @@
 (module+ test
   (define test-map `(map-main "foo" ,(map-topic "one" (map-topic "two" "three"))))
   (check-equal? (add-parents test-map) 
-                '(map-main ((parent "")) (foo ((parent ""))) (one ((parent "")) 
-                                                                  (two ((parent "one")) (three ((parent "two"))))))))
+                '(map-main ((parent "")) (foo ((parent "map-main"))) (one ((parent "map-main")) 
+                                                                          (two ((parent "one")) (three ((parent "two"))))))))
 
 ;; remove parents from tree (i.e., just remove attrs)
 ;; is not the inverse of add-parents, i.e., you do not get back your original input.
@@ -73,9 +73,14 @@
 (define tree (main->tree map-main))
 
 
+(define/contract (map-key? x)
+  (any/c . -> . boolean?)
+  ;; OK for map-key to be #f
+  (or (symbol? x) (string? x) (eq? x #f)))
+
 ;; return the parent of a given name
 (define/contract (get-parent element [tree tree])
-  (((λ(i) (or (symbol? i) (string? i)))) (pmap-tree?) . ->* . (or/c string? boolean?)) 
+  ((map-key?) (pmap-tree?) . ->* . (or/c string? boolean?)) 
   (and element (let ([result (se-path* `(,(->symbol element) #:parent) tree)])
                  (and result (->string result))))) ; se-path* returns #f if nothing found
 
@@ -88,10 +93,9 @@
 
 
 
-; algorithm to find children
+; get children of a particular element
 (define/contract (get-children element [tree tree])
-  (((λ(i) (or (symbol? i) (string? i)))) (pmap-tree?) . ->* . (or/c list? boolean?)) 
-  ;; find contents of node. 
+  ((map-key?) (pmap-tree?) . ->* . (or/c list? boolean?))  
   ;; se-path*/list returns '() if nothing found
   (and element  (let ([children (se-path*/list `(,(->symbol element)) tree)])
                   ; If there are sublists, just take first element
@@ -105,37 +109,51 @@
   (check-false (get-children 'fooburger test-tree)))
 
 
+
+;; find all siblings on current level: go up to parent and ask for children
+(define/contract (get-all-siblings element [tree tree])
+  ;; this never returns false: element is always a sibling of itself.
+  ;; todo: how to use input value in contract? e.g., to check that element is part of output list
+  ((map-key?) (pmap-tree?) . ->* . (or/c list? boolean?))  
+  (get-children (get-parent element tree) tree))
+
+(module+ test
+  (check-equal? (get-all-siblings 'one test-tree) '("foo" "one"))
+  (check-equal? (get-all-siblings 'foo test-tree) '("foo" "one"))
+  (check-equal? (get-all-siblings 'two test-tree) '("two"))
+  (check-false (get-all-siblings 'invalid-key test-tree)))
+
+
+;; siblings to the left of target element (i.e., precede in map order)
+(define/contract (get-left-siblings element [tree tree])
+  ((map-key?) (pmap-tree?) . ->* . (or/c list? boolean?))
+  (takef (get-all-siblings element tree) (λ(i) (not (equal? (->string element) (->string i))))))
+
+(module+ test
+  (check-equal? (get-left-siblings 'one test-tree) '("foo"))
+  (check-equal? (get-left-siblings 'foo test-tree) '()))
+
+;; siblings to the right of target element (i.e., follow in map order)
+(define/contract (get-right-siblings element [tree tree])
+  ((map-key?) (pmap-tree?) . ->* . (or/c list? boolean?))
+  (takef-right (get-all-siblings element tree) (λ(i) (not (equal? (->string element) (->string i))))))
+
+(module+ test
+  (check-equal? (get-right-siblings 'one test-tree) '())
+  (check-equal? (get-right-siblings 'foo test-tree) '("one")))
+
+;;;;;;;;;;;;;;;;;;;
 ;; todo next
 
-; find all siblings on current level: go up to parent and ask for children
-(define (get-all-siblings x [tree tree])
-  (get-children (get-parent x tree) tree))
-
-(define (get-adjacent-siblings x [tree tree])
-  (define-values (left right)
-    (splitf-at (get-all-siblings x tree) (λ(y) (not (equal? (->string x) (->string y))))))
-  ; use cdr because right piece includes x itself at front
-  (values left (if (empty? right)
-                   empty
-                   (cdr right))))
-
-(define (get-left-siblings x [tree tree])
-  (define-values (left right) (get-adjacent-siblings x tree))
-  left)
-
-(define (get-right-siblings x [tree tree])
-  (define-values (left right) (get-adjacent-siblings x tree))
-  right)
-
-(define (get-left x [tree tree])
-  (if (empty? (get-left-siblings x tree))
+(define (get-left element [tree tree])
+  (if (empty? (get-left-siblings element tree))
       empty
-      (last (get-left-siblings x tree))))
+      (last (get-left-siblings element tree))))
 
-(define (get-right x [tree tree])
-  (if (empty? (get-right-siblings x tree))
+(define (get-right element [tree tree])
+  (if (empty? (get-right-siblings element tree))
       empty
-      (first (get-right-siblings x tree))))
+      (first (get-right-siblings element tree))))
 
 
 (define (make-page-sequence [tree tree])
@@ -143,31 +161,31 @@
   ; todo: calculate exclusions?
   (map ->string (cdr (flatten (remove-parents tree))))) 
 
-(define (get-adjacent-pages x [tree tree])
+(define (get-adjacent-pages element [tree tree])
   (define-values (left right)
-    (splitf-at (make-page-sequence tree) (λ(y) (not (equal? (->string x) (->string y))))))
+    (splitf-at (make-page-sequence tree) (λ(y) (not (equal? (->string element) (->string y))))))
   ; use cdr because right piece includes x itself at front
   (values left (if (empty? right)
                    empty
                    (cdr right))))
 
-(define (get-previous-pages x [tree tree])
-  (define-values (left right) (get-adjacent-pages x tree))
+(define (get-previous-pages element [tree tree])
+  (define-values (left right) (get-adjacent-pages element tree))
   left)
 
-(define (get-next-pages x [tree tree])
-  (define-values (left right) (get-adjacent-pages x tree))
+(define (get-next-pages element [tree tree])
+  (define-values (left right) (get-adjacent-pages element tree))
   right)
 
-(define (get-previous x [tree tree])
-  (if (empty? (get-previous-pages x tree))
+(define (get-previous element [tree tree])
+  (if (empty? (get-previous-pages element tree))
       empty
-      (last (get-previous-pages x tree))))
+      (last (get-previous-pages element tree))))
 
-(define (get-next x [tree tree])
-  (if (empty? (get-next-pages x tree))
+(define (get-next element [tree tree])
+  (if (empty? (get-next-pages element tree))
       empty
-      (first (get-next-pages x tree))))
+      (first (get-next-pages element tree))))
 
 
 

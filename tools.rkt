@@ -156,6 +156,7 @@
           (append (list key value) (make-attr-list rest)))))
   
   ;; use flatten to splice xexpr-attrs into list
+  ;; use hash to ensure keys are unique (later values will overwrite earlier)
   (define attr-hash (apply hash (make-attr-list (flatten items))))
   `(,@(map (λ(k v) (list k v)) (hash-keys attr-hash) (hash-values attr-hash))))
 
