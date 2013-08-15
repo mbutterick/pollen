@@ -1,8 +1,6 @@
 #lang racket/base
 (require racket/match)
-(require (planet mb/pollen/tools)
-         (planet mb/pollen/main-helper))
-
+(require (planet mb/pollen/tools) (planet mb/pollen/main-helper))
 (provide (except-out (all-from-out racket/base) #%module-begin)
          (rename-out [module-begin #%module-begin]))
 
@@ -25,8 +23,7 @@
    (module pollen-inner (planet mb/pollen/doclang2_raw)
      ; use same requires as top of main.rkt 
      ; (can't import them from surrounding module due to submodule rules)
-     (require (planet mb/pollen/tools)
-              (planet mb/pollen/main-helper))
+     (require (planet mb/pollen/tools) (planet mb/pollen/main-helper))
      (require-extras #:provide #t) ; brings in the project require files
      
      ; #%top binding catches ids that aren't defined
@@ -65,6 +62,6 @@
             (rename-out (inner-here here))) ; change identifier back (now safe from macrofication)
    
    (module+ main
-     (print main)
+     main
      (displayln "")
      (displayln (format "tagged-xexpr? ~a" (tagged-xexpr? main)))))) 

@@ -1,17 +1,21 @@
 #lang racket/base
-(require xml xml/path racket/list racket/string racket/contract racket/match)
-;; todo: why is this require here?
-(require (except-in web-server/templates in))
-(require "tools.rkt" "world.rkt")
+(require xml xml/path racket/list racket/string racket/contract racket/match racket/set)
+(require "tools.rkt" "world.rkt" "decode.rkt")
+
+(require "tests/test.pmap")
+;(require "tests/pollen-lang-test.p")
 
 (module+ test (require rackunit))
 
 (module+ test
-  (define tt (main->tree (dynamic-require "tests/test.pmap" POLLEN_ROOT))))
+  main
+;  (define tt (main->tree (dynamic-require "tests/test.pmap" POLLEN_ROOT))))
+ ) 
 
 ; get the values out of the file, or make them up
 (define map-file (build-path START_DIR DEFAULT_MAP))
 (define map-main empty)
+
 
 ;; todo: this ain't a function
 (if (file-exists? map-file)
@@ -26,7 +30,9 @@
 ;; all names must be unique
 (define/contract (map-tree? x)
   (any/c . -> . boolean?)
-  (tagged-xexpr? x))
+  (and (tagged-xexpr? x) 
+       (let ([locations (map ->string (flatten (filter-not-tree whitespace? (remove-attrs x))))])
+         (= (len (apply set locations)) (len locations)))))
 
 ;; recursively processes tree, converting map locations & their parents into xexprs of this shape:
 ;; '(location ((parent "parent")))
@@ -51,13 +57,9 @@
 
 ;; remove parents from tree (i.e., just remove attrs)
 ;; is not the inverse of add-parents, i.e., you do not get back your original input.
-(define/contract (remove-parents x) 
-  (map-tree? . -> . tagged-xexpr?)
-  (match x
-    [(? tagged-xexpr?) (let-values ([(tag attr elements) (break-tagged-xexpr x)])
-                         (make-tagged-xexpr tag empty (remove-parents elements)))]
-    [(? list?) (map remove-parents x)]
-    [else x]))
+(define/contract (remove-parents mt) 
+  (map-tree? . -> . map-tree?)
+  (remove-attrs mt))
 
 (module+ test
   (check-equal? (remove-parents 
@@ -243,5 +245,4 @@
   (check-equal? (next-page 'one test-tree) "two")
   (check-false (next-page 'three test-tree)))
 
-;; todo: why is this re-exporting web-server/templates?
-(provide (all-defined-out) (all-from-out web-server/templates))
+(provide (all-defined-out))

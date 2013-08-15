@@ -30,7 +30,7 @@
 
 ; make these independent of local includes
 (define (map-topic topic . subtopics)
-  `(,(string->symbol topic) ,@(filter-not whitespace? subtopics)))
+  (make-tagged-xexpr (->symbol topic) empty (filter-not whitespace? subtopics)))
 
 
 ;; does path have a certain extension
@@ -95,12 +95,17 @@
 
 
 ;; is it xexpr content?
+(define/contract (xexpr-element? x)
+  (any/c . -> . boolean?)
+  (or (string? x) (tagged-xexpr? x)))
+
+
 (define/contract (xexpr-elements? x)
   (any/c . -> . boolean?)
   (match x
     ;; this is more strict than xexpr definition in xml module
     ;; don't allow symbols or numbers to be part of content
-    [(list elem ...) (andmap (λ(i) (or (string? i) (tagged-xexpr? i))) elem)]
+    [(list elem ...) (andmap xexpr-element? elem)]
     [else #f]))
 
 (module+ test  
@@ -158,16 +163,17 @@
   ;; use flatten to splice xexpr-attrs into list
   ;; use hash to ensure keys are unique (later values will overwrite earlier)
   (define attr-hash (apply hash (make-attr-list (flatten items))))
-  `(,@(map (λ(k v) (list k v)) (hash-keys attr-hash) (hash-values attr-hash))))
+  `(,@(map (λ(k) (list k (get attr-hash k))) 
+           ;; sort needed for predictable results for unit tests
+           (sort (hash-keys attr-hash) (λ(a b) (string<? (->string a) (->string b)))))))
 
 (module+ test
   (check-equal? (make-xexpr-attr 'foo "bar") '((foo "bar")))
   (check-equal? (make-xexpr-attr "foo" 'bar) '((foo "bar")))
   (check-equal? (make-xexpr-attr "foo" "bar" "goo" "gar") '((foo "bar")(goo "gar")))
-  (check-equal? (make-xexpr-attr '((foo "bar")(goo "gar")) "hee" "haw") 
+  (check-equal? (make-xexpr-attr (make-xexpr-attr "foo" "bar" "goo" "gar") "hee" "haw") 
                 '((foo "bar")(goo "gar")(hee "haw")))
-  (check-equal? (make-xexpr-attr '((foo "bar")(goo "gar")) "foo" "haw") '((foo "haw")(goo "gar")))
-)
+  (check-equal? (make-xexpr-attr '((foo "bar")(goo "gar")) "foo" "haw") '((foo "haw")(goo "gar"))))
 
 
 ;; create tagged-xexpr from parts (opposite of break-tagged-xexpr)
@@ -227,6 +233,20 @@
   (check-equal? (tagged-xexpr-elements '(p ((key "value"))"foo" "bar" (em "square"))) 
                 '("foo" "bar" (em "square"))))
 
+
+;; remove all attr blocks (helper function)
+(define/contract (remove-attrs x)
+  (tagged-xexpr? . -> . tagged-xexpr?)
+  (match x
+    [(? tagged-xexpr?) (let-values ([(tag attr elements) (break-tagged-xexpr x)])
+                         (make-tagged-xexpr tag empty (remove-attrs elements)))]
+    [(? list?) (map remove-attrs x)]
+    [else x]))
+
+(module+ test
+  (check-equal? (remove-attrs '(p ((foo "bar")) "hi")) '(p "hi"))
+  (check-equal? (remove-attrs '(p ((foo "bar")) "hi" (p ((foo "bar")) "hi"))) '(p "hi" (p "hi"))))
+  
 
 ;; apply filter proc recursively
 (define/contract (filter-tree proc tree)

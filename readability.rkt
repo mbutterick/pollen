@@ -4,6 +4,7 @@
 (require (only-in racket/format ~a))
 (require (only-in racket/string string-join))
 (require (only-in racket/vector vector-member))
+(require (only-in racket/set set set->list set?))
 (module+ test (require rackunit))
 (require "debug.rkt")
 
@@ -38,21 +39,23 @@
 
 
 ;; general way of coercing to a list
-(define (->list x)
+(define/contract (->list x)
   (any/c . -> . list?)
   (cond 
     [(list? x) x]
     [(vector? x) (vector->list x)]
+    [(set? x) (set->list x)]
     [else (list x)])) 
 
 (module+ test
   (check-equal? (->list '(1 2 3)) '(1 2 3))
   (check-equal? (->list (list->vector '(1 2 3))) '(1 2 3))
+  (check-equal? (->list (set 1 2 3)) '(1 2 3))
   (check-equal? (->list "foo") (list "foo")))
 
 
 ;; general way of coercing to boolean
-(define (->boolean x)
+(define/contract (->boolean x)
   (any/c . -> . boolean?)
   ;; in Racket, everything but #f is true
   (if x #t #f))
@@ -66,16 +69,20 @@
   (check-true (->boolean '(1 2 3))))
 
 
+(define/contract (has-length? x)
+  (any/c . -> . boolean?)
+  (ormap (λ(proc) (proc x)) (list list? string? symbol? vector? hash? set?)))
 
 ;; general way of asking for length
-(define (len x)
-  (any/c . -> . integer?)
+(define/contract (len x)
+  (has-length? . -> . integer?)
   (cond
     [(list? x) (length x)]
     [(string? x) (string-length x)]
     [(symbol? x) (len (->string x))]
-    [(vector? x) (vector-length x)]
+    [(vector? x) (len (->list x))]
     [(hash? x) (len (hash-keys x))]
+    [(set? x) (len (->list x))]
     [else #f]))
 
 (module+ test
@@ -87,18 +94,26 @@
   (check-not-equal? (len 'fo) 3) ; len 2
   (check-equal? (len (list->vector '(1 2 3))) 3)
   (check-not-equal? (len (list->vector '(1 2))) 3) ; len 2
+  (check-equal? (len (set 1 2 3)) 3)
+  (check-not-equal? (len (set 1 2)) 3) ; len 2
   (check-equal? (len (make-hash '((a . 1) (b . 2) (c . 3)))) 3)
   (check-not-equal? (len (make-hash '((a . 1) (b . 2)))) 3)) ; len 2
 
 
 
+(define/contract (sliceable-container? x)
+  (any/c . -> . boolean?)
+  (ormap (λ(proc) (proc x)) (list list? string? symbol? vector?)))
+
+(define/contract (container? x)
+  (any/c . -> . boolean?)
+  (ormap (λ(proc) (proc x)) (list sliceable-container? hash?))) 
+
+
 ;; general way of fetching an item from a container
 (define/contract (get container start [end #f])
-  ((any/c any/c) ((λ(i)(or (integer? i) (and (symbol? i) (equal? i 'end))))) 
-                 . ->* . any/c)
-  
-  (define (sliceable-container? container)
-    (ormap (λ(proc) (proc container)) (list list? string? vector?)))
+  ((container? any/c) ((λ(i)(or (integer? i) (and (symbol? i) (equal? i 'end))))) 
+                      . ->* . any/c)
   
   (set! end
         (if (sliceable-container? container)
@@ -121,8 +136,7 @@
                    [(string? container) (substring container start end)]
                    [(symbol? container) (->symbol (get (->string container) start end))] 
                    ;; for hash, just get item
-                   [(hash? container) (let ([hash-key start])
-                                        (hash-ref container hash-key))]
+                   [(hash? container) (hash-ref container start)]
                    [else #f]))
   
   ;; don't return single-item results inside a list
@@ -152,32 +166,26 @@
 ;; general way of testing for membership (à la Python 'in')
 ;; put item as first arg so function can use infix notation
 ;; (item . in . container)
-(define/contract (in item container)
-  (any/c any/c . -> . any/c)
-  (cond
-    [(list? container) (member item container)] ; returns #f or sublist beginning with item
-    [(vector? container) (vector-member item container)] ; returns #f or zero-based item index
-    [(hash? container) 
-     (and (hash-has-key? container item) (get container item))] ; returns #f or hash value
-    [(string? container) (let ([result ((->string item) . in . (map ->string (string->list container)))])
-                           (if result
-                               (string-join result "")
-                               #f))] ; returns #f or substring beginning with item
-    [(symbol? container) (let ([result ((->string item) . in . (->string container))])
-                           (if result
-                               (->symbol result)
-                               result))] ; returns #f or subsymbol (?!) beginning with item
-    [else #f]))
+(define/contract (in? item container)
+  (any/c any/c . -> . boolean?)
+  (->boolean (cond
+               [(list? container) (member item container)] ; returns #f or sublist beginning with item
+               [(vector? container) (vector-member item container)] ; returns #f or zero-based item index
+               [(hash? container) 
+                (and (hash-has-key? container item) (get container item))] ; returns #f or hash value
+               [(string? container) ((->string item) . in? . (map ->string (string->list container)))] ; returns #f or substring beginning with item
+               [(symbol? container) ((->string item) . in? . (->string container))] ; returns #f or subsymbol (?!) beginning with item
+               [else #f])))
 
 (module+ test
-  (check-equal? (2 . in . '(1 2 3)) '(2 3))
-  (check-false (4 . in . '(1 2 3)))
-  (check-equal? (2 . in . (list->vector '(1 2 3))) 1)
-  (check-false (4 . in . (list->vector '(1 2 3))))
-  (check-equal? ('a . in . (make-hash '((a . 1) (b . 2) (c  . 3)))) 1)
-  (check-false ('x . in . (make-hash '((a . 1) (b . 2) (c  . 3)))))
-  (check-equal? ("o" . in . "foobar") "oobar")
-  (check-false ("z" . in . "foobar"))
-  (check-equal? ('o . in . 'foobar) 'oobar)
-  (check-false ('z . in . 'foobar))
-  (check-false ("F" . in . #\F)))
+  (check-true (2 . in? . '(1 2 3)))
+  (check-false (4 . in? . '(1 2 3)))
+  (check-true (2 . in? . (list->vector '(1 2 3))))
+  (check-false (4 . in? . (list->vector '(1 2 3))))
+  (check-true ('a . in? . (make-hash '((a . 1) (b . 2) (c  . 3)))))
+  (check-false ('x . in? . (make-hash '((a . 1) (b . 2) (c  . 3)))))
+  (check-true ("o" . in? . "foobar"))
+  (check-false ("z" . in? . "foobar"))
+  (check-true ('o . in? . 'foobar))
+  (check-false ('z . in? . 'foobar))
+  (check-false ("F" . in? . #\F)))

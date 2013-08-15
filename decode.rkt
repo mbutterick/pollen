@@ -71,7 +71,7 @@
 ;; tags are inline unless they're registered as block tags.
 (define/contract (block-xexpr? x)
   (any/c . -> . boolean?)
-  ((tagged-xexpr? x) . and . (->boolean ((tagged-xexpr-tag x) . in . block-tags))))
+  ((tagged-xexpr? x) . and . (->boolean ((tagged-xexpr-tag x) . in? . block-tags))))
 
 (module+ test
   (check-true (block-xexpr? '(p "foo")))
@@ -180,7 +180,7 @@
   (define (&decode x)
     (cond
       [(tagged-xexpr? x) (let-values([(tag attr elements) (break-tagged-xexpr x)]) 
-                           (if (tag . in . (->list excluded-xexpr-tags))    
+                           (if (tag . in? . (->list excluded-xexpr-tags))    
                                x
                                (let ([decoded-xexpr 
                                       (apply make-tagged-xexpr (map &decode (list tag attr elements)))])

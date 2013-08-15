@@ -12,6 +12,7 @@
 (register-block-tag 'fooble)
 
 
+
 ;; handle meta tags
 (define/contract (meta-proc meta)
   (meta-xexpr? . -> . tagged-xexpr?)
@@ -104,7 +105,7 @@
   (define tags-to-pay-attention-to '(p aside)) ; only apply to paragraphs
   
   (define (replace-last-space str)
-    (if (#\space . in . str)
+    (if (#\space . in? . str)
         (let ([reversed-str-list (reverse (string->list str))]
               [reversed-nbsp (reverse (string->list nbsp))])
           (define-values (last-word-chars other-chars) 
@@ -128,7 +129,7 @@
              x))]
       [else x]))
   
-  (if ((car x) . in . tags-to-pay-attention-to)
+  (if ((car x) . in? . tags-to-pay-attention-to)
       (find-last-word-space x)
       x))
 
@@ -157,11 +158,11 @@
        (define str-first (get tcs 0))
        (define str-rest (get tcs 1 'end))
        (cond
-         [(str-first . in . '("\"" "“"))
+         [(str-first . in? . '("\"" "“"))
           ;; can wrap with any inline tag
           ;; so that linebreak detection etc still works
           `(,@double-pp ,(->string #\“) ,str-rest)]
-         [(str-first . in . '("\'" "‘")) 
+         [(str-first . in? . '("\'" "‘")) 
           `(,@single-pp ,(->string #\‘) ,str-rest)]
          [else tcs])]
       [(? tagged-xexpr? nx) (wrap-hanging-quotes nx)]
@@ -224,8 +225,8 @@
   (typogrify str))
 
 
-(define (root . items)
-  (tagged-xexpr? . -> . tagged-xexpr?)
+(define/contract (root . items)
+  (() #:rest (listof xexpr-element?) . ->* . tagged-xexpr?)
   (decode (cons 'root items)
           ;          #:exclude-xexpr-tags 'em
           ;          #:xexpr-tag-proc [xexpr-tag-proc (λ(x)x)]
