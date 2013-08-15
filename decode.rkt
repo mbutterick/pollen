@@ -175,7 +175,6 @@
   (when (not (tagged-xexpr? nx))
     (error (format "decode: ~v not a full tagged-xexpr" nx)))
   
-  (define metas (list))
   
   (define (&decode x)
     (cond

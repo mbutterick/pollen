@@ -2,15 +2,7 @@
 (require xml xml/path racket/list racket/string racket/contract racket/match racket/set)
 (require "tools.rkt" "world.rkt" "decode.rkt")
 
-(require "tests/test.pmap")
-;(require "tests/pollen-lang-test.p")
-
 (module+ test (require rackunit))
-
-(module+ test
-  main
-;  (define tt (main->tree (dynamic-require "tests/test.pmap" POLLEN_ROOT))))
- ) 
 
 ; get the values out of the file, or make them up
 (define map-file (build-path START_DIR DEFAULT_MAP))
@@ -31,7 +23,10 @@
 (define/contract (map-tree? x)
   (any/c . -> . boolean?)
   (and (tagged-xexpr? x) 
-       (let ([locations (map ->string (flatten (filter-not-tree whitespace? (remove-attrs x))))])
+       ;; all locations must be unique. Check this by converting x to a list of strings ...
+       (let ([locations (map ->string (flatten (remove-attrs x)))])
+         ;; and then coercing to set (because set impliedly enforces uniqueness)
+         ;; If set has same number of elements as original, all are unique.
          (= (len (apply set locations)) (len locations)))))
 
 ;; recursively processes tree, converting map locations & their parents into xexprs of this shape:
@@ -68,8 +63,16 @@
                 '(map-main (foo) (bar) (one (two (three))))))
 
 ;; todo: what is this for?
-(define (main->tree main)
-  (add-parents main))
+(define/contract (main->tree main)
+  (tagged-xexpr? . -> . map-tree?)
+  (let-values ([(nx metas) (extract-tag-from-xexpr 'meta main)])
+      (add-parents nx)))
+
+(module+ test
+  (define mt-map `(map-main "foo" "bar" ,(map-topic "one" (map-topic "two" "three")) (meta "foo" "bar")))
+  (check-equal? (main->tree mt-map) 
+                '(map-main ((parent "")) (foo ((parent "map-main"))) (bar ((parent "map-main"))) (one ((parent "map-main")) (two ((parent "one")) (three ((parent "two"))))))))
+
 
 ;; todo: what is this for? to have default input?
 (define tree (main->tree map-main))
