@@ -46,6 +46,14 @@
   (check-false (has-ext? foo.bar.txt-path 'doc))) ; wrong extension
 
 
+;; put extension on path
+(define/contract (add-ext path ext)
+  (path? (or/c symbol? string?) . -> . path?)
+  (string->path (string-append (->string path) "." (->string ext))))
+
+(module+ test
+  (check-equal? (add-ext (string->path "foo") "txt") (string->path "foo.txt")))
+
 ;; take one extension off path
 (define/contract (remove-ext path)
   (path? . -> . path?)

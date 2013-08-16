@@ -24,7 +24,7 @@
 (define (get-query-value url key)
   ; query is parsed as list of pairs, key is symbol, value is string
   ; '((key . "value") ... )
-  (let ([result (memf (ƒ(x) (=str (car x) key)) (url-query url))])
+  (let ([result (memf (λ(x) (equal? (car x) key)) (url-query url))])
     (if result
         (cdar result) ; second value of first result
         result)))

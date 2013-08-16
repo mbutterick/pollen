@@ -16,12 +16,12 @@
 
 (define (mod-date . paths) 
   (set! paths (flatten paths))
-  (when (all file-exists? paths)
+  (when (andmap file-exists? paths)
     (map file-or-directory-modify-seconds paths)))
 
 (define (log-refresh . paths)
   (set! paths (flatten paths))
-  (change mod-dates paths (mod-date paths)))
+  (hash-set! mod-dates paths (mod-date paths)))
 
 (define (source-needs-refresh? . paths)
   (set! paths (flatten paths))
@@ -31,7 +31,7 @@
 ; when you want to generate everything fresh, but not force everything
 (define (reset-mod-dates)
   (let [(keys (hash-keys mod-dates))]
-    (map (ƒ(k) (hash-remove mod-dates k)) keys)))
+    (map (λ(k) (hash-remove mod-dates k)) keys)))
 
 ; helper functions for regenerate functions
 (define pollen-file-root (current-directory))
@@ -41,6 +41,11 @@
     (displayln (format "Regenerating: ~a" f))
     (regenerate path)))
 
+;; todo: maybe move this tools.rkt as a utility
+(define (filename-of path)
+  (let-values ([(dir filename ignored) (split-path path)])
+    filename))
+
 (define (regenerate-pmap-pages pmap)
   (define pmap-sequence 
     (make-page-sequence (main->tree (dynamic-require pmap 'main))))
@@ -48,7 +53,7 @@
   (for-each regenerate-file pmap-sequence))
 
 (define (get-pollen-files-with-ext ext)
-  (filter (ƒ(f) (has-ext? f ext)) (directory-list pollen-file-root)))
+  (filter (λ(f) (has-ext? f ext)) (directory-list pollen-file-root)))
 
 ; burn all files
 (define (regenerate-all-files)
@@ -64,19 +69,44 @@
 
 
 
+(define (preproc-source? path)
+  (has-ext? path POLLEN_PREPROC_EXT))
+
+(define (make-preproc-in-path path)
+  (add-ext path POLLEN_PREPROC_EXT))
+
+(define (make-preproc-out-path path)
+  (remove-ext path))
+
+(define (has-preproc-source? path)
+  (file-exists? (make-preproc-in-path path)))
+
+(define (pollen-source? path)
+  (has-ext? path POLLEN_SOURCE_EXT))
+
+(define (make-pollen-source-path thing)
+  (add-ext (remove-ext (->path thing)) POLLEN_SOURCE_EXT))
+
+(define (has-pollen-source? path)
+  (file-exists? (make-pollen-source-path path)))  
+
+(define (needs-preproc? path)
+  ; it's a preproc source file, or a file that's the result of a preproc source
+  (ormap (λ(proc) (proc path)) (list preproc-source? has-preproc-source?)))
+
+(define (needs-template? path)
+  ; it's a pollen source file
+  ; or a file (e.g., html) that has a pollen source file
+  (ormap (λ(proc) (proc path)) (list pollen-source? has-pollen-source?)))
+
+(define (pmap-source? path)
+  (has-ext? path POLLEN_MAP_EXT))
+
 (define (regenerate path #:force [force #f])
   ; dispatches path-in to the right place
   
-  (define (needs-preproc? path)
-    ; it's a preproc source file, or a file that's the result of a preproc source
-    (any (list preproc-source? has-preproc-source?) path))
   
-  (define (needs-template? path)
-    ; it's a pollen source file
-    ; or a file (e.g., html) that has a pollen source file
-    (any (list pollen-source? has-pollen-source?) path))
-  
-  (let ([path (as-complete-path path)])
+  (let ([path (->complete-path path)])
     (cond
       [(needs-preproc? path) (do-preproc path #:force force)]
       [(needs-template? path) (do-template path #:force force)]
@@ -85,7 +115,7 @@
 
 
 (define (regenerate-message path)
-  (message "Regenerated:" (as-string (file-name-from-path path))))
+  (message "Regenerated:" (->string (file-name-from-path path))))
 
 (define (do-preproc path #:force [force #f])
   ; set up preproc-in-path & preproc-out-path values
@@ -113,7 +143,7 @@
   ; take full path or filename
   ; return full path of templated file
   
-  (define source-path (as-complete-path 
+  (define source-path (->complete-path 
                        (if (pollen-source? path) 
                            path
                            (make-pollen-source-path path))))
@@ -141,6 +171,11 @@
     ; todo: template file in body may not refer to a file that exists.
     ; todo: consider whether file-was-reloaded could change metas
     ; (because here, I'm retrieving them from existing source)
+    
+    ;;;;;;;;;;;;;;
+    ;; todo: next
+    ;;;;;;;;;;;;;;
+    
     (define meta-hash (make-meta-hash (put source-path)))
     (set! template-name (hash-ref-or meta-hash TEMPLATE_META_KEY DEFAULT_TEMPLATE)))
   (define template-path (build-path source-dir template-name))

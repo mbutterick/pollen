@@ -6,12 +6,12 @@
                                 ""
                                 (vector-ref (current-command-line-arguments) 0))])
                    (case arg
-                     [("start") 
-                      `(require (planet mb/pollen/server))]
+                     [("serve") 
+                      `(require "server.rkt")]
                      [("regenerate")  
                       `(begin
                          (displayln "Regenerate all...")
-                         (require (planet mb/pollen/regenerate))
+                         (require "regenerate.rkt")
                          (regenerate-all-files))]
                      [("clone")
                       (let ([target-path (if (> (vector-length (current-command-line-arguments)) 1)
@@ -21,7 +21,7 @@
                         `(begin
                            (displayln "Clone & bone...")
                            (require racket/file)
-                           (require (planet mb/pollen/tools))
+                           (require "tools.rkt")
                            
                            (define (pollen-related-file? file)
                              (any (list

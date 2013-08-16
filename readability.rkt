@@ -37,6 +37,14 @@
   ; todo: on bad input, it will pop a string error rather than symbol error
   (string->symbol (->string thing))) 
 
+;; general way of coercing to path
+(define (->path thing)
+  ; todo: on bad input, it will pop a string error rather than symbol error
+  (string->path (->string thing)))
+
+(define (->complete-path thing)
+  (path->complete-path (->path thing)))
+
 
 ;; general way of coercing to a list
 (define/contract (->list x)
@@ -105,14 +113,14 @@
   (any/c . -> . boolean?)
   (ormap (λ(proc) (proc x)) (list list? string? symbol? vector?)))
 
-(define/contract (container? x)
+(define/contract (gettable-container? x)
   (any/c . -> . boolean?)
   (ormap (λ(proc) (proc x)) (list sliceable-container? hash?))) 
 
 
 ;; general way of fetching an item from a container
 (define/contract (get container start [end #f])
-  ((container? any/c) ((λ(i)(or (integer? i) (and (symbol? i) (equal? i 'end))))) 
+  ((gettable-container? any/c) ((λ(i)(or (integer? i) (and (symbol? i) (equal? i 'end))))) 
                       . ->* . any/c)
   
   (set! end
