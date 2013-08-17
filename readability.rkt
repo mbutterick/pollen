@@ -121,7 +121,7 @@
 ;; general way of fetching an item from a container
 (define/contract (get container start [end #f])
   ((gettable-container? any/c) ((λ(i)(or (integer? i) (and (symbol? i) (equal? i 'end))))) 
-                      . ->* . any/c)
+                               . ->* . any/c)
   
   (set! end
         (if (sliceable-container? container)
@@ -197,3 +197,4 @@
   (check-true ('o . in? . 'foobar))
   (check-false ('z . in? . 'foobar))
   (check-false ("F" . in? . #\F)))
+

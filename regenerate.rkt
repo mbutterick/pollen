@@ -69,39 +69,6 @@
 
 
 
-(define (preproc-source? path)
-  (has-ext? path POLLEN_PREPROC_EXT))
-
-(define (make-preproc-in-path path)
-  (add-ext path POLLEN_PREPROC_EXT))
-
-(define (make-preproc-out-path path)
-  (remove-ext path))
-
-(define (has-preproc-source? path)
-  (file-exists? (make-preproc-in-path path)))
-
-(define (pollen-source? path)
-  (has-ext? path POLLEN_SOURCE_EXT))
-
-(define (make-pollen-source-path thing)
-  (add-ext (remove-ext (->path thing)) POLLEN_SOURCE_EXT))
-
-(define (has-pollen-source? path)
-  (file-exists? (make-pollen-source-path path)))  
-
-(define (needs-preproc? path)
-  ; it's a preproc source file, or a file that's the result of a preproc source
-  (ormap (λ(proc) (proc path)) (list preproc-source? has-preproc-source?)))
-
-(define (needs-template? path)
-  ; it's a pollen source file
-  ; or a file (e.g., html) that has a pollen source file
-  (ormap (λ(proc) (proc path)) (list pollen-source? has-pollen-source?)))
-
-(define (pmap-source? path)
-  (has-ext? path POLLEN_MAP_EXT))
-
 (define (regenerate path #:force [force #f])
   ; dispatches path-in to the right place
   
@@ -176,8 +143,10 @@
     ;; todo: next
     ;;;;;;;;;;;;;;
     
-    (define meta-hash (make-meta-hash (put source-path)))
-    (set! template-name (hash-ref-or meta-hash TEMPLATE_META_KEY DEFAULT_TEMPLATE)))
+    (define metas (dynamic-require source-path 'metas))
+    (set! template-name (if (TEMPLATE_META_KEY . in? . metas)
+                            (get metas TEMPLATE_META_KEY)
+                            DEFAULT_TEMPLATE)))
   (define template-path (build-path source-dir template-name))
   ; refresh template (it might have its own p file)
   (regenerate template-path #:force force)

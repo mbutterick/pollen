@@ -20,7 +20,7 @@
    
    ; doclang2_raw is a clone of scribble/doclang2 with decode disabled
    ; helpful because it collects & exports content via 'doc
-   (module pollen-inner (planet mb/pollen/doclang2_raw)
+   (module pollen-inner (planet mb/pollen/lang/doclang2_raw)
      ; use same requires as top of main.rkt 
      ; (can't import them from surrounding module due to submodule rules)
      (require (planet mb/pollen/tools) (planet mb/pollen/main-helper))
@@ -82,4 +82,4 @@
      (displayln "; pollen 'metas")
      (displayln ";-------------------------")
      metas
-     ))) 
+     )))

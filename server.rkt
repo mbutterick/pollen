@@ -51,8 +51,8 @@
   (define path (build-path pollen-file-root filename))
   (regenerate path)
   (dynamic-rerequire path)
-  (define-from path body)
-  body)
+  (define main (dynamic-require path 'main))
+  main)
 
 
 (define (format-as-code data)
@@ -73,19 +73,19 @@
 (define (route-index req)   
   ; set up filter functions by mapping a function-maker for each file type
   (define-values (pollen-file? preproc-file? pmap-file?)
-    (apply values (map (ƒ(ext)(ƒ(f)(has-ext? f ext))) (list POLLEN_SOURCE_EXT POLLEN_PREPROC_EXT POLLEN_MAP_EXT))))
+    (apply values (map (λ(ext)(λ(f)(has-ext? f ext))) (list POLLEN_SOURCE_EXT POLLEN_PREPROC_EXT POLLEN_MAP_EXT))))
   (define (template-file? x)
     (define-values (dir name ignore) (split-path x))
-    (=str (get (as-string name) 0) TEMPLATE_FILE_PREFIX))
+    (equal? (get (->string name) 0) TEMPLATE_FILE_PREFIX))
   ; get lists of files by mapping a filter function for each file type
   (define-values (pollen-files preproc-files pmap-files template-files)
-    (apply values (map (ƒ(test) (filter test (directory-list pollen-file-root))) (list pollen-file? preproc-file? pmap-file? template-file?))))
+    (apply values (map (λ(test) (filter test (directory-list pollen-file-root))) (list pollen-file? preproc-file? pmap-file? template-file?))))
   ; the actual post-p files may not have been generated yet
-  (define post-preproc-files (map (ƒ(path) (remove-ext path)) preproc-files))
+  (define post-preproc-files (map (λ(path) (remove-ext path)) preproc-files))
   ; make a combined list of p-files and post-p files
   (define all-preproc-files (sort (append preproc-files post-preproc-files) #:key path->string string<?))
   
-  (define post-pollen-files (map (ƒ(path) (add-ext (remove-ext path) 'html)) pollen-files))
+  (define post-pollen-files (map (λ(path) (add-ext (remove-ext path) 'html)) pollen-files))
   (define all-pollen-files (sort (append pollen-files post-pollen-files) #:key path->string string<?))
   
   
@@ -95,9 +95,9 @@
                [preproc-source (add-ext file POLLEN_PREPROC_EXT)]
                [file-string (path->string file)]
                [name (case type 
-                       ['direct (str file-string)]
+                       ['direct (->string file-string)]
                        ['preproc-source "source"]
-                       [else (str type)])]
+                       [else (->string type)])]
                [target (case type
                          ['direct name]
                          [(source xexpr) (format "/~a/~a" type source)]
@@ -107,7 +107,7 @@
         `(td (a ((href ,target)) ,name))))
     `(tr ,(make-link-cell 'direct) ,@(map make-link-cell routes)))
   
-  (if (all empty? (list pmap-files all-pollen-files all-preproc-files template-files))
+  (if (andmap empty? (list pmap-files all-pollen-files all-preproc-files template-files))
       (response/xexpr '(body "No files yet. Get to work!"))
       (response/xexpr 
        `(body 
@@ -115,12 +115,12 @@
                 "td:hover {background: #eee}")
          (table ((style "font-family:Concourse T3;font-size:115%"))
                 ; options for pmap files and template files
-                ,@(map (ƒ(file) (make-file-row file '(raw))) (append pmap-files template-files))
+                ,@(map (λ(file) (make-file-row file '(raw))) (append pmap-files template-files))
                 ; options for pollen files
-                ,@(map (ƒ(file) (make-file-row file '(raw source xexpr force))) post-pollen-files)
+                ,@(map (λ(file) (make-file-row file '(raw source xexpr force))) post-pollen-files)
                 ; options for preproc files
-                ; branching in ƒ is needed so these files can be interleaved on the list
-                ,@(map (ƒ(file) (make-file-row file '(raw preproc-source))) post-preproc-files))))))
+                ; branching in λ is needed so these files can be interleaved on the list
+                ,@(map (λ(file) (make-file-row file '(raw preproc-source))) post-preproc-files))))))
 
 
 (displayln "Ready to rock")

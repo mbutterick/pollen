@@ -6,20 +6,27 @@
 (module+ test (require rackunit))
 
 (require "tools.rkt")
-(require (prefix-in html: "library/html.rkt"))
 (provide (all-defined-out))
 
-
 ;; split list into list of sublists using test-proc
-(define/contract (splitf-at* xs test-proc)
-  (list? procedure? . -> . (λ(i) (match i [(list (? list?) ...) #t][else #f])))
-  (define (&splitf-at* pieces [acc '()]) ; use acc for tail recursion
-    (if (empty? pieces) 
-        acc
+(define/contract (splitf-at* xs split-test)
+  ;; todo: better error message when split-test is not a predicate
+  (list? predicate/c . -> . (listof list?))
+  (define (&splitf-at* xs [acc '()]) ; use acc for tail recursion
+    (if (empty? xs) 
+        ;; reverse because accumulation is happening backward 
+        ;; (because I'm using cons to push latest match onto front of list)
+        (reverse acc)
         (let-values ([(item rest) 
-                      (splitf-at (dropf pieces test-proc) (compose1 not test-proc))])
-          (&splitf-at* rest `(,@acc ,item)))))
-  (&splitf-at* (trim xs test-proc)))
+                      ;; drop matching elements from front
+                      ;; then split on nonmatching 
+                      ;; = nonmatching item + other elements (which will start with matching)
+                      (splitf-at (dropf xs split-test) (compose1 not split-test))])
+          ;; recurse, and store new item in accumulator
+          (&splitf-at* rest (cons item acc)))))
+  
+  ;; trim off elements matching split-test
+  (&splitf-at* (trim xs split-test)))
 
 (module+ test
   (check-equal? (splitf-at* '(1 2 3 4 5 6) even?) '((1)(3)(5)))
@@ -60,25 +67,9 @@
                 '(p "\n" "foo" "\n\n" "bar" (em "\n\n\n"))))
 
 
-(define block-tags html:block-tags)
-(define (register-block-tag tag)
-  (set! block-tags (cons tag block-tags)))
 
 ;; todo: add native support for list-xexpr
 ;; decode triple newlines to list items
-
-;; is the tagged-xexpr a block element (as opposed to inline)
-;; tags are inline unless they're registered as block tags.
-(define/contract (block-xexpr? x)
-  (any/c . -> . boolean?)
-  ((tagged-xexpr? x) . and . (->boolean ((tagged-xexpr-tag x) . in? . block-tags))))
-
-(module+ test
-  (check-true (block-xexpr? '(p "foo")))
-  (check-true (block-xexpr? '(div "foo")))
-  (check-false (block-xexpr? '(em "foo")))
-  (check-false (block-xexpr? '(barfoo "foo")))
-  (check-true (begin (register-block-tag 'barfoo) (block-xexpr? '(barfoo "foo")))))
 
 
 ;; convert numbers to strings
@@ -88,19 +79,6 @@
 
 (module+ test
   (check-equal? (stringify '(p 1 2 "foo" (em 4 "bar"))) '(p "1" "2" "foo" (em "4" "bar"))))
-
-
-
-
-
-(module+ test
-  (check-true (whitespace? " "))
-  (check-false (whitespace? "foo"))
-  (check-false (whitespace? " ")) ; a nonbreaking space
-  (check-true (whitespace? "\n \n"))
-  (check-true (whitespace? (list "\n" " " "\n")))
-  (check-true (whitespace? (list "\n" " " "\n" (list "\n" "\n")))))
-
 
 
 ;; trim from beginning & end of list
@@ -113,9 +91,6 @@
   (check-equal? (trim (list 1 3 2 4 5 6 8 9 13) odd?) '(2 4 5 6 8)))
 
 
-
-
-
 ;; decoder wireframe
 (define/contract (decode nx
                          #:exclude-xexpr-tags [excluded-xexpr-tags '()]
@@ -126,7 +101,7 @@
                          #:inline-xexpr-proc [inline-xexpr-proc (λ(x)x)]
                          #:string-proc [string-proc (λ(x)x)])
   ;; use xexpr/c for contract because it gives better error messages
-  ((xexpr/c) (#:exclude-xexpr-tags (λ(i) (or (symbol? i) (list? i)))
+  ((xexpr/c) (#:exclude-xexpr-tags list?
                                    #:xexpr-tag-proc procedure?
                                    #:xexpr-attr-proc procedure?
                                    #:xexpr-elements-proc procedure?
@@ -141,18 +116,20 @@
   (define (&decode x)
     (cond
       [(tagged-xexpr? x) (let-values([(tag attr elements) (break-tagged-xexpr x)]) 
-                           (if (tag . in? . (->list excluded-xexpr-tags))    
-                               x
-                               (let ([decoded-xexpr 
-                                      (apply make-tagged-xexpr (map &decode (list tag attr elements)))])
+                           (if (tag . in? . excluded-xexpr-tags)    
+                               x ; let x pass through untouched
+                               (let ([decoded-xexpr (apply make-tagged-xexpr 
+                                             (map &decode (list tag attr elements)))])
                                  ((if (block-xexpr? decoded-xexpr)
                                       block-xexpr-proc
                                       inline-xexpr-proc) decoded-xexpr))))]
       [(xexpr-tag? x) (xexpr-tag-proc x)]
       [(xexpr-attr? x) (xexpr-attr-proc x)]
+      ;; need this for operations that may depend on context in list
       [(xexpr-elements? x) (map &decode (xexpr-elements-proc x))]
       [(string? x) (string-proc x)]
-      [else x]))
+      ;; if something has made it through undecoded, that's a problem
+      [else (error "Can't decode" x)]))
   
   
   (&decode nx))
