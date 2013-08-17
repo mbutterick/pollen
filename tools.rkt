@@ -94,6 +94,7 @@
     [else #f]))
 
 (module+ test  
+  (check-true (xexpr-attr? empty))
   (check-true (xexpr-attr? '((key "value"))))
   (check-true (xexpr-attr? '((key "value") (foo "bar"))))
   (check-false (xexpr-attr? '((key "value") "foo" "bar"))) ; content, not attr
@@ -184,6 +185,9 @@
   (check-equal? (make-xexpr-attr '((foo "bar")(goo "gar")) "foo" "haw") '((foo "haw")(goo "gar"))))
 
 
+
+
+
 ;; create tagged-xexpr from parts (opposite of break-tagged-xexpr)
 (define/contract (make-tagged-xexpr name [attr empty] [content empty])
   ((symbol?) (xexpr-attr? xexpr-elements?) . ->* . tagged-xexpr?)
@@ -254,7 +258,7 @@
 (module+ test
   (check-equal? (remove-attrs '(p ((foo "bar")) "hi")) '(p "hi"))
   (check-equal? (remove-attrs '(p ((foo "bar")) "hi" (p ((foo "bar")) "hi"))) '(p "hi" (p "hi"))))
-  
+
 
 ;; apply filter proc recursively
 (define/contract (filter-tree proc tree)
@@ -301,3 +305,53 @@
 (module+ test
   (check-equal? (map-tree (λ(i) (if (number? i) (* 2 i) i)) '(p 1 2 3 (em 4 5))) '(p 2 4 6 (em 8 10)))
   (check-equal? (map-tree (λ(i) (if (symbol? i) 'foo i)) '(p 1 2 3 (em 4 5))) '(foo 1 2 3 (foo 4 5))))
+
+
+;; function to strip metas (or any tag)
+(define/contract (extract-tag-from-xexpr tag nx)
+  (xexpr-tag? tagged-xexpr? . -> . (values tagged-xexpr? xexpr-elements?))
+  (define matches '())
+  (define (extract-tag x)
+    (cond
+      [(and (tagged-xexpr? x) (equal? tag (car x)))
+       ; stash matched tag but return empty value
+       (begin
+         (set! matches (cons x matches))
+         empty)]
+      [(tagged-xexpr? x) (let-values([(tag attr body) (break-tagged-xexpr x)]) 
+                           (make-tagged-xexpr tag attr (extract-tag body)))]
+      [(xexpr-elements? x) (filter-not empty? (map extract-tag x))]
+      [else x]))
+  (values (extract-tag nx) (reverse matches))) 
+
+
+(module+ test
+  (define x '(root (meta "foo" "bar") "hello" "world" (meta "foo2" "bar2") 
+                   (em "goodnight" "moon" (meta "foo3" "bar3"))))
+  
+  (check-equal? (values->list (extract-tag-from-xexpr 'meta x)) 
+                (list '(root "hello" "world" (em "goodnight" "moon"))
+                      '((meta "foo" "bar") (meta "foo2" "bar2") (meta "foo3" "bar3")))))
+
+;; test for well-formed meta
+(define/contract (meta-xexpr? x)
+  (any/c . -> . boolean?)
+  (match x
+    [`(meta ,(? string? key) ,(? string? value)) #t]
+    [else #f]))
+
+(module+ test
+  (check-true (meta-xexpr? '(meta "key" "value")))
+  (check-false (meta-xexpr? '(meta "key" "value" "foo")))
+  (check-false (meta-xexpr? '(meta))))
+
+
+;; convert list of meta tags to a hash for export from pollen document.
+;; every meta is form (meta "key" "value") (enforced by contract)
+(define/contract (make-meta-hash mxs)
+  ((listof meta-xexpr?) . -> . hash?)
+  (apply hash (append-map tagged-xexpr-elements mxs)))
+
+(module+ test
+  (check-equal? (make-meta-hash '((meta "foo" "bar")(meta "hee" "haw")))
+                (hash "foo" "bar" "hee" "haw")))

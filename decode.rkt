@@ -114,44 +114,8 @@
 
 
 
-;; test for well-formed meta
-(define/contract (meta-xexpr? x)
-  (any/c . -> . boolean?)
-  (match x
-    [`(meta ,(? string? key) ,(? string? value)) #t]
-    [else #f]))
-
-(module+ test
-  (check-true (meta-xexpr? '(meta "key" "value")))
-  (check-false (meta-xexpr? '(meta "key" "value" "foo")))
-  (check-false (meta-xexpr? '(meta))))
 
 
-;; function to strip metas (or any tag)
-(define/contract (extract-tag-from-xexpr tag nx)
-  (xexpr-tag? tagged-xexpr? . -> . (values tagged-xexpr? xexpr-elements?))
-  (define matches '())
-  (define (extract-tag x)
-    (cond
-      [(and (tagged-xexpr? x) (equal? tag (car x)))
-       ; stash matched tag but return empty value
-       (begin
-         (set! matches (cons x matches))
-         empty)]
-      [(tagged-xexpr? x) (let-values([(tag attr body) (break-tagged-xexpr x)]) 
-                           (make-tagged-xexpr tag attr (extract-tag body)))]
-      [(xexpr-elements? x) (filter-not empty? (map extract-tag x))]
-      [else x]))
-  (values (extract-tag nx) (reverse matches))) 
-
-
-(module+ test
-  (define x '(root (meta "foo" "bar") "hello" "world" (meta "foo2" "bar2") 
-                   (em "goodnight" "moon" (meta "foo3" "bar3"))))
-  
-  (check-equal? (values->list (extract-tag-from-xexpr 'meta x)) 
-                (list '(root "hello" "world" (em "goodnight" "moon"))
-                      '((meta "foo" "bar") (meta "foo2" "bar2") (meta "foo3" "bar3")))))
 ;; decoder wireframe
 (define/contract (decode nx
                          #:exclude-xexpr-tags [excluded-xexpr-tags '()]
@@ -160,8 +124,7 @@
                          #:xexpr-elements-proc [xexpr-elements-proc (λ(x)x)]
                          #:block-xexpr-proc [block-xexpr-proc (λ(x)x)]
                          #:inline-xexpr-proc [inline-xexpr-proc (λ(x)x)]
-                         #:string-proc [string-proc (λ(x)x)]
-                         #:meta-proc [meta-proc (λ(x)x)])
+                         #:string-proc [string-proc (λ(x)x)])
   ;; use xexpr/c for contract because it gives better error messages
   ((xexpr/c) (#:exclude-xexpr-tags (λ(i) (or (symbol? i) (list? i)))
                                    #:xexpr-tag-proc procedure?
@@ -169,8 +132,7 @@
                                    #:xexpr-elements-proc procedure?
                                    #:block-xexpr-proc procedure?
                                    #:inline-xexpr-proc procedure?
-                                   #:string-proc procedure?
-                                   #:meta-proc procedure?)
+                                   #:string-proc procedure?)
              . ->* . tagged-xexpr?)
   (when (not (tagged-xexpr? nx))
     (error (format "decode: ~v not a full tagged-xexpr" nx)))
@@ -193,6 +155,4 @@
       [else x]))
   
   
-  (let-values ([(nx metas) (extract-tag-from-xexpr 'meta nx)])
-    (append (&decode nx) (map meta-proc metas))))
-
+  (&decode nx))

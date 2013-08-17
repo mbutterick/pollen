@@ -1,5 +1,5 @@
 #lang racket/base
-(require racket/match)
+(require racket/list)
 (require (planet mb/pollen/tools) (planet mb/pollen/main-helper))
 (provide (except-out (all-from-out racket/base) #%module-begin)
          (rename-out [module-begin #%module-begin]))
@@ -43,25 +43,43 @@
    
    (require 'pollen-inner) ; provides doc & #%top, among other things
    
+   ;; prepare the elements, and append inner-here as meta.
+   (define all-elements (append 
+                                (cond
+                                  ;; doc is probably a list, but might be a single string
+                                  [(string? doc) (list doc)] 
+                                  [(tagged-xexpr? doc) (list doc)] ; if it's a single nx, just leave it
+                                  [(list? doc) doc]) ; if it's nx content, splice it in
+                                (list `(meta "here" ,inner-here)))) ; append inner-here as meta
+   
+   ;; split out the metas now (in raw form)
+   (define-values (main-raw metas-raw) 
+     (extract-tag-from-xexpr 'meta (make-tagged-xexpr 'irrelevant-tag empty all-elements)))
+   
    ;; Policy: here in the core lang, do as little to main as possible.
    ;; The point is just to set it up for further processing.
    ;; One of the annoyances of Scribble is its insistence on decoding.
    ;; Better just to pass through the minimally processed data.
    ;; Root is treated as a function. 
    ;; If it's not defined elsewhere, it just hits #%top and becomes a tagged-xexpr.
-   (define main (apply root
-                        (append 
-                         (cond
-                           [(string? doc) (list doc)] ; doc is probably a list, but might be a single string
-                           [(tagged-xexpr? doc) (list doc)] ; if it's a single nx, just leave it
-                           [(list? doc) doc]) ; if it's nx content, splice it in
-                         (list `(meta "here" ,inner-here))))) ; append inner-here as meta
+   (define main (apply root (tagged-xexpr-elements main-raw)))
    
-   (provide main
+   (define metas (make-meta-hash metas-raw))
+   
+   (provide main metas
             (except-out (all-from-out 'pollen-inner) inner-here) ; everything from user 
             (rename-out (inner-here here))) ; change identifier back (now safe from macrofication)
    
    (module+ main
+     (displayln ";-------------------------")
+     (displayln "; pollen decoded 'main")     
+     (displayln ";-------------------------")
      main
      (displayln "")
-     (displayln (format "tagged-xexpr? ~a" (tagged-xexpr? main)))))) 
+     (displayln (format "(tagged-xexpr? main) ~a" (tagged-xexpr? main)))
+     (displayln "")
+     (displayln ";-------------------------")
+     (displayln "; pollen 'metas")
+     (displayln ";-------------------------")
+     metas
+     ))) 

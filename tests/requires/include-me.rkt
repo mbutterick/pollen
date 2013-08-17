@@ -13,14 +13,6 @@
 
 
 
-;; handle meta tags
-(define/contract (meta-proc meta)
-  (meta-xexpr? . -> . tagged-xexpr?)
-  `(meta ((name ,(second meta))(content ,(third meta)))))
-
-(module+ test
-  (check-equal? (meta-proc '(meta "key" "value")) '(meta ((name "key")(content "value")))))
-
 ;; is x a paragraph break?
 (define/contract (paragraph-break? x #:pattern [paragraph-pattern #px"^\n\n+$"])
   ((any/c) (#:pattern pregexp?) . ->* . boolean?)
@@ -234,9 +226,7 @@
           #:xexpr-elements-proc xexpr-elements-proc
           #:block-xexpr-proc block-xexpr-proc
           ;          #:inline-xexpr-proc [inline-xexpr-proc (λ(x)x)]
-          #:string-proc string-proc
-          #:meta-proc meta-proc
-          ))
+          #:string-proc string-proc))
 
 
 (define foo "bar")
