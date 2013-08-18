@@ -2,6 +2,7 @@
 (require racket/list)
 (require (planet mb/pollen/tools) (planet mb/pollen/main-helper))
 (require (only-in (planet mb/pollen/pmap) pmap-decode))
+(require (only-in (planet mb/pollen/pollen-file-tools) has-ext?))
 (require (only-in (planet mb/pollen/world) POLLEN_MAP_EXT))
 (provide (except-out (all-from-out racket/base) #%module-begin)
          (rename-out [module-begin #%module-begin]))
@@ -65,7 +66,7 @@
    ;; One of the annoyances of Scribble is its insistence on decoding.
    ;; Better just to pass through the minimally processed data.
    ;; one exception: if file extension marks it as pmap, send it to the pmap decoder instead.
-   (define main (apply (if ((get metas "here") . ends-with? . (->string POLLEN_MAP_EXT))
+   (define main (apply (if ((->path (get metas "here")) . has-ext? . POLLEN_MAP_EXT)
                            pmap-decode
                            ;; most files will go this way.
                            ;; Root is treated as a function. 
