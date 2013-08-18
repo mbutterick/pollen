@@ -148,12 +148,13 @@
                    [else #f]))
   
   ;; don't return single-item results inside a list
-  (if (and (sliceable-container? result) (= (len result) 1))
+  (if (and (sliceable-container? container) (= (len result) 1))
       (car (->list result))
       result))
 
 (module+ test
   (check-equal? (get '(0 1 2 3 4 5) 2) 2)
+  (check-equal? (get `(0 1 ,(list 2) 3 4 5) 2) (list 2))
   (check-equal? (get '(0 1 2 3 4 5) 0 2) '(0 1))
   (check-equal? (get '(0 1 2 3 4 5) 2 -1) '(2 3 4))
   (check-equal? (get '(0 1 2 3 4 5) 2 'end) '(2 3 4 5))
@@ -169,7 +170,7 @@
   (check-equal? (get 'purple 0 2) 'pu)
   (check-equal? (get 'purple 2 -1) 'rpl)
   (check-equal? (get 'purple 2 'end) 'rple)
-  (check-equal? (get (make-hash '((a . 1) (b . 2) (c  . 3))) 'a) 1))
+  (check-equal? (get (make-hash `((a . ,(list 1)) (b . ,(list 2)) (c  . ,(list 3)))) 'a) (list 1)))
 
 ;; general way of testing for membership (à la Python 'in')
 ;; put item as first arg so function can use infix notation

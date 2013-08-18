@@ -75,6 +75,16 @@
   (check-not-equal? (remove-all-ext foo.bar.txt-path) foo.bar-path) ; removes more than one ext
   (check-equal? (remove-all-ext foo.bar.txt-path) foo-path))
 
+
+(define/contract (filename-of path)
+  (complete-path? . -> . path?)
+  (define-values (dir filename ignored) (split-path path))
+  filename)
+
+(module+ test 
+ (check-equal? (filename-of (build-path (current-directory) "pollen-file-tools.rkt")) (->path "pollen-file-tools.rkt")))
+
+
 (define/contract (preproc-source? x)
   (any/c . -> . boolean?)
   (has-ext? (->path x) POLLEN_PREPROC_EXT))

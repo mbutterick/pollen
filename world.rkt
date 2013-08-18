@@ -1,6 +1,4 @@
-#lang racket
-
-; in the dev branch
+#lang racket/base
 
 (define POLLEN_PREPROC_EXT 'pp)
 (define POLLEN_SOURCE_EXT 'p)

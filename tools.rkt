@@ -13,7 +13,7 @@
 (module+ test (require rackunit))
 
 ; make these independent of local includes
-(define (map-topic topic . subtopics)
+(define (pmap-topic topic . subtopics)
   (make-tagged-xexpr (->symbol topic) empty (filter-not whitespace? subtopics)))
 
 

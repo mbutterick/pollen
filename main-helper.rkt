@@ -55,10 +55,10 @@
                                   [(equal? 'pollen-lang-module ccr) 'nowhere] 
                                   [else ccr])])
                       (match-let-values ([(_ here-name _) (split-path ccr)])
-                                        (->string (remove-all-ext here-name)))))))
+                                        (->string here-name))))))
 
 (module+ test
-  (check-equal? (get-here) "main-helper"))
+  (check-equal? (get-here) "main-helper.rkt"))
 
 ; Second step: apply a separate syntax transform to the identifier itself
 ; We can't do this in one step, because if the macro goes from identifier to function definition,
@@ -66,6 +66,6 @@
 (define-syntax here (λ (stx) (datum->syntax stx '(get-here))))
 
 (module+ test
-  (check-equal? here "main-helper"))
+  (check-equal? here "main-helper.rkt"))
 
 

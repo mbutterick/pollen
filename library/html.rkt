@@ -1,7 +1,5 @@
 #lang racket/base
 
-(require "../syntax.rkt")
-
 ;; for now, body is deemed a block, not inline
 ;; todo: is this legit? Why is body inline?
 (define block-tags

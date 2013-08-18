@@ -17,13 +17,12 @@
   (complete-path? . -> . tagged-xexpr?)
   (regenerate path)
   (dynamic-rerequire path)
-  (define main (dynamic-require path 'main))
-  main)
+  (dynamic-require path 'main))
+
 
 (define/contract (slurp path #:regenerate? [regenerate? #t])
   (complete-path? . -> . string?) 
-  (when regenerate?
-    (regenerate path))
+  (when regenerate? (regenerate path))
   (file->string path))
 
 (define/contract (format-as-code tx)

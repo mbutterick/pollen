@@ -1,56 +1,96 @@
-#lang racket
-(require xml/path)
-(require "world.rkt" "tools.rkt" "map.rkt")
-(require racket/rerequire)
+#lang racket/base
+(require racket/list racket/path racket/port racket/system 
+         racket/file racket/rerequire racket/contract)
+(require "world.rkt" "tools.rkt" "pmap.rkt" "readability.rkt")
 
-; hash of mod-dates takes lists of paths as keys,
-; and lists of modification times as values.
-; Reason: a templated page is a combination of two source files.
-; Because templates have a one-to-many relationship with source files,
-; Need to track template mod-date for each source file.
-; Otherwise a changed template will get reloaded only once, 
-; and after that get reported as being up to date.
-; Possible: store hash on disk so mod records are preserved 
-; between development sessions (prob a worthless optimization)
+(module+ test (require rackunit))
+
+;; mod-dates is a hash that takes lists of paths as keys,
+;; and lists of modification times as values.
+;; Reason: a templated page is a combination of two source files.
+;; Because templates have a one-to-many relationship with source files,
+;; Need to track template mod-date for each source file.
+;; Otherwise a changed template will get reloaded only once, 
+;; and after that get reported as being up to date.
+;; Possible: store hash on disk so mod records are preserved 
+;; between development sessions (prob a worthless optimization)
 (define mod-dates (make-hash))
 
-(define (mod-date . paths) 
-  (set! paths (flatten paths))
-  (when (andmap file-exists? paths)
-    (map file-or-directory-modify-seconds paths)))
 
-(define (log-refresh . paths)
-  (set! paths (flatten paths))
-  (hash-set! mod-dates paths (mod-date paths)))
+;; convert a path to a modification date value
+(define/contract (path->mod-date-value path)
+  (path? . -> . (or/c exact-integer? #f))
+  (and (file-exists? path) ; returns #f if a file doesn't exist
+       (file-or-directory-modify-seconds path)))
 
-(define (source-needs-refresh? . paths)
-  (set! paths (flatten paths))
-  (or (not (in? mod-dates paths))  ; no mod date
-      (not (equal? (mod-date paths) (get mod-dates paths))))) ; data changed
+(module+ test
+  (check-false (path->mod-date-value (->path "foobarfoo.rkt")))
+  (check-true (exact-integer? (path->mod-date-value (build-path (current-directory) (->path "regenerate.rkt"))))))
 
-; when you want to generate everything fresh, but not force everything
-(define (reset-mod-dates)
-  (let [(keys (hash-keys mod-dates))]
-    (map (λ(k) (hash-remove mod-dates k)) keys)))
+;; put list of paths into mod-dates
+;; want to take list as input (rather than individual path)
+;; because hash key needs to be a list
+(define/contract (store-refresh-in-mod-dates paths)
+  ((listof path?) . -> . void?)
+  (hash-set! mod-dates paths (map path->mod-date-value paths)))
+
+(module+ test
+  (reset-mod-dates)
+  (store-refresh-in-mod-dates (list (build-path (current-directory) (->path "regenerate.rkt"))))
+  (check-true (= (len mod-dates) 1))
+  (reset-mod-dates))
+
+;; when you want to generate everything fresh, 
+;; but without having to #:force everything.
+;; Regenerate functions will always go when no mod-date is found.
+(define/contract (reset-mod-dates)
+  (-> void?)
+  (set! mod-dates (make-hash)))
+
+(module+ test 
+  (reset-mod-dates)
+  (store-refresh-in-mod-dates (list (build-path (current-directory) (->path "regenerate.rkt"))))
+  (reset-mod-dates)
+  (check-true (= (len mod-dates) 0)))
+
+;; how to know whether a certain combination of paths needs a refresh
+(define/contract (source-needs-refresh? paths)
+  ((listof path?) . -> . boolean?)
+  (or (not (paths . in? . mod-dates))  ; no stored mod date
+      (not (equal? (map path->mod-date-value paths) (get mod-dates paths))))) ; data has changed
+
+(module+ test 
+  (reset-mod-dates)
+  (let ([path (build-path (current-directory) (->path "regenerate.rkt"))])
+    (store-refresh-in-mod-dates (list path))
+    (check-false (source-needs-refresh? (list path)))
+    (reset-mod-dates)
+    (check-true (source-needs-refresh? (list path)))))
+
 
 ; helper functions for regenerate functions
 (define pollen-file-root (current-directory))
 
-(define (regenerate-file f)
-  (let ([path (build-path pollen-file-root f)])
-    (displayln (format "Regenerating: ~a" f))
-    (regenerate path)))
+; complete pollen path =
+;(build-path pollen-file-root f)
 
-;; todo: maybe move this tools.rkt as a utility
-(define (filename-of path)
-  (let-values ([(dir filename ignored) (split-path path)])
-    filename))
 
-(define (regenerate-pmap-pages pmap)
-  (define pmap-sequence 
-    (make-page-sequence (main->tree (dynamic-require pmap 'main))))
-  (displayln (format "Regenerating pages from pollen map: ~a" (filename-of pmap)))
-  (for-each regenerate-file pmap-sequence))
+;; regenerate with message
+(define/contract (regenerate-path/message path)
+  (complete-path? . -> . void?)
+  (message "Regenerating: " path)
+  (regenerate path))
+
+;; todo: write test
+
+;;;;;;;;;;;;;
+;; todo next
+
+(define/contract (regenerate-with-pmap/message pmap)
+  (pmap-source? . -> . void?)
+  (message "Regenerating pages from pollen map: " (filename-of pmap))
+  (for-each regenerate-path/message 
+            (make-page-sequence (main->pmap (dynamic-require pmap 'main)))))
 
 (define (get-pollen-files-with-ext ext)
   (filter (λ(f) (has-ext? f ext)) (directory-list pollen-file-root)))
@@ -60,10 +100,10 @@
   (reset-mod-dates)
   
   (define all-preproc-files (get-pollen-files-with-ext POLLEN_PREPROC_EXT))
-  (for-each regenerate-file all-preproc-files)
+  (for-each regenerate-path/message all-preproc-files)
   
   (define all-pollen-maps (get-pollen-files-with-ext POLLEN_MAP_EXT))
-  (for-each regenerate-pmap-pages all-pollen-maps)
+  (for-each regenerate-with-pmap/message all-pollen-maps)
   
   (displayln "Completed"))
 
@@ -77,7 +117,7 @@
     (cond
       [(needs-preproc? path) (do-preproc path #:force force)]
       [(needs-template? path) (do-template path #:force force)]
-      [(pmap-source? path) (regenerate-pmap-pages path)])))
+      [(pmap-source? path) (regenerate-with-pmap/message path)])))
 
 
 
@@ -96,7 +136,7 @@
                (or force
                    (not (file-exists? preproc-out-path))
                    (source-needs-refresh? preproc-in-path)))
-      (log-refresh preproc-in-path)
+      (store-refresh-in-mod-dates preproc-in-path)
       ; use single quotes to escape spaces in pathnames
       (define command 
         (format "~a '~a' > '~a'" RACKET_PATH preproc-in-path preproc-out-path))
@@ -160,7 +200,7 @@
             (not (file-exists? generated-path)) 
             (source-needs-refresh? source-path template-path)
             file-was-reloaded?)
-    (log-refresh source-path template-path)
+    (store-refresh-in-mod-dates source-path template-path)
     
     ; Templates are part of the compile operation.
     ; Therefore no way to arbitrarily invoke template at run-time.

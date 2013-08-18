@@ -219,7 +219,7 @@
 
 (define/contract (root . items)
   (() #:rest (listof xexpr-element?) . ->* . tagged-xexpr?)
-  (decode (cons 'root items)
+  (decode (cons 'root-function items)
           ;          #:exclude-xexpr-tags 'em
           ;          #:xexpr-tag-proc [xexpr-tag-proc (λ(x)x)]
           ;          #:xexpr-attr-proc [xexpr-attr-proc (λ(x)x)]
