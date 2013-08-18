@@ -10,6 +10,12 @@
 (define pmap-file (build-path START_DIR DEFAULT_MAP))
 (define pmap-main empty)
 
+; make these independent of local includes
+(define (pmap-subtopic topic . subtopics)
+  (make-tagged-xexpr (->symbol topic) empty (filter-not whitespace? subtopics)))
+
+
+
 ;; todo: this ain't a function
 (if (file-exists? pmap-file)
     ; load it, or ...
@@ -47,7 +53,7 @@
     [else (make-tagged-xexpr (->symbol x) (make-xexpr-attr 'parent (->string parent)))]))
 
 (module+ test
-  (define test-pmap-main `(pmap-main "foo" "bar" ,(pmap-topic "one" (pmap-topic "two" "three"))))
+  (define test-pmap-main `(pmap-main "foo" "bar" ,(pmap-subtopic "one" (pmap-subtopic "two" "three"))))
   (check-equal? (add-parents test-pmap-main) 
                 '(pmap-main ((parent "")) (foo ((parent "pmap-main"))) (bar ((parent "pmap-main"))) (one ((parent "pmap-main")) (two ((parent "one")) (three ((parent "two"))))))))
 
@@ -70,7 +76,7 @@
     (add-parents nx)))
 
 (module+ test
-  (define mt-pmap `(pmap-main "foo" "bar" ,(pmap-topic "one" (pmap-topic "two" "three")) (meta "foo" "bar")))
+  (define mt-pmap `(pmap-main "foo" "bar" ,(pmap-subtopic "one" (pmap-subtopic "two" "three")) (meta "foo" "bar")))
   (check-equal? (main->pmap mt-pmap) 
                 '(pmap-main ((parent "")) (foo ((parent "pmap-main"))) (bar ((parent "pmap-main"))) (one ((parent "pmap-main")) (two ((parent "one")) (three ((parent "two"))))))))
 
@@ -255,3 +261,7 @@
   (define pm (parameterize ([current-directory "./tests/"])
                (main->pmap (dynamic-require "test-pmap.p" 'main))))
   (check-equal? (previous-page (parent 'printers-and-paper pm) pm) "ligatures"))
+
+(define/contract (pmap-decode . elements)
+  (() #:rest xexpr-elements? . ->* . any/c)
+  "hello, this is pmap-decode")

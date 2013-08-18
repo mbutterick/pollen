@@ -12,9 +12,6 @@
 ;; setup for test cases
 (module+ test (require rackunit))
 
-; make these independent of local includes
-(define (pmap-topic topic . subtopics)
-  (make-tagged-xexpr (->symbol topic) empty (filter-not whitespace? subtopics)))
 
 
 ;; helper for comparison of values

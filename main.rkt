@@ -1,6 +1,8 @@
 #lang racket/base
 (require racket/list)
 (require (planet mb/pollen/tools) (planet mb/pollen/main-helper))
+(require (only-in (planet mb/pollen/pmap) pmap-decode))
+(require (only-in (planet mb/pollen/world) POLLEN_MAP_EXT))
 (provide (except-out (all-from-out racket/base) #%module-begin)
          (rename-out [module-begin #%module-begin]))
 
@@ -45,26 +47,31 @@
    
    ;; prepare the elements, and append inner-here as meta.
    (define all-elements (append 
-                                (cond
-                                  ;; doc is probably a list, but might be a single string
-                                  [(string? doc) (list doc)] 
-                                  [(tagged-xexpr? doc) (list doc)] ; if it's a single nx, just leave it
-                                  [(list? doc) doc]) ; if it's nx content, splice it in
-                                (list `(meta "here" ,inner-here)))) ; append inner-here as meta
+                         (cond
+                           ;; doc is probably a list, but might be a single string
+                           [(string? doc) (list doc)] 
+                           [(tagged-xexpr? doc) (list doc)] ; if it's a single nx, just leave it
+                           [(list? doc) doc]) ; if it's nx content, splice it in
+                         (list `(meta "here" ,inner-here)))) ; append inner-here as meta
    
    ;; split out the metas now (in raw form)
    (define-values (main-raw metas-raw) 
      (extract-tag-from-xexpr 'meta (make-tagged-xexpr 'irrelevant-tag empty all-elements)))
    
+   (define metas (make-meta-hash metas-raw))
+   
    ;; Policy: here in the core lang, do as little to main as possible.
    ;; The point is just to set it up for further processing.
    ;; One of the annoyances of Scribble is its insistence on decoding.
    ;; Better just to pass through the minimally processed data.
-   ;; Root is treated as a function. 
-   ;; If it's not defined elsewhere, it just hits #%top and becomes a tagged-xexpr.
-   (define main (apply root (tagged-xexpr-elements main-raw)))
-   
-   (define metas (make-meta-hash metas-raw))
+   ;; one exception: if file extension marks it as pmap, send it to the pmap decoder instead.
+   (define main (apply (if ((get metas "here") . ends-with? . (->string POLLEN_MAP_EXT))
+                           pmap-decode
+                           ;; most files will go this way.
+                           ;; Root is treated as a function. 
+                           ;; If it's not defined elsewhere, 
+                           ;; it just hits #%top and becomes a tagged-xexpr.
+                           root) (tagged-xexpr-elements main-raw)))
    
    (provide main metas
             (except-out (all-from-out 'pollen-inner) inner-here) ; everything from user 

@@ -199,3 +199,24 @@
   (check-false ('z . in? . 'foobar))
   (check-false ("F" . in? . #\F)))
 
+
+;; python-style string testers
+(define/contract (starts-with? str starter)
+  (string? string? . -> . boolean?)
+  (and (<= (len starter) (len str)) (equal? (get str 0 (len starter)) starter)))
+
+(module+ test
+  (check-true ("foobar" . starts-with? . "foo"))
+  (check-true ("foobar" . starts-with? . "f"))
+  (check-true ("foobar" . starts-with? . "foobar"))
+  (check-false ("foobar" . starts-with? . "bar")))
+
+(define/contract (ends-with? str ender)
+  (string? string? . -> . boolean?)
+  (and (<= (len ender) (len str)) (equal? (get str (- (len str) (len ender)) 'end) ender)))
+
+(module+ test
+  (check-true ("foobar" . ends-with? . "bar"))
+  (check-true ("foobar" . ends-with? . "r"))
+  (check-true ("foobar" . ends-with? . "foobar"))
+  (check-false ("foobar" . ends-with? . "foo")))

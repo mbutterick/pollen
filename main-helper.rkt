@@ -34,7 +34,7 @@
     [else #'(begin)]))
 
 
-;; here = name of current file without extensions.
+;; here = path of this file, relative to current directory. 
 ;; We want to make this identifier behave as a runtime function
 ;; This requires two steps.
 ;; First, define the underlying function as syntax-rule
@@ -46,7 +46,7 @@
                     ;; whereupon define would cause an error.
                     ;; Therefore, best to use let.
                     (let* ([ccr (current-contract-region)] ; trick for getting current module name
-                           [ccr (cond
+                           [here-path (cond
                                   ;; if contract-region is called from within submodule,
                                   ;; you get a list
                                   ;; in which case, just grab the path from the front
@@ -54,8 +54,7 @@
                                   ;; file isn't yet saved in drracket
                                   [(equal? 'pollen-lang-module ccr) 'nowhere] 
                                   [else ccr])])
-                      (match-let-values ([(_ here-name _) (split-path ccr)])
-                                        (->string here-name))))))
+                      (->string (find-relative-path (current-directory) here-path))))))
 
 (module+ test
   (check-equal? (get-here) "main-helper.rkt"))
@@ -63,7 +62,7 @@
 ; Second step: apply a separate syntax transform to the identifier itself
 ; We can't do this in one step, because if the macro goes from identifier to function definition,
 ; The macro processor will evaluate the body at compile-time, not at runtime.
-(define-syntax here (λ (stx) (datum->syntax stx '(get-here))))
+(define-syntax here (λ(stx) (datum->syntax stx '(get-here))))
 
 (module+ test
   (check-equal? here "main-helper.rkt"))
