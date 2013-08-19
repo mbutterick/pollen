@@ -10,13 +10,6 @@
 (define pmap-file (build-path START_DIR DEFAULT_MAP))
 (define pmap-main empty)
 
-;; handle pmap-subtopics
-(define/contract (pmap-subtopic topic . subtopics)
-  ((string?) #:rest (listof xexpr-element?) . ->* . tagged-xexpr?)
-  (make-tagged-xexpr (->symbol topic) empty subtopics))
-
-;; todo: tests for pmap-subtopics
-
 
 ;; todo: this ain't a function
 (if (file-exists? pmap-file)
@@ -45,7 +38,7 @@
     [else (make-tagged-xexpr (->symbol x) (make-xexpr-attr 'parent (->string parent)))]))
 
 (module+ test
-  (define test-pmap-main `(pmap-main "foo" "bar" ,(pmap-subtopic "one" (pmap-subtopic "two" "three"))))
+  (define test-pmap-main `(pmap-main "foo" "bar" (one (two "three"))))
   (check-equal? (main->pmap test-pmap-main) 
                 '(pmap-main ((parent "")) (foo ((parent "pmap-main"))) (bar ((parent "pmap-main"))) (one ((parent "pmap-main")) (two ((parent "one")) (three ((parent "two"))))))))
 
@@ -75,7 +68,7 @@
 
 
 (module+ test
-  (define sample-main `(pmap-root "foo" "bar" ,(pmap-subtopic "one" (pmap-subtopic "two" "three"))))
+  (define sample-main `(pmap-root "foo" "bar" (one (two "three"))))
   (check-equal? (main->pmap sample-main) 
                 '(pmap-root ((parent "")) (foo ((parent "pmap-root"))) (bar ((parent "pmap-root"))) (one ((parent "pmap-root")) (two ((parent "one")) (three ((parent "two"))))))))
 

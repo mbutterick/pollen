@@ -28,7 +28,6 @@
      ;; use same requires as top of main.rkt 
      ;; (can't import them from surrounding module due to submodule rules)
      (require (planet mb/pollen/tools) (planet mb/pollen/main-helper))
-     (require (only-in (planet mb/pollen/pmap) pmap-subtopic))
      (require-extras #:provide #t) ; brings in the project require files
      
      ;; #%top binding catches ids that aren't defined
@@ -53,10 +52,10 @@
    (require 'pollen-inner) ; provides doc & #%top, among other things
    
    ;; prepare the elements, and append inner-here as meta.
-   (define all-elements (append 
+   (define all-elements (cons 
                          ;; append inner-here as meta
                          ;; put it first so it can be overridden by custom meta later on
-                         (list `(meta "here" ,inner-here)) 
+                         `(meta "here" ,inner-here)
                          (cond
                            ;; doc is probably a list, but might be a single string
                            [(string? doc) (list doc)] 

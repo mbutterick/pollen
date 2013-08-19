@@ -214,3 +214,4 @@
                 (hash "foo" "bar" "hee" "haw"))
   (check-equal? (make-meta-hash '((meta "foo" "bar")(meta "foo" "haw")))
                 (hash "foo" "haw")))
+

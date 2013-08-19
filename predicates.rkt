@@ -1,6 +1,5 @@
 #lang racket/base
 (require racket/contract racket/match racket/list xml racket/set)
-(require (prefix-in scribble: (only-in scribble/decode whitespace?)))
 (require (prefix-in html: "library/html.rkt"))
 (require "world.rkt" "readability.rkt" "pollen-file-tools.rkt")
 
@@ -113,6 +112,20 @@
   (check-false (meta-xexpr? '(meta "key" "value" "foo")))
   (check-false (meta-xexpr? '(meta))))
 
+
+;; count incidence of elements in a list
+;; returns hash where key is element, value is incidence
+(define/contract (count-incidence x)
+  (list? . -> . hash?)
+  (define counter (make-hash))
+  (for ([item (flatten x)]) 
+    (hash-set! counter item (add1 (hash-ref counter item 0))))
+  counter)
+
+(module+ test
+  (check-equal? (hash-ref (count-incidence '(a b c d b c)) 'b) 2)
+  (check-equal? (hash-ref (count-incidence '(a b c d b c)) 'a) 1))
+
 ;; exploit uniqueness constraint of set data structure
 (define/contract (elements-unique? x #:loud [loud #f])
   ((any/c) (#:loud boolean?) . ->* . boolean?)
@@ -123,8 +136,11 @@
       [(string? x) (elements-unique? (string->list x))]
       [else #t]))
   (if (and (not result) loud)
-      ;; todo: calculate nonunique keys
-      (error "Not unique keys:" x)
+      ;; using dynamic-require to avoid circular dependency
+      ;; todo: better way of handling this?
+      (let* ([duplicate-keys (filter-not empty? (hash-map (count-incidence x) 
+                                                          (λ(k v) (if (> v 1) k '()))))])
+        (error (string-append (if (> (len duplicate-keys) 1) "Keys aren’t" "Key isn’t") " unique:") duplicate-keys))
       result))
 
 (module+ test
@@ -173,7 +189,6 @@
 
 
 ;; recursive whitespace test
-;; Scribble's version misses whitespace in a list
 (define/contract (whitespace? x)
   (any/c . -> . boolean?)
   (cond
