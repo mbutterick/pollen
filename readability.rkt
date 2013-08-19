@@ -61,6 +61,15 @@
   (check-equal? (->list (set 1 2 3)) '(1 2 3))
   (check-equal? (->list "foo") (list "foo")))
 
+;; general way of coercing to vector
+(define (->vector x)
+  (any/c . -> . vector?)
+  ; todo: on bad input, it will pop a list error rather than vector error
+  (cond
+    [(vector? x) x]
+    [else (list->vector (->list x))]))
+
+
 
 ;; general way of coercing to boolean
 (define/contract (->boolean x)

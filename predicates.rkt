@@ -1,10 +1,11 @@
 #lang racket/base
-(require racket/contract racket/match racket/list xml)
+(require racket/contract racket/match racket/list xml racket/set)
 (require (prefix-in scribble: (only-in scribble/decode whitespace?)))
 (require (prefix-in html: "library/html.rkt"))
 (require "world.rkt" "readability.rkt" "pollen-file-tools.rkt")
 
 (module+ test (require rackunit))
+
 
 (provide (all-defined-out)
          (all-from-out "pollen-file-tools.rkt"))
@@ -112,18 +113,80 @@
   (check-false (meta-xexpr? '(meta "key" "value" "foo")))
   (check-false (meta-xexpr? '(meta))))
 
+;; exploit uniqueness constraint of set data structure
+(define/contract (elements-unique? x #:loud [loud #f])
+  ((any/c) (#:loud boolean?) . ->* . boolean?)
+  (define result 
+    (cond 
+      [(list? x) (= (len (apply set x)) (len x))]
+      [(vector? x) (elements-unique? (->list x))]
+      [(string? x) (elements-unique? (string->list x))]
+      [else #t]))
+  (if (and (not result) loud)
+      ;; todo: calculate nonunique keys
+      (error "Not unique keys:" x)
+      result))
+
+(module+ test
+  (check-true (elements-unique? '(1 2 3)))
+  (check-false (elements-unique? '(1 2 2)))
+  (check-true (elements-unique? (->vector '(1 2 3))))
+  (check-false (elements-unique? (->vector '(1 2 2))))
+  (check-true (elements-unique? "fob"))
+  (check-false (elements-unique? "foo")))
+
+
+;; todo: how to restrict this test?
+;; pmap requirements are enforced at compile-time.
+;; (such as pmap-keys must be unique).
+;; (and every element must have a parent attr).
+;; otherwise this becomes a rather expensive contract
+;; because every function in pmap.rkt uses it
+(define/contract (pmap? x)
+  (any/c . -> . boolean?)
+  (tagged-xexpr? x))
+
+
+;; pmap location must represent a possible valid filename
+(define/contract (pmap-key? x #:loud [loud #f])
+  ((any/c) (#:loud boolean?) . ->* . boolean?)
+  ;; todo: how to express the fact that the pmap-location must be 
+  ;; a valid base name for a file?
+  ;; however, don't restrict it to existing files 
+  ;; (author may want to use pmap as wireframe)
+  (define result 
+    (or  (eq? x #f) ; OK for map-key to be #f
+         (and (or (symbol? x) (string? x)) 
+              (not (= (len x) 0)) ; not empty
+              ; no whitespace
+              (andmap (compose not whitespace?) (map ->string (string->list (->string x)))))))
+  (if (and (not result) loud)
+      (error "Not a valid pmap key:" x)
+      result))
+
+(module+ test
+  (check-true (pmap-key? #f))
+  (check-true (pmap-key? "foo-bar"))
+  (check-true (pmap-key? 'foo-bar))
+  (check-false (pmap-key? ""))
+  (check-false (pmap-key? " ")))
+
 
 ;; recursive whitespace test
 ;; Scribble's version misses whitespace in a list
-(define (whitespace? x)
+(define/contract (whitespace? x)
+  (any/c . -> . boolean?)
   (cond
-    [(list? x) (andmap whitespace? x)]
-    [else (scribble:whitespace? x)]))
+    [(or (vector? x) (list? x) (set? x)) (andmap whitespace? (->list x))]
+    [(or (symbol? x) (string? x)) (->boolean (regexp-match #px"^\\s+$" (->string x)))]
+    [else #f]))
 
 (module+ test
   (check-true (whitespace? " "))
   (check-false (whitespace? "foo"))
-  (check-false (whitespace? " ")) ; a nonbreaking space
+  (check-false (whitespace? 'foo))
+  (check-false (whitespace? #\Ø))
+  (check-false (whitespace? " ")) ; a nonbreaking space. todo: why is this so?
   (check-true (whitespace? "\n \n"))
   (check-true (whitespace? (list "\n" " " "\n")))
   (check-true (whitespace? (list "\n" " " "\n" (list "\n" "\n")))))

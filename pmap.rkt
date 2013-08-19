@@ -10,10 +10,12 @@
 (define pmap-file (build-path START_DIR DEFAULT_MAP))
 (define pmap-main empty)
 
-; make these independent of local includes
-(define (pmap-subtopic topic . subtopics)
-  (make-tagged-xexpr (->symbol topic) empty (filter-not whitespace? subtopics)))
+;; handle pmap-subtopics
+(define/contract (pmap-subtopic topic . subtopics)
+  ((string?) #:rest (listof xexpr-element?) . ->* . tagged-xexpr?)
+  (make-tagged-xexpr (->symbol topic) empty subtopics))
 
+;; todo: tests for pmap-subtopics
 
 
 ;; todo: this ain't a function
@@ -25,16 +27,6 @@
       (set! files (map remove-ext (filter (λ(x) (has-ext? x POLLEN_SOURCE_EXT)) files)))
       (set! pmap-main (make-tagged-xexpr 'map-main empty (map path->string files)))))
 
-;; todo: restrict this test 
-;; all names must be unique
-(define/contract (pmap? x)
-  (any/c . -> . boolean?)
-  (and (tagged-xexpr? x) 
-       ;; all locations must be unique. Check this by converting x to a list of strings ...
-       (let ([locations (map ->string (flatten (remove-attrs x)))])
-         ;; and then coercing to set (because set impliedly enforces uniqueness)
-         ;; If set has same number of elements as original, all are unique.
-         (= (len (apply set locations)) (len locations)))))
 
 ;; recursively processes map, converting map locations & their parents into xexprs of this shape:
 ;; '(location ((parent "parent")))
@@ -54,8 +46,20 @@
 
 (module+ test
   (define test-pmap-main `(pmap-main "foo" "bar" ,(pmap-subtopic "one" (pmap-subtopic "two" "three"))))
-  (check-equal? (add-parents test-pmap-main) 
+  (check-equal? (main->pmap test-pmap-main) 
                 '(pmap-main ((parent "")) (foo ((parent "pmap-main"))) (bar ((parent "pmap-main"))) (one ((parent "pmap-main")) (two ((parent "one")) (three ((parent "two"))))))))
+
+
+
+;; this sets default input for following functions
+(define/contract (main->pmap tx)
+  (tagged-xexpr? . -> . pmap?)
+  (add-parents tx))
+
+(define pmap (main->pmap pmap-main))
+
+
+
 
 ;; remove parents from map (i.e., just remove attrs)
 ;; is not the inverse of add-parents, i.e., you do not get back your original input.
@@ -69,26 +73,14 @@
                              (one ((parent "")) (two ((parent "one")) (three ((parent "two")))))))
                 '(pmap-main (foo) (bar) (one (two (three))))))
 
-;; todo: what is this for?
-(define/contract (main->pmap main)
-  (tagged-xexpr? . -> . pmap?)
-  (let-values ([(nx metas) (extract-tag-from-xexpr 'meta main)])
-    (add-parents nx)))
 
 (module+ test
-  (define mt-pmap `(pmap-main "foo" "bar" ,(pmap-subtopic "one" (pmap-subtopic "two" "three")) (meta "foo" "bar")))
-  (check-equal? (main->pmap mt-pmap) 
-                '(pmap-main ((parent "")) (foo ((parent "pmap-main"))) (bar ((parent "pmap-main"))) (one ((parent "pmap-main")) (two ((parent "one")) (three ((parent "two"))))))))
+  (define sample-main `(pmap-root "foo" "bar" ,(pmap-subtopic "one" (pmap-subtopic "two" "three"))))
+  (check-equal? (main->pmap sample-main) 
+                '(pmap-root ((parent "")) (foo ((parent "pmap-root"))) (bar ((parent "pmap-root"))) (one ((parent "pmap-root")) (two ((parent "one")) (three ((parent "two"))))))))
 
 
-;; todo: what is this for? to have default input?
-(define pmap (main->pmap pmap-main))
 
-
-(define/contract (pmap-key? x)
-  (any/c . -> . boolean?)
-  ;; OK for map-key to be #f
-  (or (symbol? x) (string? x) (eq? x #f)))
 
 ;; return the parent of a given name
 (define/contract (parent element [pmap pmap])
@@ -255,13 +247,33 @@
   (check-equal? (next-page 'one test-pmap) "two")
   (check-false (next-page 'three test-pmap)))
 
-(module+ test
+#|(module+ test
   ;; need to parameterize current-directory
   ;; because pollen main depends on it to find the include functions
   (define pm (parameterize ([current-directory "./tests/"])
-               (main->pmap (dynamic-require "test-pmap.p" 'main))))
+               (main->pmap (dynamic-require "test.pmap" 'main))))
   (check-equal? (previous-page (parent 'printers-and-paper pm) pm) "ligatures"))
+|#
+
 
 (define/contract (pmap-decode . elements)
-  (() #:rest xexpr-elements? . ->* . any/c)
-  "hello, this is pmap-decode")
+  (() #:rest (and/c
+              ;; todo: how to put these contracts under a let?
+              ;; all elements must be valid pmap keys
+              (flat-named-contract 'valid-pmap-keys
+                                   (λ(e) (andmap (λ(x) (pmap-key? #:loud #t x)) 
+                                                 (filter-not whitespace? (flatten e)))))
+              ;; they must also be unique
+              (flat-named-contract 'unique-pmap-keys
+                                   (λ(e) (elements-unique? #:loud #t 
+                                          (map ->string ; to make keys comparable
+                                               (filter-not whitespace? (flatten e)))))))
+      . ->* . pmap?)
+  (main->pmap (decode (cons 'pmap-root elements)
+          ;          #:exclude-xexpr-tags 'em
+          ;          #:xexpr-tag-proc [xexpr-tag-proc (λ(x)x)]
+          ;          #:xexpr-attr-proc [xexpr-attr-proc (λ(x)x)]
+          #:xexpr-elements-proc (λ(xs) (filter-not whitespace? xs))
+          ; #:block-xexpr-proc block-xexpr-proc
+          ;          #:inline-xexpr-proc [inline-xexpr-proc (λ(x)x)]
+          )))

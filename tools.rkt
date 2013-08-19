@@ -5,7 +5,6 @@
 (require (only-in racket/string string-join))
 (require (only-in xml xexpr? xexpr/c))
 
-
 (require "readability.rkt" "debug.rkt" "predicates.rkt")
 (provide (all-defined-out) (all-from-out "readability.rkt" "debug.rkt" "predicates.rkt"))
 
@@ -174,9 +173,10 @@
   (check-equal? (map-tree (λ(i) (if (symbol? i) 'foo i)) '(p 1 2 3 (em 4 5))) '(foo 1 2 3 (foo 4 5))))
 
 
-;; function to strip metas (or any tag)
-(define/contract (extract-tag-from-xexpr tag nx)
-  (xexpr-tag? tagged-xexpr? . -> . (values tagged-xexpr? xexpr-elements?))
+
+;; function to split tag out of tagged-xexpr
+(define/contract (split-tag-from-xexpr tag tx)
+  (xexpr-tag? tagged-xexpr? . -> . (values xexpr-elements? tagged-xexpr? ))
   (define matches '())
   (define (extract-tag x)
     (cond
@@ -189,25 +189,28 @@
                            (make-tagged-xexpr tag attr (extract-tag body)))]
       [(xexpr-elements? x) (filter-not empty? (map extract-tag x))]
       [else x]))
-  (values (extract-tag nx) (reverse matches))) 
+  (define tx-extracted (extract-tag tx)) ;; do this first to fill matches
+  (values (reverse matches) tx-extracted)) 
 
 
 (module+ test
-  (define x '(root (meta "foo" "bar") "hello" "world" (meta "foo2" "bar2") 
+  (define xx '(root (meta "foo" "bar") "hello" "world" (meta "foo2" "bar2") 
                    (em "goodnight" "moon" (meta "foo3" "bar3"))))
   
-  (check-equal? (values->list (extract-tag-from-xexpr 'meta x)) 
-                (list '(root "hello" "world" (em "goodnight" "moon"))
-                      '((meta "foo" "bar") (meta "foo2" "bar2") (meta "foo3" "bar3")))))
-
+  (check-equal? (values->list (split-tag-from-xexpr 'meta xx)) 
+                (list '((meta "foo" "bar") (meta "foo2" "bar2") (meta "foo3" "bar3")) 
+                 '(root "hello" "world" (em "goodnight" "moon")))))
 
 
 ;; convert list of meta tags to a hash for export from pollen document.
 ;; every meta is form (meta "key" "value") (enforced by contract)
+;; later metas with the same name will override earlier ones.
 (define/contract (make-meta-hash mxs)
   ((listof meta-xexpr?) . -> . hash?)
   (apply hash (append-map tagged-xexpr-elements mxs)))
 
 (module+ test
   (check-equal? (make-meta-hash '((meta "foo" "bar")(meta "hee" "haw")))
-                (hash "foo" "bar" "hee" "haw")))
+                (hash "foo" "bar" "hee" "haw"))
+  (check-equal? (make-meta-hash '((meta "foo" "bar")(meta "foo" "haw")))
+                (hash "foo" "haw")))
