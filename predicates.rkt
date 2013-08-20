@@ -115,6 +115,8 @@
 
 ;; count incidence of elements in a list
 ;; returns hash where key is element, value is incidence
+;; todo: move this? Ideally it would be in tools,
+;; but that would create a circular dependency.
 (define/contract (count-incidence x)
   (list? . -> . hash?)
   (define counter (make-hash))
@@ -136,11 +138,11 @@
       [(string? x) (elements-unique? (string->list x))]
       [else #t]))
   (if (and (not result) loud)
-      ;; using dynamic-require to avoid circular dependency
-      ;; todo: better way of handling this?
       (let* ([duplicate-keys (filter-not empty? (hash-map (count-incidence x) 
                                                           (λ(k v) (if (> v 1) k '()))))])
-        (error (string-append (if (> (len duplicate-keys) 1) "Keys aren’t" "Key isn’t") " unique:") duplicate-keys))
+        (error (string-append (if (= (len duplicate-keys) 1) 
+                                  "Item isn’t"
+                                  "Items aren’t") " unique:") duplicate-keys))
       result))
 
 (module+ test
@@ -152,16 +154,39 @@
   (check-false (elements-unique? "foo")))
 
 
-;; todo: how to restrict this test?
-;; pmap requirements are enforced at compile-time.
-;; (such as pmap-keys must be unique).
-;; (and every element must have a parent attr).
+;; certain pmap requirements are enforced at compile-time.
+;; (such as pmap-keys must be valid strings, and unique.)
 ;; otherwise this becomes a rather expensive contract
-;; because every function in pmap.rkt uses it
+;; because every function in pmap.rkt uses it.
+;; note that a pmap is just a bunch of recursively nested pmaps.
 (define/contract (pmap? x)
   (any/c . -> . boolean?)
-  (tagged-xexpr? x))
+  (and (match x
+         ;; a tagged-xexpr with one attr ('parent)
+         ;; whose subelements recursively meet the same test.
+         [(list (? pmap-key? tag) (? pmap-attr? attr) elements ...) 
+          (andmap pmap? elements)]
+         [else #f])))
 
+(module+ test
+  (check-true (pmap? '(foo ((parent "bar")))))
+  (check-false (pmap? '(foo)))
+  (check-false (pmap? '(foo ((parent "bar")(hee "haw")))))
+  (check-true (pmap? '(foo ((parent "bar")) (hee ((parent "foo"))))))
+  (check-false (pmap? '(foo ((parent "bar")) (hee ((uncle "foo")))))))
+
+;; pmap attr must be ((parent "value"))
+(define/contract (pmap-attr? x)
+  (any/c . -> . boolean?)
+  (match x
+    [(list `(parent ,(? string?))) #t]
+    [else #f]))
+
+(module+ test
+  (check-true (pmap-attr? '((parent "bar"))))
+  (check-false (pmap-attr? '((parent "bar")(foo "bar"))))
+  (check-false (pmap-attr? '())))
+  
 
 ;; pmap location must represent a possible valid filename
 (define/contract (pmap-key? x #:loud [loud #f])

@@ -18,13 +18,13 @@
     ; ... synthesize it
     (let ([files (directory-list START_DIR)])
       (set! files (map remove-ext (filter (λ(x) (has-ext? x POLLEN_SOURCE_EXT)) files)))
-      (set! pmap-main (make-tagged-xexpr 'map-main empty (map path->string files)))))
+      (set! pmap-main (make-tagged-xexpr 'pmap-root empty (map path->string files)))))
 
 
 ;; recursively processes map, converting map locations & their parents into xexprs of this shape:
 ;; '(location ((parent "parent")))
 (define/contract (add-parents x [parent empty])
-  ((pmap?) (xexpr-tag?) . ->* . pmap?)
+  ((tagged-xexpr?) (xexpr-tag?) . ->* . pmap?)
   ; disallow map-main as parent tag
   ;  (when (equal? parent 'map-main) (set! parent empty)) 
   (match x
@@ -57,7 +57,7 @@
 ;; remove parents from map (i.e., just remove attrs)
 ;; is not the inverse of add-parents, i.e., you do not get back your original input.
 (define/contract (remove-parents mt) 
-  (pmap? . -> . pmap?)
+  (pmap? . -> . tagged-xexpr?)
   (remove-attrs mt))
 
 (module+ test
@@ -68,9 +68,9 @@
 
 
 (module+ test
-  (define sample-main `(pmap-root "foo" "bar" (one (two "three"))))
-  (check-equal? (main->pmap sample-main) 
-                '(pmap-root ((parent "")) (foo ((parent "pmap-root"))) (bar ((parent "pmap-root"))) (one ((parent "pmap-root")) (two ((parent "one")) (three ((parent "two"))))))))
+  (let ([sample-main `(pmap-root "foo" "bar" (one (two "three")))])
+    (check-equal? (main->pmap sample-main) 
+                  '(pmap-root ((parent "")) (foo ((parent "pmap-root"))) (bar ((parent "pmap-root"))) (one ((parent "pmap-root")) (two ((parent "one")) (three ((parent "two")))))))))
 
 
 
@@ -118,78 +118,77 @@
   (check-equal? (siblings 'two test-pmap) '("two"))
   (check-false (siblings 'invalid-key test-pmap)))
 
-;; helper function
-(define/contract (side-siblings side element [pmap pmap]) 
-  ((symbol? pmap-key?) (pmap?) . ->* . (or/c list? boolean?))
-  (define result ((if (equal? side 'left) takef takef-right) 
-                  (siblings element pmap) 
-                  (λ(i) (not (equal? (->string element) (->string i))))))
-  (and (not (empty? result)) result))
 
 
-(define/contract (pmap-split element elements)
-  (pmap-key? (listof pmap-key?) . -> . (values (listof pmap-key?) (listof pmap-key?)))
-  (define-values (left right) (splitf-at elements 
-                                         (λ(e) (not (equal? (->string e) (->string element))))))
-  (values left (cdr right)))
+(define/contract (siblings-split element [pmap pmap])
+  ((pmap-key?) (pmap?) . ->* . (values (or/c (listof pmap-key?) boolean?) 
+                                       (or/c (listof pmap-key?) boolean?)))
+  (let-values ([(left right) (splitf-at (siblings element pmap) 
+                                        (λ(e) (not (equal? (->string e) (->string element)))))])
+    (values (if (empty? left) #f left) (if (empty? (cdr right)) #f (cdr right)))))
 
 (module+ test
-  (check-equal? (values->list (pmap-split 'bar (siblings 'bar test-pmap))) (list '("foo") '("one"))))
+  (check-equal? (values->list (siblings-split 'one test-pmap)) '(("foo" "bar") #f))
+  (check-equal? (values->list (siblings-split 'bar test-pmap)) (list '("foo") '("one"))))
 
 
 ;; siblings to the left of target element (i.e., precede in map order)
-(define (left-siblings element [pmap pmap])
-  (side-siblings 'left element pmap))
+(define (siblings-left element [pmap pmap])
+  (let-values ([(left right) (siblings-split element pmap)])
+    left))
 
 (module+ test
-  (check-equal? (left-siblings 'one test-pmap) '("foo" "bar"))
-  (check-false (left-siblings 'foo test-pmap)))
+  (check-equal? (siblings-left 'one test-pmap) '("foo" "bar"))
+  (check-false (siblings-left 'foo test-pmap)))
 
 ;; siblings to the right of target element (i.e., follow in map order)
-(define (right-siblings element [pmap pmap])
-  (side-siblings 'right element pmap))
+(define (siblings-right element [pmap pmap])
+  (let-values ([(left right) (siblings-split element pmap)])
+    right))
 
 (module+ test
-  (check-false (right-siblings 'one test-pmap))
-  (check-equal? (right-siblings 'foo test-pmap) '("bar" "one")))
+  (check-false (siblings-right 'one test-pmap))
+  (check-equal? (siblings-right 'foo test-pmap) '("bar" "one")))
 
 
 ;; get element immediately to the left in map
-(define/contract (left-sibling element [pmap pmap])
+(define/contract (sibling-previous element [pmap pmap])
   ((pmap-key?) (pmap?) . ->* . (or/c string? boolean?))
-  (define siblings (left-siblings element pmap))
-  (and siblings (last siblings)))
+  (let ([siblings (siblings-left element pmap)])
+    (and siblings (last siblings))))
 
 (module+ test
-  (check-equal? (left-sibling 'bar test-pmap) "foo")
-  (check-false (left-sibling 'foo test-pmap)))
+  (check-equal? (sibling-previous 'bar test-pmap) "foo")
+  (check-false (sibling-previous 'foo test-pmap)))
 
 ;; get element immediately to the right in map
-(define/contract (right-sibling element [pmap pmap])
+(define/contract (sibling-next element [pmap pmap])
   ((pmap-key?) (pmap?) . ->* . (or/c string? boolean?))
-  (define siblings (right-siblings element pmap))
-  (and siblings (first siblings)))
+  (let ([siblings (siblings-right element pmap)])
+    (and siblings (first siblings))))
 
 (module+ test
-  (check-equal? (right-sibling 'foo test-pmap) "bar")
-  (check-false (right-sibling 'one test-pmap)))
+  (check-equal? (sibling-next 'foo test-pmap) "bar")
+  (check-false (sibling-next 'one test-pmap)))
 
 
 ;; flatten map to sequence
-(define/contract (make-page-sequence [pmap pmap])
+(define/contract (all-pages [pmap pmap])
   (pmap? . -> . (listof string?))
   ; use cdr to get rid of main-map tag at front
   (map ->string (cdr (flatten (remove-parents pmap))))) 
 
 (module+ test
-  (check-equal? (make-page-sequence test-pmap) '("foo" "bar" "one" "two" "three")))
+  (check-equal? (all-pages test-pmap) '("foo" "bar" "one" "two" "three")))
 
 ;; helper function for get-previous-pages and get-next-pages
 (define/contract (adjacent-pages side element [pmap pmap])
   ((symbol? pmap-key?) (pmap?) . ->* . (or/c list? boolean?))
-  (define result ((if (equal? side 'left) takef takef-right)
-                  (make-page-sequence pmap) (λ(y) (not (equal? (->string element) (->string y))))))
-  (and (not (empty? result)) result))
+  (let ([result ((if (equal? side 'left) 
+                     takef 
+                     takef-right) (all-pages pmap) 
+                                  (λ(y) (not (equal? (->string element) (->string y)))))])
+    (and (not (empty? result)) result)))
 
 (module+ test
   (check-equal? (adjacent-pages 'left 'one test-pmap) '("foo" "bar"))
@@ -221,8 +220,8 @@
 ;; get page immediately previous
 (define/contract (previous-page element [pmap pmap])
   ((pmap-key?) (pmap?) . ->* . (or/c string? boolean?))
-  (define result (previous-pages element pmap))
-  (and result (last result)))
+  (let ([result (previous-pages element pmap)])
+    (and result (last result))))
 
 (module+ test
   (check-equal? (previous-page 'one test-pmap) "bar")
@@ -232,21 +231,14 @@
 ;; get page immediately next
 (define (next-page element [pmap pmap])
   ((pmap-key?) (pmap?) . ->* . (or/c string? boolean?))
-  (define result (next-pages element pmap))
-  (and result (first result)))
+  (let ([result (next-pages element pmap)])
+    (and result (first result))))
 
 (module+ test
   (check-equal? (next-page 'foo test-pmap) "bar")
   (check-equal? (next-page 'one test-pmap) "two")
   (check-false (next-page 'three test-pmap)))
 
-#|(module+ test
-  ;; need to parameterize current-directory
-  ;; because pollen main depends on it to find the include functions
-  (define pm (parameterize ([current-directory "./tests/"])
-               (main->pmap (dynamic-require "test.pmap" 'main))))
-  (check-equal? (previous-page (parent 'printers-and-paper pm) pm) "ligatures"))
-|#
 
 
 (define/contract (pmap-decode . elements)
@@ -259,14 +251,14 @@
               ;; they must also be unique
               (flat-named-contract 'unique-pmap-keys
                                    (λ(e) (elements-unique? #:loud #t 
-                                          (map ->string ; to make keys comparable
-                                               (filter-not whitespace? (flatten e)))))))
+                                                           (map ->string ; to make keys comparable
+                                                                (filter-not whitespace? (flatten e)))))))
       . ->* . pmap?)
   (main->pmap (decode (cons 'pmap-root elements)
-          ;          #:exclude-xexpr-tags 'em
-          ;          #:xexpr-tag-proc [xexpr-tag-proc (λ(x)x)]
-          ;          #:xexpr-attr-proc [xexpr-attr-proc (λ(x)x)]
-          #:xexpr-elements-proc (λ(xs) (filter-not whitespace? xs))
-          ; #:block-xexpr-proc block-xexpr-proc
-          ;          #:inline-xexpr-proc [inline-xexpr-proc (λ(x)x)]
-          )))
+                      ;          #:exclude-xexpr-tags 'em
+                      ;          #:xexpr-tag-proc [xexpr-tag-proc (λ(x)x)]
+                      ;          #:xexpr-attr-proc [xexpr-attr-proc (λ(x)x)]
+                      #:xexpr-elements-proc (λ(xs) (filter-not whitespace? xs))
+                      ; #:block-xexpr-proc block-xexpr-proc
+                      ;          #:inline-xexpr-proc [inline-xexpr-proc (λ(x)x)]
+                      )))

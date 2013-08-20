@@ -90,7 +90,7 @@
   (pmap-source? . -> . void?)
   (message "Regenerating pages from pollen map: " (filename-of pmap))
   (for-each regenerate-path/message 
-            (make-page-sequence (main->pmap (dynamic-require pmap 'main)))))
+            (all-pages (dynamic-require pmap 'main))))
 
 (define (get-pollen-files-with-ext ext)
   (filter (λ(f) (has-ext? f ext)) (directory-list pollen-file-root)))
