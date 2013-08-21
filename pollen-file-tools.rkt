@@ -96,7 +96,7 @@
 
 (define/contract (has-preproc-source? x)
   (any/c . -> . boolean?)
-  (file-exists? (make-preproc-in-path (->path x))))
+  (file-exists? (make-preproc-source-path (->path x))))
 
 (define/contract (has-pollen-source? x)
   (any/c . -> . boolean?)
@@ -121,13 +121,21 @@
   (any/c . -> . boolean?)
   (has-ext? (->path x) POLLEN_SOURCE_EXT))
 
+;; this is for regenerate module.
+;; when we want to be friendly with inputs for functions that require a path.
+;; Strings & symbols often result from xexpr parsing
+;; and are trivially converted to paths.
+;; so let's say close enough.
+(define/contract (pathish? x)
+  (any/c . -> . boolean?)
+  (->boolean (or path? string? symbol?)))
 
 
-(define/contract (make-preproc-in-path path)
+(define/contract (make-preproc-source-path path)
   (path? . -> . path?)
   (add-ext path POLLEN_PREPROC_EXT))
 
-(define/contract (make-preproc-out-path path)
+(define/contract (make-preproc-output-path path)
   (path? . -> . path?)
   (remove-ext path))
 

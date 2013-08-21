@@ -39,7 +39,7 @@
 
 ;; general way of coercing to path
 (define (->path thing)
-  ; todo: on bad input, it will pop a string error rather than symbol error
+  ; todo: on bad input, it will pop a string error rather than path error
   (string->path (->string thing)))
 
 (define (->complete-path thing)

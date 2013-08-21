@@ -5,6 +5,8 @@
 
 (module+ test (require rackunit))
 
+(provide regenerate force-regenerate)
+
 ;; mod-dates is a hash that takes lists of paths as keys,
 ;; and lists of modification times as values.
 ;; Reason: a templated page is a combination of two source files.
@@ -30,8 +32,9 @@
 ;; put list of paths into mod-dates
 ;; want to take list as input (rather than individual path)
 ;; because hash key needs to be a list
-(define/contract (store-refresh-in-mod-dates paths)
-  ((listof path?) . -> . void?)
+(define/contract (store-refresh-in-mod-dates path-or-paths)
+  ((or/c path? (listof path?)) . -> . void?)
+  (define paths (->list path-or-paths))
   (hash-set! mod-dates paths (map path->mod-date-value paths)))
 
 (module+ test
@@ -54,10 +57,11 @@
   (check-true (= (len mod-dates) 0)))
 
 ;; how to know whether a certain combination of paths needs a refresh
-(define/contract (source-needs-refresh? paths)
-  ((listof path?) . -> . boolean?)
-  (or (not (paths . in? . mod-dates))  ; no stored mod date
-      (not (equal? (map path->mod-date-value paths) (get mod-dates paths))))) ; data has changed
+(define/contract (source-needs-refresh? path-or-paths)
+  ((or/c path? (listof path?)) . -> . boolean?)
+  (let ([paths (->list path-or-paths)])
+    (or (not (paths . in? . mod-dates))  ; no stored mod date
+        (not (equal? (map path->mod-date-value paths) (get mod-dates paths)))))) ; data has changed
 
 (module+ test 
   (reset-mod-dates)
@@ -68,62 +72,87 @@
     (check-true (source-needs-refresh? (list path)))))
 
 
-; helper functions for regenerate functions
-;(define pollen-file-root (current-directory))
+;; convenience function for external modules to use
+(define/contract (force-regenerate x)
+  (pathish? . -> . void?)
+  (regenerate x #:force #t))
 
-; complete pollen path =
-;(build-path pollen-file-root f)
-
-
-;; regenerate files listed in a pmap file
-(define/contract (regenerate-with-pmap pmap)
-  (pmap? . -> . void?)    
-  (for-each regenerate (all-pages pmap)))
-
-;; todo: write test
-
-
-;; dispatches path to the right place
-(define/contract (regenerate path #:force [force #f])
-  (path? . -> . void?)
-  (regenerating-message path)
-  (let ([path (->complete-path path)])
+;; dispatches path to the right regeneration function
+;; use #:force to refresh regardless of cached state
+(define/contract (regenerate x #:force [force #f])
+  ((pathish?) (#:force boolean?) . ->* . void?)
+  (let ([path (->complete-path (->path x))])
     (cond
+      ;; this will catch pp (preprocessor) files
+      [(needs-preproc? path) (regenerate-with-preproc path #:force force)]
+      ;; this will catch p files, 
+      ;; and files without extension that correspond to p files
+      [(needs-template? path) (regenerate-with-template path #:force force)]
+      ;; this will catch pmap (pollen map) files
       [(pmap-source? path) (let ([pmap (dynamic-require path 'main)])
-                             (regenerate-with-pmap pmap))]
-      [(needs-preproc? path) (do-preproc path #:force force)]
-      [(needs-template? path) (do-template path #:force force)])))
+                             (regenerate-with-pmap pmap #:force force))]
+      [else (error "Regenerate: no handler for" (->string (file-name-from-path path)))])))
 
-;; todo: write test
-
+;; todo: write tests
 
 
+;; todo: write contract & tests
 (define (regenerating-message path)
+  ;; you can actually stuff whatever string you want into path —
+  ;; if it's not really a path, file-name-from-path won't choke
   (message "Regenerating:" (->string (file-name-from-path path))))
 
-(define (do-preproc path #:force [force #f])
-  ; set up preproc-in-path & preproc-out-path values
-  (let-values 
-      ([(preproc-in-path preproc-out-path) 
-        (if (preproc-source? path) 
-            (values path (make-preproc-out-path path))
-            (values (make-preproc-in-path path) path))])    
-    
-    (when (and (file-exists? preproc-in-path) 
-               (or force
-                   (not (file-exists? preproc-out-path))
-                   (source-needs-refresh? preproc-in-path)))
-      (store-refresh-in-mod-dates preproc-in-path)
-      ; use single quotes to escape spaces in pathnames
-      (define command 
-        (format "~a '~a' > '~a'" RACKET_PATH preproc-in-path preproc-out-path))
-      ; discard output using open-output-nowhere
-      (parameterize ([current-output-port (open-output-nowhere)])
-        (system command))
-      (regenerate-message preproc-out-path))))
+;; todo: write contract & tests
+(define (regenerated-message path)
+  (message "Regenerated:" (->string (file-name-from-path path))))
 
 
-(define (do-template path [template-name empty] #:force [force #f]) 
+(define/contract (regenerate-with-preproc x #:force [force #f])
+  ((pathish?) (#:force boolean?) . ->* . void?)
+  (define path (->path x))
+  ;; path might be either a preproc-source path or preproc-output path
+  ;; figure out which, then compute the other
+  (define-values (source-path output-path) (if (preproc-source? path) 
+                                               (values path (make-preproc-output-path path))
+                                               (values (make-preproc-source-path path) path)))  
+  
+  ;; Computing the source-path doesn't validate whether it exists.
+  ;; Which is important, of course.
+  (if (file-exists? source-path) 
+      ;; Three conditions under which we refresh:
+      (if (or
+           ;; 1) explicitly forced refresh
+           force 
+           ;; 2) output file doesn't exist (so it definitely won't appear in mod-dates)
+           ;; also, this is convenient for development: 
+           ;; you can trigger a refresh just by deleting the file
+           (not (file-exists? output-path)) 
+           ;; 3) file otherwise needs refresh (e.g., it changed)
+           (source-needs-refresh? source-path)) 
+          ;; use single quotes to escape spaces in pathnames
+          (let ([command (format "~a '~a' > '~a'" RACKET_PATH source-path output-path)])
+            (regenerating-message (format "~a from ~a" 
+                                          (file-name-from-path output-path)
+                                          (file-name-from-path source-path)))
+            (store-refresh-in-mod-dates source-path)
+            ;; discard output using open-output-nowhere
+            (parameterize ([current-output-port (open-output-nowhere)])
+              (system command))
+            (regenerated-message output-path))
+          ;; otherwise, skip file because there's no trigger for refresh
+          (message "File is up to date:" (->string (file-name-from-path output-path))))
+      ;; source-path doesn't exist
+      (message "Preprocessor file not found:" (->string (file-name-from-path source-path)))))
+
+;; todo: write tests
+
+
+
+;;;;;;;;;;;;;;;
+;; todo next
+;;;;;;;;;;;;;;;
+
+(define (regenerate-with-template path [template-name empty] #:force [force #f]) 
   ; take full path or filename
   ; return full path of templated file
   
@@ -201,7 +230,14 @@
     
     
     (display-to-file #:exists 'replace page-result generated-path)
-    (regenerate-message generated-path)))
+    (regenerated-message generated-path)))
 
 
-(provide regenerate regenerate-all-files)
+
+;; regenerate files listed in a pmap file
+(define/contract (regenerate-with-pmap pmap #:force [force #f])
+  (pmap? . -> . void?)    
+  ;; pass force parameter through 
+  (for-each (λ(i) (regenerate i #:force force)) (all-pages pmap)))
+
+;; todo: write test
