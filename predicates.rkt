@@ -179,12 +179,12 @@
 (define/contract (pmap-attr? x)
   (any/c . -> . boolean?)
   (match x
-    [(list `(parent ,(? string?))) #t]
+    [(list `(,POLLEN_MAP_PARENT_KEY ,(? string?))) #t]
     [else #f]))
 
 (module+ test
-  (check-true (pmap-attr? '((parent "bar"))))
-  (check-false (pmap-attr? '((parent "bar")(foo "bar"))))
+  (check-true (pmap-attr? `((,POLLEN_MAP_PARENT_KEY "bar"))))
+  (check-false (pmap-attr? `((,POLLEN_MAP_PARENT_KEY "bar")(foo "bar"))))
   (check-false (pmap-attr? '())))
   
 
