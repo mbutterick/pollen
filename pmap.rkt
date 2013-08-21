@@ -7,7 +7,7 @@
 (provide (all-defined-out))
 
 ; get the values out of the file, or make them up
-(define pmap-file (build-path START_DIR DEFAULT_MAP))
+(define pmap-file (build-path START_DIR DEFAULT_POLLEN_MAP))
 (define pmap-main empty)
 
 
@@ -35,12 +35,12 @@
        ;; xexpr with tag as name, parent as attr, children as elements with tag as next parent
        (make-tagged-xexpr tag attr (map (λ(c) (add-parents c tag)) children)))]
     ;; single map entry: convert to xexpr with parent
-    [else (make-tagged-xexpr (->symbol x) (make-xexpr-attr 'parent (->string parent)))]))
+    [else (make-tagged-xexpr (->symbol x) (make-xexpr-attr POLLEN_MAP_PARENT_KEY (->string parent)))]))
 
 (module+ test
   (define test-pmap-main `(pmap-main "foo" "bar" (one (two "three"))))
   (check-equal? (main->pmap test-pmap-main) 
-                '(pmap-main ((parent "")) (foo ((parent "pmap-main"))) (bar ((parent "pmap-main"))) (one ((parent "pmap-main")) (two ((parent "one")) (three ((parent "two"))))))))
+                `(pmap-main ((,POLLEN_MAP_PARENT_KEY "")) (foo ((,POLLEN_MAP_PARENT_KEY "pmap-main"))) (bar ((,POLLEN_MAP_PARENT_KEY "pmap-main"))) (one ((,POLLEN_MAP_PARENT_KEY "pmap-main")) (two ((,POLLEN_MAP_PARENT_KEY "one")) (three ((,POLLEN_MAP_PARENT_KEY "two"))))))))
 
 
 
@@ -62,15 +62,14 @@
 
 (module+ test
   (check-equal? (remove-parents 
-                 '(pmap-main ((parent "")) (foo ((parent ""))) (bar ((parent ""))) 
-                             (one ((parent "")) (two ((parent "one")) (three ((parent "two")))))))
+                 `(pmap-main ((,POLLEN_MAP_PARENT_KEY "")) (foo ((,POLLEN_MAP_PARENT_KEY ""))) (bar ((,POLLEN_MAP_PARENT_KEY ""))) (one ((,POLLEN_MAP_PARENT_KEY "")) (two ((,POLLEN_MAP_PARENT_KEY "one")) (three ((,POLLEN_MAP_PARENT_KEY "two")))))))
                 '(pmap-main (foo) (bar) (one (two (three))))))
 
 
 (module+ test
   (let ([sample-main `(pmap-root "foo" "bar" (one (two "three")))])
     (check-equal? (main->pmap sample-main) 
-                  '(pmap-root ((parent "")) (foo ((parent "pmap-root"))) (bar ((parent "pmap-root"))) (one ((parent "pmap-root")) (two ((parent "one")) (three ((parent "two")))))))))
+                  `(pmap-root ((,POLLEN_MAP_PARENT_KEY "")) (foo ((,POLLEN_MAP_PARENT_KEY "pmap-root"))) (bar ((,POLLEN_MAP_PARENT_KEY "pmap-root"))) (one ((,POLLEN_MAP_PARENT_KEY "pmap-root")) (two ((,POLLEN_MAP_PARENT_KEY "one")) (three ((,POLLEN_MAP_PARENT_KEY "two")))))))))
 
 
 

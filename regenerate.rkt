@@ -69,60 +69,37 @@
 
 
 ; helper functions for regenerate functions
-(define pollen-file-root (current-directory))
+;(define pollen-file-root (current-directory))
 
 ; complete pollen path =
 ;(build-path pollen-file-root f)
 
 
-;; regenerate with message
-(define/contract (regenerate-path/message path)
-  (complete-path? . -> . void?)
-  (message "Regenerating: " path)
-  (regenerate path))
+;; regenerate files listed in a pmap file
+(define/contract (regenerate-with-pmap pmap)
+  (pmap? . -> . void?)    
+  (for-each regenerate (all-pages pmap)))
 
 ;; todo: write test
 
-;;;;;;;;;;;;;
-;; todo next
 
-(define/contract (regenerate-with-pmap/message pmap)
-  (pmap-source? . -> . void?)
-  (message "Regenerating pages from pollen map: " (filename-of pmap))
-  (for-each regenerate-path/message 
-            (all-pages (dynamic-require pmap 'main))))
-
-(define (get-pollen-files-with-ext ext)
-  (filter (λ(f) (has-ext? f ext)) (directory-list pollen-file-root)))
-
-; burn all files
-(define (regenerate-all-files)
-  (reset-mod-dates)
-  
-  (define all-preproc-files (get-pollen-files-with-ext POLLEN_PREPROC_EXT))
-  (for-each regenerate-path/message all-preproc-files)
-  
-  (define all-pollen-maps (get-pollen-files-with-ext POLLEN_MAP_EXT))
-  (for-each regenerate-with-pmap/message all-pollen-maps)
-  
-  (displayln "Completed"))
-
-
-
-(define (regenerate path #:force [force #f])
-  ; dispatches path-in to the right place
-  
-  
+;; dispatches path to the right place
+(define/contract (regenerate path #:force [force #f])
+  (path? . -> . void?)
+  (regenerating-message path)
   (let ([path (->complete-path path)])
     (cond
+      [(pmap-source? path) (let ([pmap (dynamic-require path 'main)])
+                             (regenerate-with-pmap pmap))]
       [(needs-preproc? path) (do-preproc path #:force force)]
-      [(needs-template? path) (do-template path #:force force)]
-      [(pmap-source? path) (regenerate-with-pmap/message path)])))
+      [(needs-template? path) (do-template path #:force force)])))
+
+;; todo: write test
 
 
 
-(define (regenerate-message path)
-  (message "Regenerated:" (->string (file-name-from-path path))))
+(define (regenerating-message path)
+  (message "Regenerating:" (->string (file-name-from-path path))))
 
 (define (do-preproc path #:force [force #f])
   ; set up preproc-in-path & preproc-out-path values

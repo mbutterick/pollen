@@ -7,6 +7,10 @@
 
 (module+ test (require rackunit))
 
+
+; helper functions for regenerate functions
+(define pollen-file-root (current-directory))
+
 ;; does path have a certain extension
 (define/contract (has-ext? path ext)
   (path? symbol? . -> . boolean?)
@@ -75,14 +79,15 @@
   (check-not-equal? (remove-all-ext foo.bar.txt-path) foo.bar-path) ; removes more than one ext
   (check-equal? (remove-all-ext foo.bar.txt-path) foo-path))
 
+;; superfluous: use file-name-from-path in racket/path
 
-(define/contract (filename-of path)
+#|(define/contract (filename-of path)
   (complete-path? . -> . path?)
   (define-values (dir filename ignored) (split-path path))
   filename)
 
 (module+ test 
- (check-equal? (filename-of (build-path (current-directory) "pollen-file-tools.rkt")) (->path "pollen-file-tools.rkt")))
+ (check-equal? (filename-of (build-path (current-directory) "pollen-file-tools.rkt")) (->path "pollen-file-tools.rkt")))|#
 
 
 (define/contract (preproc-source? x)
@@ -129,3 +134,9 @@
 (define/contract (make-pollen-source-path thing)
   (path? . -> . path?)
   (add-ext (remove-ext (->path thing)) POLLEN_SOURCE_EXT))
+
+(define/contract (project-files-with-ext ext)
+  (symbol? . -> . (listof complete-path?))
+  (filter (λ(i) (has-ext? i ext)) (directory-list pollen-file-root)))
+
+;; todo: write tests for project-files-with-ext
