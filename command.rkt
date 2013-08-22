@@ -1,5 +1,7 @@
 #lang racket
 
+;; todo: add command to check validity of installation
+
 (require (for-syntax "readability.rkt"))
 
 (define-syntax (handle-pollen-command stx)

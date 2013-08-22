@@ -140,9 +140,28 @@
   (path? . -> . path?)
   (remove-ext path))
 
+(define/contract (make-pollen-output-path thing ext)
+  (pathish? (or/c string? symbol?) . -> . path?)
+  (add-ext (remove-ext (->path thing)) ext))
+
+(module+ test
+  (check-equal? (make-pollen-output-path (->path "foo.p") 'html) (->path "foo.html"))
+  (check-equal? (make-pollen-output-path (->path "/Users/mb/git/foo.p") 'html) (->path "/Users/mb/git/foo.html"))
+  (check-equal? (make-pollen-output-path "foo" 'xml) (->path "foo.xml"))
+  (check-equal? (make-pollen-output-path 'foo 'barml) (->path "foo.barml")))
+
+;; turns input into corresponding pollen source path
+;; does not, however, validate that new path exists
+;; todo: should it? I don't think so, sometimes handy to make the name for later use
+;; OK to use pollen source as input (comes out the same way)
 (define/contract (make-pollen-source-path thing)
-  (path? . -> . path?)
+  (pathish? . -> . path?)
   (add-ext (remove-ext (->path thing)) POLLEN_SOURCE_EXT))
+
+(module+ test
+  (check-equal? (make-pollen-source-path (->path "foo.p")) (->path "foo.p"))
+  (check-equal? (make-pollen-source-path "foo") (->path "foo.p"))
+  (check-equal? (make-pollen-source-path 'foo) (->path "foo.p")))
 
 (define/contract (project-files-with-ext ext)
   (symbol? . -> . (listof complete-path?))

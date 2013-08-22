@@ -30,16 +30,17 @@
   (check-true (exact-integer? (path->mod-date-value (build-path (current-directory) (->path "regenerate.rkt"))))))
 
 ;; put list of paths into mod-dates
-;; want to take list as input (rather than individual path)
+;; need list as input (rather than individual path)
 ;; because hash key needs to be a list
-(define/contract (store-refresh-in-mod-dates path-or-paths)
-  ((or/c path? (listof path?)) . -> . void?)
-  (define paths (->list path-or-paths))
-  (hash-set! mod-dates paths (map path->mod-date-value paths)))
+;; so it's convenient to use a rest argument
+;; therefore, use function by just listing out the paths
+(define/contract (store-refresh-in-mod-dates . rest-paths)
+  (() #:rest (listof path?) . ->* . void?)
+  (hash-set! mod-dates rest-paths (map path->mod-date-value rest-paths)))
 
 (module+ test
   (reset-mod-dates)
-  (store-refresh-in-mod-dates (list (build-path (current-directory) (->path "regenerate.rkt"))))
+  (store-refresh-in-mod-dates (build-path (current-directory) (->path "regenerate.rkt")))
   (check-true (= (len mod-dates) 1))
   (reset-mod-dates))
 
@@ -52,24 +53,24 @@
 
 (module+ test 
   (reset-mod-dates)
-  (store-refresh-in-mod-dates (list (build-path (current-directory) (->path "regenerate.rkt"))))
+  (store-refresh-in-mod-dates (build-path (current-directory) (->path "regenerate.rkt")))
   (reset-mod-dates)
   (check-true (= (len mod-dates) 0)))
 
 ;; how to know whether a certain combination of paths needs a refresh
-(define/contract (source-needs-refresh? path-or-paths)
-  ((or/c path? (listof path?)) . -> . boolean?)
-  (let ([paths (->list path-or-paths)])
-    (or (not (paths . in? . mod-dates))  ; no stored mod date
-        (not (equal? (map path->mod-date-value paths) (get mod-dates paths)))))) ; data has changed
+;; use rest argument here so calling pattern matches store-refresh
+(define/contract (mod-date-expired? . rest-paths)
+  (() #:rest (listof path?) . ->* . boolean?)
+    (or (not (rest-paths . in? . mod-dates))  ; no stored mod date
+        (not (equal? (map path->mod-date-value rest-paths) (get mod-dates rest-paths))))) ; data has changed
 
 (module+ test 
   (reset-mod-dates)
   (let ([path (build-path (current-directory) (->path "regenerate.rkt"))])
-    (store-refresh-in-mod-dates (list path))
-    (check-false (source-needs-refresh? (list path)))
+    (store-refresh-in-mod-dates path)
+    (check-false (mod-date-expired? path))
     (reset-mod-dates)
-    (check-true (source-needs-refresh? (list path)))))
+    (check-true (mod-date-expired? path))))
 
 
 ;; convenience function for external modules to use
@@ -91,7 +92,7 @@
       ;; this will catch pmap (pollen map) files
       [(pmap-source? path) (let ([pmap (dynamic-require path 'main)])
                              (regenerate-with-pmap pmap #:force force))]
-      [else (error "Regenerate: no handler for" (->string (file-name-from-path path)))])))
+      [else (message "Regenerate: passing through" (->string (file-name-from-path path)))])))
 
 ;; todo: write tests
 
@@ -128,7 +129,7 @@
            ;; you can trigger a refresh just by deleting the file
            (not (file-exists? output-path)) 
            ;; 3) file otherwise needs refresh (e.g., it changed)
-           (source-needs-refresh? source-path)) 
+           (mod-date-expired? source-path)) 
           ;; use single quotes to escape spaces in pathnames
           (let ([command (format "~a '~a' > '~a'" RACKET_PATH source-path output-path)])
             (regenerating-message (format "~a from ~a" 
@@ -147,92 +148,111 @@
 ;; todo: write tests
 
 
-
-;;;;;;;;;;;;;;;
-;; todo next
-;;;;;;;;;;;;;;;
-
-(define (regenerate-with-template path [template-name empty] #:force [force #f]) 
-  ; take full path or filename
-  ; return full path of templated file
+;; utility function for regenerate-with-template
+(define/contract (handle-source-rerequire source-path)
+  (path? . -> . boolean?)
   
-  (define source-path (->complete-path 
-                       (if (pollen-source? path) 
-                           path
-                           (make-pollen-source-path path))))
+  ;; dynamic-rerequire watches files to see if they change.
+  ;; if so, then it reloads them.
+  ;; therefore, it's useful in a development environment
+  ;; because it reloads as needed, but otherwise not.
   
-  (define-values (source-dir source-name ignored) (split-path source-path))
+  (define-values (source-dir source-name _) (split-path source-path))
+  ;; need to require source file (to retrieve template name, which is in metas)
+  ;; but use dynamic-rerequire now to force refresh for dynamic-require later,
+  ;; otherwise the source file will cache
+  ;; by default, rerequire reports reloads to error port.
+  ;; set up a port to catch messages from dynamic-rerequire
+  ;; and then examine this message to find out if anything was reloaded. 
+  (define port-for-catching-file-info (open-output-string))
   
-  ; get body out of source file (to retrieve template name)
-  ; use dynamic-rerequire to force refresh for dynamic-require, 
-  ; otherwise it will cache
-  ; parameterize needed because source files have relative requires
-  (define file-was-reloaded-port (open-output-string))
+  ;; parameterize needed because source files have relative requires in project directory
+  ;; parameterize is slow, IIRC
   (parameterize ([current-directory source-dir]
-                 [current-error-port file-was-reloaded-port])
-    ; by default, rerequire reports reloads to error port.
-    ; so capture this message to find out if anything was reloaded.
+                 [current-error-port port-for-catching-file-info])
     (dynamic-rerequire source-path))
   
-  (define file-was-reloaded? 
-    (> (string-length (get-output-string file-was-reloaded-port)) 0))
+  ;; if the file needed to be reloaded, there will be a message in the port
+  ;; this becomes the return value
+  (->boolean (> (len (get-output-string port-for-catching-file-info)) 0)))
+
+
+;; apply template
+(define/contract (regenerate-with-template x [template-name #f] #:force [force #f]) 
+  ((pathish?) (path? #:force boolean?) . ->* . void?)
   
-  ; set template, regenerate, get data
-  ; first, if no template name provided, look it up
-  (when (or (empty? template-name) (not (file-exists? (build-path source-dir template-name))))
-    ; get template name out of meta fields.
-    ; todo: template file in body may not refer to a file that exists.
-    ; todo: consider whether file-was-reloaded could change metas
-    ; (because here, I'm retrieving them from existing source)
-    
-    ;;;;;;;;;;;;;;
-    ;; todo: next
-    ;;;;;;;;;;;;;;
-    
-    (define metas (dynamic-require source-path 'metas))
-    (set! template-name (if (TEMPLATE_META_KEY . in? . metas)
-                            (get metas TEMPLATE_META_KEY)
-                            DEFAULT_TEMPLATE)))
-  (define template-path (build-path source-dir template-name))
-  ; refresh template (it might have its own p file)
+  ;; set up information about source
+  (define source-path (->complete-path (make-pollen-source-path (->path x))))
+  (define-values (source-dir source-name _) (split-path source-path))
+  
+  ;; find out whether source had to be reloaded
+  (define source-reloaded? (handle-source-rerequire source-path))
+  
+  ;; Then the rest: 
+  ;; set the template, regenerate the source file with template, and catch the output.
+  ;; 1) Set the template.
+  (define template-path 
+    (build-path source-dir
+                ;; if template name provided and exists
+                (if (and template-name (file-exists? (build-path source-dir template-name)))
+                    ;; OK to use template-name as given
+                    template-name
+                    ;; Otherwise — try to get template name out of meta fields.
+                    ;; todo: consider that template file in metas 
+                    ;; may not refer to a file that exists.
+                    ;; what then?
+                    (let ([source-metas (dynamic-require source-path 'metas)])
+                      (if (TEMPLATE_META_KEY . in? . source-metas)
+                          (get source-metas TEMPLATE_META_KEY)
+                          DEFAULT_TEMPLATE)))))
+  
+  ;; refresh template (it might have its own preprocessor file)
   (regenerate template-path #:force force)
   
-  ; calculate new path for generated file: 
-  ; base from source + ext from template
-  (define generated-path (build-path source-dir (add-ext (remove-ext source-name) (get-ext template-path))))
+  ;; calculate new path for generated file: base from source + ext from template
+  (define output-path (make-pollen-output-path source-path (get-ext template-path)))
   
-  ; do we need to refresh?
-  (when (or force
-            (not (file-exists? generated-path)) 
-            (source-needs-refresh? source-path template-path)
-            file-was-reloaded?)
-    (store-refresh-in-mod-dates source-path template-path)
-    
-    ; Templates are part of the compile operation.
-    ; Therefore no way to arbitrarily invoke template at run-time.
-    ; This routine creates a new namespace and compiles the template within it.
-    ; Todo: performance improvement would be to make a macro
-    ; that pre-compiles all known templates into their own functions.
-    ; then apply-template can either look for one of those functions,
-    ; if the template exists,
-    ; or if not found, use the eval technique.
-    (define page-result
-      ; parameterize current-directory to make file requires work
-      (parameterize ([current-namespace (make-base-empty-namespace)]
-                     [current-directory source-dir]
-                     [current-output-port (open-output-nowhere)])
-        (namespace-require 'racket) ; use namespace-require for FIRST require, then eval after
-        (eval '(require (planet mb/pollen/template)) (current-namespace))
-        ; import source into eval space, 
-        ; automatically sets up main & metas & here
-        (eval `(require ,(path->string source-name)) (current-namespace)) 
-        (eval `(include-template #:command-char ,TEMPLATE_FIELD_DELIMITER ,template-name) (current-namespace))))
-    
-    
-    (display-to-file #:exists 'replace page-result generated-path)
-    (regenerated-message generated-path)))
+  ;; 2) Regenerate the source file with template, if needed.
+  ;; Regenerate is expensive, so we avoid it when we can.
+  ;; Four conditions where we regenerate:
+  (if (or force ; a) it's explicitly demanded
+          (not (file-exists? output-path)) ; b) output file does not exist
+          ;; c) mod-dates indicates refresh is needed
+          (mod-date-expired? source-path template-path) 
+          ;; d) dynamic-rerequire indicates the source had to be reloaded
+          source-reloaded?)
+      (begin
+        (store-refresh-in-mod-dates source-path template-path)
+        (let ([page-result (render-source-with-template source-path template-path)])
+          (display-to-file #:exists 'replace page-result output-path)
+          (regenerated-message (file-name-from-path output-path))))
+      (message "File is up to date:" (->string (file-name-from-path output-path)))))
 
 
+(define/contract (render-source-with-template source-path template-path)
+  (complete-path? complete-path? . -> . string?)
+  
+  ;; set up information about source and template paths
+  (define-values (source-dir source-name _) (split-path source-path))
+  (define-values (template-dir template-name __) (split-path template-path))
+
+  ;; Templates are part of the compile operation.
+  ;; Therefore no way to arbitrarily invoke template at run-time.
+  ;; This routine creates a new namespace and compiles the template within it.
+  
+  ;; parameterize current-directory to make file requires work
+  ;; the below expression will evaluate to a string 
+  ;; that represents the output of the operation.
+  (parameterize ([current-namespace (make-base-empty-namespace)]
+                 [current-directory source-dir]
+                 [current-output-port (open-output-nowhere)])
+    (namespace-require 'racket) ; use namespace-require for FIRST require, then eval after
+    (eval '(require (only-in web-server/templates include-template)) (current-namespace))
+    (eval '(require (planet mb/pollen/pmap)) (current-namespace))
+    ; import source into eval space, 
+    ; automatically sets up main & metas & here
+    (eval `(require ,(path->string source-name)) (current-namespace)) 
+    (eval `(include-template #:command-char ,TEMPLATE_FIELD_DELIMITER ,(->string template-name)) (current-namespace))))
 
 ;; regenerate files listed in a pmap file
 (define/contract (regenerate-with-pmap pmap #:force [force #f])
