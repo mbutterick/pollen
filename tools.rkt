@@ -1,7 +1,7 @@
 #lang racket/base
 (require racket/contract racket/match)
 (require (only-in racket/format ~a))
-(require racket/list)
+(require racket/list xml)
 (require (only-in racket/string string-join))
 (require (only-in xml xexpr? xexpr/c))
 
@@ -215,3 +215,57 @@
   (check-equal? (make-meta-hash '((meta "foo" "bar")(meta "foo" "haw")))
                 (hash "foo" "haw")))
 
+
+;; todo: tests & contracts for this subsection
+
+(define (put x)
+  ; handles either xexpr or pollen file as input
+  (cond
+    ; pass through xexpr as is
+    ; put is optional for xexprs.
+    ; it's only here to make the idiom smooth.
+    [(tagged-xexpr? x) x] 
+    ; todo: how to externalize pollen main tag into world name?
+    [(file-exists? (->path x)) (dynamic-require x 'main)]
+    ; also try adding pollen file extension
+    ; this makes put compatible with map references
+    [(let ([x (make-pollen-source-path x)])
+       (when (file-exists? x)
+         (put x)))]
+    [else (error "put: need named xexpr or pollen file, but got" x)]))
+
+
+(define (merge x)
+  (cond
+    [(tagged-xexpr? x)
+     ; return content of xexpr.
+     ; pollen language rules will splice these into the main flow.
+     (if (empty? x)
+         ""
+         (let-values([(name attr content) (break-tagged-xexpr x)])
+           content))]
+    [(string? x) (list x)]))
+
+
+#|(define (merge-strings x)
+  (when (empty? x) (error "merge-strings got empty x"))
+  ;todo: filter metas?
+  ; leaning toward no. Simplest behavior.
+  ; function is not intended to be used with whole pollen body anyhow.
+  (let ([x (merge x)])
+    (string-join (filter string? (flatten x)) " ")))|#
+
+(define (merge-strings x)
+  (string-join (filter string? (flatten x)) " "))
+
+
+(define (make-html x)
+  (if (tagged-xexpr? x)
+      (xexpr->string x)
+      (let ([x (->list x)])
+        (when (andmap xexpr? x)
+          (string-join (map xexpr->string x) "")))))
+
+; generate *-as-html versions of functions
+(define-values (put-as-html merge-as-html merge-strings-as-html)
+  (apply values (map (λ(proc) (λ(x) (make-html (proc x)))) (list put merge merge-strings))))

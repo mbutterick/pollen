@@ -47,7 +47,9 @@
      ;; set up a hook for identifier 'here'
      ;; (but under a different name to avoid macrofication)
      (define inner-here here)  
-     (provide (all-defined-out))) 
+     (provide (all-defined-out))
+     (provide (all-from-out ; pollen file should bring its requires
+               (planet mb/pollen/tools)))) 
    
    (require 'pollen-inner) ; provides doc & #%top, among other things
    

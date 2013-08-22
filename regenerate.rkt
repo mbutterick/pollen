@@ -61,8 +61,8 @@
 ;; use rest argument here so calling pattern matches store-refresh
 (define/contract (mod-date-expired? . rest-paths)
   (() #:rest (listof path?) . ->* . boolean?)
-    (or (not (rest-paths . in? . mod-dates))  ; no stored mod date
-        (not (equal? (map path->mod-date-value rest-paths) (get mod-dates rest-paths))))) ; data has changed
+  (or (not (rest-paths . in? . mod-dates))  ; no stored mod date
+      (not (equal? (map path->mod-date-value rest-paths) (get mod-dates rest-paths))))) ; data has changed
 
 (module+ test 
   (reset-mod-dates)
@@ -92,7 +92,8 @@
       ;; this will catch pmap (pollen map) files
       [(pmap-source? path) (let ([pmap (dynamic-require path 'main)])
                              (regenerate-with-pmap pmap #:force force))]
-      [else (message "Regenerate: passing through" (->string (file-name-from-path path)))])))
+      [(file-exists? path) (message "Regenerate: passing through" (->string (file-name-from-path path)))]
+      [else (error "File not found:" (->string (file-name-from-path path)))])))
 
 ;; todo: write tests
 
@@ -108,18 +109,30 @@
   (message "Regenerated:" (->string (file-name-from-path path))))
 
 
-(define/contract (regenerate-with-preproc x #:force [force #f])
-  ((pathish?) (#:force boolean?) . ->* . void?)
+;; todo: these are misnamed. Not "complete"
+(define (complete-preproc-source-path x)
   (define path (->path x))
+  (if (preproc-source? path)
+      path
+      (make-preproc-source-path path)))
+
+(define (complete-preproc-output-path x)
+  (define path (->path x))
+  (if (preproc-source? path)
+      (make-preproc-output-path path)
+      path))
+
+(define/contract (regenerate-with-preproc x #:force [force #f])
+  (((and/c pathish?
+           (flat-named-contract 'file-exists
+                                (λ(x) (file-exists? (complete-preproc-source-path x)))))) (#:force boolean?) . ->* . void?)
+  
+  
   ;; path might be either a preproc-source path or preproc-output path
   ;; figure out which, then compute the other
-  (define-values (source-path output-path) (if (preproc-source? path) 
-                                               (values path (make-preproc-output-path path))
-                                               (values (make-preproc-source-path path) path)))  
+  (define source-path (complete-preproc-source-path x))
+  (define output-path (complete-preproc-output-path x))
   
-  ;; Computing the source-path doesn't validate whether it exists.
-  ;; Which is important, of course.
-  (if (file-exists? source-path) 
       ;; Three conditions under which we refresh:
       (if (or
            ;; 1) explicitly forced refresh
@@ -141,16 +154,14 @@
               (system command))
             (regenerated-message output-path))
           ;; otherwise, skip file because there's no trigger for refresh
-          (message "File is up to date:" (->string (file-name-from-path output-path))))
-      ;; source-path doesn't exist
-      (message "Preprocessor file not found:" (->string (file-name-from-path source-path)))))
+          (message "File is up to date:" (->string (file-name-from-path output-path)))))
 
 ;; todo: write tests
 
 
 ;; utility function for regenerate-with-template
 (define/contract (handle-source-rerequire source-path)
-  (path? . -> . boolean?)
+  ((and/c path? file-exists?) . -> . boolean?)
   
   ;; dynamic-rerequire watches files to see if they change.
   ;; if so, then it reloads them.
@@ -176,14 +187,20 @@
   ;; this becomes the return value
   (->boolean (> (len (get-output-string port-for-catching-file-info)) 0)))
 
+(define (complete-pollen-source-path x)
+  (->complete-path (make-pollen-source-path (->path x))))
 
 ;; apply template
 (define/contract (regenerate-with-template x [template-name #f] #:force [force #f]) 
-  ((pathish?) (path? #:force boolean?) . ->* . void?)
+  (((and/c pathish? 
+           (flat-named-contract 'file-exists
+                                (λ(x) (file-exists? (complete-pollen-source-path x))))))
+   (path? #:force boolean?) . ->* . void?)
   
   ;; set up information about source
-  (define source-path (->complete-path (make-pollen-source-path (->path x))))
-  (define-values (source-dir source-name _) (split-path source-path))
+  (define source-path (complete-pollen-source-path x))
+  ;; todo: this won't work with source files nested down one level
+  (define-values (source-dir ignored also-ignored) (split-path source-path))
   
   ;; find out whether source had to be reloaded
   (define source-reloaded? (handle-source-rerequire source-path))
@@ -193,9 +210,8 @@
   ;; 1) Set the template.
   (define template-path 
     (build-path source-dir
-                ;; if template name provided and exists
+                ;; if template name provided and exists, use that
                 (if (and template-name (file-exists? (build-path source-dir template-name)))
-                    ;; OK to use template-name as given
                     template-name
                     ;; Otherwise — try to get template name out of meta fields.
                     ;; todo: consider that template file in metas 
@@ -230,12 +246,13 @@
 
 
 (define/contract (render-source-with-template source-path template-path)
-  (complete-path? complete-path? . -> . string?)
+  (file-exists? file-exists? . -> . string?)
   
   ;; set up information about source and template paths
+  ;; todo: how to write these without blanks?
   (define-values (source-dir source-name _) (split-path source-path))
-  (define-values (template-dir template-name __) (split-path template-path))
-
+  (define-values (___ template-name __) (split-path template-path))
+  
   ;; Templates are part of the compile operation.
   ;; Therefore no way to arbitrarily invoke template at run-time.
   ;; This routine creates a new namespace and compiles the template within it.
@@ -247,10 +264,9 @@
                  [current-directory source-dir]
                  [current-output-port (open-output-nowhere)])
     (namespace-require 'racket) ; use namespace-require for FIRST require, then eval after
-    (eval '(require (only-in web-server/templates include-template)) (current-namespace))
+    (eval '(require web-server/templates) (current-namespace))
     (eval '(require (planet mb/pollen/pmap)) (current-namespace))
-    ; import source into eval space, 
-    ; automatically sets up main & metas & here
+    ;; import source into eval space. This sets up main & metas
     (eval `(require ,(path->string source-name)) (current-namespace)) 
     (eval `(include-template #:command-char ,TEMPLATE_FIELD_DELIMITER ,(->string template-name)) (current-namespace))))
 
