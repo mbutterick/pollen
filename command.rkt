@@ -13,8 +13,8 @@
                      [("regenerate") `(begin
                                         ;; todo: take extensions off the comand line
                                         (displayln "Regenerate preproc & pmap files ...")
-                                        (require "regenerate.rkt" "pollen-file-tools.rkt")
-                                        (map force-regenerate (append-map project-files-with-ext (list POLLEN_PREPROC_EXT POLLEN_MAP_EXT))))]
+                                        (require "regenerate.rkt" "pollen-file-tools.rkt" "world.rkt")
+                                        (apply regenerate-with-session (append-map project-files-with-ext (list POLLEN_PREPROC_EXT POLLEN_MAP_EXT))))]
                      [("clone") (let ([target-path 
                                        (if (> (len args) 1)
                                            (->path (get args 1))

@@ -6,8 +6,6 @@
 
 (displayln "Pollen server starting...")
 
-(define pollen-file-root (current-directory))
-
 (define/contract (route-wrapper route-proc)
   ;; todo: make better contract for return value
   ((complete-path? . -> . tagged-xexpr?) . -> . procedure?)

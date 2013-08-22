@@ -7,13 +7,14 @@
 (define TEMPLATE_FIELD_DELIMITER POLLEN_EXPRESSION_DELIMITER)
 
 (define DEFAULT_TEMPLATE "-main.html")
-(define TEMPLATE_META_KEY 'template)
+(define FALLBACK_TEMPLATE_NAME "-temp-fallback-template.html")
+(define TEMPLATE_META_KEY "template")
 
 (define POLLEN_MAP_EXT 'pmap)
 (define DEFAULT_POLLEN_MAP "main.pmap")
 (define POLLEN_MAP_PARENT_KEY 'parent)
 
-(define MAIN_POLLEN_EXPORT 'body)
+(define MAIN_POLLEN_EXPORT 'main)
 ;(define META_POLLEN_TAG 'metas)
 ;(define META_POLLEN_EXPORT 'metas)
 

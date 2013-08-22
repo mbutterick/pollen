@@ -165,6 +165,6 @@
 
 (define/contract (project-files-with-ext ext)
   (symbol? . -> . (listof complete-path?))
-  (filter (λ(i) (has-ext? i ext)) (directory-list pollen-file-root)))
+  (map ->complete-path (filter (λ(i) (has-ext? i ext)) (directory-list pollen-file-root))))
 
 ;; todo: write tests for project-files-with-ext

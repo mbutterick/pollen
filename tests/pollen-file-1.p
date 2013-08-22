@@ -1,5 +1,7 @@
 #lang planet mb/pollen
 
+◊meta["template" "-stain.html"]
+
 ◊topic['((class "small"))]{Bibliography}
 
 ◊lc{T}his is not, by any measure, a comprehensive bibliography. Rather, it’s a selection of favorites from my own bookshelf that I consult most frequently in my work as a writer and a typographer.

@@ -1,26 +1,5 @@
 #lang planet mb/pollen
 
-index
-typography-in-ten-minutes
-summary-of-key-rules
-foreword
-introduction
-how-to-use
-how-to-pay-for-this-book
-◊why-typography-matters{
-               what-is-typography
-               where-do-the-rules-come-from}
-◊type-composition{
-               straight-and-curly-quotes
-               one-space-between-sentences
-               trademark-and-copyright-symbols
-               ligatures}
-◊appendix{
-               printers-and-paper
-               how-to-make-a-pdf
-               typewriter-habits
-               common-accented-characters
-               identifying-fonts
-               bibliography
-               charter
-               mb-lectures-and-articles}
+
+pollen-file-1
+pollen-file-2
