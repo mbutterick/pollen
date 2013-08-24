@@ -57,11 +57,12 @@
                                         ;; file isn't yet saved in drracket
                                         [(equal? 'pollen-lang-module ccr) 'nowhere] 
                                         [else ccr])])
-                      (displayln "ccr in main=")
-                      (displayln ccr)
-                      (displayln "current-directory in main=")
-                      ;; todo: this does not respond to parameterize. Why?
-                      (displayln (current-directory))
+                      ;; pass complete path back as here value (as string)
+                      ;; Why not relative to current-directory? 
+                      ;; Because current-directory can't be parameterized
+                      ;; so raises possibility of inconsistent values.
+                      ;; Whereas the complete path is unambiguous,
+                      ;; and can be made relative by the caller (or otherwise altered).
                       (->string here-path)))))
 
 (module+ test

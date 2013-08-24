@@ -11,11 +11,15 @@
 
 (define fallback-template-data "FALLBACK! ◊(put-as-html main)")
 
-;; todo: tests & contracts for this subsection
+;; todo: docstrings for this subsection
 
 (define/contract (puttable-item? x)
   (any/c . -> . boolean?)
   (or (tagged-xexpr? x) (has-pollen-source? x)))
+
+(define/contract (query-key? x)
+  (any/c . -> . boolean?)
+  (or (string? x) (symbol? x)))
 
 (define/contract (put x)
   (puttable-item? . -> . tagged-xexpr?)
@@ -27,38 +31,50 @@
 (module+ test
   (check-equal? (put '(foo "bar")) '(foo "bar"))
   (check-equal? (put "tests/template/put.p") 
-                '(root "\n" "\n" "One paragraph" "\n" "\n" "Another paragraph" "\n" "\n")))
+                '(root "\n" "\n" (em "One") " paragraph" "\n" "\n" "Another " (em "paragraph") "\n" "\n")))
 
 
 
-(define/contract (from x query)
-  (puttable-item? (or/c string? symbol?) . -> . (or/c list? false?))
-  (or 
-   (and (has-pollen-source? x) (from-metas x query))
-   (from-main x query)))
+(define/contract (find-in x query)
+  (puttable-item? query-key? . -> . (or/c xexpr-elements? false?))
+  (or (find-in-metas x query) (find-in-main x query)))
 
+(module+ test 
+  (parameterize ([current-directory "tests/template"])
+    (check-false (find-in "put" "nonexistent-key"))
+    (check-equal? (find-in "put" "foo") (list "bar"))
+    (check-equal? (find-in "put" "em") (list "One" "paragraph"))))
 
-(define/contract (from-metas x key)
-  (has-pollen-source? (or/c string? symbol?) . -> . (or/c list? false?))
-  (let ([metas (dynamic-require (make-pollen-source-path x) 'metas)]
-        [key (->string key)])
-    ;; todo: why am I returning value as xexpr?
-    (and (key . in? . metas ) `(value ,(get metas key)))))
+(define/contract (find-in-metas x key)
+  (puttable-item? query-key? . -> . (or/c xexpr-elements? false?))
+  (and (has-pollen-source? x)
+       (let ([metas (dynamic-require (make-pollen-source-path x) 'metas)]
+             [key (->string key)])
+         (and (key . in? . metas ) (->list (get metas key))))))
 
 (module+ test
   (parameterize ([current-directory "tests/template"])
-    (let ([metas (dynamic-require (make-pollen-source-path 'put) 'metas)])
-    (check-equal? (from-metas "put" "foo") '(value "bar"))
-    (check-equal? (from-metas 'put 'here) `(value ,(find-relative-path (current-directory) (->path (get metas "here"))))))))
+    (check-equal? (find-in-metas "put" "foo") (list "bar"))
+    (let* ([metas (dynamic-require (make-pollen-source-path 'put) 'metas)]
+           [here (find-in-metas 'put 'here)]
+           [here-relative (list (->string (find-relative-path (current-directory) (car here))))])     
+      (check-equal? here-relative (list "put.p")))))
 
-(define (from-main x query) ; this used to be plain from
-  ; check results first
+
+(define/contract (find-in-main x query) 
+  (puttable-item? (or/c query-key? (listof query-key?)) 
+                  . -> . (or/c xexpr-elements? false?))
   (let* ([x (put x)]
-         [results (se-path*/list (list query) x)])
-    ; if results exist, send back xexpr as output
-    (if (not (empty? results))
-        `(,query ,@results) ; todo: why use query as tag?
-        #f)))
+         ;; make sure query is a list of symbols (required by se-path*/list)
+         [query (map ->symbol (->list query))]
+         [results (se-path*/list query x)])
+    ;; if results exist, send back xexpr as output
+    (and (not (empty? results)) results)))
+
+(module+ test
+  (parameterize ([current-directory "tests/template"])
+    (check-false (find-in-main "put" "nonexistent-key"))
+    (check-equal? (find-in-main "put" "em") (list "One" "paragraph"))))
 
 
 (define (merge x)

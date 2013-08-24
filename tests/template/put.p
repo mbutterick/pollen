@@ -1,7 +1,7 @@
 #lang planet mb/pollen
 
-One paragraph
+◊em{One} paragraph
 
-Another paragraph
+Another ◊em{paragraph}
 
 ◊meta["foo" "bar"]
