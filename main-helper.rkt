@@ -1,7 +1,10 @@
 #lang racket
+(require racket/contract/region)
+
+;; use full planet paths because this file is evaluated from source directory,
+;; not module directory
 (require (for-syntax (planet mb/pollen/tools) (planet mb/pollen/world)))
 (require (planet mb/pollen/tools) (planet mb/pollen/world))
-(require racket/contract/region)
 
 (provide (all-defined-out))
 
@@ -47,14 +50,19 @@
                     ;; Therefore, best to use let.
                     (let* ([ccr (current-contract-region)] ; trick for getting current module name
                            [here-path (cond
-                                  ;; if contract-region is called from within submodule,
-                                  ;; you get a list
-                                  ;; in which case, just grab the path from the front
-                                  [(list? ccr) (car ccr)]
-                                  ;; file isn't yet saved in drracket
-                                  [(equal? 'pollen-lang-module ccr) 'nowhere] 
-                                  [else ccr])])
-                      (->string (find-relative-path (current-directory) here-path))))))
+                                        ;; if contract-region is called from within submodule,
+                                        ;; you get a list
+                                        ;; in which case, just grab the path from the front
+                                        [(list? ccr) (car ccr)]
+                                        ;; file isn't yet saved in drracket
+                                        [(equal? 'pollen-lang-module ccr) 'nowhere] 
+                                        [else ccr])])
+                      (displayln "ccr in main=")
+                      (displayln ccr)
+                      (displayln "current-directory in main=")
+                      ;; todo: this does not respond to parameterize. Why?
+                      (displayln (current-directory))
+                      (->string here-path)))))
 
 (module+ test
   (check-equal? (get-here) "main-helper.rkt"))

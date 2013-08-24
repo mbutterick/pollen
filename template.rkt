@@ -1,9 +1,9 @@
 #lang racket/base
-(require racket/list racket/string xml xml/path)
+(require racket/list racket/contract racket/string xml xml/path racket/bool)
 (require "readability.rkt" "debug.rkt" "predicates.rkt" "tools.rkt")
 
 ;; setup for test cases
-(module+ test (require rackunit))
+(module+ test (require rackunit racket/path))
 
 (provide (all-defined-out))
 
@@ -13,11 +13,43 @@
 
 ;; todo: tests & contracts for this subsection
 
-(define (from x query)
-  ; cache x
-  (let ([x (put x)])
-    ; try finding it in metas, if not, find it in main, if not then return false
-    (or (from-metas x query) (from-main x query))))
+(define/contract (puttable-item? x)
+  (any/c . -> . boolean?)
+  (or (tagged-xexpr? x) (has-pollen-source? x)))
+
+(define/contract (put x)
+  (puttable-item? . -> . tagged-xexpr?)
+  (cond
+    ;; Using put has no effect on tagged-xexprs. It's here to make the idiom smooth.
+    [(tagged-xexpr? x) x] 
+    [(has-pollen-source? x) (dynamic-require (make-pollen-source-path x) 'main)]))
+
+(module+ test
+  (check-equal? (put '(foo "bar")) '(foo "bar"))
+  (check-equal? (put "tests/template/put.p") 
+                '(root "\n" "\n" "One paragraph" "\n" "\n" "Another paragraph" "\n" "\n")))
+
+
+
+(define/contract (from x query)
+  (puttable-item? (or/c string? symbol?) . -> . (or/c list? false?))
+  (or 
+   (and (has-pollen-source? x) (from-metas x query))
+   (from-main x query)))
+
+
+(define/contract (from-metas x key)
+  (has-pollen-source? (or/c string? symbol?) . -> . (or/c list? false?))
+  (let ([metas (dynamic-require (make-pollen-source-path x) 'metas)]
+        [key (->string key)])
+    ;; todo: why am I returning value as xexpr?
+    (and (key . in? . metas ) `(value ,(get metas key)))))
+
+(module+ test
+  (parameterize ([current-directory "tests/template"])
+    (let ([metas (dynamic-require (make-pollen-source-path 'put) 'metas)])
+    (check-equal? (from-metas "put" "foo") '(value "bar"))
+    (check-equal? (from-metas 'put 'here) `(value ,(find-relative-path (current-directory) (->path (get metas "here"))))))))
 
 (define (from-main x query) ; this used to be plain from
   ; check results first
@@ -27,30 +59,6 @@
     (if (not (empty? results))
         `(,query ,@results) ; todo: why use query as tag?
         #f)))
-
-(define (from-metas x key)
-  (let* ([x (put x)]
-         [meta-hash (make-meta-hash x)]
-         [key (->symbol key)])
-    (if (in? meta-hash key)
-        `(value ,(get meta-hash key)) ;todo: why use value as tag?
-        #f)))
-
-(define (put x)
-  ; handles either xexpr or pollen file as input
-  (cond
-    ; pass through xexpr as is
-    ; put is optional for xexprs.
-    ; it's only here to make the idiom smooth.
-    [(tagged-xexpr? x) x] 
-    ; todo: how to externalize pollen main tag into world name?
-    [(file-exists? (->path x)) (dynamic-require x 'main)]
-    ; also try adding pollen file extension
-    ; this makes put compatible with map references
-    [(let ([x (make-pollen-source-path x)])
-       (when (file-exists? x)
-         (put x)))]
-    [else (error "put: need named xexpr or pollen file, but got" x)]))
 
 
 (define (merge x)
