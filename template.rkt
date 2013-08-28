@@ -35,9 +35,9 @@
 
 
 
-(define/contract (find-in x query)
+(define/contract (find-in px query)
   (puttable-item? query-key? . -> . (or/c xexpr-elements? false?))
-  (or (find-in-metas x query) (find-in-main x query)))
+  (or (find-in-metas px query) (find-in-main px query)))
 
 (module+ test 
   (parameterize ([current-directory "tests/template"])
@@ -45,10 +45,10 @@
     (check-equal? (find-in "put" "foo") (list "bar"))
     (check-equal? (find-in "put" "em") (list "One" "paragraph"))))
 
-(define/contract (find-in-metas x key)
+(define/contract (find-in-metas px key)
   (puttable-item? query-key? . -> . (or/c xexpr-elements? false?))
-  (and (has-pollen-source? x)
-       (let ([metas (dynamic-require (make-pollen-source-path x) 'metas)]
+  (and (has-pollen-source? px)
+       (let ([metas (dynamic-require (make-pollen-source-path px) 'metas)]
              [key (->string key)])
          (and (key . in? . metas ) (->list (get metas key))))))
 
@@ -61,13 +61,13 @@
       (check-equal? here-relative (list "put.p")))))
 
 
-(define/contract (find-in-main x query) 
+(define/contract (find-in-main px query) 
   (puttable-item? (or/c query-key? (listof query-key?)) 
                   . -> . (or/c xexpr-elements? false?))
-  (let* ([x (put x)]
+  (let* ([px (put px)]
          ;; make sure query is a list of symbols (required by se-path*/list)
          [query (map ->symbol (->list query))]
-         [results (se-path*/list query x)])
+         [results (se-path*/list query px)])
     ;; if results exist, send back xexpr as output
     (and (not (empty? results)) results)))
 
@@ -77,37 +77,31 @@
     (check-equal? (find-in-main "put" "em") (list "One" "paragraph"))))
 
 
-(define (merge x)
+;; turns input into xexpr-elements so they can be spliced into template
+;; (as opposed to dropped in as a full tagged-xexpr)
+;; by returning a list, pollen rules will automatically merge into main flow
+;; todo: explain why
+;; todo: do I need this?
+(define/contract (splice x)
+  ((or/c tagged-xexpr? xexpr-elements? string?) . -> . xexpr-elements?)
   (cond
-    [(tagged-xexpr? x)
-     ; return content of xexpr.
-     ; pollen language rules will splice these into the main flow.
-     (if (empty? x)
-         ""
-         (let-values([(name attr content) (break-tagged-xexpr x)])
-           content))]
-    [(string? x) (list x)]))
+    [(tagged-xexpr? x) (tagged-xexpr-elements x)]
+    [(xexpr-elements? x) x]
+    [(string? x) (->list x)]))
+
+(module+ test
+  (check-equal? (splice '(p "foo" "bar")) (list "foo" "bar"))
+  (check-equal? (splice (list "foo" "bar")) (list "foo" "bar"))
+  (check-equal? (splice "foo") (list "foo")))
 
 
-#|(define (merge-strings x)
-  (when (empty? x) (error "merge-strings got empty x"))
-  ;todo: filter metas?
-  ; leaning toward no. Simplest behavior.
-  ; function is not intended to be used with whole pollen body anyhow.
-  (let ([x (merge x)])
-    (string-join (filter string? (flatten x)) " ")))|#
-
-(define (merge-strings x)
-  (string-join (filter string? (flatten x)) " "))
-
-
-(define (make-html x)
-  (if (tagged-xexpr? x)
-      (xexpr->string x)
-      (let ([x (->list x)])
-        (when (andmap xexpr? x)
-          (string-join (map xexpr->string x) "")))))
+(define/contract (make-html x)
+  ((or/c tagged-xexpr? xexpr-elements? xexpr-element?) . -> . string?)
+  (cond
+    [(tagged-xexpr? x) (xexpr->string x)]
+    [else (let ([x (->list x)])
+            (string-join (map xexpr->string x) ""))]))
 
 ; generate *-as-html versions of functions
-(define-values (put-as-html merge-as-html merge-strings-as-html)
-  (apply values (map (λ(proc) (λ(x) (make-html (proc x)))) (list put merge merge-strings))))
+(define-values (put-as-html splice-as-html)
+  (apply values (map (λ(proc) (λ(x) (make-html (proc x)))) (list put splice))))
