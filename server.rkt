@@ -2,13 +2,14 @@
 #lang web-server
 (require web-server/servlet-env)
 (require web-server/dispatch web-server/dispatchers/dispatch)
+(require xml)
 (require "server-routes.rkt" "predicates.rkt")
 
 (displayln "Pollen server starting...")
 
 (define/contract (route-wrapper route-proc)
   ;; todo: make better contract for return value
-  ((complete-path? . -> . tagged-xexpr?) . -> . procedure?)
+  (procedure? . -> . procedure?)
   (λ(req string-arg) 
     (define filename string-arg)
     (response/xexpr (route-proc (build-path pollen-file-root filename)))))
@@ -25,7 +26,7 @@
             ;; so extract the path manually
             (define req-uri (request-uri req))
             (define path (reroot-path (url->path req-uri) pollen-file-root))
-            (define force (get-query-value req-uri 'force))
+            (define force (equal? (get-query-value req-uri 'force) "true"))
             (route-preproc path #:force force)
             (next-dispatcher))]))
 

@@ -90,9 +90,15 @@
  (check-equal? (filename-of (build-path (current-directory) "pollen-file-tools.rkt")) (->path "pollen-file-tools.rkt")))|#
 
 
+;; todo: tests for these predicates
+
 (define/contract (preproc-source? x)
   (any/c . -> . boolean?)
   (has-ext? (->path x) POLLEN_PREPROC_EXT))
+
+(module+ test
+  (check-true (preproc-source? "foo.pp"))
+  (check-false (preproc-source? "foo.bar")))
 
 (define/contract (has-preproc-source? x)
   (any/c . -> . boolean?)
@@ -117,9 +123,30 @@
   (any/c . -> . boolean?)
   (has-ext? (->path x) POLLEN_MAP_EXT))
 
+(module+ test
+  (check-true (pmap-source? "foo.pmap"))
+  (check-false (pmap-source? "pmap.bar")))
+
+
 (define/contract (pollen-source? x)
   (any/c . -> . boolean?)
   (has-ext? (->path x) POLLEN_SOURCE_EXT))
+
+(module+ test
+  (check-true (pollen-source? "foo.p"))
+  (check-false (pollen-source? "foo.pp")))
+
+
+(define/contract (template-source? x)
+  (any/c . -> . boolean?)
+  (define-values (dir name ignore) (split-path x))
+  (equal? (get (->string name) 0) TEMPLATE_FILE_PREFIX))
+
+(module+ test
+  (check-true (template-source? "-foo.html"))
+  (check-false (template-source? "foo.html")))
+
+
 
 ;; this is for regenerate module.
 ;; when we want to be friendly with inputs for functions that require a path.
