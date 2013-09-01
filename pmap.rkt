@@ -6,19 +6,25 @@
 
 (provide (all-defined-out))
 
-; get the values out of the file, or make them up
+;; get the values out of the file, or make them up
 (define pmap-file (build-path START_DIR DEFAULT_POLLEN_MAP))
 (define pmap-main empty)
+
+;; todo next: why doesn't this line work?
+(report (dynamic-require pmap-file 'main))
+
+(error 'stop)
 
 
 ;; todo: this ain't a function
 (if (file-exists? pmap-file)
-    ; load it, or ...
+    ; load it ....
     (set! pmap-main (dynamic-require pmap-file POLLEN_ROOT)) 
-    ; ... synthesize it
+    ; ... or else synthesize it
     (let ([files (directory-list START_DIR)])
       (set! files (map remove-ext (filter (λ(x) (has-ext? x POLLEN_SOURCE_EXT)) files)))
       (set! pmap-main (make-tagged-xexpr 'pmap-root empty (map path->string files)))))
+
 
 
 ;; recursively processes map, converting map locations & their parents into xexprs of this shape:

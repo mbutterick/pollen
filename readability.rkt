@@ -1,6 +1,6 @@
 #lang racket/base
 (require racket/contract)
-(require (only-in racket/list empty? range))
+(require (only-in racket/list empty? range splitf-at dropf dropf-right))
 (require (only-in racket/format ~a))
 (require (only-in racket/string string-join))
 (require (only-in racket/vector vector-member))
@@ -9,6 +9,19 @@
 (require "debug.rkt")
 
 (provide (all-defined-out))
+
+;; general way of coercing to integer
+(define/contract (->int x)
+  (any/c . -> . integer?)
+  (cond
+    [(integer? x) x]
+    [(real? x) (floor x)]
+    [(and (string? x) (> (len x) 0)) (->int (string->number x))]
+    [(symbol? x) (->int (->string x))]
+    [(char? x) (char->integer x)]
+    [(has-length? x) (len x)]
+    [else (error "Can't convert to integer:" x)]))
+
 
 ;; general way of coercing to string
 (define/contract (->string x)
@@ -127,6 +140,16 @@
   (ormap (λ(proc) (proc x)) (list sliceable-container? hash?))) 
 
 
+;; general way of setting an item in a mutable container
+(define/contract (change x i value)
+  ((or/c vector? hash?) any/c any/c . -> . void?)
+  ; general-purpose mutable data object setter
+  (cond
+    [(vector? x) (vector-set! x i value)] 
+    [(hash? x) (hash-set! x i value)]
+    [else (error "Can't set this datatype using change")]))
+
+
 ;; general way of fetching an item from a container
 (define/contract (get container start [end #f])
   ((gettable-container? any/c) ((λ(i)(or (integer? i) (and (symbol? i) (equal? i 'end))))) 
@@ -229,3 +252,39 @@
   (check-true ("foobar" . ends-with? . "r"))
   (check-true ("foobar" . ends-with? . "foobar"))
   (check-false ("foobar" . ends-with? . "foo")))
+
+;; trim from beginning & end of list
+(define (trim items test-proc)
+  (list? procedure? . -> . list?)
+  (dropf-right (dropf items test-proc) test-proc))
+
+(module+ test
+;  (check-equal? (trim (list "\n" " " 1 2 3 "\n") whitespace?) '(1 2 3))
+  (check-equal? (trim (list 1 3 2 4 5 6 8 9 13) odd?) '(2 4 5 6 8)))
+
+
+
+;; split list into list of sublists using test-proc
+(define/contract (splitf-at* xs split-test)
+  ;; todo: better error message when split-test is not a predicate
+  (list? predicate/c . -> . (listof list?))
+  (define (&splitf-at* xs [acc '()]) ; use acc for tail recursion
+    (if (empty? xs) 
+        ;; reverse because accumulation is happening backward 
+        ;; (because I'm using cons to push latest match onto front of list)
+        (reverse acc)
+        (let-values ([(item rest) 
+                      ;; drop matching elements from front
+                      ;; then split on nonmatching 
+                      ;; = nonmatching item + other elements (which will start with matching)
+                      (splitf-at (dropf xs split-test) (compose1 not split-test))])
+          ;; recurse, and store new item in accumulator
+          (&splitf-at* rest (cons item acc)))))
+  
+  ;; trim off elements matching split-test
+  (&splitf-at* (trim xs split-test)))
+
+(module+ test
+  ; (check-equal? (splitf-at* '("foo" " " "bar" "\n" "\n" "ino") whitespace?) '(("foo")("bar")("ino")))
+  (check-equal? (splitf-at* '(1 2 3 4 5 6) even?) '((1)(3)(5))))
+

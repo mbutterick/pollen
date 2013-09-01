@@ -35,15 +35,15 @@
 
 
 
-(define/contract (find-in px query)
+(define/contract (find px query)
   (puttable-item? query-key? . -> . (or/c xexpr-elements? false?))
   (or (find-in-metas px query) (find-in-main px query)))
 
 (module+ test 
   (parameterize ([current-directory "tests/template"])
-    (check-false (find-in "put" "nonexistent-key"))
-    (check-equal? (find-in "put" "foo") (list "bar"))
-    (check-equal? (find-in "put" "em") (list "One" "paragraph"))))
+    (check-false (find "put" "nonexistent-key"))
+    (check-equal? (find "put" "foo") (list "bar"))
+    (check-equal? (find "put" "em") (list "One" "paragraph"))))
 
 (define/contract (find-in-metas px key)
   (puttable-item? query-key? . -> . (or/c xexpr-elements? false?))

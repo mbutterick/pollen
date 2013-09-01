@@ -21,10 +21,10 @@
   ; general function for creating groups of css properties
   ; with browser prefixes and one value
   (define (map-suffix suffix prefixes)
-    (map (ƒ(prefix) (string-append prefix suffix)) prefixes))
+    (map (λ(prefix) (string-append prefix suffix)) prefixes))
   
   (define (join-css-prop-and-value p v)
-    (string-join (list (str p) (str v)) ": "))
+    (string-join (list (->string p) (->string v)) ": "))
   
   (define properties (map-suffix property-suffix property-prefixes))
   
@@ -75,12 +75,12 @@
   
   ; use single quotes in the formatter because css string might be used in an inline tag
   ; with form style="[string]" so double quotes are irritating
-  (define feature-tag-string (string-join (map (ƒ(tag value) (format "'~a' ~a" tag value)) feature-tags feature-values) ", "))
+  (define feature-tag-string (string-join (map (λ(tag value) (format "'~a' ~a" tag value)) feature-tags feature-values) ", "))
   
   ; I hate accommodating old browsers but I'll make an exception because OT support is 
   ; critical to most MB projects
   ; if this comes before new-style -moz- declaration, it will work for all.
-  (define feature-tag-string-old-firefox (string-join (map (ƒ(tag value) (format "'~a=~a'" tag value)) feature-tags feature-values) ", "))
+  (define feature-tag-string-old-firefox (string-join (map (λ(tag value) (format "'~a=~a'" tag value)) feature-tags feature-values) ", "))
   
   (define feature-tag-property "font-feature-settings")
   
@@ -103,12 +103,12 @@
   
   (when (not stops) ; distribute colors evenly between 0 and 100
     ; new-stops is range of steps incremented properly and rounded to int, then append 100 to end
-    (let ([new-stops `(,@(map int (range 0 100 (/ 100 (sub1 (len colors))))) 100)])
+    (let ([new-stops `(,@(map ->int (range 0 100 (/ 100 (sub1 (len colors))))) 100)])
       ; convert to list of percentages
-      (set! stops (map (ƒ(x) (format "~a%" x)) new-stops))))
+      (set! stops (map (λ(x) (format "~a%" x)) new-stops))))
   
   ; color / percentage pairs separated by commas
-  (define color-stop-string (string-join (map (ƒ(color stop) (format "~a ~a" color stop)) colors stops) ", "))
+  (define color-stop-string (string-join (map (λ(color stop) (format "~a ~a" color stop)) colors stops) ", "))
   
   ; set up gradient options
   (define gradient-type (if radial "radial" "linear"))
@@ -116,7 +116,7 @@
   
   ; can't use standard make-css-strings in this case because the prefixes appear in the value,
   ; not in the property (which is always "background")
-  (define gradient-strings (map (ƒ(prefix) (format "background: ~a~a-gradient(~a, ~a)" prefix gradient-type gradient-direction color-stop-string)) css-property-prefixes))
+  (define gradient-strings (map (λ(prefix) (format "background: ~a~a-gradient(~a, ~a)" prefix gradient-type gradient-direction color-stop-string)) css-property-prefixes))
   
   ; just fill with the last color if gradient not available
   (define fallback-string (format "background: ~a" (last colors)))

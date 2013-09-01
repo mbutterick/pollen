@@ -9,7 +9,7 @@
                  (let* ([args (current-command-line-arguments)]
                         [arg (if (> (len args) 0) (get args 0) "")])
                    (case arg
-                     [("serve") `(require "server.rkt")]
+                     [("start") `(require "server.rkt")]
                      [("regenerate") `(begin
                                         ;; todo: take extensions off the comand line
                                         (displayln "Regenerate preproc & pmap files ...")

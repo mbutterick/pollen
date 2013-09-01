@@ -8,6 +8,13 @@
 
 ; todo: contracts, tests, docs
 
+(require (prefix-in williams: (planet williams/describe/describe)))
+
+(define (describe x)
+  (williams:describe x)
+  x)
+
+
 ; debug utilities
 (define (message . items)
   (define (zero-fill str count)

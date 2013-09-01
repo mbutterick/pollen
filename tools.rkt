@@ -173,6 +173,18 @@
   (check-equal? (map-tree (λ(i) (if (symbol? i) 'foo i)) '(p 1 2 3 (em 4 5))) '(foo 1 2 3 (foo 4 5))))
 
 
+(define/contract (map-xexpr-elements proc tx)
+  (procedure? tagged-xexpr? . -> . tagged-xexpr?)
+  (define-values (tag attr elements) (break-tagged-xexpr tx)) 
+  (make-tagged-xexpr tag attr (map proc elements)))
+
+(module+ test
+  (check-equal? (map-xexpr-elements (λ(x) (if (string? x) "boing" x))  
+                                    '(p "foo" "bar" (em "square"))) 
+                '(p "boing" "boing" (em "square"))))
+
+
+
 
 ;; function to split tag out of tagged-xexpr
 (define/contract (split-tag-from-xexpr tag tx)
@@ -195,11 +207,11 @@
 
 (module+ test
   (define xx '(root (meta "foo" "bar") "hello" "world" (meta "foo2" "bar2") 
-                   (em "goodnight" "moon" (meta "foo3" "bar3"))))
+                    (em "goodnight" "moon" (meta "foo3" "bar3"))))
   
   (check-equal? (values->list (split-tag-from-xexpr 'meta xx)) 
                 (list '((meta "foo" "bar") (meta "foo2" "bar2") (meta "foo3" "bar3")) 
-                 '(root "hello" "world" (em "goodnight" "moon")))))
+                      '(root "hello" "world" (em "goodnight" "moon")))))
 
 
 ;; convert list of meta tags to a hash for export from pollen document.

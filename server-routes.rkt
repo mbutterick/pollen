@@ -44,7 +44,7 @@
   (check-equal? (format-as-code '(p "foo")) '(div ((style "white-space:pre-wrap;font-family:AlixFB,monospaced")) (p "foo"))))
 
 ;; server routes
-;; these all produce an xexpr, which is handled upstream by (response/xexpr x)
+;; these all produce an xexpr, which is handled upstream by response/xexpr
 
 ;; server route that returns html
 ;; todo: what is this for?
@@ -105,20 +105,21 @@
   
   ;; Utility function for making file rows
   (define (make-file-row file routes)
+    ;; Utility function for making cells
     (define (make-link-cell type)
-      (letrec ([source (add-ext (remove-ext file) POLLEN_SOURCE_EXT)]
-               [preproc-source (add-ext file POLLEN_PREPROC_EXT)]
-               [file-string (path->string file)]
-               [name (case type 
-                       ['direct (->string file-string)]
-                       ['preproc-source "source"]
-                       [else (->string type)])]
-               [target (case type
-                         ['direct name]
-                         [(source xexpr) (format "/~a/~a" type source)]
-                         ['preproc-source (format "/~a/~a" 'raw preproc-source)]
-                         ['force (format "/~a?force=true" file-string)]
-                         [else (format "/~a/~a" type file-string)])])
+      (let* ([source (add-ext (remove-ext file) POLLEN_SOURCE_EXT)]
+             [preproc-source (add-ext file POLLEN_PREPROC_EXT)]
+             [file-string (->string file)]
+             [name (case type 
+                     ['direct file-string]
+                     ['preproc-source "source"]
+                     [else (->string type)])]
+             [target (case type
+                       ['direct name]
+                       [(source xexpr) (format "/~a/~a" type source)]
+                       ['preproc-source (format "/~a/~a" 'raw preproc-source)]
+                       ['force (format "/~a?force=true" file-string)]
+                       [else (format "/~a/~a" type file-string)])])
         `(td (a ((href ,target)) ,name))))
     `(tr ,(make-link-cell 'direct) ,@(map make-link-cell routes)))
   
@@ -128,12 +129,13 @@
         (style ((type "text/css")) "td a { display: block; width: 100%; height: 100%; padding: 8px; }"
                "td:hover {background: #eee}")
         (table ((style "font-family:Concourse T3;font-size:115%"))
-               ; options for pmap files and template files
+               ;; options for pmap files and template files
                ,@(map (λ(file) (make-file-row file '(raw))) (append pmap-files template-files))
-               ; options for pollen files
+               
+               ;; options for pollen files
                ,@(map (λ(file) (make-file-row file '(raw source xexpr force))) post-pollen-files)
-               ; options for preproc files
-               ; branching in λ is needed so these files can be interleaved on the list
+               ;; options for preproc files
+               ;; branching in λ is needed so these files can be interleaved on the list
                ,@(map (λ(file) (make-file-row file '(raw preproc-source))) post-preproc-files)))))
 
 
@@ -141,9 +143,8 @@
   ; query is parsed as list of pairs, key is symbol, value is string
   ; '((key . "value") ... )
   (let ([result (memf (λ(x) (equal? (car x) key)) (url-query url))])
-    (if result
-        (cdar result) ; second value of first result
-        result)))
+    (and result (cdar result)))) ; second value of first result
+
 
 ; default route w/preproc support
 (define (route-preproc path #:force force-value)

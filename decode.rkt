@@ -8,31 +8,6 @@
 (require "tools.rkt")
 (provide (all-defined-out))
 
-;; split list into list of sublists using test-proc
-(define/contract (splitf-at* xs split-test)
-  ;; todo: better error message when split-test is not a predicate
-  (list? predicate/c . -> . (listof list?))
-  (define (&splitf-at* xs [acc '()]) ; use acc for tail recursion
-    (if (empty? xs) 
-        ;; reverse because accumulation is happening backward 
-        ;; (because I'm using cons to push latest match onto front of list)
-        (reverse acc)
-        (let-values ([(item rest) 
-                      ;; drop matching elements from front
-                      ;; then split on nonmatching 
-                      ;; = nonmatching item + other elements (which will start with matching)
-                      (splitf-at (dropf xs split-test) (compose1 not split-test))])
-          ;; recurse, and store new item in accumulator
-          (&splitf-at* rest (cons item acc)))))
-  
-  ;; trim off elements matching split-test
-  (&splitf-at* (trim xs split-test)))
-
-(module+ test
-  (check-equal? (splitf-at* '(1 2 3 4 5 6) even?) '((1)(3)(5)))
-  (check-equal? (splitf-at* '("foo" " " "bar" "\n" "\n" "ino") whitespace?) '(("foo")("bar")("ino"))))
-
-
 
 ;; Find adjacent newline characters in a list and merge them into one item
 ;; Scribble, by default, makes each newline a separate list item
@@ -80,15 +55,6 @@
 (module+ test
   (check-equal? (stringify '(p 1 2 "foo" (em 4 "bar"))) '(p "1" "2" "foo" (em "4" "bar"))))
 
-
-;; trim from beginning & end of list
-(define (trim items test-proc)
-  (list? procedure? . -> . list?)
-  (dropf-right (dropf items test-proc) test-proc))
-
-(module+ test
-  (check-equal? (trim (list "\n" " " 1 2 3 "\n") whitespace?) '(1 2 3))
-  (check-equal? (trim (list 1 3 2 4 5 6 8 9 13) odd?) '(2 4 5 6 8)))
 
 
 ;; decoder wireframe
