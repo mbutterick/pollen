@@ -1,6 +1,9 @@
 # for Racket
 **/compiled/
 
+*.dep
+*.zo
+
 # for Mac OS X
 .DS_Store
 .AppleDouble
