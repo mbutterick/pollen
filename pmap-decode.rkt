@@ -24,33 +24,36 @@
     ;; single map entry: convert to xexpr with parent
     [else (make-tagged-xexpr (->symbol x) (make-xexpr-attr POLLEN_MAP_PARENT_KEY (->string parent)))]))
 
+
+;; this sets default input for following functions
+(define/contract (pmap-root->pmap tx)
+  ;; (not/c pmap) prevents pmaps from being accepted as input
+  ((and/c tagged-xexpr? (not/c pmap?)) . -> . pmap?)
+  (add-parents tx))
+
+
 (module+ test
   (define test-pmap-main `(pmap-main "foo" "bar" (one (two "three"))))
   (check-equal? (pmap-root->pmap test-pmap-main) 
                 `(pmap-main ((,POLLEN_MAP_PARENT_KEY "")) (foo ((,POLLEN_MAP_PARENT_KEY "pmap-main"))) (bar ((,POLLEN_MAP_PARENT_KEY "pmap-main"))) (one ((,POLLEN_MAP_PARENT_KEY "pmap-main")) (two ((,POLLEN_MAP_PARENT_KEY "one")) (three ((,POLLEN_MAP_PARENT_KEY "two"))))))))
 
 
-;; this sets default input for following functions
-(define/contract (pmap-root->pmap tx)
-  (tagged-xexpr? . -> . pmap?)
-  (add-parents tx))
+
+;; contract for pmap-source-decode
+(define/contract (valid-pmap-keys? x)
+  (any/c . -> . boolean?)
+  (andmap (λ(x) (pmap-key? #:loud #t x)) (filter-not whitespace? (flatten x))))
+
+;; contract for pmap-source-decode
+(define/contract (unique-pmap-keys? x)
+  (any/c . -> . boolean?)
+  ;; use map ->string to make keys comparable
+  (elements-unique? #:loud #t (map ->string (filter-not whitespace? (flatten x)))))
 
 
 (define/contract (pmap-source-decode . elements)
-  (() #:rest (and/c
-              ;; todo: how to put these contracts under a let?
-              ;; all elements must be valid pmap keys
-              (flat-named-contract 'valid-pmap-keys
-                                   (λ(e) (andmap (λ(x) (pmap-key? #:loud #t x)) 
-                                                 (filter-not whitespace? (flatten e)))))
-              ;; they must also be unique
-              (flat-named-contract 'unique-pmap-keys
-                                   (λ(e) (elements-unique? #:loud #t 
-                                                           (map ->string ; to make keys comparable
-                                                                (filter-not whitespace? (flatten e)))))))
-      . ->* . pmap?)
-  (pmap-root->pmap (decode (cons 'pmap-root elements)
-                      #:xexpr-elements-proc (λ(xs) (filter-not whitespace? xs))
-                      )))
+  (() #:rest (and/c valid-pmap-keys? unique-pmap-keys?) . ->* . pmap?)
+  (pmap-root->pmap (decode (cons POLLEN_MAP_ROOT_NAME elements)
+                           #:xexpr-elements-proc (λ(xs) (filter-not whitespace? xs)))))
 
 

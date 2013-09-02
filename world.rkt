@@ -13,6 +13,7 @@
 (define POLLEN_MAP_EXT 'pmap)
 (define DEFAULT_POLLEN_MAP "main.pmap")
 (define POLLEN_MAP_PARENT_KEY 'parent)
+(define POLLEN_MAP_ROOT_NAME 'pmap-root)
 
 (define MAIN_POLLEN_EXPORT 'main)
 ;(define META_POLLEN_TAG 'metas)

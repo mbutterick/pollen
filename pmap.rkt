@@ -6,20 +6,27 @@
 
 (provide (all-defined-out))
 
-;; get the values out of the file, or make them up
-(define pmap 
-  (let ([pmap-source (build-path START_DIR DEFAULT_POLLEN_MAP)])
-    (if (file-exists? pmap-source)
-        ;; Load it from default path.
-        ;; dynamic require of a pmap source file gets you a full pmap. 
-        (dynamic-require pmap-source POLLEN_ROOT)
-        ;; ... or else synthesize it
-        ;; get list of all files
-        (let* ([files (directory-list START_DIR)]
-               ;; filter it to those with pollen extensions
-               [files (map remove-ext (filter (λ(x) (has-ext? x POLLEN_SOURCE_EXT)) files))])
-          ;; make a 'pmap-root structure and convert it to a full pmap
-          (pmap-root->pmap (make-tagged-xexpr 'pmap-root empty (map path->string files)))))))
+;; function to set up the project-pmap.
+;; this is to make life simpler when using map navigation functions.
+;; the current main.pmap of the project is used as the default input.
+;; without this, you'd have to pass it over and over.
+;; which is sort of the functional lifestyle, 
+;; but in templates, gets tiresome and error-prone.
+(define/contract (make-project-pmap)
+  (-> pmap?)
+  (define pmap-source (build-path START_DIR DEFAULT_POLLEN_MAP))
+  (if (file-exists? pmap-source)
+      ;; Load it from default path.
+      ;; dynamic require of a pmap source file gets you a full pmap. 
+      (dynamic-require pmap-source POLLEN_ROOT)
+      ;; ... or else synthesize it
+      (let* ([files (directory-list START_DIR)]
+             ;; restrict files to those with pollen extensions
+             [files (map remove-ext (filter (λ(x) (has-ext? x POLLEN_SOURCE_EXT)) files))])
+        ;; make a POLLEN_MAP_ROOT_NAME structure and convert it to a full pmap
+        (pmap-root->pmap (cons POLLEN_MAP_ROOT_NAME (map path->string files))))))
+
+(define project-pmap (make-project-pmap))
 
 
 ;; remove parents from map (i.e., just remove attrs)
@@ -35,15 +42,14 @@
 
 
 (module+ test
-  (let ([sample-main `(pmap-root "foo" "bar" (one (two "three")))])
+  (let ([sample-main `(POLLEN_MAP_ROOT_NAME "foo" "bar" (one (two "three")))])
     (check-equal? (pmap-root->pmap sample-main) 
-                  `(pmap-root ((,POLLEN_MAP_PARENT_KEY "")) (foo ((,POLLEN_MAP_PARENT_KEY "pmap-root"))) (bar ((,POLLEN_MAP_PARENT_KEY "pmap-root"))) (one ((,POLLEN_MAP_PARENT_KEY "pmap-root")) (two ((,POLLEN_MAP_PARENT_KEY "one")) (three ((,POLLEN_MAP_PARENT_KEY "two")))))))))
-
+                  `(POLLEN_MAP_ROOT_NAME ((,POLLEN_MAP_PARENT_KEY "")) (foo ((,POLLEN_MAP_PARENT_KEY "POLLEN_MAP_ROOT_NAME"))) (bar ((,POLLEN_MAP_PARENT_KEY "POLLEN_MAP_ROOT_NAME"))) (one ((,POLLEN_MAP_PARENT_KEY "POLLEN_MAP_ROOT_NAME")) (two ((,POLLEN_MAP_PARENT_KEY "one")) (three ((,POLLEN_MAP_PARENT_KEY "two")))))))))
 
 
 
 ;; return the parent of a given name
-(define/contract (parent element [pmap pmap])
+(define/contract (parent element [pmap project-pmap])
   ((pmap-key?) (pmap?) . ->* . (or/c string? boolean?)) 
   (and element (let ([result (se-path* `(,(->symbol element) #:parent) pmap)])
                  (and result (->string result))))) ; se-path* returns #f if nothing found
@@ -59,7 +65,7 @@
 
 
 ; get children of a particular element
-(define/contract (children element [pmap pmap])
+(define/contract (children element [pmap project-pmap])
   ((pmap-key?) (pmap?) . ->* . (or/c list? boolean?))  
   ;; se-path*/list returns '() if nothing found
   (and element  (let ([children (se-path*/list `(,(->symbol element)) pmap)])
@@ -74,7 +80,7 @@
 
 
 ;; find all siblings on current level: go up to parent and ask for children
-(define/contract (siblings element [pmap pmap])
+(define/contract (siblings element [pmap project-pmap])
   ;; this never returns false: element is always a sibling of itself.
   ;; todo: how to use input value in contract? e.g., to check that element is part of output list
   ((pmap-key?) (pmap?) . ->* . (or/c list? boolean?))  
@@ -88,7 +94,7 @@
 
 
 
-(define/contract (siblings-split element [pmap pmap])
+(define/contract (siblings-split element [pmap project-pmap])
   ((pmap-key?) (pmap?) . ->* . (values (or/c (listof pmap-key?) boolean?) 
                                        (or/c (listof pmap-key?) boolean?)))
   (let-values ([(left right) (splitf-at (siblings element pmap) 
@@ -101,7 +107,7 @@
 
 
 ;; siblings to the left of target element (i.e., precede in map order)
-(define (siblings-left element [pmap pmap])
+(define (siblings-left element [pmap project-pmap])
   (let-values ([(left right) (siblings-split element pmap)])
     left))
 
@@ -110,7 +116,7 @@
   (check-false (siblings-left 'foo test-pmap)))
 
 ;; siblings to the right of target element (i.e., follow in map order)
-(define (siblings-right element [pmap pmap])
+(define (siblings-right element [pmap project-pmap])
   (let-values ([(left right) (siblings-split element pmap)])
     right))
 
@@ -120,7 +126,7 @@
 
 
 ;; get element immediately to the left in map
-(define/contract (sibling-previous element [pmap pmap])
+(define/contract (sibling-previous element [pmap project-pmap])
   ((pmap-key?) (pmap?) . ->* . (or/c string? boolean?))
   (let ([siblings (siblings-left element pmap)])
     (and siblings (last siblings))))
@@ -130,7 +136,7 @@
   (check-false (sibling-previous 'foo test-pmap)))
 
 ;; get element immediately to the right in map
-(define/contract (sibling-next element [pmap pmap])
+(define/contract (sibling-next element [pmap project-pmap])
   ((pmap-key?) (pmap?) . ->* . (or/c string? boolean?))
   (let ([siblings (siblings-right element pmap)])
     (and siblings (first siblings))))
@@ -141,7 +147,7 @@
 
 
 ;; flatten map to sequence
-(define/contract (all-pages [pmap pmap])
+(define/contract (all-pages [pmap project-pmap])
   (pmap? . -> . (listof string?))
   ; use cdr to get rid of main-map tag at front
   (map ->string (cdr (flatten (remove-parents pmap))))) 
@@ -150,7 +156,7 @@
   (check-equal? (all-pages test-pmap) '("foo" "bar" "one" "two" "three")))
 
 ;; helper function for get-previous-pages and get-next-pages
-(define/contract (adjacent-pages side element [pmap pmap])
+(define/contract (adjacent-pages side element [pmap project-pmap])
   ((symbol? pmap-key?) (pmap?) . ->* . (or/c list? boolean?))
   (let ([result ((if (equal? side 'left) 
                      takef 
@@ -165,7 +171,7 @@
 
 
 ;; get sequence of earlier pages
-(define/contract (previous-pages element [pmap pmap])
+(define/contract (previous-pages element [pmap project-pmap])
   ((pmap-key?) (pmap?) . ->* . (or/c list? boolean?))
   (adjacent-pages 'left element pmap))
 
@@ -176,7 +182,7 @@
 
 
 ;; get sequence of next pages
-(define (next-pages element [pmap pmap])
+(define (next-pages element [pmap project-pmap])
   ((pmap-key?) (pmap?) . ->* . (or/c list? boolean?))
   (adjacent-pages 'right element pmap))
 
@@ -186,7 +192,7 @@
   (check-false (next-pages 'three test-pmap)))
 
 ;; get page immediately previous
-(define/contract (previous-page element [pmap pmap])
+(define/contract (previous-page element [pmap project-pmap])
   ((pmap-key?) (pmap?) . ->* . (or/c string? boolean?))
   (let ([result (previous-pages element pmap)])
     (and result (last result))))
@@ -197,7 +203,7 @@
   (check-false (previous-page 'foo test-pmap)))
 
 ;; get page immediately next
-(define (next-page element [pmap pmap])
+(define (next-page element [pmap project-pmap])
   ((pmap-key?) (pmap?) . ->* . (or/c string? boolean?))
   (let ([result (next-pages element pmap)])
     (and result (first result))))
