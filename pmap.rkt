@@ -1,63 +1,25 @@
 #lang racket/base
 (require xml xml/path racket/list racket/string racket/contract racket/match racket/set)
-(require "tools.rkt" "world.rkt" "decode.rkt")
+(require "tools.rkt" "world.rkt" "pmap-decode.rkt")
 
 (module+ test (require rackunit))
 
 (provide (all-defined-out))
 
 ;; get the values out of the file, or make them up
-(define pmap-file (build-path START_DIR DEFAULT_POLLEN_MAP))
-(define pmap-main empty)
-
-;; todo next: why doesn't this line work?
-(report (dynamic-require pmap-file 'main))
-
-(error 'stop)
-
-
-;; todo: this ain't a function
-(if (file-exists? pmap-file)
-    ; load it ....
-    (set! pmap-main (dynamic-require pmap-file POLLEN_ROOT)) 
-    ; ... or else synthesize it
-    (let ([files (directory-list START_DIR)])
-      (set! files (map remove-ext (filter (λ(x) (has-ext? x POLLEN_SOURCE_EXT)) files)))
-      (set! pmap-main (make-tagged-xexpr 'pmap-root empty (map path->string files)))))
-
-
-
-;; recursively processes map, converting map locations & their parents into xexprs of this shape:
-;; '(location ((parent "parent")))
-(define/contract (add-parents x [parent empty])
-  ((tagged-xexpr?) (xexpr-tag?) . ->* . pmap?)
-  ; disallow map-main as parent tag
-  ;  (when (equal? parent 'map-main) (set! parent empty)) 
-  (match x
-    ;; this pattern signifies next level in hierarchy 
-    ;; where first element is new parent, and rest are children.
-    [(list (? xexpr-tag? next-parent) children ...)
-     (let-values ([(tag attr _) (break-tagged-xexpr (add-parents next-parent parent))])
-       ;; xexpr with tag as name, parent as attr, children as elements with tag as next parent
-       (make-tagged-xexpr tag attr (map (λ(c) (add-parents c tag)) children)))]
-    ;; single map entry: convert to xexpr with parent
-    [else (make-tagged-xexpr (->symbol x) (make-xexpr-attr POLLEN_MAP_PARENT_KEY (->string parent)))]))
-
-(module+ test
-  (define test-pmap-main `(pmap-main "foo" "bar" (one (two "three"))))
-  (check-equal? (main->pmap test-pmap-main) 
-                `(pmap-main ((,POLLEN_MAP_PARENT_KEY "")) (foo ((,POLLEN_MAP_PARENT_KEY "pmap-main"))) (bar ((,POLLEN_MAP_PARENT_KEY "pmap-main"))) (one ((,POLLEN_MAP_PARENT_KEY "pmap-main")) (two ((,POLLEN_MAP_PARENT_KEY "one")) (three ((,POLLEN_MAP_PARENT_KEY "two"))))))))
-
-
-
-;; this sets default input for following functions
-(define/contract (main->pmap tx)
-  (tagged-xexpr? . -> . pmap?)
-  (add-parents tx))
-
-(define pmap (main->pmap pmap-main))
-
-
+(define pmap 
+  (let ([pmap-source (build-path START_DIR DEFAULT_POLLEN_MAP)])
+    (if (file-exists? pmap-source)
+        ;; Load it from default path.
+        ;; dynamic require of a pmap source file gets you a full pmap. 
+        (dynamic-require pmap-source POLLEN_ROOT)
+        ;; ... or else synthesize it
+        ;; get list of all files
+        (let* ([files (directory-list START_DIR)]
+               ;; filter it to those with pollen extensions
+               [files (map remove-ext (filter (λ(x) (has-ext? x POLLEN_SOURCE_EXT)) files))])
+          ;; make a 'pmap-root structure and convert it to a full pmap
+          (pmap-root->pmap (make-tagged-xexpr 'pmap-root empty (map path->string files)))))))
 
 
 ;; remove parents from map (i.e., just remove attrs)
@@ -74,7 +36,7 @@
 
 (module+ test
   (let ([sample-main `(pmap-root "foo" "bar" (one (two "three")))])
-    (check-equal? (main->pmap sample-main) 
+    (check-equal? (pmap-root->pmap sample-main) 
                   `(pmap-root ((,POLLEN_MAP_PARENT_KEY "")) (foo ((,POLLEN_MAP_PARENT_KEY "pmap-root"))) (bar ((,POLLEN_MAP_PARENT_KEY "pmap-root"))) (one ((,POLLEN_MAP_PARENT_KEY "pmap-root")) (two ((,POLLEN_MAP_PARENT_KEY "one")) (three ((,POLLEN_MAP_PARENT_KEY "two")))))))))
 
 
@@ -88,7 +50,8 @@
 
 
 (module+ test
-  (define test-pmap (main->pmap test-pmap-main))
+  (define test-pmap-main `(pmap-main "foo" "bar" (one (two "three"))))
+  (define test-pmap (pmap-root->pmap test-pmap-main))
   (check-equal? (parent 'three test-pmap) "two")
   (check-equal? (parent "three" test-pmap) "two")
   (check-false (parent 'nonexistent-name test-pmap)))
@@ -246,24 +209,4 @@
 
 
 
-(define/contract (pmap-decode . elements)
-  (() #:rest (and/c
-              ;; todo: how to put these contracts under a let?
-              ;; all elements must be valid pmap keys
-              (flat-named-contract 'valid-pmap-keys
-                                   (λ(e) (andmap (λ(x) (pmap-key? #:loud #t x)) 
-                                                 (filter-not whitespace? (flatten e)))))
-              ;; they must also be unique
-              (flat-named-contract 'unique-pmap-keys
-                                   (λ(e) (elements-unique? #:loud #t 
-                                                           (map ->string ; to make keys comparable
-                                                                (filter-not whitespace? (flatten e)))))))
-      . ->* . pmap?)
-  (main->pmap (decode (cons 'pmap-root elements)
-                      ;          #:exclude-xexpr-tags 'em
-                      ;          #:xexpr-tag-proc [xexpr-tag-proc (λ(x)x)]
-                      ;          #:xexpr-attr-proc [xexpr-attr-proc (λ(x)x)]
-                      #:xexpr-elements-proc (λ(xs) (filter-not whitespace? xs))
-                      ; #:block-xexpr-proc block-xexpr-proc
-                      ;          #:inline-xexpr-proc [inline-xexpr-proc (λ(x)x)]
-                      )))
+

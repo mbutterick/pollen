@@ -1,7 +1,7 @@
 #lang racket/base
 (require racket/list)
 (require (planet mb/pollen/tools) (planet mb/pollen/main-helper))
-(require (only-in (planet mb/pollen/pmap) pmap-decode))
+(require (only-in (planet mb/pollen/pmap-decode) pmap-source-decode))
 (require (only-in (planet mb/pollen/predicates) pmap?))
 (require (only-in (planet mb/pollen/pollen-file-tools) has-ext?))
 (require (only-in (planet mb/pollen/world) POLLEN_MAP_EXT))
@@ -76,16 +76,17 @@
    ;; Unlike Scribble, which insists on decoding,
    ;; Pollen just passes through the minimally processed data.
    ;; one exception: if file extension marks it as pmap, send it to the pmap decoder instead.
-   (define source-is-pmap? 
+   (define pmap-source? 
    ;; this tests inner-here (which is always the file name)
      ;; rather than (get metas 'here) which might have been overridden.
      ;; Because if it's overridden to something other than *.pmap, 
      ;; pmap processing will fail.
      ;; This defeats rule that pmap file suffix triggers pmap decoding.
      ((->path inner-here) . has-ext? . POLLEN_MAP_EXT))
-   (define main (apply (if source-is-pmap?
-                           pmap-decode
-                           ;; most files will go this way.
+   (define main (apply (if pmap-source?
+                           ;; pmap source files will go this way,
+                           pmap-source-decode
+                           ;; ... but other files, including pollen, will go this way.
                            ;; Root is treated as a function. 
                            ;; If it's not defined elsewhere, 
                            ;; it just hits #%top and becomes a tagged-xexpr.
