@@ -145,6 +145,7 @@
   
   ;; x might be either a preproc-source path or preproc-output path
   (define source-path (complete-preproc-source-path x))
+  (define-values (source-dir source-name _) (split-path source-path))
   (define output-path (complete-preproc-output-path x))
   
   ;; Three conditions under which we refresh:
@@ -164,7 +165,8 @@
                                       (file-name-from-path source-path)))
         (store-refresh-in-mod-dates source-path)
         ;; discard output using open-output-nowhere
-        (parameterize ([current-output-port (open-output-nowhere)])
+        (parameterize ([current-directory source-dir]
+                       [current-output-port (open-output-nowhere)])
           (system command))
         (regenerated-message output-path))
       ;; otherwise, skip file because there's no trigger for refresh
@@ -242,7 +244,7 @@
      (let ([tp (build-path source-dir FALLBACK_TEMPLATE_NAME)])
        (display-to-file #:exists 'replace fallback-template-data tp)
        tp)))
-    
+  
   ;; refresh template (it might have its own preprocessor file)
   (regenerate template-path #:force force)
   
