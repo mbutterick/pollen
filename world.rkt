@@ -19,7 +19,7 @@
 ;(define META_POLLEN_TAG 'metas)
 ;(define META_POLLEN_EXPORT 'metas)
 
-(define EXTRAS_DIR (string->path "requires"))
+(define EXTRAS_DIR (string->path "require"))
 
 (define MISSING_FILE_BOILERPLATE "#lang planet mb/pollen\n\n")
 
