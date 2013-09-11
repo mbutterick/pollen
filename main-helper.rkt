@@ -13,26 +13,23 @@
 ;; Look for an EXTRAS_DIR directory local to the source file.
 ;; and require all the .rkt files therein. 
 ;; optionally provide them.
-(define-syntax (require-extras stx #:provide [provide #f])  
+
+(define-syntax (require-and-provide-extras stx)  
   (cond
     [(directory-exists? EXTRAS_DIR)
-     ;; This will be resolved in the context of current-directory.
-     ;; So when called from outside the project directory, 
-     ;; current-directory must be properly set with 'parameterize'
-     (define (make-complete-path path)
-       ;; todo: document why this function is necessary (it definitely is, but I forgot why)
-       (define-values (start_dir name _ignore) (split-path (path->complete-path path)))
-       (build-path start_dir EXTRAS_DIR name))
-     (define files (map make-complete-path (filter (λ(i) (has-ext? i 'rkt)) (directory-list EXTRAS_DIR))))
-     (define files-in-require-form 
-       (map (λ(file) `(file ,(->string file))) files)) 
-     (datum->syntax stx 
-                    (if provide
-                        `(begin
-                           (require ,@files-in-require-form)
-                           (provide (all-from-out ,@files-in-require-form)))
-                        `(begin
-                           (require ,@files-in-require-form))))]
+     (let ([files-in-require-form (make-files-in-require-form EXTRAS_DIR)])
+       (datum->syntax stx `(begin
+                             (require ,@files-in-require-form)
+                             (provide (all-from-out ,@files-in-require-form)))))]
+    ; if no files to import, do nothing
+    [else #'(begin)]))
+
+(define-syntax (require-extras stx)  
+  (cond
+    [(directory-exists? EXTRAS_DIR)
+     (let ([files-in-require-form (make-files-in-require-form EXTRAS_DIR)])
+       (datum->syntax stx `(begin
+                             (require ,@files-in-require-form))))]
     ; if no files to import, do nothing
     [else #'(begin)]))
 

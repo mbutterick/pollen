@@ -289,8 +289,10 @@
                  [current-directory source-dir]
                  [current-output-port (open-output-nowhere)])
     (namespace-require 'racket) ; use namespace-require for FIRST require, then eval after
+    ;; for include-template (used below)
     (eval '(require web-server/templates) (current-namespace))
-    (eval '(require (planet mb/pollen/pmap)) (current-namespace))
+    ;; for pmap navigation functions, and template commands
+    (eval '(require (planet mb/pollen/pmap)(planet mb/pollen/template)) (current-namespace))
     ;; import source into eval space. This sets up main & metas
     (eval `(require ,(path->string source-name)) (current-namespace)) 
     (eval `(include-template #:command-char ,TEMPLATE_FIELD_DELIMITER ,(->string template-name)) (current-namespace))))

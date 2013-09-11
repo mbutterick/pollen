@@ -11,6 +11,19 @@
 ;; setup for test cases
 (module+ test (require rackunit))
 
+;; helper function for pollen/main and pollen/main-pre
+(define (make-files-in-require-form file-directory)
+  ;; This will be resolved in the context of current-directory.
+  ;; So when called from outside the project directory, 
+  ;; current-directory must be properly set with 'parameterize'
+  (define (make-complete-path path)
+    ;; todo: document why this function is necessary (it definitely is, but I forgot why)
+    (define-values (start_dir name _ignore) (split-path (path->complete-path path)))
+    (build-path start_dir file-directory name))
+  (define files (map make-complete-path (filter (λ(i) (has-ext? i 'rkt)) (directory-list file-directory))))
+  (define files-in-require-form 
+    (map (λ(file) `(file ,(->string file))) files)) 
+  files-in-require-form)
 
 
 ;; helper for comparison of values

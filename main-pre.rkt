@@ -1,7 +1,7 @@
 #lang racket/base
 
 (require (only-in (planet mb/pollen/readability) ->list)
-         (only-in (planet mb/pollen/decode) trim)
+         (only-in (planet mb/pollen/tools) trim)
          (only-in (planet mb/pollen/predicates) whitespace?))
 
 (provide (except-out (all-from-out racket/base) #%module-begin)
@@ -21,7 +21,7 @@
    ; helpful because it collects & exports content via 'doc
    (module pollen-inner (planet mb/pollen/lang/doclang2_raw)
      (require (planet mb/pollen/tools) (planet mb/pollen/main-helper))
-     (require-extras #:provide #t) ; brings in the project require files
+     (require-and-provide-extras) ; brings in the project require files
      
      expr ...) ; body of module 
    

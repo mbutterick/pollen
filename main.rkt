@@ -28,7 +28,7 @@
      ;; use same requires as top of main.rkt 
      ;; (can't import them from surrounding module due to submodule rules)
      (require (planet mb/pollen/tools) (planet mb/pollen/main-helper))
-     (require-extras #:provide #t) ; brings in the project require files
+     (require-and-provide-extras) ; brings in the project require files
      
      ;; #%top binding catches ids that aren't defined
      ;; here, convert them to basic xexpr
@@ -63,7 +63,7 @@
                            [(string? doc) (list doc)] 
                            [(tagged-xexpr? doc) (list doc)] ; if it's a single nx, just leave it
                            [(list? doc) doc]))) ; if it's nx content, splice it in
-                         
+   
    
    ;; split out the metas now (in raw form)
    (define-values (metas-raw main-raw) 
@@ -76,14 +76,15 @@
    ;; Unlike Scribble, which insists on decoding,
    ;; Pollen just passes through the minimally processed data.
    ;; one exception: if file extension marks it as pmap, send it to the pmap decoder instead.
-   (define pmap-source? 
+   
    ;; this tests inner-here (which is always the file name)
-     ;; rather than (get metas 'here) which might have been overridden.
-     ;; Because if it's overridden to something other than *.pmap, 
-     ;; pmap processing will fail.
-     ;; This defeats rule that pmap file suffix triggers pmap decoding.
-     ((->path inner-here) . has-ext? . POLLEN_MAP_EXT))
-   (define main (apply (if pmap-source?
+   ;; rather than (get metas 'here) which might have been overridden.
+   ;; Because if it's overridden to something other than *.pmap, 
+   ;; pmap processing will fail.
+   ;; This defeats rule that pmap file suffix triggers pmap decoding.
+   (define here-is-pmap? (pmap-source? (->path inner-here)))
+   
+   (define main (apply (if here-is-pmap?
                            ;; pmap source files will go this way,
                            pmap-source-decode
                            ;; ... but other files, including pollen, will go this way.
@@ -98,12 +99,12 @@
    
    (module+ main
      (displayln ";-------------------------")
-     (displayln (string-append "; pollen decoded 'main" (if source-is-pmap? " (as pmap)" "")))     
+     (displayln (string-append "; pollen decoded 'main" (if here-is-pmap? " (as pmap)" "")))     
      (displayln ";-------------------------")
      main
      (displayln "")
      
-     (if source-is-pmap?
+     (if here-is-pmap?
          (displayln (format "(pmap? main) ~a" (pmap? main)))
          (displayln (format "(tagged-xexpr? main) ~a" (tagged-xexpr? main))))
      (displayln "")
