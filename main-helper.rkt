@@ -3,12 +3,27 @@
 
 ;; use full planet paths because this file is evaluated from source directory,
 ;; not module directory
-(require (for-syntax (planet mb/pollen/tools) (planet mb/pollen/world)))
+(require (for-syntax racket/rerequire (planet mb/pollen/tools) (planet mb/pollen/world)))
 (require (planet mb/pollen/tools) (planet mb/pollen/world))
 
 (provide (all-defined-out))
 
 (module+ test (require rackunit))
+
+;; use define-for-syntax because this function supports
+;; the two syntax transformers below
+(define-for-syntax (make-files-in-require-form file-directory)
+  ;; This will be resolved in the context of current-directory.
+  ;; So when called from outside the project directory, 
+  ;; current-directory must be properly set with 'parameterize'
+  (define (insert-directory-into-path path)
+    ;; todo: document why this function is necessary (it definitely is, but I forgot why)
+    (define-values (start_dir name _ignore) (split-path (path->complete-path path)))
+    (build-path start_dir file-directory name))
+  (define files (map insert-directory-into-path (filter (λ(i) (has-ext? i 'rkt)) (directory-list file-directory))))
+  ; this puts files in require form
+  (map (λ(file) `(file ,(->string file))) files))
+  
 
 ;; Look for an EXTRAS_DIR directory local to the source file.
 ;; and require all the .rkt files therein. 

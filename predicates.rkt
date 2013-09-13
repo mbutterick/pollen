@@ -62,6 +62,14 @@
   (any/c . -> . boolean?)
   (or (string? x) (tagged-xexpr? x)))
 
+;; Not a great idea to use "plural" (i.e. listlike) contracts.
+;; Instead of foobars? use (listof foobar?) as contract
+;; Reason is that listof will show you the specific element that fails
+;; whereas foobars? will just announce the result for the whole list.
+;; Since contracts are intended to tell you why your input is defective,
+;; the (listof foobar?) behavior is better.
+;; outside of contracts, instead of testing (foobars? list),
+;; test (andmap foobar? list)
 
 (define/contract (xexpr-elements? x)
   (any/c . -> . boolean?)
@@ -87,8 +95,8 @@
   (and (xexpr? x) ; meets basic xexpr contract
        (match x
          [(list (? symbol? name) rest ...) ; is a list starting with a symbol
-          (or (xexpr-elements? rest) ; the rest is content or ...
-              (and (xexpr-attr? (car rest)) (xexpr-elements? (cdr rest))))] ; attr + content 
+          (or (andmap xexpr-element? rest) ; the rest is content or ...
+              (and (xexpr-attr? (car rest)) (andmap xexpr-element? (cdr rest))))] ; attr + content 
          [else #f])))
 
 (module+ test  
@@ -178,15 +186,17 @@
 ;; pmap attr must be ((parent "value"))
 (define/contract (pmap-attr? x)
   (any/c . -> . boolean?)
+  (define foo 'bar)
   (match x
-    [(list `(,POLLEN_MAP_PARENT_KEY ,(? string?))) #t]
+    ;; todo: how can I use POLLEN_MAP_PARENT_KEY
+    [`((parent ,(? string?))) #t]
     [else #f]))
 
 (module+ test
-  (check-true (pmap-attr? `((,POLLEN_MAP_PARENT_KEY "bar"))))
-  (check-false (pmap-attr? `((,POLLEN_MAP_PARENT_KEY "bar")(foo "bar"))))
+  (check-true (pmap-attr? '((parent "bar"))))
+  (check-false (pmap-attr? '((parent "bar") '(foo "bar"))))
   (check-false (pmap-attr? '())))
-  
+
 
 ;; pmap location must represent a possible valid filename
 (define/contract (pmap-key? x #:loud [loud #f])

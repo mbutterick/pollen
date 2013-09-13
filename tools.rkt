@@ -11,19 +11,6 @@
 ;; setup for test cases
 (module+ test (require rackunit))
 
-;; helper function for pollen/main and pollen/main-pre
-(define (make-files-in-require-form file-directory)
-  ;; This will be resolved in the context of current-directory.
-  ;; So when called from outside the project directory, 
-  ;; current-directory must be properly set with 'parameterize'
-  (define (make-complete-path path)
-    ;; todo: document why this function is necessary (it definitely is, but I forgot why)
-    (define-values (start_dir name _ignore) (split-path (path->complete-path path)))
-    (build-path start_dir file-directory name))
-  (define files (map make-complete-path (filter (λ(i) (has-ext? i 'rkt)) (directory-list file-directory))))
-  (define files-in-require-form 
-    (map (λ(file) `(file ,(->string file))) files)) 
-  files-in-require-form)
 
 
 ;; helper for comparison of values
@@ -69,7 +56,10 @@
 
 ;; create tagged-xexpr from parts (opposite of break-tagged-xexpr)
 (define/contract (make-tagged-xexpr name [attr empty] [content empty])
-  ((symbol?) (xexpr-attr? xexpr-elements?) . ->* . tagged-xexpr?)
+  ; xexpr/c provides a nicer error message,
+  ; but is not sufficient on its own (too permissive)
+  ((symbol?) (xexpr-attr? (listof xexpr-element?)) 
+             . ->* . tagged-xexpr?)
   (filter-not empty? `(,name ,attr ,@content)))
 
 (module+ test
@@ -82,7 +72,8 @@
 
 ;; decompose tagged-xexpr into parts (opposite of make-tagged-xexpr)
 (define/contract (break-tagged-xexpr nx)
-  (tagged-xexpr? . -> . (values symbol? xexpr-attr? xexpr-elements?))
+  (tagged-xexpr? . -> . 
+                 (values symbol? xexpr-attr? (listof xexpr-element?)))
   (match 
       ; tagged-xexpr may or may not have attr
       ; if not, add empty attr so that decomposition only handles one case
@@ -114,7 +105,7 @@
   attr)
 
 (define (tagged-xexpr-elements nx)
-  (tagged-xexpr? . -> . xexpr-elements?)
+  (tagged-xexpr? . -> . (listof xexpr-element?))
   (define-values (tag attrt elements) (break-tagged-xexpr nx))
   elements)
 
@@ -201,7 +192,7 @@
 
 ;; function to split tag out of tagged-xexpr
 (define/contract (split-tag-from-xexpr tag tx)
-  (xexpr-tag? tagged-xexpr? . -> . (values xexpr-elements? tagged-xexpr? ))
+  (xexpr-tag? tagged-xexpr? . -> . (values (listof xexpr-element?) tagged-xexpr? ))
   (define matches '())
   (define (extract-tag x)
     (cond

@@ -102,7 +102,7 @@
                                (regenerate-with-pmap pmap #:force force))]
         [(equal? FALLBACK_TEMPLATE_NAME (->string (file-name-from-path path)))
          (message "Regenerate: using fallback template")]
-        [(file-exists? path) (message "Regenerate: passing through" (->string (file-name-from-path path)))]
+        [(file-exists? path) (message "Regenerate: nothing to be done with" (->string (file-name-from-path path)))]
         [else (error "Regenerate couldn't find" (->string (file-name-from-path path)))])))
   (for-each &regenerate xs))
 
