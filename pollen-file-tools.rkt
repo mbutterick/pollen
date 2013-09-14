@@ -147,6 +147,18 @@
   (check-false (template-source? "foo.html")))
 
 
+;; predicate for files that are eligible to be required
+;; from the project/require directory
+;; todo: extend this beyond just racket files?
+(define/contract (project-require-file? x)
+  (any/c . -> . boolean?)
+  (has-ext? (->path x) 'rkt))
+
+(module+ test
+  (check-true (project-require-file? "foo.rkt"))
+  (check-false (project-require-file? "foo.html")))
+
+
 
 ;; this is for regenerate module.
 ;; when we want to be friendly with inputs for functions that require a path.

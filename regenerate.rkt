@@ -18,6 +18,10 @@
 ;; between development sessions (prob a worthless optimization)
 (define mod-dates (make-hash))
 
+(define/contract (make-mod-dates-key paths)
+  ((listof path?) . -> . (listof path?))
+  (define project-require-files (or (get-project-require-files) empty))
+  (flatten (append paths project-require-files)))
 
 ;; convert a path to a modification date value
 (define/contract (path->mod-date-value path)
@@ -36,11 +40,16 @@
 ;; therefore, use function by just listing out the paths
 (define/contract (store-refresh-in-mod-dates . rest-paths)
   (() #:rest (listof path?) . ->* . void?)
-  (report (current-directory))
-  ;; todo next: make this work
-  (let* ([project-require-files (or (get-project-require-files) empty)]
-         [all-files-used-in-key (append rest-paths project-require-files)])
-  (hash-set! mod-dates (report all-files-used-in-key) (map path->mod-date-value all-files-used-in-key))))
+  ;; project require files are appended to the mod-date key.
+  ;; Why? So a change in a require file will trigger a refresh 
+  ;; (which is the right thing to do, since pollen files are 
+  ;; dependent on those requires)
+  ;; It's convenient for development, because otherwise
+  ;; you'd need to restart the server when you change a require
+  ;; or explicitly use the force parameter.
+  ;; This way, require files and pollen files have the same behavior.
+  (define key (make-mod-dates-key rest-paths))
+  (hash-set! mod-dates key (map path->mod-date-value key)))
 
 (module+ test
   (reset-mod-dates)
@@ -65,8 +74,9 @@
 ;; use rest argument here so calling pattern matches store-refresh
 (define/contract (mod-date-expired? . rest-paths)
   (() #:rest (listof path?) . ->* . boolean?)
-  (or (not (rest-paths . in? . mod-dates))  ; no stored mod date
-      (not (equal? (map path->mod-date-value rest-paths) (get mod-dates rest-paths))))) ; data has changed
+  (define key (make-mod-dates-key rest-paths))
+  (or (not (key . in? . mod-dates))  ; no stored mod date
+      (not (equal? (map path->mod-date-value key) (get mod-dates key))))) ; data has changed
 
 (module+ test 
   (reset-mod-dates)
@@ -106,7 +116,7 @@
                                (regenerate-with-pmap pmap #:force force))]
         [(equal? FALLBACK_TEMPLATE_NAME (->string (file-name-from-path path)))
          (message "Regenerate: using fallback template")]
-        [(file-exists? path) (message "Regenerate: nothing to be done with" (->string (file-name-from-path path)))]
+        [(file-exists? path) 'pass-through]
         [else (error "Regenerate couldn't find" (->string (file-name-from-path path)))])))
   (for-each &regenerate xs))
 
@@ -159,9 +169,9 @@
        ;; 2) output file doesn't exist (so it definitely won't appear in mod-dates)
        ;; also, this is convenient for development: 
        ;; you can trigger a refresh just by deleting the file
-       (not (file-exists? output-path)) 
+       (not (file-exists? output-path))
        ;; 3) file otherwise needs refresh (e.g., it changed)
-       (mod-date-expired? source-path)) 
+       (mod-date-expired? source-path))
       ;; use single quotes to escape spaces in pathnames
       (let ([command (format "~a '~a' > '~a'" RACKET_PATH source-path output-path)])
         (regenerating-message (format "~a from ~a" 

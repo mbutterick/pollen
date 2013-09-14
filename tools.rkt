@@ -14,14 +14,12 @@
 
 
 ;; list of all eligible requires in project require directory
-;; assumes current working directory is project directory
-;; either for real, or via parameterize
-;; todo: is it possible to check this via contract?
-;; I don't think so: not possible to know ex ante whether you're in a project folder
-(define (get-project-require-files)
-  (and (directory-exists? EXTRAS_DIR)
-       ;; todo: allow more than just .rkt files?
-       (let ([files (filter (λ(i) (has-ext? i 'rkt)) (directory-list EXTRAS_DIR #:build? #t))])
+(define/contract (get-project-require-files)
+  (-> (or/c (listof complete-path?) boolean?))
+  (define extras-directory (build-path pollen-file-root EXTRAS_DIR))
+  (and (directory-exists? extras-directory)
+       ;; #:build? option returns complete paths (instead of just file names)
+       (let ([files (filter project-require-file? (directory-list extras-directory #:build? #t))])
          (and (not (empty? files)) files))))
 
 
