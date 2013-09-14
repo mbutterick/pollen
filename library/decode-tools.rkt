@@ -108,31 +108,36 @@
                                       #:single-prepend [single-pp '(squo)]
                                       #:double-prepend  [double-pp '(dquo)])
   ((tagged-xexpr?) (#:single-prepend list? #:double-prepend list?) . ->* . tagged-xexpr?)
-  (define two-char-string? (λ(i) (and (string? i) (>= (len i) 2))))
+  (define two-or-more-char-string? (λ(i) (and (string? i) (>= (len i) 2))))
   (define-values (tag attr elements) (break-tagged-xexpr nx))
-  (define new-car-elements
-    (match (car elements)
-      [(? two-char-string? tcs)
-       (define str-first (get tcs 0))
-       (define str-rest (get tcs 1 'end))
-       (cond
-         [(str-first . in? . '("\"" "“"))
-          ;; can wrap with any inline tag
-          ;; so that linebreak detection etc still works
-          `(,@double-pp ,(->string #\“) ,str-rest)]
-         [(str-first . in? . '("\'" "‘")) 
-          `(,@single-pp ,(->string #\‘) ,str-rest)]
-         [else tcs])]
-      [(? tagged-xexpr? nx) (wrap-hanging-quotes nx)]
-      [else (car elements)]))
-  (make-tagged-xexpr tag attr (cons new-car-elements (cdr elements))))
+  (make-tagged-xexpr tag attr
+                     (if (and (list? elements) (not (empty? elements)))
+                         (let ([new-car-elements  (match (car elements)
+                                                    [(? two-or-more-char-string? tcs)
+                                                     (define str-first (get tcs 0))
+                                                     (define str-rest (get tcs 1 'end))
+                                                     (cond
+                                                       [(str-first . in? . '("\"" "“"))
+                                                        ;; can wrap with any inline tag
+                                                        ;; so that linebreak detection etc still works
+                                                        `(,@double-pp ,(->string #\“) ,str-rest)]
+                                                       [(str-first . in? . '("\'" "‘")) 
+                                                        `(,@single-pp ,(->string #\‘) ,str-rest)]
+                                                       [else tcs])]
+                                                    [(? tagged-xexpr? nx) (wrap-hanging-quotes nx)]
+                                                    [else (car elements)])])
+                           (cons new-car-elements (cdr elements)))
+                         elements)))
+
 
 
 (module+ test
   (check-equal? (wrap-hanging-quotes '(p "\"Hi\" there")) '(p (dquo "“" "Hi\" there")))
   (check-equal? (wrap-hanging-quotes '(p "'Hi' there")) '(p (squo "‘" "Hi' there")))
   (check-equal? (wrap-hanging-quotes '(p "'Hi' there") #:single-prepend '(foo ((bar "ino")))) 
-                '(p (foo ((bar "ino")) "‘" "Hi' there"))))
+                '(p (foo ((bar "ino")) "‘" "Hi' there")))
+  ;; make sure tagged-xexpr without elements passes through unscathed
+  (check-equal? (wrap-hanging-quotes '(div ((style "height:2em")))) '(div ((style "height:2em")))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

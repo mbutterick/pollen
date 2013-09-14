@@ -10,43 +10,27 @@
 
 (module+ test (require rackunit))
 
-;; use define-for-syntax because this function supports
-;; the two syntax transformers below
-(define-for-syntax (make-files-in-require-form file-directory)
-  ;; This will be resolved in the context of current-directory.
-  ;; So when called from outside the project directory, 
-  ;; current-directory must be properly set with 'parameterize'
-  (define (insert-directory-into-path path)
-    ;; todo: document why this function is necessary (it definitely is, but I forgot why)
-    (define-values (start_dir name _ignore) (split-path (path->complete-path path)))
-    (build-path start_dir file-directory name))
-  (define files (map insert-directory-into-path (filter (λ(i) (has-ext? i 'rkt)) (directory-list file-directory))))
-  ; this puts files in require form
-  (map (λ(file) `(file ,(->string file))) files))
-  
+(define-for-syntax (put-file-in-require-form file)
+  `(file ,(->string file)))
 
-;; Look for an EXTRAS_DIR directory local to the source file.
-;; and require all the .rkt files therein. 
-;; optionally provide them.
-
-(define-syntax (require-and-provide-extras stx)  
-  (cond
-    [(directory-exists? EXTRAS_DIR)
-     (let ([files-in-require-form (make-files-in-require-form EXTRAS_DIR)])
+(define-syntax (require-and-provide-extras stx)
+  (define project-require-files (get-project-require-files))
+  (if project-require-files
+     (let ([files-in-require-form (map put-file-in-require-form project-require-files)])
        (datum->syntax stx `(begin
                              (require ,@files-in-require-form)
-                             (provide (all-from-out ,@files-in-require-form)))))]
+                             (provide (all-from-out ,@files-in-require-form)))))
     ; if no files to import, do nothing
-    [else #'(begin)]))
+    #'(begin)))
 
-(define-syntax (require-extras stx)  
-  (cond
-    [(directory-exists? EXTRAS_DIR)
-     (let ([files-in-require-form (make-files-in-require-form EXTRAS_DIR)])
+(define-syntax (require-extras stx)
+  (define project-require-files (get-project-require-files))
+  (if project-require-files
+     (let ([files-in-require-form (map put-file-in-require-form project-require-files)])
        (datum->syntax stx `(begin
-                             (require ,@files-in-require-form))))]
+                             (require ,@files-in-require-form))))
     ; if no files to import, do nothing
-    [else #'(begin)]))
+    #'(begin)))
 
 
 ;; here = path of this file, relative to current directory. 

@@ -36,7 +36,11 @@
 ;; therefore, use function by just listing out the paths
 (define/contract (store-refresh-in-mod-dates . rest-paths)
   (() #:rest (listof path?) . ->* . void?)
-  (hash-set! mod-dates rest-paths (map path->mod-date-value rest-paths)))
+  (report (current-directory))
+  ;; todo next: make this work
+  (let* ([project-require-files (or (get-project-require-files) empty)]
+         [all-files-used-in-key (append rest-paths project-require-files)])
+  (hash-set! mod-dates (report all-files-used-in-key) (map path->mod-date-value all-files-used-in-key))))
 
 (module+ test
   (reset-mod-dates)

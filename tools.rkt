@@ -5,12 +5,24 @@
 (require (only-in racket/string string-join))
 (require (only-in xml xexpr? xexpr/c))
 
-(require "readability.rkt" "debug.rkt" "predicates.rkt")
+(require "readability.rkt" "debug.rkt" "predicates.rkt" "world.rkt")
 (provide (all-defined-out) (all-from-out "readability.rkt" "debug.rkt" "predicates.rkt"))
 
 ;; setup for test cases
 (module+ test (require rackunit))
 
+
+
+;; list of all eligible requires in project require directory
+;; assumes current working directory is project directory
+;; either for real, or via parameterize
+;; todo: is it possible to check this via contract?
+;; I don't think so: not possible to know ex ante whether you're in a project folder
+(define (get-project-require-files)
+  (and (directory-exists? EXTRAS_DIR)
+       ;; todo: allow more than just .rkt files?
+       (let ([files (filter (λ(i) (has-ext? i 'rkt)) (directory-list EXTRAS_DIR #:build? #t))])
+         (and (not (empty? files)) files))))
 
 
 ;; helper for comparison of values
