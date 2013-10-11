@@ -23,11 +23,12 @@
    [("html" (string-arg)) (route-wrapper route-html)]
    [else  (λ(req)
             ;; because it's the "else" route, can't use string-arg matcher
-            ;; so extract the path manually
-            (define req-uri (request-uri req))
-            (define path (reroot-path (url->path req-uri) pollen-file-root))
-            (define force (equal? (get-query-value req-uri 'force) "true"))
-            (route-preproc path #:force force)
+            (define request-url (request-uri req))
+            ;; /inform is a magic servlet that must be allowed to pass through
+            (when (not (equal? (url->string request-url) "/inform"))
+              (let ([path (reroot-path (url->path request-url) pollen-file-root)]
+                    [force (equal? (get-query-value request-url 'force) "true")])
+                (route-default path #:force force)))
             (next-dispatcher))]))
 
 (displayln "Ready to rock")

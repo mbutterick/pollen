@@ -146,6 +146,6 @@
     (and result (cdar result)))) ; second value of first result
 
 
-; default route w/preproc support
-(define (route-preproc path #:force force-value)
+; default route
+(define (route-default path #:force force-value)
   (regenerate path #:force force-value))
