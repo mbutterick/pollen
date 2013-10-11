@@ -5,7 +5,7 @@
 (require xml)
 (require "server-routes.rkt" "predicates.rkt")
 
-(displayln "Pollen server starting...")
+(displayln "Pollen server starting..." (current-error-port))
 
 (define/contract (route-wrapper route-proc)
   ;; todo: make better contract for return value
@@ -24,14 +24,14 @@
    [else  (λ(req)
             ;; because it's the "else" route, can't use string-arg matcher
             (define request-url (request-uri req))
-            ;; /inform is a magic servlet that must be allowed to pass through
+            ;; /inform is a magic request that must be allowed to pass through
             (when (not (equal? (url->string request-url) "/inform"))
               (let ([path (reroot-path (url->path request-url) pollen-file-root)]
                     [force (equal? (get-query-value request-url 'force) "true")])
                 (route-default path #:force force)))
             (next-dispatcher))]))
 
-(displayln "Ready to rock")
+(displayln "Ready to rock" (current-error-port))
 
 (serve/servlet start
                #:port 8080
