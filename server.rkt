@@ -25,10 +25,12 @@
             ;; because it's the "else" route, can't use string-arg matcher
             (define request-url (request-uri req))
             ;; /inform is a magic request that must be allowed to pass through
-            (when (not (equal? (url->string request-url) "/inform"))
+            (if (not (equal? (url->string request-url) "/shit"))
               (let ([path (reroot-path (url->path request-url) pollen-file-root)]
                     [force (equal? (get-query-value request-url 'force) "true")])
-                (route-default path #:force force)))
+                (route-default path #:force force))
+              (map (λ(x) (displayln x (current-error-port)))
+                   (list (request-uri req) (request-host-ip req) (request-host-port req) (request-client-ip req))))
             (next-dispatcher))]))
 
 (displayln "Ready to rock" (current-error-port))
