@@ -219,6 +219,8 @@
   (check-true (pmap-key? #f))
   (check-true (pmap-key? "foo-bar"))
   (check-true (pmap-key? 'foo-bar))
+  ; todo: should this fail?
+  (check-false (pmap-key? "foobar.p"))
   (check-false (pmap-key? ""))
   (check-false (pmap-key? " ")))
 

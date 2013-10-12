@@ -1,42 +1,41 @@
-#! /Applications/Racket/bin/racket
 #lang web-server
 (require web-server/servlet-env)
 (require web-server/dispatch web-server/dispatchers/dispatch)
 (require xml)
-(require "server-routes.rkt" "predicates.rkt")
+(require "server-routes.rkt" "predicates.rkt" "debug.rkt")
 
-(displayln "Pollen server starting..." (current-error-port))
+(message "Pollen server starting...")
+(message "Racket version" (version))
+
+(define (logger req)
+  (message (url->string (request-uri req)) "from" (request-client-ip req)))
 
 (define/contract (route-wrapper route-proc)
-  ;; todo: make better contract for return value
   (procedure? . -> . procedure?)
   (λ(req string-arg) 
-    (define filename string-arg)
+    (logger req)
+    (define filename string-arg) 
     (response/xexpr (route-proc (build-path pollen-file-root filename)))))
 
 (define-values (start url)
   (dispatch-rules
-   [("start") (λ(req) (response/xexpr (route-index pollen-file-root)))]
+   [("start") (λ(req) 
+                (logger req)
+                (response/xexpr (route-index)))]
    [("source" (string-arg)) (route-wrapper route-source)]
    [("xexpr" (string-arg)) (route-wrapper route-xexpr)]
    [("raw" (string-arg)) (route-wrapper route-raw-html)]
    [("html" (string-arg)) (route-wrapper route-html)]
    [else  (λ(req)
             ;; because it's the "else" route, can't use string-arg matcher
-            (define request-url (request-uri req))
-            ;; /inform is a magic request that must be allowed to pass through
-            (if (not (equal? (url->string request-url) "/shit"))
-              (let ([path (reroot-path (url->path request-url) pollen-file-root)]
-                    [force (equal? (get-query-value request-url 'force) "true")])
-                (route-default path #:force force))
-              (map (λ(x) (displayln x (current-error-port)))
-                   (list (request-uri req) (request-host-ip req) (request-host-port req) (request-client-ip req))))
+            (logger req)
+            (route-default req)
             (next-dispatcher))]))
 
-(displayln "Ready to rock" (current-error-port))
+(message "Ready to rock")
 
 (serve/servlet start
-               #:port 8080
+               #:port 8088
                #:listen-ip #f
                #:servlet-regexp #rx"" ; respond to top level
                #:command-line? #t

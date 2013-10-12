@@ -1,8 +1,8 @@
 #lang racket/base
 (require racket/list racket/contract racket/rerequire racket/file racket/format xml)
-(require (only-in net/url url-query url->path))
-(require (only-in web-server/http/request-structs request-uri))
-(require "world.rkt" "regenerate.rkt" "readability.rkt" "predicates.rkt")
+(require (only-in net/url url-query url->path url->string))
+(require (only-in web-server/http/request-structs request-uri request-client-ip))
+(require "world.rkt" "regenerate.rkt" "readability.rkt" "predicates.rkt" "debug.rkt")
 
 (module+ test (require rackunit))
 
@@ -72,8 +72,8 @@
 
 
 
-(define/contract (route-index pollen-file-root)   
-  (complete-path? . -> . xexpr?)
+(define/contract (route-index)   
+  (-> xexpr?)
   
   ;; This function generates the Pollen dashboard.
   ;; First, generate some lists of files.
@@ -147,5 +147,9 @@
 
 
 ; default route
-(define (route-default path #:force force-value)
-  (regenerate path #:force force-value))
+(define (route-default req)  
+  (define request-url (request-uri req))
+  (define path (reroot-path (url->path request-url) pollen-file-root))
+  (define force (equal? (get-query-value request-url 'force) "true"))
+  (with-handlers ([exn:fail? (λ(e) (message "Default route ignoring" (url->string request-url)))])
+    (regenerate path #:force force)))
