@@ -213,6 +213,24 @@
   (check-equal? (next-page 'one test-pmap) "two")
   (check-false (next-page 'three test-pmap)))
 
+;; convert path to pmap-key
+;; used for converting "here" values to pmap-keys
+(define/contract (->pmap-key x)
+  (any/c . -> . pmap-key?)
+  (->string (remove-all-ext (last (explode-path (->path x))))))
+
+(module+ test
+  (check-equal? (->pmap-key "bar") "bar")
+  (check-equal? (->pmap-key "foo/bar") "bar")
+  (check-equal? (->pmap-key "foo/bar.html") "bar")
+  (check-equal? (->pmap-key "/Users/this/that/foo/bar.html.pp") "bar"))
 
 
-
+;; convert key to URL
+;; = key name + suffix of template (or suffix of default template)
+;; todo: finish this function, right now it just appends html
+;; this would also be useful for start page (showing correct url of generated pages)
+(define/contract (pmap-key->url key)
+  (pmap-key? . -> . string?)
+  (string-append key ".html"))
+  

@@ -208,9 +208,8 @@
   (define result 
     (or  (eq? x #f) ; OK for map-key to be #f
          (and (or (symbol? x) (string? x)) 
-              (not (= (len x) 0)) ; not empty
-              ; no whitespace
-              (andmap (compose not whitespace?) (map ->string (string->list (->string x)))))))
+              ;; todo: should test be same as valid module name?
+              (->boolean (regexp-match #px"^[-_A-Za-z0-9]+$" (->string x))))))
   (if (and (not result) loud)
       (error "Not a valid pmap key:" x)
       result))
@@ -218,9 +217,10 @@
 (module+ test
   (check-true (pmap-key? #f))
   (check-true (pmap-key? "foo-bar"))
+  (check-true (pmap-key? "Foo_Bar_0123"))
   (check-true (pmap-key? 'foo-bar))
-  ; todo: should this fail?
-  (check-false (pmap-key? "foobar.p"))
+  (check-false (pmap-key? "foo-bar.p"))
+  (check-false (pmap-key? "/Users/MB/foo-bar"))
   (check-false (pmap-key? ""))
   (check-false (pmap-key? " ")))
 
