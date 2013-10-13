@@ -87,7 +87,7 @@
   
   ;; The actual post-preproc files may not have been generated yet
   ;; so calculate their names (rather than rely on directory list)
-  (define post-preproc-files (map (λ(path) (remove-ext path)) preproc-files))
+  (define post-preproc-files (map make-preproc-output-path preproc-files))
   
   ;; Make a combined list of preproc files and post-preproc file, in alphabetical order
   (define all-preproc-files (sort (append preproc-files post-preproc-files) 
@@ -98,7 +98,7 @@
   ;; not necessarily true (it will assume the extension of its template.)
   ;; But pulling out all the template extensions requires parsing all the files,
   ;; which is slow and superfluous, since we're trying to be lazy about rendering.
-  (define post-pollen-files (map (λ(path) (add-ext (remove-ext path) 'html)) pollen-files))
+  (define post-pollen-files (map make-pollen-output-path pollen-files))
   
   ;; Make a combined list of pollen files and post-pollen files, in alphabetical order
   (define all-pollen-files (sort (append pollen-files post-pollen-files) #:key path->string string<?))
@@ -151,5 +151,5 @@
   (define request-url (request-uri req))
   (define path (reroot-path (url->path request-url) pollen-file-root))
   (define force (equal? (get-query-value request-url 'force) "true"))
-  (with-handlers ([exn:fail? (λ(e) (message "Default route ignoring" (url->string request-url) "because of error\n" (exn-message e)))])
+  (with-handlers ([exn:fail? (λ(e) (message "Regenerate is skipping" (url->string request-url) "because of error\n" (exn-message e)))])
     (regenerate path #:force force)))

@@ -49,10 +49,10 @@
 
 
 ;; return the parent of a given name
-(define/contract (parent node [ptree project-ptree])
+(define/contract (parent pnode [ptree project-ptree])
   ((pnode?) (ptree?) . ->* . (or/c string? boolean?)) 
-  (and node (let ([result (se-path* `(,(->symbol node) #:parent) ptree)])
-                 (and result (->string result))))) ; se-path* returns #f if nothing found
+  (and pnode (let ([result (se-path* `(,(->symbol pnode) #:parent) ptree)])
+              (and result (->string result))))) ; se-path* returns #f if nothing found
 
 
 (module+ test
@@ -64,13 +64,13 @@
 
 
 
-; get children of a particular node
-(define/contract (children node [ptree project-ptree])
+; get children of a particular pnode
+(define/contract (children pnode [ptree project-ptree])
   ((pnode?) (ptree?) . ->* . (or/c list? boolean?))  
   ;; se-path*/list returns '() if nothing found
-  (and node  (let ([children (se-path*/list `(,(->symbol node)) ptree)])
-                  ; If there are sublists, just take first node
-                  (and (not (empty? children)) (map (λ(i) (->string (if (list? i) (car i) i))) children)))))
+  (and pnode  (let ([children (se-path*/list `(,(->symbol pnode)) ptree)])
+               ; If there are sublists, just take first pnode
+               (and (not (empty? children)) (map (λ(i) (->string (if (list? i) (car i) i))) children)))))
 
 (module+ test
   (check-equal? (children 'one test-ptree) (list "two"))
@@ -80,11 +80,11 @@
 
 
 ;; find all siblings on current level: go up to parent and ask for children
-(define/contract (siblings node [ptree project-ptree])
-  ;; this never returns false: node is always a sibling of itself.
-  ;; todo: how to use input value in contract? e.g., to check that node is part of output list
+(define/contract (siblings pnode [ptree project-ptree])
+  ;; this never returns false: pnode is always a sibling of itself.
+  ;; todo: how to use input value in contract? e.g., to check that pnode is part of output list
   ((pnode?) (ptree?) . ->* . (or/c list? boolean?))  
-  (children (parent node ptree) ptree))
+  (children (parent pnode ptree) ptree))
 
 (module+ test
   (check-equal? (siblings 'one test-ptree) '("foo" "bar" "one"))
@@ -94,11 +94,11 @@
 
 
 
-(define/contract (siblings-split node [ptree project-ptree])
+(define/contract (siblings-split pnode [ptree project-ptree])
   ((pnode?) (ptree?) . ->* . (values (or/c (listof pnode?) boolean?) 
-                                         (or/c (listof pnode?) boolean?)))
-  (let-values ([(left right) (splitf-at (siblings node ptree) 
-                                        (λ(e) (not (equal? (->string e) (->string node)))))])
+                                     (or/c (listof pnode?) boolean?)))
+  (let-values ([(left right) (splitf-at (siblings pnode ptree) 
+                                        (λ(e) (not (equal? (->string e) (->string pnode)))))])
     (values (if (empty? left) #f left) (if (empty? (cdr right)) #f (cdr right)))))
 
 (module+ test
@@ -106,18 +106,18 @@
   (check-equal? (values->list (siblings-split 'bar test-ptree)) (list '("foo") '("one"))))
 
 
-;; siblings to the left of target node (i.e., precede in tree order)
-(define (siblings-left node [ptree project-ptree])
-  (let-values ([(left right) (siblings-split node ptree)])
+;; siblings to the left of target pnode (i.e., precede in tree order)
+(define (siblings-left pnode [ptree project-ptree])
+  (let-values ([(left right) (siblings-split pnode ptree)])
     left))
 
 (module+ test
   (check-equal? (siblings-left 'one test-ptree) '("foo" "bar"))
   (check-false (siblings-left 'foo test-ptree)))
 
-;; siblings to the right of target node (i.e., follow in tree order)
-(define (siblings-right node [ptree project-ptree])
-  (let-values ([(left right) (siblings-split node ptree)])
+;; siblings to the right of target pnode (i.e., follow in tree order)
+(define (siblings-right pnode [ptree project-ptree])
+  (let-values ([(left right) (siblings-split pnode ptree)])
     right))
 
 (module+ test
@@ -125,20 +125,20 @@
   (check-equal? (siblings-right 'foo test-ptree) '("bar" "one")))
 
 
-;; get node immediately to the left in tree
-(define/contract (sibling-previous node [ptree project-ptree])
+;; get pnode immediately to the left in tree
+(define/contract (sibling-previous pnode [ptree project-ptree])
   ((pnode?) (ptree?) . ->* . (or/c string? boolean?))
-  (let ([siblings (siblings-left node ptree)])
+  (let ([siblings (siblings-left pnode ptree)])
     (and siblings (last siblings))))
 
 (module+ test
   (check-equal? (sibling-previous 'bar test-ptree) "foo")
   (check-false (sibling-previous 'foo test-ptree)))
 
-;; get node immediately to the right in tree
-(define/contract (sibling-next node [ptree project-ptree])
+;; get pnode immediately to the right in tree
+(define/contract (sibling-next pnode [ptree project-ptree])
   ((pnode?) (ptree?) . ->* . (or/c string? boolean?))
-  (let ([siblings (siblings-right node ptree)])
+  (let ([siblings (siblings-right pnode ptree)])
     (and siblings (first siblings))))
 
 (module+ test
@@ -156,12 +156,12 @@
   (check-equal? (all-pages test-ptree) '("foo" "bar" "one" "two" "three")))
 
 ;; helper function for get-previous-pages and get-next-pages
-(define/contract (adjacent-pages side node [ptree project-ptree])
+(define/contract (adjacent-pages side pnode [ptree project-ptree])
   ((symbol? pnode?) (ptree?) . ->* . (or/c list? boolean?))
   (let ([result ((if (equal? side 'left) 
                      takef 
                      takef-right) (all-pages ptree) 
-                                  (λ(y) (not (equal? (->string node) (->string y)))))])
+                                  (λ(y) (not (equal? (->string pnode) (->string y)))))])
     (and (not (empty? result)) result)))
 
 (module+ test
@@ -171,9 +171,9 @@
 
 
 ;; get sequence of earlier pages
-(define/contract (previous-pages node [ptree project-ptree])
+(define/contract (previous-pages pnode [ptree project-ptree])
   ((pnode?) (ptree?) . ->* . (or/c list? boolean?))
-  (adjacent-pages 'left node ptree))
+  (adjacent-pages 'left pnode ptree))
 
 (module+ test
   (check-equal? (previous-pages 'one test-ptree) '("foo" "bar"))
@@ -182,9 +182,9 @@
 
 
 ;; get sequence of next pages
-(define (next-pages node [ptree project-ptree])
+(define (next-pages pnode [ptree project-ptree])
   ((pnode?) (ptree?) . ->* . (or/c list? boolean?))
-  (adjacent-pages 'right node ptree))
+  (adjacent-pages 'right pnode ptree))
 
 (module+ test
   (check-equal? (next-pages 'foo test-ptree) '("bar" "one" "two" "three"))
@@ -192,9 +192,9 @@
   (check-false (next-pages 'three test-ptree)))
 
 ;; get page immediately previous
-(define/contract (previous-page node [ptree project-ptree])
+(define/contract (previous-page pnode [ptree project-ptree])
   ((pnode?) (ptree?) . ->* . (or/c string? boolean?))
-  (let ([result (previous-pages node ptree)])
+  (let ([result (previous-pages pnode ptree)])
     (and result (last result))))
 
 (module+ test
@@ -203,9 +203,9 @@
   (check-false (previous-page 'foo test-ptree)))
 
 ;; get page immediately next
-(define (next-page node [ptree project-ptree])
+(define (next-page pnode [ptree project-ptree])
   ((pnode?) (ptree?) . ->* . (or/c string? boolean?))
-  (let ([result (next-pages node ptree)])
+  (let ([result (next-pages pnode ptree)])
     (and result (first result))))
 
 (module+ test
@@ -227,13 +227,20 @@
 
 (define here->pnode path->pnode)
 
-;; convert key to URL
-;; = key name + suffix of template (or suffix of default template)
-;; todo: finish this function, right now it just appends html
-;; this would also be useful for start page (showing correct url of generated pages)
-(define/contract (pnode->url key)
+(define/contract (pnode->url pnode)
   (pnode? . -> . string?)
-  (string-append key ".html"))
+  (define files (directory-list START_DIR))
+  (define (source-matches-pnode? x)
+    ;; todo: consider this test further.
+    ;; could pnode refer to files without pollen source?
+    ;; if so, the test is too narrow.
+    (and (x . starts-with? . pnode) (pollen-source? x)))
+  (define file-matches (filter source-matches-pnode? files))
+  (if ((length file-matches) . > . 1)
+      (error "Duplicate source files for pnode" pnode)
+      (->string (make-pollen-output-path (car file-matches)))))
+
+;; todo: make tests
 
 
 ;; this project setup must follow definitions to prevent undefined errors
