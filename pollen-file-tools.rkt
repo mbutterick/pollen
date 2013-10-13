@@ -180,15 +180,15 @@
   (path? . -> . path?)
   (remove-ext path))
 
-(define/contract (make-pollen-output-path thing ext)
-  (pathish? (or/c string? symbol?) . -> . path?)
-  (add-ext (remove-ext (->path thing)) ext))
+(define/contract (make-pollen-output-path thing)
+  (pathish? . -> . path?)
+  (remove-ext (->path thing)))
 
 (module+ test
-  (check-equal? (make-pollen-output-path (->path "foo.p") 'html) (->path "foo.html"))
-  (check-equal? (make-pollen-output-path (->path "/Users/mb/git/foo.p") 'html) (->path "/Users/mb/git/foo.html"))
-  (check-equal? (make-pollen-output-path "foo" 'xml) (->path "foo.xml"))
-  (check-equal? (make-pollen-output-path 'foo 'barml) (->path "foo.barml")))
+  (check-equal? (make-pollen-output-path (->path "foo.html.p")) (->path "foo.html"))
+  (check-equal? (make-pollen-output-path (->path "/Users/mb/git/foo.html.p")) (->path "/Users/mb/git/foo.html"))
+  (check-equal? (make-pollen-output-path "foo.xml.p") (->path "foo.xml"))
+  (check-equal? (make-pollen-output-path 'foo.barml.p) (->path "foo.barml")))
 
 ;; turns input into corresponding pollen source path
 ;; does not, however, validate that new path exists
@@ -196,10 +196,14 @@
 ;; OK to use pollen source as input (comes out the same way)
 (define/contract (make-pollen-source-path thing)
   (pathish? . -> . path?)
-  (add-ext (remove-ext (->path thing)) POLLEN_SOURCE_EXT))
+  (define path (->path thing))
+  (if (pollen-source? path)
+      path
+      (add-ext path POLLEN_SOURCE_EXT)))
 
 (module+ test
   (check-equal? (make-pollen-source-path (->path "foo.p")) (->path "foo.p"))
+  (check-equal? (make-pollen-source-path (->path "foo.html")) (->path "foo.html.p"))
   (check-equal? (make-pollen-source-path "foo") (->path "foo.p"))
   (check-equal? (make-pollen-source-path 'foo) (->path "foo.p")))
 

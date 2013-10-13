@@ -263,8 +263,8 @@
   ;; refresh template (it might have its own preprocessor file)
   (regenerate template-path #:force force)
   
-  ;; calculate new path for generated file: base from source + ext from template
-  (define output-path (make-pollen-output-path source-path (get-ext template-path)))
+  ;; calculate new path for generated file
+  (define output-path (make-pollen-output-path source-path))
   
   ;; 2) Regenerate the source file with template, if needed.
   ;; Regenerate is expensive, so we avoid it when we can.

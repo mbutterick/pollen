@@ -27,10 +27,7 @@
              [files (map remove-ext (filter (λ(x) (has-ext? x POLLEN_SOURCE_EXT)) files))])
         ;; make a POLLEN_TREE_ROOT_NAME structure and convert it to a full ptree
         (message "Generating ptree from file listing")
-        (ptree-root->ptree (cons POLLEN_TREE_ROOT_NAME (map path->string files))))))
-
-(define project-ptree (make-project-ptree))
-
+        (ptree-root->ptree (cons POLLEN_TREE_ROOT_NAME (map path->pnode files))))))
 
 ;; remove parents from tree (i.e., just remove attrs)
 ;; is not the inverse of add-parents, i.e., you do not get back your original input.
@@ -218,16 +215,17 @@
 
 ;; convert path to pnode
 ;; used for converting "here" values to pnodes
-(define/contract (here->pnode x)
+(define/contract (path->pnode x)
   (pathish? . -> . pnode?)
   (->string (remove-all-ext (last (explode-path (->path x))))))
 
 (module+ test
-  (check-equal? (here->pnode "bar") "bar")
-  (check-equal? (here->pnode "foo/bar") "bar")
-  (check-equal? (here->pnode "foo/bar.html") "bar")
-  (check-equal? (here->pnode "/Users/this/that/foo/bar.html.pp") "bar"))
+  (check-equal? (path->pnode "bar") "bar")
+  (check-equal? (path->pnode "foo/bar") "bar")
+  (check-equal? (path->pnode "foo/bar.html") "bar")
+  (check-equal? (path->pnode "/Users/this/that/foo/bar.html.pp") "bar"))
 
+(define here->pnode path->pnode)
 
 ;; convert key to URL
 ;; = key name + suffix of template (or suffix of default template)
@@ -236,4 +234,8 @@
 (define/contract (pnode->url key)
   (pnode? . -> . string?)
   (string-append key ".html"))
+
+
+;; this project setup must follow definitions to prevent undefined errors
+(define project-ptree (make-project-ptree))
 
