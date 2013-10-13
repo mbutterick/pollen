@@ -232,10 +232,18 @@
   (check-false ("F" . in? . #\F)))
 
 
+;; stringish: data type that can be trivially converted to string
+;; todo: merge this with pathish
+(define/contract (stringish? x)
+  (any/c . -> . boolean?)
+  (->boolean (or path? string? symbol?)))
+
 ;; python-style string testers
 (define/contract (starts-with? str starter)
-  (string? string? . -> . boolean?)
-  (and (<= (len starter) (len str)) (equal? (get str 0 (len starter)) starter)))
+  (stringish? stringish? . -> . boolean?)
+  (let ([str (->string str)]
+        [starter (->string starter)])
+    (and (<= (len starter) (len str)) (equal? (get str 0 (len starter)) starter))))
 
 (module+ test
   (check-true ("foobar" . starts-with? . "foo"))
@@ -259,7 +267,7 @@
   (dropf-right (dropf items test-proc) test-proc))
 
 (module+ test
-;  (check-equal? (trim (list "\n" " " 1 2 3 "\n") whitespace?) '(1 2 3))
+  ;  (check-equal? (trim (list "\n" " " 1 2 3 "\n") whitespace?) '(1 2 3))
   (check-equal? (trim (list 1 3 2 4 5 6 8 9 13) odd?) '(2 4 5 6 8)))
 
 
