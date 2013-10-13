@@ -4,8 +4,8 @@
 
 (require (for-syntax "readability.rkt"))
 
-(define-syntax (handle-pollen-command stx)
-  (datum->syntax stx
+(define-syntax (handle-pollen-command syntax-context)
+  (datum->syntax syntax-context
                  (let* ([args (current-command-line-arguments)]
                         [arg (if (> (len args) 0) (get args 0) "")])
                    (case arg
