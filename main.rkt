@@ -1,10 +1,10 @@
 #lang racket/base
 (require racket/list)
 (require (planet mb/pollen/tools) (planet mb/pollen/main-helper))
-(require (only-in (planet mb/pollen/pmap-decode) pmap-source-decode))
-(require (only-in (planet mb/pollen/predicates) pmap?))
+(require (only-in (planet mb/pollen/ptree-decode) ptree-source-decode))
+(require (only-in (planet mb/pollen/predicates) ptree?))
 (require (only-in (planet mb/pollen/pollen-file-tools) has-ext?))
-(require (only-in (planet mb/pollen/world) POLLEN_MAP_EXT))
+(require (only-in (planet mb/pollen/world) POLLEN_TREE_EXT))
 (provide (except-out (all-from-out racket/base) #%module-begin)
          (rename-out [module-begin #%module-begin]))
 
@@ -75,18 +75,18 @@
    ;; The point is just to set it up for further processing.
    ;; Unlike Scribble, which insists on decoding,
    ;; Pollen just passes through the minimally processed data.
-   ;; one exception: if file extension marks it as pmap, send it to the pmap decoder instead.
+   ;; one exception: if file extension marks it as ptree, send it to the ptree decoder instead.
    
    ;; this tests inner-here (which is always the file name)
    ;; rather than (get metas 'here) which might have been overridden.
-   ;; Because if it's overridden to something other than *.pmap, 
-   ;; pmap processing will fail.
-   ;; This defeats rule that pmap file suffix triggers pmap decoding.
-   (define here-is-pmap? (pmap-source? (->path inner-here)))
+   ;; Because if it's overridden to something other than *.ptree, 
+   ;; ptree processing will fail.
+   ;; This defeats rule that ptree file suffix triggers ptree decoding.
+   (define here-is-ptree? (ptree-source? (->path inner-here)))
    
-   (define main (apply (if here-is-pmap?
-                           ;; pmap source files will go this way,
-                           pmap-source-decode
+   (define main (apply (if here-is-ptree?
+                           ;; ptree source files will go this way,
+                           ptree-source-decode
                            ;; ... but other files, including pollen, will go this way.
                            ;; Root is treated as a function. 
                            ;; If it's not defined elsewhere, 
@@ -99,13 +99,13 @@
    
    (module+ main
      (displayln ";-------------------------")
-     (displayln (string-append "; pollen decoded 'main" (if here-is-pmap? " (as pmap)" "")))     
+     (displayln (string-append "; pollen decoded 'main" (if here-is-ptree? " (as ptree)" "")))     
      (displayln ";-------------------------")
      main
      (displayln "")
      
-     (if here-is-pmap?
-         (displayln (format "(pmap? main) ~a" (pmap? main)))
+     (if here-is-ptree?
+         (displayln (format "(ptree? main) ~a" (ptree? main)))
          (displayln (format "(tagged-xexpr? main) ~a" (tagged-xexpr? main))))
      (displayln "")
      (displayln ";-------------------------")

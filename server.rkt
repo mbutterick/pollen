@@ -1,14 +1,17 @@
 #lang web-server
+(require "start.rkt")
 (require web-server/servlet-env)
 (require web-server/dispatch web-server/dispatchers/dispatch)
 (require xml)
 (require "server-routes.rkt" "predicates.rkt" "debug.rkt")
 
-(message "Pollen server starting...")
-(message "Racket version" (version))
+(message "Starting webserver")
 
 (define (logger req)
-  (message (url->string (request-uri req)) "from" (request-client-ip req)))
+  (define client (request-client-ip req))
+  (when (equal? client "::1")
+    (set! client "localhost"))
+  (message "Request:" (url->string (request-uri req)) "from" client))
 
 (define/contract (route-wrapper route-proc)
   (procedure? . -> . procedure?)

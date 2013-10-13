@@ -12,9 +12,9 @@
                      [("start") `(require "server.rkt")]
                      [("regenerate") `(begin
                                         ;; todo: take extensions off the comand line
-                                        (displayln "Regenerate preproc & pmap files ...")
+                                        (displayln "Regenerate preproc & ptree files ...")
                                         (require "regenerate.rkt" "pollen-file-tools.rkt" "world.rkt")
-                                        (apply regenerate-with-session (append-map project-files-with-ext (list POLLEN_PREPROC_EXT POLLEN_MAP_EXT))))]
+                                        (apply regenerate-with-session (append-map project-files-with-ext (list POLLEN_PREPROC_EXT POLLEN_TREE_EXT))))]
                      [("clone") (let ([target-path 
                                        (if (> (len args) 1)
                                            (->path (get args 1))
@@ -29,7 +29,7 @@
                                                                      pollen-source? 
                                                                      preproc-source? 
                                                                      template-source?
-                                                                     pmap-source?
+                                                                     ptree-source?
                                                                      pollen-script?
                                                                      magic-directory?
                                                                      racket-file?)))

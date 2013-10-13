@@ -119,13 +119,13 @@
   ; or a file (e.g., html) that has a pollen source file
   (ormap (λ(proc) (proc (->path x))) (list pollen-source? has-pollen-source?)))
 
-(define/contract (pmap-source? x)
+(define/contract (ptree-source? x)
   (any/c . -> . boolean?)
-  (has-ext? (->path x) POLLEN_MAP_EXT))
+  (has-ext? (->path x) POLLEN_TREE_EXT))
 
 (module+ test
-  (check-true (pmap-source? "foo.pmap"))
-  (check-false (pmap-source? "pmap.bar")))
+  (check-true (ptree-source? "foo.ptree"))
+  (check-false (ptree-source? "ptree.bar")))
 
 
 (define/contract (pollen-source? x)

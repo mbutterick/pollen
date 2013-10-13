@@ -14,8 +14,9 @@
   (williams:describe x)
   x)
 
-
 ; debug utilities
+(define months (list "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"))
+
 (define (message . items)
   (define (zero-fill str count)
     (set! str (~a str))
@@ -25,15 +26,15 @@
   
   (define (make-date-string)
     (define date (current-date))
-    (define date-fields (map (λ(x) (zero-fill x 2)) 
-                             (list (date-month date)
+    (define date-fields (map (λ(x) (zero-fill x 2)) (list
                                    (date-day date)
-                                   (date-year date)
+                                   (list-ref months (sub1 (date-month date)))
                                    (modulo (date-hour date) 12)
                                    (date-minute date)
                                    (date-second date)
-                                   (if (< (date-hour date) 12) "am" "pm"))))    
-    (apply format "[~a.~a.~a ~a:~a:~a~a]" date-fields))
+                                ;   (if (< (date-hour date) 12) "am" "pm")
+                                   )))  
+    (apply format "[~a-~a ~a:~a:~a]" date-fields))
   (displayln (string-join `(,(make-date-string) ,@(map (λ(x)(if (string? x) x (~v x))) items))) (current-error-port)))
 
 

@@ -1,5 +1,7 @@
 #lang racket/base
 
+(provide (all-defined-out))
+
 (define POLLEN_PREPROC_EXT 'pp)
 (define POLLEN_SOURCE_EXT 'p)
 (define TEMPLATE_FILE_PREFIX "-")
@@ -10,10 +12,10 @@
 (define FALLBACK_TEMPLATE_NAME "-temp-fallback-template.html")
 (define TEMPLATE_META_KEY "template")
 
-(define POLLEN_MAP_EXT 'pmap)
-(define DEFAULT_POLLEN_MAP "main.pmap")
-(define POLLEN_MAP_PARENT_KEY 'parent)
-(define POLLEN_MAP_ROOT_NAME 'pmap-root)
+(define POLLEN_TREE_EXT 'ptree)
+(define DEFAULT_POLLEN_TREE "main.ptree")
+(define POLLEN_TREE_PARENT_NAME 'parent)
+(define POLLEN_TREE_ROOT_NAME 'ptree-root)
 
 (define MAIN_POLLEN_EXPORT 'main)
 ;(define META_POLLEN_TAG 'metas)
@@ -28,13 +30,9 @@
 
 (define OUTPUT_SUBDIR 'public)
 
-(define RACKET_PATH "/Applications/Racket/bin/racket")
+(define RACKET_PATH "/usr/bin/racket")
 
 (define POLLEN_ROOT 'main)
-
-; todo: this doesn't work as hoped
-;(define-syntax POLLEN_ROOT_TAG
-;  (λ(stx) (datum->syntax stx 'main)))
 
 ; get the starting directory, which is the parent of 'run-file
 (define START_DIR
@@ -45,4 +43,3 @@
         dir)))
 
 
-(provide (all-defined-out))

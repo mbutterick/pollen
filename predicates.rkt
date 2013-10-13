@@ -162,29 +162,29 @@
   (check-false (elements-unique? "foo")))
 
 
-;; certain pmap requirements are enforced at compile-time.
-;; (such as pmap-keys must be valid strings, and unique.)
+;; certain ptree requirements are enforced at compile-time.
+;; (such as pnodes must be valid strings, and unique.)
 ;; otherwise this becomes a rather expensive contract
-;; because every function in pmap.rkt uses it.
-;; note that a pmap is just a bunch of recursively nested pmaps.
-(define/contract (pmap? x)
+;; because every function in ptree.rkt uses it.
+;; note that a ptree is just a bunch of recursively nested ptrees.
+(define/contract (ptree? x)
   (any/c . -> . boolean?)
   (and (match x
          ;; a tagged-xexpr with one attr ('parent)
          ;; whose subelements recursively meet the same test.
-         [(list (? pmap-key? tag) (? pmap-attr? attr) elements ...) 
-          (andmap pmap? elements)]
+         [(list (? pnode? tag) (? ptree-attr? attr) elements ...) 
+          (andmap ptree? elements)]
          [else #f])))
 
 (module+ test
-  (check-true (pmap? '(foo ((parent "bar")))))
-  (check-false (pmap? '(foo)))
-  (check-false (pmap? '(foo ((parent "bar")(hee "haw")))))
-  (check-true (pmap? '(foo ((parent "bar")) (hee ((parent "foo"))))))
-  (check-false (pmap? '(foo ((parent "bar")) (hee ((uncle "foo")))))))
+  (check-true (ptree? '(foo ((parent "bar")))))
+  (check-false (ptree? '(foo)))
+  (check-false (ptree? '(foo ((parent "bar")(hee "haw")))))
+  (check-true (ptree? '(foo ((parent "bar")) (hee ((parent "foo"))))))
+  (check-false (ptree? '(foo ((parent "bar")) (hee ((uncle "foo")))))))
 
-;; pmap attr must be ((parent "value"))
-(define/contract (pmap-attr? x)
+;; ptree attr must be ((parent "value"))
+(define/contract (ptree-attr? x)
   (any/c . -> . boolean?)
   (define foo 'bar)
   (match x
@@ -193,36 +193,36 @@
     [else #f]))
 
 (module+ test
-  (check-true (pmap-attr? '((parent "bar"))))
-  (check-false (pmap-attr? '((parent "bar") '(foo "bar"))))
-  (check-false (pmap-attr? '())))
+  (check-true (ptree-attr? '((parent "bar"))))
+  (check-false (ptree-attr? '((parent "bar") '(foo "bar"))))
+  (check-false (ptree-attr? '())))
 
 
-;; pmap location must represent a possible valid filename
-(define/contract (pmap-key? x #:loud [loud #f])
+;; ptree location must represent a possible valid filename
+(define/contract (pnode? x #:loud [loud #f])
   ((any/c) (#:loud boolean?) . ->* . boolean?)
-  ;; todo: how to express the fact that the pmap-location must be 
+  ;; todo: how to express the fact that the ptree-location must be 
   ;; a valid base name for a file?
   ;; however, don't restrict it to existing files 
-  ;; (author may want to use pmap as wireframe)
+  ;; (author may want to use ptree as wireframe)
   (define result 
     (or  (eq? x #f) ; OK for map-key to be #f
          (and (or (symbol? x) (string? x)) 
               ;; todo: should test be same as valid module name?
               (->boolean (regexp-match #px"^[-_A-Za-z0-9]+$" (->string x))))))
   (if (and (not result) loud)
-      (error "Not a valid pmap key:" x)
+      (error "Not a valid ptree key:" x)
       result))
 
 (module+ test
-  (check-true (pmap-key? #f))
-  (check-true (pmap-key? "foo-bar"))
-  (check-true (pmap-key? "Foo_Bar_0123"))
-  (check-true (pmap-key? 'foo-bar))
-  (check-false (pmap-key? "foo-bar.p"))
-  (check-false (pmap-key? "/Users/MB/foo-bar"))
-  (check-false (pmap-key? ""))
-  (check-false (pmap-key? " ")))
+  (check-true (pnode? #f))
+  (check-true (pnode? "foo-bar"))
+  (check-true (pnode? "Foo_Bar_0123"))
+  (check-true (pnode? 'foo-bar))
+  (check-false (pnode? "foo-bar.p"))
+  (check-false (pnode? "/Users/MB/foo-bar"))
+  (check-false (pnode? ""))
+  (check-false (pnode? " ")))
 
 
 ;; recursive whitespace test

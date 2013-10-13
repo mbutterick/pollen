@@ -79,11 +79,11 @@
   ;; First, generate some lists of files.
   
   ;; get lists of files by mapping a filter function for each file type
-  (define-values (pollen-files preproc-files pmap-files template-files)
+  (define-values (pollen-files preproc-files ptree-files template-files)
     (let ([all-files-in-project-directory (directory-list pollen-file-root)])
       (apply values 
              (map (λ(test) (filter test all-files-in-project-directory)) 
-                  (list pollen-source? preproc-source? pmap-source? template-source?)))))
+                  (list pollen-source? preproc-source? ptree-source? template-source?)))))
   
   ;; The actual post-preproc files may not have been generated yet
   ;; so calculate their names (rather than rely on directory list)
@@ -123,14 +123,14 @@
         `(td (a ((href ,target)) ,name))))
     `(tr ,(make-link-cell 'direct) ,@(map make-link-cell routes)))
   
-  (if (andmap empty? (list pmap-files all-pollen-files all-preproc-files template-files))
+  (if (andmap empty? (list ptree-files all-pollen-files all-preproc-files template-files))
       '(body "No files yet. Get to work!")
       `(body 
         (style ((type "text/css")) "td a { display: block; width: 100%; height: 100%; padding: 8px; }"
                "td:hover {background: #eee}")
         (table ((style "font-family:Concourse T3;font-size:115%"))
-               ;; options for pmap files and template files
-               ,@(map (λ(file) (make-file-row file '(raw))) (append pmap-files template-files))
+               ;; options for ptree files and template files
+               ,@(map (λ(file) (make-file-row file '(raw))) (append ptree-files template-files))
                
                ;; options for pollen files
                ,@(map (λ(file) (make-file-row file '(raw source xexpr force))) post-pollen-files)
@@ -151,5 +151,5 @@
   (define request-url (request-uri req))
   (define path (reroot-path (url->path request-url) pollen-file-root))
   (define force (equal? (get-query-value request-url 'force) "true"))
-  (with-handlers ([exn:fail? (λ(e) (message "Default route ignoring" (url->string request-url)))])
+  (with-handlers ([exn:fail? (λ(e) (message "Default route ignoring" (url->string request-url) "because of error\n" (exn-message e)))])
     (regenerate path #:force force)))

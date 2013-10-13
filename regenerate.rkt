@@ -1,7 +1,7 @@
 #lang racket/base
 (require racket/list racket/path racket/port racket/system 
          racket/file racket/rerequire racket/contract racket/bool)
-(require "world.rkt" "tools.rkt" "pmap.rkt" "readability.rkt" "template.rkt")
+(require "world.rkt" "tools.rkt" "ptree.rkt" "readability.rkt" "template.rkt")
 
 (module+ test (require rackunit))
 
@@ -105,15 +105,16 @@
   (() (#:force boolean?) #:rest (listof pathish?) . ->* . void?)
   (define (&regenerate x) 
     (let ([path (->complete-path (->path x))])
+      ;      (message "Regenerating" (->string path))
       (cond
         ;; this will catch pp (preprocessor) files
         [(needs-preproc? path) (regenerate-with-preproc path #:force force)]
         ;; this will catch p files, 
         ;; and files without extension that correspond to p files
         [(needs-template? path) (regenerate-with-template path #:force force)]
-        ;; this will catch pmap (pollen map) files
-        [(pmap-source? path) (let ([pmap (dynamic-require path 'main)])
-                               (regenerate-with-pmap pmap #:force force))]
+        ;; this will catch ptree files
+        [(ptree-source? path) (let ([ptree (dynamic-require path 'main)])
+                                (regenerate-with-ptree ptree #:force force))]
         [(equal? FALLBACK_TEMPLATE_NAME (->string (file-name-from-path path)))
          (message "Regenerate: using fallback template")]
         [(file-exists? path) 'pass-through]
@@ -276,6 +277,8 @@
           source-reloaded?)
       (begin
         (store-refresh-in-mod-dates source-path template-path)
+        (message "Rendering source" (->string source-path)
+                 "with template" (->string template-path))
         (let ([page-result (render-source-with-template source-path template-path)])
           (display-to-file #:exists 'replace page-result output-path)
           (regenerated-message (file-name-from-path output-path))))
@@ -307,17 +310,17 @@
     (namespace-require 'racket) ; use namespace-require for FIRST require, then eval after
     ;; for include-template (used below)
     (eval '(require web-server/templates) (current-namespace))
-    ;; for pmap navigation functions, and template commands
-    (eval '(require (planet mb/pollen/pmap)(planet mb/pollen/template)) (current-namespace))
+    ;; for ptree navigation functions, and template commands
+    (eval '(require  (planet mb/pollen/debug)(planet mb/pollen/ptree)(planet mb/pollen/template)) (current-namespace))
     ;; import source into eval space. This sets up main & metas
     (eval `(require ,(path->string source-name)) (current-namespace)) 
     (eval `(include-template #:command-char ,TEMPLATE_FIELD_DELIMITER ,(->string template-name)) (current-namespace))))
 
-;; regenerate files listed in a pmap file
-(define/contract (regenerate-with-pmap pmap #:force [force #f])
-  ((pmap?) (#:force boolean?) . ->* . void?)    
+;; regenerate files listed in a ptree file
+(define/contract (regenerate-with-ptree ptree #:force [force #f])
+  ((ptree?) (#:force boolean?) . ->* . void?)    
   ;; pass force parameter through 
-  (for-each (λ(i) (regenerate i #:force force)) (all-pages pmap)))
+  (for-each (λ(i) (regenerate i #:force force)) (all-pages ptree)))
 
 
 
