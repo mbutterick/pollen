@@ -26,14 +26,17 @@
   
   (define (make-date-string)
     (define date (current-date))
-    (define date-fields (map (λ(x) (zero-fill x 2)) (list
-                                   (date-day date)
-                                   (list-ref months (sub1 (date-month date)))
-                                   (modulo (date-hour date) 12)
-                                   (date-minute date)
-                                   (date-second date)
-                                ;   (if (< (date-hour date) 12) "am" "pm")
-                                   )))  
+    (define date-fields (map (λ(x) (zero-fill x 2)) 
+                             (list
+                              (date-day date)
+                              (list-ref months (sub1 (date-month date)))
+                              (if (<= (date-hour date) 12)
+                                  (date-hour date) ; am hours + noon hour
+                                  (modulo (date-hour date) 12)) ; pm hours after noon hour
+                              (date-minute date)
+                              (date-second date)
+                              ;   (if (< (date-hour date) 12) "am" "pm")
+                              )))  
     (apply format "[~a-~a ~a:~a:~a]" date-fields))
   (displayln (string-join `(,(make-date-string) ,@(map (λ(x)(if (string? x) x (~v x))) items))) (current-error-port)))
 
