@@ -7,6 +7,11 @@
 
 (provide render render-with-session)
 
+
+;; for shared use by eval & system
+(define nowhere-port (open-output-nowhere))
+
+
 ;; mod-dates is a hash that takes lists of paths as keys,
 ;; and lists of modification times as values.
 ;; Reason: a templated page is a combination of two source files.
@@ -104,7 +109,8 @@
 (define/contract (render #:force [force #f] . xs)
   (() (#:force boolean?) #:rest (listof pathish?) . ->* . void?)
   (define (&render x) 
-    (let ([path (->complete-path (->path x))])
+    (let ([path (->complete-path (->path x))])              
+   ;   (message "Dispatching render for" (->string (file-name-from-path path)))
       (cond
         ;; this will catch preprocessor files
         [(needs-preproc? path) (render-with-preproc path #:force force)]
@@ -116,7 +122,7 @@
                                 (render-ptree-files ptree #:force force))]
         [(equal? FALLBACK_TEMPLATE_NAME (->string (file-name-from-path path)))
          (message "Render: using fallback template")]
-        [(file-exists? path) 'pass-through]
+        [(file-exists? path) (message "Serving static file" (->string (file-name-from-path path)))]
         [else (error "Render couldn't find" (->string (file-name-from-path path)))])))
   (for-each &render xs))
 
@@ -135,7 +141,7 @@
 
 (define/contract (up-to-date-message path)
   (any/c . -> . void?)
-  (message "File is up to date:" (->string (file-name-from-path path))))
+  (message (->string (file-name-from-path path)) "is up to date, using cached copy"))
 
 
 (define/contract (render-with-preproc x #:force [force #f])
@@ -161,12 +167,12 @@
       ;; use single quotes to escape spaces in pathnames
       (let ([command (format "~a '~a' > '~a'" RACKET_PATH source-path output-path)])
         (rendering-message (format "~a from ~a" 
-                                      (file-name-from-path output-path)
-                                      (file-name-from-path source-path)))
+                                   (file-name-from-path output-path)
+                                   (file-name-from-path source-path)))
         (store-refresh-in-mod-dates source-path)
         ;; discard output using open-output-nowhere
         (parameterize ([current-directory source-dir]
-                       [current-output-port (open-output-nowhere)])
+                       [current-output-port nowhere-port])
           (system command))
         (rendered-message output-path))
       ;; otherwise, skip file because there's no trigger for refresh
@@ -241,10 +247,10 @@
                          ;; path using default template name =
                          ;; "-main" + extension from output path (e.g. foo.xml.p -> -main.xml)
                          (build-path source-dir (add-ext DEFAULT_TEMPLATE_PREFIX (get-ext (->output-path source-path)))))))
-     ;; if none of these work, make temporary template file
-     (let ([tp (build-path source-dir FALLBACK_TEMPLATE_NAME)])
-       (display-to-file #:exists 'replace fallback-template-data tp)
-       tp)))
+     ;; if none of these work, make fallback template file
+     (let ([ft-path (build-path source-dir FALLBACK_TEMPLATE_NAME)])
+       (display-to-file #:exists 'replace fallback-template-data ft-path)
+       ft-path)))
   
   ;; refresh template (it might have its own preprocessor file)
   (render template-path #:force force)
@@ -252,8 +258,8 @@
   ;; calculate new path for generated file
   (define output-path (->output-path source-path))
   
-  ;; 2) render the source file with template, if needed.
-  ;; render is expensive, so we avoid it when we can.
+  ;; 2) Render the source file with template, if needed.
+  ;; Render is expensive, so we avoid it when we can.
   ;; Four conditions where we render:
   (if (or force ; a) it's explicitly demanded
           (not (file-exists? output-path)) ; b) output file does not exist
@@ -291,15 +297,18 @@
   ;; that represents the output of the operation.
   (parameterize ([current-namespace (make-base-empty-namespace)]
                  [current-directory source-dir]
-                 [current-output-port (open-output-nowhere)])
+                 [current-output-port nowhere-port]
+                 [current-error-port nowhere-port]) ; silent evaluation; exceptions still thrown
     (namespace-require 'racket) ; use namespace-require for FIRST require, then eval after
-    ;; for include-template (used below)
-    (eval '(require web-server/templates) (current-namespace))
-    ;; for ptree navigation functions, and template commands
-    (eval '(require  (planet mb/pollen/debug)(planet mb/pollen/ptree)(planet mb/pollen/template)) (current-namespace))
-    ;; import source into eval space. This sets up main & metas
-    (eval `(require ,(path->string source-name)) (current-namespace)) 
-    (eval `(include-template #:command-char ,TEMPLATE_FIELD_DELIMITER ,(->string template-name)) (current-namespace))))
+    (eval `(begin 
+             ;; for include-template (used below)
+             (require web-server/templates)
+             ;; for ptree navigation functions, and template commands
+             (require  (planet mb/pollen/debug) (planet mb/pollen/ptree) (planet mb/pollen/template))
+             ;; import source into eval space. This sets up main & metas
+             (require ,(->string source-name))
+             (include-template #:command-char ,TEMPLATE_FIELD_DELIMITER ,(->string template-name))) 
+          (current-namespace))))
 
 ;; render files listed in a ptree file
 (define/contract (render-ptree-files ptree #:force [force #f])
