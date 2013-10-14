@@ -43,10 +43,10 @@
 ;; because hash key needs to be a list
 ;; so it's convenient to use a rest argument
 ;; therefore, use function by just listing out the paths
-(define/contract (store-refresh-in-mod-dates . rest-paths)
+(define/contract (store-render-in-mod-dates . rest-paths)
   (() #:rest (listof path?) . ->* . void?)
   ;; project require files are appended to the mod-date key.
-  ;; Why? So a change in a require file will trigger a refresh 
+  ;; Why? So a change in a require file will trigger a render 
   ;; (which is the right thing to do, since pollen files are 
   ;; dependent on those requires)
   ;; It's convenient for development, because otherwise
@@ -58,7 +58,7 @@
 
 (module+ test
   (reset-mod-dates)
-  (store-refresh-in-mod-dates (build-path (current-directory) (->path "render.rkt")))
+  (store-render-in-mod-dates (build-path (current-directory) (->path "render.rkt")))
   (check-true (= (len mod-dates) 1))
   (reset-mod-dates))
 
@@ -71,12 +71,12 @@
 
 (module+ test 
   (reset-mod-dates)
-  (store-refresh-in-mod-dates (build-path (current-directory) (->path "render.rkt")))
+  (store-render-in-mod-dates (build-path (current-directory) (->path "render.rkt")))
   (reset-mod-dates)
   (check-true (= (len mod-dates) 0)))
 
-;; how to know whether a certain combination of paths needs a refresh
-;; use rest argument here so calling pattern matches store-refresh
+;; how to know whether a certain combination of paths needs a render
+;; use rest argument here so calling pattern matches store-render
 (define/contract (mod-date-expired? . rest-paths)
   (() #:rest (listof path?) . ->* . boolean?)
   (define key (make-mod-dates-key rest-paths))
@@ -86,7 +86,7 @@
 (module+ test 
   (reset-mod-dates)
   (let ([path (build-path (current-directory) (->path "render.rkt"))])
-    (store-refresh-in-mod-dates path)
+    (store-render-in-mod-dates path)
     (check-false (mod-date-expired? path))
     (reset-mod-dates)
     (check-true (mod-date-expired? path))))
@@ -105,7 +105,7 @@
   (for-each render xs))
 
 ;; dispatches path to the right rendering function
-;; use #:force to refresh regardless of cached state
+;; use #:force to render regardless of cached state
 (define/contract (render #:force [force #f] . xs)
   (() (#:force boolean?) #:rest (listof pathish?) . ->* . void?)
   (define (&render x) 
@@ -113,7 +113,7 @@
       ;   (message "Dispatching render for" (->string (file-name-from-path path)))
       (cond
         ;; this will catch preprocessor files
-        [(needs-preproc? path) (render-with-preproc path #:force force)]
+        [(needs-preproc? path) (render-preproc-source path #:force force)]
         ;; this will catch pollen source files, 
         ;; and files without extension that correspond to p files
         [(needs-template? path) (render-with-template path #:force force)]
@@ -144,7 +144,7 @@
   (message (->string (file-name-from-path path)) "is up to date, using cached copy"))
 
 
-(define/contract (render-with-preproc x #:force [force #f])
+(define/contract (render-preproc-source x #:force [force #f])
   (((and/c pathish?
            (flat-named-contract 'file-exists
                                 (λ(x) (file-exists? (->complete-path (->preproc-source-path x))))))) (#:force boolean?) . ->* . void?)
@@ -169,21 +169,22 @@
        ;; 4) source had to be reloaded (some other change)
        source-reloaded?)
 
-      ;; how we render: import 'text from preproc source file and write to output path
+      ;; how we render: import 'text from preproc source file, 
+      ;; which is rendered during source parsing,
+      ;; and write that to output path
       (begin
         (rendering-message (format "~a from ~a" 
                                    (file-name-from-path output-path)
                                    (file-name-from-path source-path)))
-        (store-refresh-in-mod-dates source-path)
+        (store-render-in-mod-dates source-path)
         
-        (parameterize ([current-directory source-dir]
-                       [current-output-port nowhere-port])
+        (parameterize ([current-directory source-dir])
           (let ([text (dynamic-require source-path 'text)])
             (display-to-file text output-path #:exists 'replace)))
         
         (rendered-message output-path))
 
-      ;; otherwise, skip file because there's no trigger for refresh
+      ;; otherwise, skip file because there's no trigger for render
       (up-to-date-message output-path)))
 
 ;; todo: write tests
@@ -200,7 +201,7 @@
   
   (define-values (source-dir source-name _) (split-path source-path))
   ;; need to require source file (to retrieve template name, which is in metas)
-  ;; but use dynamic-rerequire now to force refresh for dynamic-require later,
+  ;; but use dynamic-rerequire now to force render for dynamic-require later,
   ;; otherwise the source file will cache
   ;; by default, rerequire reports reloads to error port.
   ;; set up a port to catch messages from dynamic-rerequire
@@ -257,10 +258,10 @@
                          (build-path source-dir (add-ext DEFAULT_TEMPLATE_PREFIX (get-ext (->output-path source-path)))))))
      ;; if none of these work, make fallback template file
      (let ([ft-path (build-path source-dir FALLBACK_TEMPLATE_NAME)])
-       (display-to-file #:exists 'replace fallback-template-data ft-path)
+       (display-to-file fallback-template-data ft-path #:exists 'replace)
        ft-path)))
   
-  ;; refresh template (it might have its own preprocessor file)
+  ;; render template (it might have its own preprocessor file)
   (render template-path #:force force)
   
   ;; calculate new path for generated file
@@ -271,15 +272,16 @@
   ;; Four conditions where we render:
   (if (or force ; a) it's explicitly demanded
           (not (file-exists? output-path)) ; b) output file does not exist
-          ;; c) mod-dates indicates refresh is needed
+          ;; c) mod-dates indicates render is needed
           (mod-date-expired? source-path template-path) 
           ;; d) dynamic-rerequire indicates the source had to be reloaded
           source-reloaded?)
       (begin
-        (store-refresh-in-mod-dates source-path template-path)
-        (message "Rendering source" (->string (file-name-from-path source-path)) "with template" (->string (file-name-from-path template-path)))
+        (store-render-in-mod-dates source-path template-path)
+        (message "Rendering source" (->string (file-name-from-path source-path)) 
+                 "with template" (->string (file-name-from-path template-path)))
         (let ([page-result (render-source-with-template source-path template-path)])
-          (display-to-file #:exists 'replace page-result output-path)
+          (display-to-file page-result output-path #:exists 'replace)
           (rendered-message output-path)))
       (up-to-date-message output-path))
   
