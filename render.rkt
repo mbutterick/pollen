@@ -110,7 +110,7 @@
   (() (#:force boolean?) #:rest (listof pathish?) . ->* . void?)
   (define (&render x) 
     (let ([path (->complete-path (->path x))])              
-   ;   (message "Dispatching render for" (->string (file-name-from-path path)))
+      ;   (message "Dispatching render for" (->string (file-name-from-path path)))
       (cond
         ;; this will catch preprocessor files
         [(needs-preproc? path) (render-with-preproc path #:force force)]
@@ -154,27 +154,35 @@
   (define-values (source-dir source-name _) (split-path source-path))
   (define output-path (->complete-path (->output-path x)))
   
-  ;; Three conditions under which we refresh:
+  (define source-reloaded? (handle-source-rerequire source-path))
+  
+  ;; Four conditions under which we render preproc sources:
   (if (or
-       ;; 1) explicitly forced refresh
+       ;; 1) explicitly forced render:
        force 
        ;; 2) output file doesn't exist (so it definitely won't appear in mod-dates)
        ;; also, this is convenient for development: 
-       ;; you can trigger a refresh just by deleting the file
+       ;; you can trigger a render just by deleting the file
        (not (file-exists? output-path))
-       ;; 3) file otherwise needs refresh (e.g., it changed)
-       (mod-date-expired? source-path))
-      ;; use single quotes to escape spaces in pathnames
-      (let ([command (format "~a '~a' > '~a'" RACKET_PATH source-path output-path)])
+       ;; 3) file otherwise needs render (e.g., it changed)
+       (mod-date-expired? source-path)
+       ;; 4) source had to be reloaded (some other change)
+       source-reloaded?)
+
+      ;; how we render: import 'text from preproc source file and write to output path
+      (begin
         (rendering-message (format "~a from ~a" 
                                    (file-name-from-path output-path)
                                    (file-name-from-path source-path)))
         (store-refresh-in-mod-dates source-path)
-        ;; discard output using open-output-nowhere
+        
         (parameterize ([current-directory source-dir]
                        [current-output-port nowhere-port])
-          (system command))
+          (let ([text (dynamic-require source-path 'text)])
+            (display-to-file text output-path #:exists 'replace)))
+        
         (rendered-message output-path))
+
       ;; otherwise, skip file because there's no trigger for refresh
       (up-to-date-message output-path)))
 

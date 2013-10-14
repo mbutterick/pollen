@@ -7,7 +7,8 @@
 (provide (except-out (all-from-out racket/base) #%module-begin)
          (rename-out [module-begin #%module-begin]))
 
-(require (only-in scribble/text output))
+(require (only-in scribble/text output)
+         (only-in racket/list flatten))
 
 (define-syntax-rule (module-begin expr ...)
   (#%module-begin
@@ -27,8 +28,6 @@
    
    (require 'pollen-inner) ; provides 'doc
    
-   (define text (trim (->list doc) whitespace?)) ; if single line, text will be a string
-   
-   (provide text (all-from-out 'pollen-inner))
-   
-   (output text)))
+   ;; reduce text to simplest represetnation: a single ouput string
+   (define text (apply string-append (flatten (trim (->list doc) whitespace?))))
+   (provide text (all-from-out 'pollen-inner))))
