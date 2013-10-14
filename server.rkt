@@ -9,9 +9,10 @@
 
 (define (logger req)
   (define client (request-client-ip req))
-  (when (equal? client "::1")
-    (set! client "localhost"))
-  (message "Request:" (url->string (request-uri req)) "from" client))
+  (message "Request:" (url->string (request-uri req)) 
+           "from" (if (equal? client "::1")
+                      "localhost" 
+                      client)))
 
 (define/contract (route-wrapper route-proc)
   (procedure? . -> . procedure?)
