@@ -3,8 +3,6 @@
 (require (planet mb/pollen/tools) (planet mb/pollen/main-helper))
 (require (only-in (planet mb/pollen/ptree-decode) ptree-source-decode))
 (require (only-in (planet mb/pollen/predicates) ptree?))
-(require (only-in (planet mb/pollen/file-tools) has-ext?))
-(require (only-in (planet mb/pollen/world) POLLEN_TREE_EXT))
 (provide (except-out (all-from-out racket/base) #%module-begin)
          (rename-out [module-begin #%module-begin]))
 
