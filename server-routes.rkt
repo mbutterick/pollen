@@ -2,7 +2,7 @@
 (require racket/list racket/contract racket/rerequire racket/file racket/format xml)
 (require (only-in net/url url-query url->path url->string))
 (require (only-in web-server/http/request-structs request-uri request-client-ip))
-(require "world.rkt" "regenerate.rkt" "readability.rkt" "predicates.rkt" "debug.rkt")
+(require "world.rkt" "render.rkt" "readability.rkt" "predicates.rkt" "debug.rkt")
 
 (module+ test (require rackunit))
 
@@ -13,24 +13,24 @@
 (provide (all-defined-out))
 
 ;; extract main xexpr from a path
-(define/contract (file->xexpr path #:regen [regen #t])
-  ((complete-path?) (#:regen boolean?) . ->* . tagged-xexpr?)
-  (when regen (regenerate path)) ; refresh path 
+(define/contract (file->xexpr path #:render [wants-render #t])
+  ((complete-path?) (#:render boolean?) . ->* . tagged-xexpr?)
+  (when wants-render (render path))
   (dynamic-rerequire path) ; stores module mod date; reloads if it's changed
   (dynamic-require path 'main))
 
 (module+ test
-  (check-equal? (file->xexpr (build-path (current-directory) "tests/server-routes/foo.p") #:regen #f) '(root "\n" "foo")))
+  (check-equal? (file->xexpr (build-path (current-directory) "tests/server-routes/foo.p") #:render #f) '(root "\n" "foo")))
 
 ;; read contents of file to string
-;; just file->string with a regenerate option
-(define/contract (slurp path #:regen [regen #t])
-  ((complete-path?) (#:regen boolean?) . ->* . string?) 
-  (when regen (regenerate path))
+;; just file->string with a render option
+(define/contract (slurp path #:render [wants-render #t])
+  ((complete-path?) (#:render boolean?) . ->* . string?) 
+  (when wants-render (render path))
   (file->string path))
 
 (module+ test
-  (check-equal? (slurp (build-path (current-directory) "tests/server-routes/bar.html") #:regen #f) "<html><body><p>bar</p></body></html>"))
+  (check-equal? (slurp (build-path (current-directory) "tests/server-routes/bar.html") #:render #f) "<html><body><p>bar</p></body></html>"))
 
 
 ;; add a wrapper to tagged-xexpr that displays it as monospaced text
@@ -56,7 +56,7 @@
 ;; for viewing source without using "view source"
 (define/contract (route-raw-html path)
   (complete-path? . -> . xexpr?)
-  (format-as-code (slurp path #:regen #f)))
+  (format-as-code (slurp path #:render #f)))
 
 ;; todo: consolidate with function above, they're the same.
 ;; server route that shows contents of file on disk
@@ -80,14 +80,14 @@
   
   ;; get lists of files by mapping a filter function for each file type
   (define-values (pollen-files preproc-files ptree-files template-files)
-    (let ([all-files-in-project-directory (directory-list pollen-file-root)])
+    (let ([all-files-in-project-directory (directory-list pollen-project-directory)])
       (apply values 
              (map (λ(test) (filter test all-files-in-project-directory)) 
                   (list pollen-source? preproc-source? ptree-source? template-source?)))))
   
   ;; The actual post-preproc files may not have been generated yet
   ;; so calculate their names (rather than rely on directory list)
-  (define post-preproc-files (map make-preproc-output-path preproc-files))
+  (define post-preproc-files (map ->output-path preproc-files))
   
   ;; Make a combined list of preproc files and post-preproc file, in alphabetical order
   (define all-preproc-files (sort (append preproc-files post-preproc-files) 
@@ -98,7 +98,7 @@
   ;; not necessarily true (it will assume the extension of its template.)
   ;; But pulling out all the template extensions requires parsing all the files,
   ;; which is slow and superfluous, since we're trying to be lazy about rendering.
-  (define post-pollen-files (map make-pollen-output-path pollen-files))
+  (define post-pollen-files (map ->output-path pollen-files))
   
   ;; Make a combined list of pollen files and post-pollen files, in alphabetical order
   (define all-pollen-files (sort (append pollen-files post-pollen-files) #:key path->string string<?))
@@ -149,7 +149,7 @@
 ; default route
 (define (route-default req)  
   (define request-url (request-uri req))
-  (define path (reroot-path (url->path request-url) pollen-file-root))
+  (define path (reroot-path (url->path request-url) pollen-project-directory))
   (define force (equal? (get-query-value request-url 'force) "true"))
-  (with-handlers ([exn:fail? (λ(e) (message "Regenerate is skipping" (url->string request-url) "because of error\n" (exn-message e)))])
-    (regenerate path #:force force)))
+  (with-handlers ([exn:fail? (λ(e) (message "Render is skipping" (url->string request-url) "because of error\n" (exn-message e)))])
+    (render path #:force force)))

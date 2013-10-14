@@ -1,13 +1,13 @@
 #lang racket/base
 (require racket/contract racket/match racket/list xml racket/set)
 (require (prefix-in html: "library/html.rkt"))
-(require "world.rkt" "readability.rkt" "pollen-file-tools.rkt")
+(require "world.rkt" "readability.rkt" "file-tools.rkt")
 
 (module+ test (require rackunit))
 
 
 (provide (all-defined-out)
-         (all-from-out "pollen-file-tools.rkt"))
+         (all-from-out "file-tools.rkt"))
 
 
 ;; add a block tag to the list

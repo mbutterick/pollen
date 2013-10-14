@@ -1,5 +1,5 @@
 #lang web-server
-(require "start.rkt")
+(require "startup.rkt")
 (require web-server/servlet-env)
 (require web-server/dispatch web-server/dispatchers/dispatch)
 (require xml)
@@ -18,7 +18,7 @@
   (λ(req string-arg) 
     (logger req)
     (define filename string-arg) 
-    (response/xexpr (route-proc (build-path pollen-file-root filename)))))
+    (response/xexpr (route-proc (build-path pollen-project-directory filename)))))
 
 (define-values (start url)
   (dispatch-rules
@@ -42,4 +42,4 @@
                #:listen-ip #f
                #:servlet-regexp #rx"" ; respond to top level
                #:command-line? #t
-               #:extra-files-paths (list (build-path pollen-file-root)))
+               #:extra-files-paths (list (build-path pollen-project-directory)))

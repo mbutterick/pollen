@@ -26,7 +26,7 @@
   (cond
     ;; Using put has no effect on tagged-xexprs. It's here to make the idiom smooth.
     [(tagged-xexpr? x) x] 
-    [(has-pollen-source? x) (dynamic-require (make-pollen-source-path x) 'main)]))
+    [(has-pollen-source? x) (dynamic-require (->pollen-source-path x) 'main)]))
 
 (module+ test
   (check-equal? (put '(foo "bar")) '(foo "bar"))
@@ -48,14 +48,14 @@
 (define/contract (find-in-metas px key)
   (puttable-item? query-key? . -> . (or/c xexpr-elements? false?))
   (and (has-pollen-source? px)
-       (let ([metas (dynamic-require (make-pollen-source-path px) 'metas)]
+       (let ([metas (dynamic-require (->pollen-source-path px) 'metas)]
              [key (->string key)])
          (and (key . in? . metas ) (->list (get metas key))))))
 
 (module+ test
   (parameterize ([current-directory "tests/template"])
     (check-equal? (find-in-metas "put" "foo") (list "bar"))
-    (let* ([metas (dynamic-require (make-pollen-source-path 'put) 'metas)]
+    (let* ([metas (dynamic-require (->pollen-source-path 'put) 'metas)]
            [here (find-in-metas 'put 'here)]
            [here-relative (list (->string (find-relative-path (current-directory) (car here))))])     
       (check-equal? here-relative (list "put.p")))))

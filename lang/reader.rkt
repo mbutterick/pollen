@@ -1,7 +1,7 @@
 #lang racket/base
 (require (only-in scribble/reader make-at-reader)
          (only-in "../world.rkt" POLLEN_EXPRESSION_DELIMITER)
-         (only-in "../pollen-file-tools.rkt" preproc-source?))
+         (only-in "../file-tools.rkt" preproc-source?))
 
 (provide (rename-out [mb-read read]
                      [mb-read-syntax read-syntax])

@@ -9,12 +9,21 @@
 
 
 ; helper functions for regenerate functions
-(define pollen-file-root (current-directory))
+(define pollen-project-directory (current-directory))
+
+;; this is for regenerate module.
+;; when we want to be friendly with inputs for functions that require a path.
+;; Strings & symbols often result from xexpr parsing
+;; and are trivially converted to paths.
+;; so let's say close enough.
+(define/contract (pathish? x)
+  (any/c . -> . boolean?)
+  (->boolean (or path? string? symbol?)))
 
 ;; does path have a certain extension
-(define/contract (has-ext? path ext)
-  (path? symbol? . -> . boolean?)
-  (define ext-of-path (filename-extension path))
+(define/contract (has-ext? x ext)
+  (pathish? stringish? . -> . boolean?)
+  (define ext-of-path (filename-extension (->path x)))
   (and ext-of-path (equal? (bytes->string/utf-8 ext-of-path) (->string ext))))
 
 (module+ test
@@ -23,20 +32,20 @@
     (apply values (map string->path foo-path-strings)))
   ;; test the sample paths before using them for other tests
   (define foo-paths (list foo-path foo.txt-path foo.bar-path foo.bar.txt-path))
-  (for-each check-equal? (map path->string foo-paths) foo-path-strings))
+  (for-each check-equal? (map ->string foo-paths) foo-path-strings))
 
 
 (module+ test
   (check-false (has-ext? foo-path 'txt)) 
-  (check-true (has-ext? foo.txt-path 'txt))
+  (check-true (foo.txt-path . has-ext? . 'txt))
   (check-true (has-ext? foo.bar.txt-path 'txt))
-  (check-false (has-ext? foo.bar.txt-path 'doc))) ; wrong extension
+  (check-false (foo.bar.txt-path . has-ext? . 'doc))) ; wrong extension
 
 
 ;; get file extension as a string
-(define/contract (get-ext path)
-  (path? . -> . string?)
-  (bytes->string/utf-8 (filename-extension path)))
+(define/contract (get-ext x)
+  (pathish? . -> . string?)
+  (bytes->string/utf-8 (filename-extension (->path x))))
 
 (module+ test
   (check-equal? (get-ext (->path "foo.txt")) "txt")
@@ -46,17 +55,17 @@
 
 
 ;; put extension on path
-(define/contract (add-ext path ext)
-  (path? (or/c symbol? string?) . -> . path?)
-  (string->path (string-append (->string path) "." (->string ext))))
+(define/contract (add-ext x ext)
+  (pathish? stringish? . -> . path?)
+  (->path (string-append (->string x) "." (->string ext))))
 
 (module+ test
   (check-equal? (add-ext (string->path "foo") "txt") (string->path "foo.txt")))
 
 ;; take one extension off path
-(define/contract (remove-ext path)
-  (path? . -> . path?)
-  (path-replace-suffix path ""))
+(define/contract (remove-ext x)
+  (pathish? . -> . path?)
+  (path-replace-suffix (->path x) ""))
 
 (module+ test  
   (check-equal? (remove-ext foo-path) foo-path)
@@ -66,8 +75,9 @@
 
 
 ;; take all extensions off path
-(define/contract (remove-all-ext path)
-  (path? . -> . path?)
+(define/contract (remove-all-ext x)
+  (pathish? . -> . path?)
+  (define path (->path x))
   (define path-with-removed-ext (remove-ext path))
   (if (equal? path path-with-removed-ext)
       path
@@ -78,16 +88,6 @@
   (check-equal? (remove-all-ext foo.txt-path) foo-path)
   (check-not-equal? (remove-all-ext foo.bar.txt-path) foo.bar-path) ; removes more than one ext
   (check-equal? (remove-all-ext foo.bar.txt-path) foo-path))
-
-;; superfluous: use file-name-from-path in racket/path
-
-#|(define/contract (filename-of path)
-  (complete-path? . -> . path?)
-  (define-values (dir filename ignored) (split-path path))
-  filename)
-
-(module+ test 
- (check-equal? (filename-of (build-path (current-directory) "pollen-file-tools.rkt")) (->path "pollen-file-tools.rkt")))|#
 
 
 ;; todo: tests for these predicates
@@ -102,11 +102,11 @@
 
 (define/contract (has-preproc-source? x)
   (any/c . -> . boolean?)
-  (file-exists? (make-preproc-source-path (->path x))))
+  (file-exists? (->preproc-source-path (->path x))))
 
 (define/contract (has-pollen-source? x)
   (any/c . -> . boolean?)
-  (file-exists? (make-pollen-source-path (->path x))))
+  (file-exists? (->pollen-source-path (->path x))))
 
 (define/contract (needs-preproc? x)
   (any/c . -> . boolean?)
@@ -121,7 +121,7 @@
 
 (define/contract (ptree-source? x)
   (any/c . -> . boolean?)
-  (has-ext? (->path x) POLLEN_TREE_EXT))
+  (has-ext? x POLLEN_TREE_EXT))
 
 (module+ test
   (check-true (ptree-source? "foo.ptree"))
@@ -130,7 +130,7 @@
 
 (define/contract (pollen-source? x)
   (any/c . -> . boolean?)
-  (has-ext? (->path x) POLLEN_SOURCE_EXT))
+  (has-ext? x POLLEN_SOURCE_EXT))
 
 (module+ test
   (check-true (pollen-source? "foo.p"))
@@ -152,7 +152,7 @@
 ;; todo: extend this beyond just racket files?
 (define/contract (project-require-file? x)
   (any/c . -> . boolean?)
-  (has-ext? (->path x) 'rkt))
+  (has-ext? x 'rkt))
 
 (module+ test
   (check-true (project-require-file? "foo.rkt"))
@@ -160,55 +160,53 @@
 
 
 
-;; this is for regenerate module.
-;; when we want to be friendly with inputs for functions that require a path.
-;; Strings & symbols often result from xexpr parsing
-;; and are trivially converted to paths.
-;; so let's say close enough.
-(define/contract (pathish? x)
-  (any/c . -> . boolean?)
-  (->boolean (or path? string? symbol?)))
-
-
 ;; todo: tighten these input contracts
 ;; so that, say, a source-path cannot be input for make-preproc-source-path
-(define/contract (make-preproc-source-path path)
-  (path? . -> . path?)
-  (add-ext path POLLEN_PREPROC_EXT))
-
-(define/contract (make-preproc-output-path path)
-  (path? . -> . path?)
-  (remove-ext path))
-
-(define/contract (make-pollen-output-path thing)
+(define/contract (->preproc-source-path x)
   (pathish? . -> . path?)
-  (remove-ext (->path thing)))
+  (->path (if (preproc-source? x)
+              x
+              (add-ext x POLLEN_PREPROC_EXT))))
 
 (module+ test
-  (check-equal? (make-pollen-output-path (->path "foo.html.p")) (->path "foo.html"))
-  (check-equal? (make-pollen-output-path (->path "/Users/mb/git/foo.html.p")) (->path "/Users/mb/git/foo.html"))
-  (check-equal? (make-pollen-output-path "foo.xml.p") (->path "foo.xml"))
-  (check-equal? (make-pollen-output-path 'foo.barml.p) (->path "foo.barml")))
+  (check-equal? (->preproc-source-path (->path "foo.pp")) (->path "foo.pp"))
+  (check-equal? (->preproc-source-path (->path "foo.html")) (->path "foo.html.pp"))
+  (check-equal? (->preproc-source-path "foo") (->path "foo.pp"))
+  (check-equal? (->preproc-source-path 'foo) (->path "foo.pp")))
+
+(define/contract (->output-path x)
+  (pathish? . -> . path?)
+  (->path 
+   (if (or (pollen-source? x) (preproc-source? x))
+       (remove-ext x)
+       x)))
+
+(module+ test
+  (check-equal? (->output-path (->path "foo.ptree")) (->path "foo.ptree"))
+  (check-equal? (->output-path "foo.html") (->path "foo.html"))
+  (check-equal? (->output-path 'foo.html.p) (->path "foo.html"))
+  (check-equal? (->output-path (->path "/Users/mb/git/foo.html.p")) (->path "/Users/mb/git/foo.html"))
+  (check-equal? (->output-path "foo.xml.p") (->path "foo.xml"))
+  (check-equal? (->output-path 'foo.barml.p) (->path "foo.barml")))
 
 ;; turns input into corresponding pollen source path
 ;; does not, however, validate that new path exists
 ;; todo: should it? I don't think so, sometimes handy to make the name for later use
 ;; OK to use pollen source as input (comes out the same way)
-(define/contract (make-pollen-source-path thing)
+(define/contract (->pollen-source-path x)
   (pathish? . -> . path?)
-  (define path (->path thing))
-  (if (pollen-source? path)
-      path
-      (add-ext path POLLEN_SOURCE_EXT)))
+  (->path (if (pollen-source? x)
+              x
+              (add-ext x POLLEN_SOURCE_EXT))))
 
 (module+ test
-  (check-equal? (make-pollen-source-path (->path "foo.p")) (->path "foo.p"))
-  (check-equal? (make-pollen-source-path (->path "foo.html")) (->path "foo.html.p"))
-  (check-equal? (make-pollen-source-path "foo") (->path "foo.p"))
-  (check-equal? (make-pollen-source-path 'foo) (->path "foo.p")))
+  (check-equal? (->pollen-source-path (->path "foo.p")) (->path "foo.p"))
+  (check-equal? (->pollen-source-path (->path "foo.html")) (->path "foo.html.p"))
+  (check-equal? (->pollen-source-path "foo") (->path "foo.p"))
+  (check-equal? (->pollen-source-path 'foo) (->path "foo.p")))
 
 (define/contract (project-files-with-ext ext)
   (symbol? . -> . (listof complete-path?))
-  (map ->complete-path (filter (λ(i) (has-ext? i ext)) (directory-list pollen-file-root))))
+  (map ->complete-path (filter (λ(i) (has-ext? i ext)) (directory-list pollen-project-directory))))
 
 ;; todo: write tests for project-files-with-ext

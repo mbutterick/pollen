@@ -1,5 +1,5 @@
 #lang racket/base
-(require xml xml/path racket/list racket/string racket/contract racket/match racket/set)
+(require xml xml/path racket/list racket/string racket/contract racket/match racket/set racket/path)
 (require "tools.rkt" "world.rkt" "ptree-decode.rkt" "debug.rkt")
 
 (module+ test (require rackunit))
@@ -19,7 +19,7 @@
       ;; Load it from default path.
       ;; dynamic require of a ptree source file gets you a full ptree. 
       (begin
-        (message "Loading ptree file" (->string ptree-source))
+        (message "Using ptree file" (->string (file-name-from-path ptree-source)))
         (dynamic-require ptree-source POLLEN_ROOT))
       ;; ... or else synthesize it
       (let* ([files (directory-list START_DIR)]
@@ -238,7 +238,7 @@
   (define file-matches (filter source-matches-pnode? files))
   (if ((length file-matches) . > . 1)
       (error "Duplicate source files for pnode" pnode)
-      (->string (make-pollen-output-path (car file-matches)))))
+      (->string (->output-path (car file-matches)))))
 
 ;; todo: make tests
 

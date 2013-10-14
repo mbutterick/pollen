@@ -8,7 +8,7 @@
 (define POLLEN_EXPRESSION_DELIMITER #\◊)
 (define TEMPLATE_FIELD_DELIMITER POLLEN_EXPRESSION_DELIMITER)
 
-(define DEFAULT_TEMPLATE "-main.html")
+(define DEFAULT_TEMPLATE_PREFIX "-main")
 (define FALLBACK_TEMPLATE_NAME "-temp-fallback-template.html")
 (define TEMPLATE_META_KEY "template")
 

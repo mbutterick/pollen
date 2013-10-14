@@ -10,11 +10,11 @@
                         [arg (if (> (len args) 0) (get args 0) "")])
                    (case arg
                      [("start") `(require "server.rkt")]
-                     [("regenerate") `(begin
+                     [("render") `(begin
                                         ;; todo: take extensions off the comand line
-                                        (displayln "Regenerate preproc & ptree files ...")
-                                        (require "regenerate.rkt" "pollen-file-tools.rkt" "world.rkt")
-                                        (apply regenerate-with-session (append-map project-files-with-ext (list POLLEN_PREPROC_EXT POLLEN_TREE_EXT))))]
+                                        (displayln "Render preproc & ptree files ...")
+                                        (require "render.rkt" "file-tools.rkt" "world.rkt")
+                                        (apply render-with-session (append-map project-files-with-ext (list POLLEN_PREPROC_EXT POLLEN_TREE_EXT))))]
                      [("clone") (let ([target-path 
                                        (if (> (len args) 1)
                                            (->path (get args 1))
@@ -49,12 +49,12 @@
                                        (displayln (format "Completed to ~a" ,target-path))
                                        )))]
                      [("") `(displayln "No command given")]
-                     ;; treat other input as a possible file name for regeneration
+                     ;; treat other input as a possible file name for rendering
                      [else (let ([possible-file (->path arg)])
                              (if (file-exists? possible-file)
                                  `(begin
-                                    (require (planet mb/pollen/regenerate))
-                                    (regenerate ,possible-file))
+                                    (require (planet mb/pollen/render))
+                                    (render ,possible-file))
                                  `(displayln (format "No command defined for ~a" ,arg))))]))))
 
 (handle-pollen-command)

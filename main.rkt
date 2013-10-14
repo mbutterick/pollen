@@ -3,7 +3,7 @@
 (require (planet mb/pollen/tools) (planet mb/pollen/main-helper))
 (require (only-in (planet mb/pollen/ptree-decode) ptree-source-decode))
 (require (only-in (planet mb/pollen/predicates) ptree?))
-(require (only-in (planet mb/pollen/pollen-file-tools) has-ext?))
+(require (only-in (planet mb/pollen/file-tools) has-ext?))
 (require (only-in (planet mb/pollen/world) POLLEN_TREE_EXT))
 (provide (except-out (all-from-out racket/base) #%module-begin)
          (rename-out [module-begin #%module-begin]))
@@ -40,6 +40,7 @@
      ;; but it makes debugging tricky, because an undefined (symbol item ...)
      ;; is just treated as a valid tagged-xexpr, not an undefined function.
      (define-syntax-rule (#%top . id)
+       ;; todo: can #%top emit a debug message when a function hits it?
        (λ x `(id ,@x)))
      
      expr ... ; body of module  
