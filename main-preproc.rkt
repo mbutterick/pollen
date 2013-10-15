@@ -1,9 +1,6 @@
 #lang racket
 
-(require (only-in (planet mb/pollen/readability) ->list)
-         (only-in (planet mb/pollen/tools) trim)
-         (only-in (planet mb/pollen/predicates) whitespace?))
-
+(require "main-preproc-imports.rkt")
 (provide (except-out (all-from-out racket) #%module-begin)
          (rename-out [module-begin #%module-begin]))
 
