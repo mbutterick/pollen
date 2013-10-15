@@ -1,9 +1,9 @@
-#lang racket/base
+#lang racket
 (require racket/list)
 (require (planet mb/pollen/tools) (planet mb/pollen/main-helper))
 (require (only-in (planet mb/pollen/ptree-decode) ptree-source-decode))
 (require (only-in (planet mb/pollen/predicates) ptree?))
-(provide (except-out (all-from-out racket/base) #%module-begin)
+(provide (except-out (all-from-out racket) #%module-begin)
          (rename-out [module-begin #%module-begin]))
 
 (define-syntax-rule (module-begin expr ...)

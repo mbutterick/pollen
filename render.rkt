@@ -1,12 +1,10 @@
-#lang racket/base
-(require racket/list racket/path racket/port racket/system 
-         racket/file racket/rerequire racket/contract racket/bool)
+#lang racket
+(require racket/port racket/file racket/rerequire racket/contract)
 (require "world.rkt" "tools.rkt" "readability.rkt" "template.rkt")
 
 (module+ test (require rackunit))
 
 (provide render render-with-session)
-
 
 ;; for shared use by eval & system
 (define nowhere-port (open-output-nowhere))
@@ -168,7 +166,7 @@
        (mod-date-expired? source-path)
        ;; 4) source had to be reloaded (some other change)
        source-reloaded?)
-
+      
       ;; how we render: import 'text from preproc source file, 
       ;; which is rendered during source parsing,
       ;; and write that to output path
@@ -183,7 +181,7 @@
             (display-to-file text output-path #:exists 'replace)))
         
         (rendered-message output-path))
-
+      
       ;; otherwise, skip file because there's no trigger for render
       (up-to-date-message output-path)))
 
@@ -244,18 +242,17 @@
      ;; Build the possible paths and use the first one  
      ;; that either exists, or has a preproc source that exists.
      (ormap (λ(p) (if (ormap file-exists? (list p (->preproc-source-path p))) p #f)) 
-            (filter-not false? 
-                        (list
-                         ;; path based on template-name
-                         (and template-name (build-path source-dir template-name))
-                         ;; path based on metas
-                         (let ([source-metas (dynamic-require source-path 'metas)])
-                           (and (TEMPLATE_META_KEY . in? . source-metas)
-                                (build-path source-dir 
-                                            (get source-metas TEMPLATE_META_KEY))))
-                         ;; path using default template name =
-                         ;; "-main" + extension from output path (e.g. foo.xml.p -> -main.xml)
-                         (build-path source-dir (add-ext DEFAULT_TEMPLATE_PREFIX (get-ext (->output-path source-path)))))))
+            (filter (λ(x) (->boolean x)) ;; if any of the possibilities below are invalid, they return #f 
+                    (list
+                     ;; path based on template-name
+                     (and template-name (build-path source-dir template-name))
+                     ;; path based on metas
+                     (let ([source-metas (dynamic-require source-path 'metas)])
+                       (and (TEMPLATE_META_KEY . in? . source-metas)
+                            (build-path source-dir (get source-metas TEMPLATE_META_KEY))))
+                     ;; path using default template name =
+                     ;; "-main" + extension from output path (e.g. foo.xml.p -> -main.xml)
+                     (build-path source-dir (add-ext DEFAULT_TEMPLATE_PREFIX (get-ext (->output-path source-path)))))))
      ;; if none of these work, make fallback template file
      (let ([ft-path (build-path source-dir FALLBACK_TEMPLATE_NAME)])
        (display-to-file fallback-template-data ft-path #:exists 'replace)
@@ -280,7 +277,7 @@
         (store-render-in-mod-dates source-path template-path)
         (message "Rendering source" (->string (file-name-from-path source-path)) 
                  "with template" (->string (file-name-from-path template-path)))
-        (let ([page-result (render-source-with-template source-path template-path)])
+        (let ([page-result (time (render-source-with-template source-path template-path))])
           (display-to-file page-result output-path #:exists 'replace)
           (rendered-message output-path)))
       (up-to-date-message output-path))
@@ -289,6 +286,21 @@
   (let ([tp (build-path source-dir FALLBACK_TEMPLATE_NAME)])
     (when (file-exists? tp) (delete-file tp))))
 
+;; cache some modules inside this namespace so they can be shared by namespace for eval
+(require web-server/templates  
+         racket/list
+         xml/path
+         (planet mb/pollen/debug)
+         (planet mb/pollen/decode)
+         (planet mb/pollen/file-tools)
+         (planet mb/pollen/predicates)
+         (planet mb/pollen/ptree-nav)
+         (planet mb/pollen/ptree-decode)
+         (planet mb/pollen/readability)
+         (planet mb/pollen/template)
+         (planet mb/pollen/tools)
+         (planet mb/pollen/world))
+(define original-ns (current-namespace))
 
 (define/contract (render-source-with-template source-path template-path)
   (file-exists? file-exists? . -> . string?)
@@ -309,6 +321,29 @@
                  [current-directory source-dir]
                  [current-output-port nowhere-port]
                  [current-error-port nowhere-port]) ; silent evaluation; exceptions still thrown
+    ;; attach already-imported modules 
+    ;; this is a performance optimization: this way,
+    ;; the eval namespace doesn't have to re-import these
+    ;; because otherwise, most of its time is spent traversing imports.
+    (map (λ(mod-name) (namespace-attach-module original-ns mod-name)) 
+         '(racket 
+           web-server/templates 
+           xml/path
+           racket/port 
+           racket/file 
+           racket/rerequire 
+           racket/contract 
+           racket/list
+           (planet mb/pollen/debug)
+           (planet mb/pollen/decode)
+           (planet mb/pollen/file-tools)
+           (planet mb/pollen/predicates)
+           (planet mb/pollen/ptree-nav)
+           (planet mb/pollen/ptree-decode)
+           (planet mb/pollen/readability)
+           (planet mb/pollen/template)
+           (planet mb/pollen/tools)
+           (planet mb/pollen/world)))
     (namespace-require 'racket) ; use namespace-require for FIRST require, then eval after
     (eval `(begin 
              ;; for include-template (used below)
@@ -319,6 +354,7 @@
              (require ,(->string source-name))
              (include-template #:command-char ,TEMPLATE_FIELD_DELIMITER ,(->string template-name))) 
           (current-namespace))))
+
 
 ;; render files listed in a ptree file
 (define/contract (render-ptree-files ptree #:force [force #f])

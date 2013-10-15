@@ -1,10 +1,10 @@
-#lang racket/base
+#lang racket
 
 (require (only-in (planet mb/pollen/readability) ->list)
          (only-in (planet mb/pollen/tools) trim)
          (only-in (planet mb/pollen/predicates) whitespace?))
 
-(provide (except-out (all-from-out racket/base) #%module-begin)
+(provide (except-out (all-from-out racket) #%module-begin)
          (rename-out [module-begin #%module-begin]))
 
 (require (only-in scribble/text output)

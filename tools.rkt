@@ -1,17 +1,15 @@
 #lang racket/base
-(require racket/contract racket/match)
+(require racket/contract racket/match racket/path)
 (require (only-in racket/format ~a))
-(require racket/list xml)
+(require racket/list)
 (require (only-in racket/string string-join))
 (require (only-in xml xexpr? xexpr/c))
 
 (require "readability.rkt" "debug.rkt" "predicates.rkt" "world.rkt")
-(provide (all-defined-out) (all-from-out "readability.rkt" "debug.rkt" "predicates.rkt"))
+(provide (all-defined-out) (all-from-out "readability.rkt" "debug.rkt" "predicates.rkt" racket/list racket/path))
 
 ;; setup for test cases
 (module+ test (require rackunit))
-
-
 
 ;; list of all eligible requires in project require directory
 (define/contract (get-project-require-files)

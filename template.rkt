@@ -1,6 +1,6 @@
 #lang racket/base
-(require racket/list racket/contract racket/string xml xml/path racket/bool)
-(require "readability.rkt" "debug.rkt" "predicates.rkt" "tools.rkt")
+(require racket/contract racket/string xml xml/path racket/bool)
+(require "tools.rkt")
 
 ;; setup for test cases
 (module+ test (require rackunit racket/path))

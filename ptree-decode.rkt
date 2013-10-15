@@ -7,7 +7,6 @@
 (provide (all-defined-out))
 
 ;; These functions need to be separated so that they can be accessed by pollen parser (in main.rkt)
-;; Other ptree functions are in ptree.rkt.
 ;; ptree decoder takes ptree source and returns a full ptree structure.
 
 ;; recursively processes tree, converting tree locations & their parents into xexprs of this shape:
