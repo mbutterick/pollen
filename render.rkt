@@ -296,8 +296,7 @@
          (planet mb/pollen/main-imports)
          (planet mb/pollen/main-preproc-imports)
          (planet mb/pollen/predicates)
-         (planet mb/pollen/ptree-nav)
-         (planet mb/pollen/ptree-decode)
+         (planet mb/pollen/ptree)
          (planet mb/pollen/readability)
          (planet mb/pollen/template)
          (planet mb/pollen/tools)
@@ -321,8 +320,7 @@
   ;; that represents the output of the operation.
   (parameterize ([current-namespace (make-base-empty-namespace)]
                  [current-directory source-dir]
-                 [current-output-port nowhere-port]
-                 [current-error-port nowhere-port]) ; silent evaluation; exceptions still thrown
+                 [current-output-port nowhere-port])
     ;; attach already-imported modules 
     ;; this is a performance optimization: this way,
     ;; the eval namespace doesn't have to re-import these
@@ -342,8 +340,7 @@
            (planet mb/pollen/main-imports)
            (planet mb/pollen/main-preproc-imports)
            (planet mb/pollen/predicates)
-           (planet mb/pollen/ptree-nav)
-           (planet mb/pollen/ptree-decode)
+           (planet mb/pollen/ptree)
            (planet mb/pollen/readability)
            (planet mb/pollen/template)
            (planet mb/pollen/tools)
@@ -356,6 +353,8 @@
              (require  (planet mb/pollen/debug) (planet mb/pollen/ptree) (planet mb/pollen/template))
              ;; import source into eval space. This sets up main & metas
              (require ,(->string source-name))
+             (set-current-ptree (make-project-ptree ,pollen-project-directory))
+             (set-current-url-context ,pollen-project-directory)
              (include-template #:command-char ,TEMPLATE_FIELD_DELIMITER ,(->string template-name))) 
           (current-namespace))))
 

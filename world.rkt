@@ -35,7 +35,7 @@
 (define POLLEN_ROOT 'main)
 
 ; get the starting directory, which is the parent of 'run-file
-(define START_DIR
+(define POLLEN_PROJECT_DIR
   (let-values ([(dir ignored also-ignored)
                 (split-path (find-system-path 'run-file))])
     (if (equal? dir 'relative)

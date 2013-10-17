@@ -11,14 +11,30 @@
 ; helper functions for regenerate functions
 (define pollen-project-directory (current-directory))
 
-;; this is for regenerate module.
-;; when we want to be friendly with inputs for functions that require a path.
-;; Strings & symbols often result from xexpr parsing
-;; and are trivially converted to paths.
-;; so let's say close enough.
+;; if something can be successfully coerced to a path,
+;; it's pathish.
 (define/contract (pathish? x)
   (any/c . -> . boolean?)
-  (->boolean (or path? string? symbol?)))
+  (with-handlers ([exn:fail? (λ(e) #f)])
+    (->boolean (->path x))))
+
+(module+ test
+  (check-true (pathish? (->path "/Users/MB/home")))
+  (check-true (pathish? "/Users/MB/home"))
+  (check-true (pathish? (->symbol "/Users/MB/home"))))
+
+;; like pathish, but for directories
+;; todo: is this contract too restrictive?
+;; pathish doesn't require the path to exist,
+;; but this one does.
+(define/contract (directory-pathish? x)
+  (any/c . -> . boolean?)
+  (->boolean (and (pathish? x) (directory-exists? (->path x)))))
+
+(module+ test
+  (check-true (directory-pathish? "/Users/"))
+  (check-false (directory-pathish? "foobar")))
+
 
 ;; does path have a certain extension
 (define/contract (has-ext? x ext)

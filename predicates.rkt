@@ -186,7 +186,6 @@
 ;; ptree attr must be ((parent "value"))
 (define/contract (ptree-attr? x)
   (any/c . -> . boolean?)
-  (define foo 'bar)
   (match x
     ;; todo: how can I use POLLEN_MAP_PARENT_KEY
     [`((parent ,(? string?))) #t]

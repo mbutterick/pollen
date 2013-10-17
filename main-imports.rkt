@@ -5,12 +5,14 @@
 ;; and cached for the benefit of the render eval function.
 
 
-(require racket/list)
-(require (planet mb/pollen/tools) (planet mb/pollen/main-helper))
-(require (only-in (planet mb/pollen/ptree-decode) ptree-source-decode))
-(require (only-in (planet mb/pollen/predicates) ptree?))
+(require racket/list
+         (planet mb/pollen/tools) 
+         (planet mb/pollen/main-helper)
+         (only-in (planet mb/pollen/ptree) ptree-source-decode)
+         (only-in (planet mb/pollen/predicates) ptree?))
 
-(provide (all-from-out
-          racket/list
-           (planet mb/pollen/tools) (planet mb/pollen/main-helper)
-           (planet mb/pollen/ptree-decode)(planet mb/pollen/predicates)))
+(provide (all-from-out racket/list
+                       (planet mb/pollen/tools) 
+                       (planet mb/pollen/main-helper)
+                       (planet mb/pollen/ptree)
+                       (planet mb/pollen/predicates)))
