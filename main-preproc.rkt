@@ -27,4 +27,10 @@
    
    ;; reduce text to simplest represetnation: a single ouput string
    (define text (apply string-append (flatten (trim (->list doc) whitespace?))))
-   (provide text (all-from-out 'pollen-inner))))
+   (provide text (all-from-out 'pollen-inner))
+
+   (module+ main
+     (displayln ";-------------------------")
+     (displayln (string-append "; pollen decoded 'text"))     
+     (displayln ";-------------------------")
+     (display text))))
