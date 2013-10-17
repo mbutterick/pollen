@@ -107,7 +107,7 @@
 (define/contract (render #:force [force #f] . xs)
   (() (#:force boolean?) #:rest (listof pathish?) . ->* . void?)
   (define (&render x) 
-    (let ([path (->complete-path (->path x))])              
+    (let ([path (->complete-path x)])              
       ;   (message "Dispatching render for" (->string (file-name-from-path path)))
       (cond
         ;; this will catch preprocessor files
@@ -117,7 +117,7 @@
         [(needs-template? path) (render-with-template path #:force force)]
         ;; this will catch ptree files
         [(ptree-source? path) (let ([ptree (dynamic-require path 'main)])
-                                (render-ptree-files ptree #:force force))]
+                                (render-files-in-ptree ptree #:force force))]
         [(equal? FALLBACK_TEMPLATE_NAME (->string (file-name-from-path path)))
          (message "Render: using fallback template")]
         [(file-exists? path) (message "Serving static file" (->string (file-name-from-path path)))]
@@ -360,7 +360,7 @@
 
 
 ;; render files listed in a ptree file
-(define/contract (render-ptree-files ptree #:force [force #f])
+(define/contract (render-files-in-ptree ptree #:force [force #f])
   ((ptree?) (#:force boolean?) . ->* . void?)    
   ;; pass force parameter through 
   (for-each (λ(i) (render i #:force force)) 
