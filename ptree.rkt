@@ -229,16 +229,16 @@
 (define here->pnode path->pnode)
 
 (define/contract (pnode->url pnode [files current-url-context])
-  ((pnode?) ((listof pathish?)) . ->* . string?)
+  ((pnode?) ((listof pathish?)) . ->* . (or/c string? boolean?))
   ;; upconvert all files to their output path
   ;; then remove duplicates because some sources might have already been rendered
   (define output-paths (remove-duplicates (map ->output-path files) equal?))
   ;; find ones that match pnode
-  (define matching-paths (filter (λ(x) (x . starts-with? . pnode)) output-paths))
+  (define matching-paths (filter (λ(x) (equal? (->string (remove-all-ext x)) (->string pnode))) output-paths))
   (cond
-    [((len matching-paths) . = . 0) "#"] ; conventional way to write a null URL
     [((len matching-paths) . = . 1) (->string (car matching-paths))]
-    [((len matching-paths) . > . 1) (error "More than one matching URL for" pnode)]))
+    [((len matching-paths) . > . 1) (error "More than one matching URL for" pnode)]
+    [else #f] ))
 
 
 (module+ test
@@ -298,18 +298,27 @@
 
 
 (define current-ptree '(empty ((parent "")))) ;; simplest empty ptree that will meet ptree contract
-(define current-url-context pollen-project-directory)
 
 (define/contract (set-current-ptree ptree)
   (ptree? . -> . void?)
   (set! current-ptree ptree))
 
+;; create the state variable
+(define current-url-context '())
+
+;; create the state variable setter
 (define/contract (set-current-url-context x)
   ((or/c directory-pathish? (listof pathish?)) . -> . void)
+  ;; try treating x as a directory, 
+  ;; otherwise treat it as a list of paths
   (set! current-url-context (with-handlers ([exn:fail? (λ(e) x)])
                               (directory-list x))))
 
+;; set the state variable using the setter
+(set-current-url-context pollen-project-directory)
+
 (module+ main
+  (displayln "Running module main")
   (set-current-ptree (make-project-ptree (->path "/Users/MB/git/bpt/")))
   (set-current-url-context (directory-list "/Users/MB/git/bpt/"))
   (pnode->url (previous-page (previous-page 'what-is-typography))))

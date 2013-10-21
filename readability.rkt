@@ -71,7 +71,7 @@
 (module+ test
   (check-equal? (->list '(1 2 3)) '(1 2 3))
   (check-equal? (->list (list->vector '(1 2 3))) '(1 2 3))
-  (check-equal? (->list (set 1 2 3)) '(1 2 3))
+  (check-equal? (->list (set 1 2 3)) '(3 2 1))
   (check-equal? (->list "foo") (list "foo")))
 
 ;; general way of coercing to vector
@@ -236,7 +236,8 @@
 ;; todo: merge this with pathish
 (define/contract (stringish? x)
   (any/c . -> . boolean?)
-  (->boolean (or path? string? symbol?)))
+  (with-handlers ([exn:fail? (λ(e) #f)])
+    (->boolean (->string x))))
 
 ;; python-style string testers
 (define/contract (starts-with? str starter)
