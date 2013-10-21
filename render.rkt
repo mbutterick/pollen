@@ -287,6 +287,7 @@
     (when (file-exists? tp) (delete-file tp))))
 
 ;; cache some modules inside this namespace so they can be shared by namespace for eval
+;; todo: macrofy this to avoid repeating names
 (require web-server/templates  
          racket/list
          xml/path

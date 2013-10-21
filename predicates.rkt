@@ -10,29 +10,6 @@
          (all-from-out "file-tools.rkt"))
 
 
-;; add a block tag to the list
-;; this function is among the predicates because it alters a predicate globally.
-(define/contract (register-block-tag tag)
-  (symbol? . -> . void?)
-  (set! block-tags (cons tag block-tags)))
-
-;; initial set of block tags: from html
-(define block-tags html:block-tags)
-
-
-;; is the tagged-xexpr a block element (as opposed to inline)
-;; tags are inline unless they're registered as block tags.
-(define/contract (block-xexpr? x)
-  (any/c . -> . boolean?)
-  ((tagged-xexpr? x) . and . (->boolean ((car x) . in? . block-tags))))
-
-(module+ test
-  (check-true (block-xexpr? '(p "foo")))
-  (check-true (block-xexpr? '(div "foo")))
-  (check-false (block-xexpr? '(em "foo")))
-  (check-false (block-xexpr? '(barfoo "foo")))
-  (check-true (begin (register-block-tag 'barfoo) (block-xexpr? '(barfoo "foo")))))
-
 
 ;; is it an xexpr tag?
 (define/contract (xexpr-tag? x)
@@ -119,6 +96,27 @@
   (check-true (meta-xexpr? '(meta "key" "value")))
   (check-false (meta-xexpr? '(meta "key" "value" "foo")))
   (check-false (meta-xexpr? '(meta))))
+
+
+;; initial set of block tags: from html
+(define block-tags html:block-tags)
+
+(define/contract (append-block-tag tag)
+  (xexpr-tag? . -> . void?)
+  (set! block-tags (cons tag block-tags)))
+
+;; is the tagged-xexpr a block element (as opposed to inline)
+;; tags are inline unless they're registered as block tags.
+(define/contract (block-xexpr? x)
+  (any/c . -> . boolean?)
+  ;; (car x) = shorthand for tag of xexpr
+  ((tagged-xexpr? x) . and . ((car x) . in? . block-tags)))
+
+(module+ test
+  (check-true (block-xexpr? '(p "foo")))
+  (check-true (block-xexpr? '(div "foo")))
+  (check-false (block-xexpr? '(em "foo")))
+  (check-false (block-xexpr? '(barfoo "foo"))))
 
 
 ;; count incidence of elements in a list

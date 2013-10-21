@@ -1,11 +1,20 @@
 #lang racket/base
 (require racket/contract)
 (require (only-in xml xexpr/c))
-(require "tools.rkt")
+(require "tools.rkt" "predicates.rkt")
 
 (module+ test (require rackunit))
 
 (provide (all-defined-out))
+
+;; add a block tag to the list
+;; this function is among the predicates because it alters a predicate globally.
+(define/contract (register-block-tag tag)
+  (symbol? . -> . void?)
+  (append-block-tag tag))
+
+(module+ test
+    (check-true (begin (register-block-tag 'barfoo) (block-xexpr? '(barfoo "foo")))))
 
 
 ;; decoder wireframe

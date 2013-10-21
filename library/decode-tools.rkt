@@ -248,7 +248,7 @@
 
 (module+ test
   (check-equal? (wrap-paragraph '("foo" "bar")) '(p "foo" "bar"))
-  (check-equal? (begin (register-block-tag 'para) (wrap-paragraph #:tag 'para '("foo" "bar"))) 
+  (check-equal? (begin (append-block-tag 'para) (wrap-paragraph #:tag 'para '("foo" "bar"))) 
                 '(para "foo" "bar"))
   (check-equal? (wrap-paragraph '((p "bar" "foo"))) '(p "bar" "foo"))
   (check-equal? (wrap-paragraph '((div "bar" "foo") "Hi" )) '(p (div "bar" "foo") "Hi")))
