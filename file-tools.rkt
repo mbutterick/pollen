@@ -1,5 +1,5 @@
 #lang racket/base
-(require racket/contract)
+(require racket/contract racket/path)
 (require (only-in racket/path filename-extension))
 (require "world.rkt" "readability.rkt")
 
@@ -10,6 +10,7 @@
 
 ; helper functions for regenerate functions
 (define pollen-project-directory (current-directory))
+
 
 ;; if something can be successfully coerced to a path,
 ;; it's pathish.
@@ -35,6 +36,18 @@
   (check-true (directory-pathish? "/Users/"))
   (check-false (directory-pathish? "foobar")))
 
+
+;; helper function for ptree
+;; make paths absolute to test whether files exist,
+;; then convert back to relative
+(define/contract (visible-files dir)
+  (directory-pathish? . -> . (listof path?))
+  (define (visible? relative-path)
+    (not ((->string relative-path) . starts-with? . ".")))
+  (filter visible? 
+          (map (λ(p) (find-relative-path dir p)) 
+               (filter file-exists? 
+                       (directory-list dir #:build? #t)))))
 
 ;; does path have a certain extension
 (define/contract (has-ext? x ext)
@@ -81,10 +94,14 @@
 ;; take one extension off path
 (define/contract (remove-ext x)
   (pathish? . -> . path?)
-  (path-replace-suffix (->path x) ""))
+  ;; pass through hidden files (those starting with a dot)
+  (if (x . starts-with? . ".")
+      x
+      (path-replace-suffix (->path x) "")))
 
 (module+ test  
   (check-equal? (remove-ext foo-path) foo-path)
+  (check-equal? (remove-ext (->path ".foo.txt")) (->path ".foo.txt"))
   (check-equal? (remove-ext foo.txt-path) foo-path)
   (check-equal? (remove-ext foo.bar.txt-path) foo.bar-path)
   (check-not-equal? (remove-ext foo.bar.txt-path) foo-path)) ; does not remove all extensions
@@ -93,15 +110,19 @@
 ;; take all extensions off path
 (define/contract (remove-all-ext x)
   (pathish? . -> . path?)
-  (define path (->path x))
-  (define path-with-removed-ext (remove-ext path))
-  (if (equal? path path-with-removed-ext)
-      path
-      (remove-all-ext path-with-removed-ext)))
+  ;; pass through hidden files (those starting with a dot)
+  (if (x . starts-with? . ".")
+      x
+      (let* ([path (->path x)]
+             [path-with-removed-ext (remove-ext path)])
+        (if (equal? path path-with-removed-ext)
+            path
+            (remove-all-ext path-with-removed-ext)))))
 
 (module+ test  
   (check-equal? (remove-all-ext foo-path) foo-path)
   (check-equal? (remove-all-ext foo.txt-path) foo-path)
+  (check-equal? (remove-all-ext (->path ".foo.txt")) (->path ".foo.txt"))
   (check-not-equal? (remove-all-ext foo.bar.txt-path) foo.bar-path) ; removes more than one ext
   (check-equal? (remove-all-ext foo.bar.txt-path) foo-path))
 

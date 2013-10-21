@@ -234,7 +234,8 @@
   ;; then remove duplicates because some sources might have already been rendered
   (define output-paths (remove-duplicates (map ->output-path files) equal?))
   ;; find ones that match pnode
-  (define matching-paths (filter (λ(x) (equal? (->string (remove-all-ext x)) (->string pnode))) output-paths))
+  (define matching-paths (filter (λ(x) (equal? (path->pnode x) (->string pnode))) output-paths))
+  
   (cond
     [((len matching-paths) . = . 1) (->string (car matching-paths))]
     [((len matching-paths) . > . 1) (error "More than one matching URL for" pnode)]
@@ -246,7 +247,7 @@
   (check-equal? (pnode->url 'foo files) "foo.html")
   (check-equal? (pnode->url 'bar files) "bar.html")
   ;;  (check-equal? (pnode->url 'zap files) 'error) ;; todo: how to test error?
-  (check-equal? (pnode->url 'hee files) "#"))
+  (check-false (pnode->url 'hee files)))
 
 
 ;; recursively processes tree, converting tree locations & their parents into xexprs of this shape:
@@ -312,7 +313,7 @@
   ;; try treating x as a directory, 
   ;; otherwise treat it as a list of paths
   (set! current-url-context (with-handlers ([exn:fail? (λ(e) x)])
-                              (directory-list x))))
+                              (visible-files (->path x)))))
 
 ;; set the state variable using the setter
 (set-current-url-context pollen-project-directory)
@@ -320,5 +321,5 @@
 (module+ main
   (displayln "Running module main")
   (set-current-ptree (make-project-ptree (->path "/Users/MB/git/bpt/")))
-  (set-current-url-context (directory-list "/Users/MB/git/bpt/"))
+  (set-current-url-context "/Users/MB/git/bpt/")
   (pnode->url (previous-pnode (previous-pnode 'what-is-typography))))
