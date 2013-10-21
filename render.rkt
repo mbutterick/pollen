@@ -175,11 +175,8 @@
                                    (file-name-from-path output-path)
                                    (file-name-from-path source-path)))
         (store-render-in-mod-dates source-path)
-        
-        (parameterize ([current-directory source-dir])
-          (let ([text (dynamic-require source-path 'text)])
-            (display-to-file text output-path #:exists 'replace)))
-        
+        (let ([text (time (render-through-eval source-dir `(dynamic-require ,source-path 'text)))])
+          (display-to-file text output-path #:exists 'replace))
         (rendered-message output-path))
       
       ;; otherwise, skip file because there's no trigger for render
@@ -304,23 +301,10 @@
          (planet mb/pollen/world))
 (define original-ns (current-namespace))
 
-(define/contract (render-source-with-template source-path template-path)
-  (file-exists? file-exists? . -> . string?)
-  
-  ;; set up information about source and template paths
-  ;; todo: how to write these without blanks?
-  (define-values (source-dir source-name _) (split-path source-path))
-  (define-values (___ template-name __) (split-path template-path))
-  
-  ;; Templates are part of the compile operation.
-  ;; Therefore no way to arbitrarily invoke template at run-time.
-  ;; This routine creates a new namespace and compiles the template within it.
-  
-  ;; parameterize current-directory to make file requires work
-  ;; the below expression will evaluate to a string 
-  ;; that represents the output of the operation.
+(define/contract (render-through-eval base-dir eval-string)
+  (directory-pathish? list? . -> . string?)
   (parameterize ([current-namespace (make-base-empty-namespace)]
-                 [current-directory source-dir]
+                 [current-directory (->complete-path base-dir)]
                  [current-output-port nowhere-port])
     ;; attach already-imported modules 
     ;; this is a performance optimization: this way,
@@ -347,17 +331,31 @@
            (planet mb/pollen/tools)
            (planet mb/pollen/world)))
     (namespace-require 'racket) ; use namespace-require for FIRST require, then eval after
-    (eval `(begin 
-             ;; for include-template (used below)
-             (require web-server/templates)
-             ;; for ptree navigation functions, and template commands
-             (require  (planet mb/pollen/debug) (planet mb/pollen/ptree) (planet mb/pollen/template))
-             ;; import source into eval space. This sets up main & metas
-             (require ,(->string source-name))
-             (set-current-ptree (make-project-ptree ,pollen-project-directory))
-             (set-current-url-context ,pollen-project-directory)
-             (include-template #:command-char ,TEMPLATE_FIELD_DELIMITER ,(->string template-name))) 
-          (current-namespace))))
+    (eval eval-string (current-namespace))))
+
+(define/contract (render-source-with-template source-path template-path)
+  (file-exists? file-exists? . -> . string?)
+  
+  ;; set up information about source and template paths
+  ;; todo: how to write these without blanks?
+  (define-values (source-dir source-name _) (split-path source-path))
+  (define-values (___ template-name __) (split-path template-path))
+  
+  ;; Templates are part of the compile operation.
+  ;; Therefore no way to arbitrarily invoke template at run-time.
+  ;; This routine creates a new namespace and compiles the template within it.
+  
+  (render-through-eval source-dir
+                       `(begin 
+                          ;; for include-template (used below)
+                          (require web-server/templates)
+                          ;; for ptree navigation functions, and template commands
+                          (require  (planet mb/pollen/debug) (planet mb/pollen/ptree) (planet mb/pollen/template))
+                          ;; import source into eval space. This sets up main & metas
+                          (require ,(->string source-name))
+                          (set-current-ptree (make-project-ptree ,pollen-project-directory))
+                          (set-current-url-context ,pollen-project-directory)
+                          (include-template #:command-char ,TEMPLATE_FIELD_DELIMITER ,(->string template-name)))))
 
 
 ;; render files listed in a ptree file
