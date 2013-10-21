@@ -148,71 +148,71 @@
 
 
 ;; flatten tree to sequence
-(define/contract (all-pages [ptree current-ptree])
+(define/contract (all-pnodes [ptree current-ptree])
   (ptree? . -> . (listof string?))
   ; use cdr to get rid of root tag at front
   (map ->string (cdr (flatten (remove-parents ptree))))) 
 
 (module+ test
-  (check-equal? (all-pages test-ptree) '("foo" "bar" "one" "two" "three")))
+  (check-equal? (all-pnodes test-ptree) '("foo" "bar" "one" "two" "three")))
 
-;; helper function for get-previous-pages and get-next-pages
-(define/contract (adjacent-pages side pnode [ptree current-ptree])
+;; helper function for get-previous-pnodes and get-next-pnodes
+(define/contract (adjacent-pnodes side pnode [ptree current-ptree])
   ((symbol? pnode?) (ptree?) . ->* . (or/c list? boolean?))
   (let ([result ((if (equal? side 'left) 
                      takef 
-                     takef-right) (all-pages ptree) 
+                     takef-right) (all-pnodes ptree) 
                                   (λ(y) (not (equal? (->string pnode) (->string y)))))])
     (and (not (empty? result)) result)))
 
 (module+ test
-  (check-equal? (adjacent-pages 'left 'one test-ptree) '("foo" "bar"))
-  (check-equal? (adjacent-pages 'left 'three test-ptree) '("foo" "bar" "one" "two"))
-  (check-false (adjacent-pages 'left 'foo test-ptree)))
+  (check-equal? (adjacent-pnodes 'left 'one test-ptree) '("foo" "bar"))
+  (check-equal? (adjacent-pnodes 'left 'three test-ptree) '("foo" "bar" "one" "two"))
+  (check-false (adjacent-pnodes 'left 'foo test-ptree)))
 
 
-;; get sequence of earlier pages
-(define/contract (previous-pages pnode [ptree current-ptree])
+;; get sequence of earlier pnodes
+(define/contract (previous-pnodes pnode [ptree current-ptree])
   ((pnode?) (ptree?) . ->* . (or/c list? boolean?))
-  (adjacent-pages 'left pnode ptree))
+  (adjacent-pnodes 'left pnode ptree))
 
 (module+ test
-  (check-equal? (previous-pages 'one test-ptree) '("foo" "bar"))
-  (check-equal? (previous-pages 'three test-ptree) '("foo" "bar" "one" "two"))
-  (check-false (previous-pages 'foo test-ptree)))
+  (check-equal? (previous-pnodes 'one test-ptree) '("foo" "bar"))
+  (check-equal? (previous-pnodes 'three test-ptree) '("foo" "bar" "one" "two"))
+  (check-false (previous-pnodes 'foo test-ptree)))
 
 
-;; get sequence of next pages
-(define (next-pages pnode [ptree current-ptree])
+;; get sequence of next pnodes
+(define (next-pnodes pnode [ptree current-ptree])
   ((pnode?) (ptree?) . ->* . (or/c list? boolean?))
-  (adjacent-pages 'right pnode ptree))
+  (adjacent-pnodes 'right pnode ptree))
 
 (module+ test
-  (check-equal? (next-pages 'foo test-ptree) '("bar" "one" "two" "three"))
-  (check-equal? (next-pages 'one test-ptree) '("two" "three"))
-  (check-false (next-pages 'three test-ptree)))
+  (check-equal? (next-pnodes 'foo test-ptree) '("bar" "one" "two" "three"))
+  (check-equal? (next-pnodes 'one test-ptree) '("two" "three"))
+  (check-false (next-pnodes 'three test-ptree)))
 
-;; get page immediately previous
-(define/contract (previous-page pnode [ptree current-ptree])
+;; get pnode immediately previous
+(define/contract (previous-pnode pnode [ptree current-ptree])
   ((pnode?) (ptree?) . ->* . (or/c string? boolean?))
-  (let ([result (previous-pages pnode ptree)])
+  (let ([result (previous-pnodes pnode ptree)])
     (and result (last result))))
 
 (module+ test
-  (check-equal? (previous-page 'one test-ptree) "bar")
-  (check-equal? (previous-page 'three test-ptree) "two")
-  (check-false (previous-page 'foo test-ptree)))
+  (check-equal? (previous-pnode 'one test-ptree) "bar")
+  (check-equal? (previous-pnode 'three test-ptree) "two")
+  (check-false (previous-pnode 'foo test-ptree)))
 
-;; get page immediately next
-(define (next-page pnode [ptree current-ptree])
+;; get pnode immediately next
+(define (next-pnode pnode [ptree current-ptree])
   ((pnode?) (ptree?) . ->* . (or/c string? boolean?))
-  (let ([result (next-pages pnode ptree)])
+  (let ([result (next-pnodes pnode ptree)])
     (and result (first result))))
 
 (module+ test
-  (check-equal? (next-page 'foo test-ptree) "bar")
-  (check-equal? (next-page 'one test-ptree) "two")
-  (check-false (next-page 'three test-ptree)))
+  (check-equal? (next-pnode 'foo test-ptree) "bar")
+  (check-equal? (next-pnode 'one test-ptree) "two")
+  (check-false (next-pnode 'three test-ptree)))
 
 ;; convert path to pnode
 ;; used for converting "here" values to pnodes
@@ -321,4 +321,4 @@
   (displayln "Running module main")
   (set-current-ptree (make-project-ptree (->path "/Users/MB/git/bpt/")))
   (set-current-url-context (directory-list "/Users/MB/git/bpt/"))
-  (pnode->url (previous-page (previous-page 'what-is-typography))))
+  (pnode->url (previous-pnode (previous-pnode 'what-is-typography))))
