@@ -5,7 +5,8 @@
 (require xml)
 (require "server-routes.rkt" "predicates.rkt" "debug.rkt")
 
-(message "Starting webserver")
+(define port-number 8088)
+(message (format "Starting webserver at http://localhost:~a" port-number))
 
 (define (logger req)
   (define client (request-client-ip req))
@@ -39,7 +40,7 @@
 (message "Ready to rock")
 
 (serve/servlet start
-               #:port 8088
+               #:port port-number
                #:listen-ip #f
                #:servlet-regexp #rx"" ; respond to top level
                #:command-line? #t
