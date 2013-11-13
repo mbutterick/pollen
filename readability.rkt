@@ -1,5 +1,5 @@
 #lang racket/base
-(require racket/contract)
+(require racket/contract net/url)
 (require (only-in racket/list empty? range splitf-at dropf dropf-right))
 (require (only-in racket/format ~a))
 (require (only-in racket/string string-join))
@@ -31,6 +31,7 @@
     [(empty? x) ""]
     [(symbol? x) (symbol->string x)]
     [(number? x) (number->string x)]
+    [(url? x) (->string (->path x))]
     [(path? x) (path->string x)]
     [(char? x) (~a x)]
     [else (error (format "Can't make ~a into string" x))]))
@@ -40,6 +41,7 @@
   (check-equal? (->string '()) "")
   (check-equal? (->string 'foo) "foo")
   (check-equal? (->string 123) "123")
+  (check-equal? (->string (string->url "foo/bar.html")) "foo/bar.html")
   (define file-name-as-text "foo.txt")
   (check-equal? (->string (string->path file-name-as-text)) file-name-as-text)
   (check-equal? (->string #\¶) "¶"))
@@ -51,9 +53,24 @@
   (string->symbol (->string thing))) 
 
 ;; general way of coercing to path
-(define (->path thing)
+(define/contract (->path thing)
+  (any/c . -> . path?)
   ; todo: on bad input, it will pop a string error rather than path error
-  (string->path (->string thing)))
+  (cond 
+    [(url? thing) (apply build-path (map path/param-path (url-path thing)))]
+    [else (string->path (->string thing))]))
+
+(module+ test
+  (check-equal? (->path "foo") (string->path "foo"))
+  (check-equal? (->path 'foo) (string->path "foo"))
+  (check-equal? (->path 123) (string->path "123"))
+  (check-equal? (->path (string->url "foo/bar.html")) (string->path "foo/bar.html")))
+
+;; general way of coercing to url
+(define/contract (->url thing)
+  (any/c . -> . url?)
+  ; todo: on bad input, it will pop a string error rather than url error
+  (string->url (->string thing)))
 
 (define (->complete-path thing)
   (path->complete-path (->path thing)))
