@@ -11,6 +11,17 @@
 ; helper functions for regenerate functions
 (define pollen-project-directory (current-directory))
 
+;; if something can be successfully coerced to a url,
+;; it's urlish.
+(define/contract (urlish? x)
+  (any/c . -> . boolean?)
+  (with-handlers ([exn:fail? (λ(e) #f)])
+    (->boolean (->url x))))
+
+(module+ test
+  (check-true (urlish? (->path "/Users/MB/home.html")))
+  (check-true (urlish? "/Users/MB/home.html?foo=bar"))
+  (check-true (urlish? (->symbol "/Users/MB/home"))))
 
 ;; if something can be successfully coerced to a path,
 ;; it's pathish.
@@ -71,16 +82,15 @@
   (check-false (foo.bar.txt-path . has-ext? . 'doc))) ; wrong extension
 
 
-;; get file extension as a string
+;; get file extension as a string, or return #f
 (define/contract (get-ext x)
-  (pathish? . -> . string?)
-  (bytes->string/utf-8 (filename-extension (->path x))))
+  (pathish? . -> . (or/c string? #f))
+  (let ([fe-result (filename-extension (->path x))])
+    (and fe-result (bytes->string/utf-8 fe-result))))
 
 (module+ test
   (check-equal? (get-ext (->path "foo.txt")) "txt")
-  ;; todo: how should get-ext handle input that has no extension?
-  ;(check-equal? (get-ext (->path "foo")) "")
-  )
+  (check-false (get-ext "foo")))
 
 
 ;; put extension on path
