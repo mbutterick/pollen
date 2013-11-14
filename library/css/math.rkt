@@ -12,7 +12,7 @@
 
 (define/contract (cssqish? x)
   (any/c . -> . boolean?)
-  (->boolean (or (cssq? x) (cssqish->cssq x))))
+  (->boolean (or (cssq? x) (string? x))))
 
 (define/contract (string->unit x)
   (string? . -> . css-unit?)
@@ -20,7 +20,8 @@
       x
       (error 'string->unit "'~a' not a valid css unit" x)))
 
-(define (cssqish->cssq x)
+(define/contract (cssqish->cssq x)
+  (cssqish? . -> . cssq?)
   (cond
     [(cssq? x) x]
     [else (begin
