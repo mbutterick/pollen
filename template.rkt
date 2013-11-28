@@ -1,6 +1,6 @@
 #lang racket/base
 (require racket/contract racket/string xml xml/path racket/bool)
-(require "tools.rkt")
+(require "tools.rkt" "ptree.rkt")
 
 ;; setup for test cases
 (module+ test (require rackunit racket/path))
@@ -15,7 +15,9 @@
 
 (define/contract (puttable-item? x)
   (any/c . -> . boolean?)
-  (or (tagged-xexpr? x) (has-pollen-source? x)))
+  (or (tagged-xexpr? x) 
+      (has-pollen-source? x) 
+      (has-pollen-source? (name->url x))))
 
 (define/contract (query-key? x)
   (any/c . -> . boolean?)
@@ -26,7 +28,8 @@
   (cond
     ;; Using put has no effect on tagged-xexprs. It's here to make the idiom smooth.
     [(tagged-xexpr? x) x] 
-    [(has-pollen-source? x) (dynamic-require (->pollen-source-path x) 'main)]))
+    [(has-pollen-source? x) (dynamic-require (->pollen-source-path x) 'main)]
+    [(has-pollen-source? (name->url x)) (dynamic-require (->pollen-source-path (name->url x)) 'main)]))
 
 (module+ test
   (check-equal? (put '(foo "bar")) '(foo "bar"))
@@ -58,7 +61,7 @@
     (let* ([metas (dynamic-require (->pollen-source-path 'put) 'metas)]
            [here (find-in-metas 'put 'here)]
            [here-relative (list (->string (find-relative-path (current-directory) (car here))))])     
-      (check-equal? here-relative (list "put.p")))))
+      (check-equal? here-relative (list "put")))))
 
 
 (define/contract (find-in-main px query) 

@@ -8,7 +8,7 @@
 (require racket/list
          (planet mb/pollen/tools) 
          (planet mb/pollen/main-helper)
-         (only-in (planet mb/pollen/ptree) ptree-source-decode)
+         (only-in (planet mb/pollen/ptree) ptree-source-decode path->name)
          (only-in (planet mb/pollen/predicates) ptree?))
 
 (provide (all-from-out racket/list

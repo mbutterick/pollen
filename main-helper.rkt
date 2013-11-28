@@ -37,7 +37,7 @@
 ;; We want to make this identifier behave as a runtime function
 ;; This requires two steps.
 ;; First, define the underlying function as syntax-rule
-(define-syntax (get-here stx)
+(define-syntax (get-here-path stx)
   (datum->syntax stx 
                  '(begin 
                     ;; Even though begin permits defines,
@@ -45,7 +45,7 @@
                     ;; whereupon define would cause an error.
                     ;; Therefore, best to use let.
                     (let* ([ccr (current-contract-region)] ; trick for getting current module name
-                           [here-path (cond
+                           [hp (cond
                                         ;; if contract-region is called from within submodule,
                                         ;; you get a list
                                         ;; in which case, just grab the path from the front
@@ -59,7 +59,7 @@
                       ;; so raises possibility of inconsistent values.
                       ;; Whereas the complete path is unambiguous,
                       ;; and can be made relative by the caller (or otherwise altered).
-                      (->string here-path)))))
+                      (->string hp)))))
 
 ;; todo: update tests
 ;(module+ test
@@ -68,7 +68,7 @@
 ; Second step: apply a separate syntax transform to the identifier itself
 ; We can't do this in one step, because if the macro goes from identifier to function definition,
 ; The macro processor will evaluate the body at compile-time, not at runtime.
-(define-syntax here (λ(stx) (datum->syntax stx '(get-here))))
+(define-syntax here-path (λ(stx) (datum->syntax stx '(get-here-path))))
 
 ;; todo: update test
 ;(module+ test

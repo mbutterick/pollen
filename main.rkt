@@ -42,23 +42,26 @@
      
      ;; set up a hook for identifier 'here'
      ;; (but under a different name to avoid macrofication)
-     (define inner-here here)  
+     (define inner-here-path here-path)  
      (provide (all-defined-out))
      (provide (all-from-out ; pollen file should bring its requires
                (planet mb/pollen/tools)))) 
    
    (require 'pollen-inner) ; provides doc & #%top, among other things
    
-   ;; prepare the elements, and append inner-here as meta.
-   (define all-elements (cons 
-                         ;; append inner-here as meta
-                         ;; put it first so it can be overridden by custom meta later on
-                         `(meta "here" ,inner-here)
-                         (cond
-                           ;; doc is probably a list, but might be a single string
-                           [(string? doc) (list doc)] 
-                           [(tagged-xexpr? doc) (list doc)] ; if it's a single nx, just leave it
-                           [(list? doc) doc]))) ; if it's nx content, splice it in
+   (define here (path->name inner-here-path))
+   
+   ;; prepare the elements, and append inner-here-path as meta.
+   ;; put it first so it can be overridden by custom meta later on
+   (define all-elements (cons `(meta "here-path" ,inner-here-path)
+                              (cons `(meta "here" ,here)                         
+                                    (cond
+                                      ;; doc is probably a list, but might be a single string
+                                      [(string? doc) (list doc)] 
+                                      ;; if it's a single nx, just leave it
+                                      [(tagged-xexpr? doc) (list doc)]
+                                      ;; if it's nx content, splice it in
+                                      [(list? doc) doc])))) 
    
    
    ;; split out the metas now (in raw form)
@@ -78,7 +81,7 @@
    ;; Because if it's overridden to something other than *.ptree, 
    ;; ptree processing will fail.
    ;; This defeats rule that ptree file suffix triggers ptree decoding.
-   (define here-is-ptree? (ptree-source? (->path inner-here)))
+   (define here-is-ptree? (ptree-source? (->path inner-here-path)))
    
    (define main (apply (if here-is-ptree?
                            ;; ptree source files will go this way,
@@ -89,9 +92,10 @@
                            ;; it just hits #%top and becomes a tagged-xexpr.
                            root) (tagged-xexpr-elements main-raw)))
    
-   (provide main metas
-            (except-out (all-from-out 'pollen-inner) inner-here) ; everything from user 
-            (rename-out (inner-here here))) ; change identifier back (now safe from macrofication)
+   
+   (provide main metas here
+            (except-out (all-from-out 'pollen-inner) inner-here-path) ; everything from user 
+            (rename-out (inner-here-path here-path))) ; change identifier back (now safe from macrofication)
    
    (module+ main
      (displayln ";-------------------------")

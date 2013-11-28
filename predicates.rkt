@@ -161,7 +161,7 @@
 
 
 ;; certain ptree requirements are enforced at compile-time.
-;; (such as pnodes must be valid strings, and unique.)
+;; (such as names must be valid strings, and unique.)
 ;; otherwise this becomes a rather expensive contract
 ;; because every function in ptree.rkt uses it.
 ;; note that a ptree is just a bunch of recursively nested ptrees.
@@ -170,7 +170,7 @@
   (and (match x
          ;; a tagged-xexpr with one attr ('parent)
          ;; whose subelements recursively meet the same test.
-         [(list (? pnode? tag) (? ptree-attr? attr) elements ...) 
+         [(list (? ptree-name? tag) (? ptree-attr? attr) elements ...) 
           (andmap ptree? elements)]
          [else #f])))
 
@@ -196,7 +196,7 @@
 
 
 ;; ptree location must represent a possible valid filename
-(define/contract (pnode? x #:loud [loud #f])
+(define/contract (ptree-name? x #:loud [loud #f])
   ((any/c) (#:loud boolean?) . ->* . boolean?)
   ;; todo: how to express the fact that the ptree-location must be 
   ;; a valid base name for a file?
@@ -205,21 +205,21 @@
   (define result 
     (or  (eq? x #f) ; OK for map-key to be #f
          (and (or (symbol? x) (string? x)) 
-              ;; todo: should test be same as valid module name?
+              ;; todo: should test be same as valid module ptree-name?
               (->boolean (regexp-match #px"^[-_A-Za-z0-9]+$" (->string x))))))
   (if (and (not result) loud)
       (error "Not a valid ptree key:" x)
       result))
 
 (module+ test
-  (check-true (pnode? #f))
-  (check-true (pnode? "foo-bar"))
-  (check-true (pnode? "Foo_Bar_0123"))
-  (check-true (pnode? 'foo-bar))
-  (check-false (pnode? "foo-bar.p"))
-  (check-false (pnode? "/Users/MB/foo-bar"))
-  (check-false (pnode? ""))
-  (check-false (pnode? " ")))
+  (check-true (ptree-name? #f))
+  (check-true (ptree-name? "foo-bar"))
+  (check-true (ptree-name? "Foo_Bar_0123"))
+  (check-true (ptree-name? 'foo-bar))
+  (check-false (ptree-name? "foo-bar.p"))
+  (check-false (ptree-name? "/Users/MB/foo-bar"))
+  (check-false (ptree-name? ""))
+  (check-false (ptree-name? " ")))
 
 
 ;; recursive whitespace test
