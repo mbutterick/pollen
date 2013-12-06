@@ -25,7 +25,7 @@
 
 (define OUTPUT_SUBDIR 'public)
 
-(define RACKET_PATH "/Applications/Racket/bin/racket")
+(define RACKET_PATH "racket")
 
 (define POLLEN_ROOT 'main)
 
