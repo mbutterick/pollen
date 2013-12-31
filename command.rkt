@@ -55,6 +55,7 @@
                         (if (file-exists? possible-file)
                             `(begin
                                (require (planet mb/pollen/regenerate))
+                               (displayln (format "Regenerating ~a" (path->string ,possible-file)))
                                (regenerate ,possible-file))
                             `(displayln (format "No command defined for ~a" ,arg))))]))))
 
