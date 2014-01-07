@@ -2,8 +2,8 @@
 
 (provide (all-defined-out))
 
-(define POLLEN_PREPROC_EXT 'pp)
-(define POLLEN_SOURCE_EXT 'p)
+(define POLLEN_PREPROC_EXT 'p)
+(define POLLEN_SOURCE_EXT 'pd)
 (define TEMPLATE_FILE_PREFIX "-")
 (define POLLEN_EXPRESSION_DELIMITER #\◊)
 (define TEMPLATE_FIELD_DELIMITER POLLEN_EXPRESSION_DELIMITER)
@@ -23,7 +23,7 @@
 
 (define EXTRAS_DIR (string->path "pollen-require"))
 
-(define MISSING_FILE_BOILERPLATE "#lang planet mb/pollen\n\n")
+(define MISSING_FILE_BOILERPLATE "#lang pollen\n\n")
 
 (define LINE_BREAK "\n")
 (define PARAGRAPH_BREAK "\n\n")
@@ -33,6 +33,7 @@
 (define RACKET_PATH "/usr/bin/racket")
 
 (define POLLEN_ROOT 'main)
+(define POLLEN_COMMAND_FILE "polcom")
 
 ; get the starting directory, which is the parent of 'run-file
 (define POLLEN_PROJECT_DIR

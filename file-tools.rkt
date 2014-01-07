@@ -144,7 +144,7 @@
   (has-ext? (->path x) POLLEN_PREPROC_EXT))
 
 (module+ test
-  (check-true (preproc-source? "foo.pp"))
+  (check-true (preproc-source? "foo.p"))
   (check-false (preproc-source? "foo.bar")))
 
 (define/contract (has-preproc-source? x)
@@ -180,8 +180,8 @@
   (has-ext? x POLLEN_SOURCE_EXT))
 
 (module+ test
-  (check-true (pollen-source? "foo.p"))
-  (check-false (pollen-source? "foo.pp")))
+  (check-true (pollen-source? "foo.pd"))
+  (check-false (pollen-source? "foo.p")))
 
 
 (define/contract (template-source? x)
@@ -216,10 +216,10 @@
               (add-ext x POLLEN_PREPROC_EXT))))
 
 (module+ test
-  (check-equal? (->preproc-source-path (->path "foo.pp")) (->path "foo.pp"))
-  (check-equal? (->preproc-source-path (->path "foo.html")) (->path "foo.html.pp"))
-  (check-equal? (->preproc-source-path "foo") (->path "foo.pp"))
-  (check-equal? (->preproc-source-path 'foo) (->path "foo.pp")))
+  (check-equal? (->preproc-source-path (->path "foo.p")) (->path "foo.p"))
+  (check-equal? (->preproc-source-path (->path "foo.html")) (->path "foo.html.p"))
+  (check-equal? (->preproc-source-path "foo") (->path "foo.p"))
+  (check-equal? (->preproc-source-path 'foo) (->path "foo.p")))
 
 (define/contract (->output-path x)
   (pathish? . -> . path?)
@@ -247,10 +247,10 @@
               (add-ext x POLLEN_SOURCE_EXT))))
 
 (module+ test
-  (check-equal? (->pollen-source-path (->path "foo.p")) (->path "foo.p"))
-  (check-equal? (->pollen-source-path (->path "foo.html")) (->path "foo.html.p"))
-  (check-equal? (->pollen-source-path "foo") (->path "foo.p"))
-  (check-equal? (->pollen-source-path 'foo) (->path "foo.p")))
+  (check-equal? (->pollen-source-path (->path "foo.pd")) (->path "foo.pd"))
+  (check-equal? (->pollen-source-path (->path "foo.html")) (->path "foo.html.pd"))
+  (check-equal? (->pollen-source-path "foo") (->path "foo.pd"))
+  (check-equal? (->pollen-source-path 'foo) (->path "foo.pd")))
 
 (define/contract (project-files-with-ext ext)
   (symbol? . -> . (listof complete-path?))

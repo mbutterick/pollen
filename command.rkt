@@ -2,12 +2,13 @@
 
 ;; todo: add command to check validity of installation
 
-(require (for-syntax "readability.rkt"))
+(require (for-syntax "readability.rkt" "world.rkt"))
 
 (define-syntax (handle-pollen-command syntax-context)
   (datum->syntax syntax-context
                  (let* ([args (current-command-line-arguments)]
                         [arg (if (> (len args) 0) (get args 0) "")])
+                   (display (format "~a: " POLLEN_COMMAND_FILE))
                    (case arg
                      [("start") `(require "server.rkt")]
                      [("render") `(begin
@@ -55,6 +56,6 @@
                                  `(begin
                                     (require (planet mb/pollen/render))
                                     (render ,possible-file))
-                                 `(displayln (format "No command defined for ~a" ,arg))))]))))
+                                 `(displayln (format "No command defined for '~a'" ,arg))))]))))
 
 (handle-pollen-command)

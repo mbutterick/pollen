@@ -31,6 +31,6 @@
 
    (module+ main
      (displayln ";-------------------------")
-     (displayln (string-append "; pollen decoded 'text"))     
+     (displayln (string-append "; pollen 'text"))     
      (displayln ";-------------------------")
      (display text))))
