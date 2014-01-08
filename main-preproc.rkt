@@ -1,6 +1,6 @@
 #lang racket
 
-(require "main-preproc-imports.rkt")
+(require "main-preproc-imports.rkt" "readability.rkt")
 (provide (except-out (all-from-out racket) #%module-begin)
          (rename-out [module-begin #%module-begin]))
 
@@ -26,7 +26,7 @@
    (require 'pollen-inner) ; provides 'doc
    
    ;; reduce text to simplest represetnation: a single ouput string
-   (define text (apply string-append (flatten (trim (->list doc) whitespace?))))
+   (define text (apply string-append (map ->string (flatten (trim (->list doc) whitespace?)))))
    (provide text (all-from-out 'pollen-inner))
 
    (module+ main
