@@ -37,7 +37,8 @@
             (route-default req)
             (next-dispatcher))]))
 
-(message "Ready to rock")
+(message "Ready to rock. Type ^C to exit")
+
 
 (serve/servlet start
                #:port port-number
