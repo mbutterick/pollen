@@ -6,7 +6,9 @@
 (require "server-routes.rkt" "predicates.rkt" "debug.rkt")
 
 (define port-number 8088)
-(message (format "Starting webserver at http://localhost:~a" port-number))
+
+(message (format "Project directory is ~a" pollen-project-directory))
+(message (format "Project server is http://localhost:~a" port-number) "(Ctrl-C to exit)")
 
 (define (logger req)
   (define client (request-client-ip req))
@@ -24,7 +26,7 @@
 
 (define-values (start url)
   (dispatch-rules
-   [("start") (λ(req) 
+   [("pollen") (λ(req) 
                 (logger req)
                 (response/xexpr (route-index)))]
    [("source" (string-arg)) (route-wrapper route-source)]
@@ -37,7 +39,8 @@
             (route-default req)
             (next-dispatcher))]))
 
-(message "Ready to rock. Type ^C to exit")
+(message (format "Project dashboard is http://localhost:~a/pollen" port-number))
+(message "Ready to rock")
 
 
 (serve/servlet start

@@ -19,8 +19,9 @@
   (dynamic-rerequire path) ; stores module mod date; reloads if it's changed
   (dynamic-require path 'main))
 
-(module+ test
-  (check-equal? (file->xexpr (build-path (current-directory) "tests/server-routes/foo.p") #:render #f) '(root "\n" "foo")))
+;; todo: rewrite this test, obsolete since filename convention changed
+;;(module+ test
+;;  (check-equal? (file->xexpr (build-path (current-directory) "tests/server-routes/foo.p") #:render #f) '(root "\n" "foo")))
 
 ;; read contents of file to string
 ;; just file->string with a render option
@@ -94,14 +95,18 @@
                                   #:key path->string string<?))
   
   ;; calculate names of post-pollen files
-  ;; todo: this isn't quite right. Assumes post-pollen file will have html extension.
-  ;; not necessarily true (it will assume the extension of its template.)
-  ;; But pulling out all the template extensions requires parsing all the files,
-  ;; which is slow and superfluous, since we're trying to be lazy about rendering.
   (define post-pollen-files (map ->output-path pollen-files))
   
   ;; Make a combined list of pollen files and post-pollen files, in alphabetical order
   (define all-pollen-files (sort (append pollen-files post-pollen-files) #:key path->string string<?))
+  
+  (define leftover-files (filter (λ(f) (and
+                                        (not (equal? (->string f) "polcom")) ;todo: generalize this test
+                                        (not ((->string f) . starts-with? . "."))
+                                        (not (f . in? . all-pollen-files)))) 
+                                 (directory-list pollen-project-directory)))
+  
+  (message leftover-files)
   
   ;; Utility function for making file rows
   (define (make-file-row file routes)
@@ -123,14 +128,14 @@
         `(td (a ((href ,target)) ,name))))
     `(tr ,(make-link-cell 'direct) ,@(map make-link-cell routes)))
   
-  (if (andmap empty? (list ptree-files all-pollen-files all-preproc-files template-files))
+  (if (andmap empty? (list ptree-files all-pollen-files all-preproc-files template-files leftover-files))
       '(body "No files yet. Get to work!")
       `(body 
         (style ((type "text/css")) "td a { display: block; width: 100%; height: 100%; padding: 8px; }"
                "td:hover {background: #eee}")
         (table ((style "font-family:Concourse T3;font-size:115%"))
                ;; options for ptree files and template files
-               ,@(map (λ(file) (make-file-row file '(raw))) (append ptree-files template-files))
+               ,@(map (λ(file) (make-file-row file '(raw))) (append leftover-files ptree-files template-files))
                
                ;; options for pollen files
                ,@(map (λ(file) (make-file-row file '(raw source xexpr force))) post-pollen-files)

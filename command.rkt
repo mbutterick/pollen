@@ -10,6 +10,11 @@
                         [arg (if (> (len args) 0) (get args 0) "")])
                    (display (format "~a: " POLLEN_COMMAND_FILE))
                    (case arg
+                     [("help") (displayln "valid commands are
+polcom start (starts project server)
+polcom render (renders all files in project directory)
+polcom clone (copies rendered files to desktop)
+polcom [filename] (renders individual file)")]
                      [("start") `(require "server.rkt")]
                      [("render") `(begin
                                         ;; todo: take extensions off the comand line

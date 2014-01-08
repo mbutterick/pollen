@@ -2,6 +2,8 @@
 
 (provide (all-defined-out))
 
+(define POLLEN_VERSION "0.001")
+
 (define POLLEN_PREPROC_EXT 'p)
 (define POLLEN_SOURCE_EXT 'pd)
 (define TEMPLATE_FILE_PREFIX "-")

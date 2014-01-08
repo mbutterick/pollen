@@ -24,7 +24,7 @@
   (set! last-message-time now)
   (if then      
       (- now then)
-      "--"))
+      "0"))
 
 (define (zero-fill str count)
   (set! str (~a str))
@@ -59,7 +59,7 @@
   (string-append (string-join time-fields ":") (if (< (date-hour date) 12) "am" "pm")))
 
 (define (make-debug-timestamp)
-  (format "[~a ~as]" (make-timestamp) (seconds-since-last-message)))
+  (format "[~a ∆~as]" (make-timestamp) (seconds-since-last-message)))
 
 (define (message . items)
   (displayln (string-join `(,(make-debug-timestamp) ,@(map (λ(x)(if (string? x) x (~v x))) items))) (current-error-port)))

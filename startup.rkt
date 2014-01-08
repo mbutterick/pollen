@@ -1,4 +1,3 @@
 #lang racket/base
-(require "debug.rkt")
-(message "Starting Pollen")
-(message "Using Racket" (version))
+(require "debug.rkt" "world.rkt")
+(message (format "Welcome to Pollen ~a" POLLEN_VERSION) (format "(Racket ~a)" (version)))
