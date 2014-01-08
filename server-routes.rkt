@@ -103,10 +103,9 @@
   (define leftover-files (filter (λ(f) (and
                                         (not (equal? (->string f) "polcom")) ;todo: generalize this test
                                         (not ((->string f) . starts-with? . "."))
-                                        (not (f . in? . all-pollen-files)))) 
+                                        (not (f . in? . all-pollen-files))
+                                        (not (f . in? . all-preproc-files)))) 
                                  (directory-list pollen-project-directory)))
-  
-  (message leftover-files)
   
   ;; Utility function for making file rows
   (define (make-file-row file routes)
