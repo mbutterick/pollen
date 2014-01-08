@@ -30,7 +30,7 @@
    (provide text (all-from-out 'pollen-inner))
 
    (module+ main
-     (displayln ";-------------------------")
-     (displayln (string-append "; pollen 'text"))     
-     (displayln ";-------------------------")
+;     (displayln ";-------------------------")
+;     (displayln (string-append "; pollen 'text"))     
+;     (displayln ";-------------------------")
      (display text))))
