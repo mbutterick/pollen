@@ -113,17 +113,17 @@
 
 (define (success-messages)
   (message "Setup complete")
-  (message (format "Run '~a~a start' to start project server" cd polcom-filename))
-  (message (format "Or run '~a~a help' for a list of commands" cd polcom-filename))
+  (define path-to-polcom (format "~a~a" cd polcom-filename))
+  (message (format "Run '~a start' to start project server" path-to-polcom))
+  (message (format "Or run '~a help' for a list of commands" path-to-polcom))
   (when (not (test-mode)) (exit)))
 
 (define report-success
   (new task% 
        [do-proc success-messages]))
 
-
-(define tasks (list confirm-setup make-polcom report-success))
 (define (setup)
+  (define tasks (list confirm-setup make-polcom report-success))
   (send-each tasks do-task undo-task))
 
 
