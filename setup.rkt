@@ -22,7 +22,7 @@
 
 (define (setup-testable test-only)    
   (message (format "Set up ~a as a pollen directory? ['y' or 'yes']" cd))
-  (define setup-confirm (->string (read)))
+  (define setup-confirm (if test-only "y" (->string (read))))
   (when (not (or (equal? setup-confirm "y") (equal? setup-confirm "yes")))
     (begin
       (message "Aborting setup")
