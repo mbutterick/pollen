@@ -32,7 +32,9 @@
 
 (define OUTPUT_SUBDIR 'public)
 
-(define RACKET_PATH "/usr/bin/racket")
+(require racket/string racket/port racket/system)
+;; todo: is path to racket already available as an environment variable?
+(define RACKET_PATH (string-trim (with-output-to-string (λ() (system "which racket")))))
 
 (define POLLEN_ROOT 'main)
 (define POLLEN_COMMAND_FILE "polcom")
@@ -46,3 +48,6 @@
         dir)))
 
 
+(require "readability.rkt")
+(define RESERVED_PATHS
+  (map ->path (list POLLEN_COMMAND_FILE EXTRAS_DIR)))

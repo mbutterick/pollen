@@ -51,10 +51,11 @@
 ;; helper function for ptree
 ;; make paths absolute to test whether files exist,
 ;; then convert back to relative
+(define (visible? path)
+    (not ((->string path) . starts-with? . ".")))
+
 (define/contract (visible-files dir)
   (directory-pathish? . -> . (listof path?))
-  (define (visible? relative-path)
-    (not ((->string relative-path) . starts-with? . ".")))
   (filter visible? 
           (map (λ(p) (find-relative-path dir p)) 
                (filter file-exists? 

@@ -1,7 +1,7 @@
 #lang racket/base
 (require racket/system racket/port racket/file 
-         racket/string racket/date racket/class racket/list)
-(require "debug.rkt" "readability.rkt")
+           racket/class racket/list)
+(require "debug.rkt" "readability.rkt" "world.rkt")
 
 (provide setup)
 
@@ -49,7 +49,7 @@
   (format "#! ~a
 #lang racket/base
 (require pollen/command)
-; pollen setup run in ~a on ~a" 
+;; pollen setup run in ~a on ~a" 
           racket-path
           cd
           (format "~a at ~a" (make-datestamp) (make-timestamp))))
@@ -73,27 +73,25 @@
 
 
 ;; task: make polcom file
-(define polcom-filename "polcom")
 
 (define (delete-polcom-file-if-existing)
-  (when (file-exists? polcom-filename)
+  (when (file-exists? POLLEN_COMMAND_FILE)
     (begin
       (message (format "Deleting existing polcom file in ~a" cd))
-      (delete-file polcom-filename))))
+      (delete-file POLLEN_COMMAND_FILE))))
 
 (define (save-polcom-file)
-  (define racket-path (string-trim (with-output-to-string (λ() (system "which racket")))))
-  (define path-to-racket-exists? (> (len racket-path) 0)) 
+  (define path-to-racket-exists? (> (len RACKET_PATH) 0)) 
   
   (if path-to-racket-exists?
-      (let ([polcom-data (make-polcom-data racket-path)])
-        (message (format "Using ~a as racket path" racket-path))
+      (let ([polcom-data (make-polcom-data RACKET_PATH)])
+        (message (format "Using ~a as racket path" RACKET_PATH))
         (delete-polcom-file-if-existing)
         (message (format "Creating new polcom file in ~a" cd))
         (if (not (test-mode))
             (begin
-              (display-to-file polcom-data polcom-filename)
-              (with-output-to-string (λ() (system (format "chmod 755 ~a" polcom-filename)))))
+              (display-to-file polcom-data POLLEN_COMMAND_FILE)
+              (with-output-to-string (λ() (system (format "chmod 755 ~a" POLLEN_COMMAND_FILE)))))
             (message "[test mode: file would be saved now]")))
       (begin 
         (message "No path to Racket binary")
@@ -113,7 +111,7 @@
 
 (define (success-messages)
   (message "Setup complete")
-  (define path-to-polcom (format "~a~a" cd polcom-filename))
+  (define path-to-polcom (format "~a~a" cd POLLEN_COMMAND_FILE))
   (message (format "Run '~a start' to start project server" path-to-polcom))
   (message (format "Or run '~a help' for a list of commands" path-to-polcom))
   (when (not (test-mode)) (exit)))
