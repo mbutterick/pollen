@@ -61,6 +61,12 @@
 (define (make-debug-timestamp)
   (format "[~a ∆~as]" (make-timestamp) (seconds-since-last-message)))
 
+
+
+;; todo: consolidate these two message functions
+(define (basic-message . items)
+  (displayln (string-join `(,@(map (λ(x)(if (string? x) x (~v x))) items))) (current-error-port)))
+
 (define (message . items)
   (displayln (string-join `(,(make-debug-timestamp) ,@(map (λ(x)(if (string? x) x (~v x))) items))) (current-error-port)))
 
@@ -68,5 +74,5 @@
 ; report the current value of the variable, then return it
 (define-syntax-rule (report var)
   (begin 
-    (message 'var "=" var) 
+    (basic-message 'var "=" var) 
     var))

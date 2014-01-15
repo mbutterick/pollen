@@ -45,7 +45,7 @@
 
 (module+ test
   (check-true (directory-pathish? "/Users/"))
-  (check-false (directory-pathish? "foobar")))
+  (check-false (directory-pathish? "foobarzooblish")))
 
 
 ;; helper function for ptree
@@ -70,7 +70,7 @@
 (module+ test
   (define foo-path-strings '("foo" "foo.txt" "foo.bar" "foo.bar.txt"))
   (define-values (foo-path foo.txt-path foo.bar-path foo.bar.txt-path) 
-    (apply values (map string->path foo-path-strings)))
+    (apply values (map ->path foo-path-strings)))
   ;; test the sample paths before using them for other tests
   (define foo-paths (list foo-path foo.txt-path foo.bar-path foo.bar.txt-path))
   (for-each check-equal? (map ->string foo-paths) foo-path-strings))
