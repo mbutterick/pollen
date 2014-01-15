@@ -1,0 +1,4 @@
+#! /usr/bin/racket
+#lang racket/base
+(require pollen/command)
+; pollen setup run in /Users/mb/git/foobar/ on 07-Jan-2014 at 10:13:14pm
