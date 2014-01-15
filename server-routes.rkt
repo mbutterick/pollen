@@ -1,5 +1,5 @@
 #lang racket/base
-(require racket/list racket/contract racket/rerequire racket/file racket/format xml)
+(require racket/list racket/contract racket/rerequire racket/file racket/format xml racket/match racket/set)
 (require (only-in net/url url-query url->path url->string))
 (require (only-in web-server/http/request-structs request-uri request-client-ip))
 (require "world.rkt" "render.rkt" "readability.rkt" "predicates.rkt" "debug.rkt")
@@ -73,74 +73,36 @@
 
 
 
-(define/contract (route-index)   
-  (-> xexpr?)
+(define (route-index [dir pollen-project-directory])
+  (define (make-link-cell href+text)
+    (match-define (cons href text) href+text) 
+    (filter-not void? `(td ,(when (and href text) 
+                              `(a ((href ,href)) ,text)))))
   
-  ;; This function generates the Pollen dashboard.
-  ;; First, generate some lists of files.
+  (define (make-path-row p)
+    (define pstring (->string p))
+    (define (file-in-dir? p) (file-exists? (apply build-path (map ->path (list dir p)))))
+    (define sources (filter file-in-dir? (list (->preproc-source-path pstring) (->pollen-source-path pstring))))
+    (define source (if (not (empty? sources)) (->string (car sources)) #f))
+    `(tr ,@(map make-link-cell 
+                (append (list 
+                         (cons pstring pstring) 
+                         (cons (format "raw/~a" pstring) "raw"))
+                        (if source
+                            (list
+                             (cons source "source")
+                             (cons (format "xexpr/~a" source) "xexpr")
+                             (cons (format "~a?force=true" pstring) pstring))
+                            (make-list 3 (cons #f #f)))))))
   
-  ;; get lists of files by mapping a filter function for each file type
-  (define-values (pollen-files preproc-files ptree-files template-files)
-    (let ([all-files-in-project-directory (directory-list pollen-project-directory)])
-      (apply values 
-             (map (λ(test) (filter test all-files-in-project-directory)) 
-                  (list pollen-source? preproc-source? ptree-source? template-source?)))))
+  (define (unique-sorted-output-paths xs)
+    (sort (set->list (list->set (map ->output-path xs))) #:key ->string string<?))
   
-  ;; The actual post-preproc files may not have been generated yet
-  ;; so calculate their names (rather than rely on directory list)
-  (define post-preproc-files (map ->output-path preproc-files))
+  (define (ineligible-path? x) (or (not (visible? x)) (member x RESERVED_PATHS)))  
   
-  ;; Make a combined list of preproc files and post-preproc file, in alphabetical order
-  (define all-preproc-files (sort (append preproc-files post-preproc-files) 
-                                  #:key path->string string<?))
+  (define project-paths (filter-not ineligible-path? (directory-list dir)))
   
-  ;; calculate names of post-pollen files
-  (define post-pollen-files (map ->output-path pollen-files))
-  
-  ;; Make a combined list of pollen files and post-pollen files, in alphabetical order
-  (define all-pollen-files (sort (append pollen-files post-pollen-files) #:key path->string string<?))
-  
-  (define leftover-files (filter (λ(f) (and
-                                        (not (equal? (->string f) "polcom")) ;todo: generalize this test
-                                        (not ((->string f) . starts-with? . "."))
-                                        (not (f . in? . all-pollen-files))
-                                        (not (f . in? . all-preproc-files)))) 
-                                 (directory-list pollen-project-directory)))
-  
-  ;; Utility function for making file rows
-  (define (make-file-row file routes)
-    ;; Utility function for making cells
-    (define (make-link-cell type)
-      (let* ([source (add-ext (remove-ext file) POLLEN_SOURCE_EXT)]
-             [preproc-source (add-ext file POLLEN_PREPROC_EXT)]
-             [file-string (->string file)]
-             [name (case type 
-                     ['direct file-string]
-                     ['preproc-source "source"]
-                     [else (->string type)])]
-             [target (case type
-                       ['direct name]
-                       [(source xexpr) (format "/~a/~a" type source)]
-                       ['preproc-source (format "/~a/~a" 'raw preproc-source)]
-                       ['force (format "/~a?force=true" file-string)]
-                       [else (format "/~a/~a" type file-string)])])
-        `(td (a ((href ,target)) ,name))))
-    `(tr ,(make-link-cell 'direct) ,@(map make-link-cell routes)))
-  
-  (if (andmap empty? (list ptree-files all-pollen-files all-preproc-files template-files leftover-files))
-      '(body "No files yet. Get to work!")
-      `(body 
-        (style ((type "text/css")) "td a { display: block; width: 100%; height: 100%; padding: 8px; }"
-               "td:hover {background: #eee}")
-        (table ((style "font-family:Concourse T3;font-size:115%"))
-               ;; options for ptree files and template files
-               ,@(map (λ(file) (make-file-row file '(raw))) (append leftover-files ptree-files template-files))
-               
-               ;; options for pollen files
-               ,@(map (λ(file) (make-file-row file '(raw source xexpr force))) post-pollen-files)
-               ;; options for preproc files
-               ;; branching in λ is needed so these files can be interleaved on the list
-               ,@(map (λ(file) (make-file-row file '(raw preproc-source))) post-preproc-files)))))
+  `(table ,@(map make-path-row (unique-sorted-output-paths project-paths))))
 
 
 (define (get-query-value url key)
