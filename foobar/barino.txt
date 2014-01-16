@@ -1,3 +1,4 @@
-#lang pollen
+FALLBACK! <root>
 
 hello from barino.txt.pd. Gets rendered with pollen decoder.
+</root>

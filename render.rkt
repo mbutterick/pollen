@@ -167,7 +167,7 @@
        ;; 4) source had to be reloaded (some other change)
        source-reloaded?)
       
-      ;; how we render: import 'text from preproc source file, 
+      ;; how we render: import 'main from preproc source file, 
       ;; which is rendered during source parsing,
       ;; and write that to output path
       (begin
@@ -175,8 +175,8 @@
                                    (file-name-from-path output-path)
                                    (file-name-from-path source-path)))
         (store-render-in-mod-dates source-path)
-        (let ([text (time (render-through-eval source-dir `(dynamic-require ,source-path 'text)))])
-          (display-to-file text output-path #:exists 'replace))
+        (let ([main (time (render-through-eval source-dir `(dynamic-require ,source-path 'main)))])
+          (display-to-file main output-path #:exists 'replace))
         (rendered-message output-path))
       
       ;; otherwise, skip file because there's no trigger for render
@@ -353,8 +353,8 @@
                           (require  (planet mb/pollen/debug) (planet mb/pollen/ptree) (planet mb/pollen/template))
                           ;; import source into eval space. This sets up main & metas
                           (require ,(->string source-name))
-                          (set-current-ptree (make-project-ptree ,pollen-project-directory))
-                          (set-current-url-context ,pollen-project-directory)
+                          (set-current-ptree (make-project-ptree ,PROJECT_ROOT))
+                          (set-current-url-context ,PROJECT_ROOT)
                           (include-template #:command-char ,TEMPLATE_FIELD_DELIMITER ,(->string template-name)))))
 
 

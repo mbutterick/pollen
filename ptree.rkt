@@ -23,7 +23,7 @@
 
 
 ;; Try loading from ptree file, or failing that, synthesize ptree.
-(define/contract (make-project-ptree [project-dir pollen-project-directory])
+(define/contract (make-project-ptree [project-dir PROJECT_ROOT])
   (() (directory-pathish?) . ->* . ptree?)
   (define ptree-source (build-path project-dir DEFAULT_POLLEN_TREE))
   (if (file-exists? ptree-source)
@@ -320,7 +320,7 @@
                               (visible-files (->path x)))))
 
 ;; set the state variable using the setter
-(set-current-url-context pollen-project-directory)
+(set-current-url-context PROJECT_ROOT)
 
 (module+ main
   (displayln "Running module main")

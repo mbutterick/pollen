@@ -14,7 +14,7 @@
 ;; list of all eligible requires in project require directory
 (define/contract (get-project-require-files)
   (-> (or/c (listof complete-path?) boolean?))
-  (define extras-directory (build-path pollen-project-directory EXTRAS_DIR))
+  (define extras-directory (build-path PROJECT_ROOT EXTRAS_DIR))
   (and (directory-exists? extras-directory)
        ;; #:build? option returns complete paths (instead of just file names)
        (let ([files (filter project-require-file? (directory-list extras-directory #:build? #t))])

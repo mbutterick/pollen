@@ -8,9 +8,6 @@
 (module+ test (require rackunit))
 
 
-; helper functions for regenerate functions
-(define pollen-project-directory (current-directory))
-
 ;; if something can be successfully coerced to a url,
 ;; it's urlish.
 (define/contract (urlish? x)
@@ -255,6 +252,6 @@
 
 (define/contract (project-files-with-ext ext)
   (symbol? . -> . (listof complete-path?))
-  (map ->complete-path (filter (λ(i) (has-ext? i ext)) (directory-list pollen-project-directory))))
+  (map ->complete-path (filter (λ(i) (has-ext? i ext)) (directory-list PROJECT_ROOT))))
 
 ;; todo: write tests for project-files-with-ext

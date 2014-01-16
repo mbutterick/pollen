@@ -25,12 +25,12 @@
    
    (require 'pollen-inner) ; provides 'doc
    
-   ;; reduce text to simplest represetnation: a single ouput string
-   (define text (apply string-append (map ->string (flatten (trim (->list doc) whitespace?)))))
-   (provide text (all-from-out 'pollen-inner))
+   ;; reduce text to simplest representation: a single ouput string
+   (define main (apply string-append (map ->string (flatten (trim (->list doc) whitespace?)))))
+   (provide main (all-from-out 'pollen-inner))
 
    (module+ main
 ;     (displayln ";-------------------------")
-;     (displayln (string-append "; pollen 'text"))     
+;     (displayln (string-append "; pollen 'main"))     
 ;     (displayln ";-------------------------")
-     (display text))))
+     (display main))))

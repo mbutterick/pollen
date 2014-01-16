@@ -1,3 +1,3 @@
 #lang pollen
 
-world ◊(* 101 101)
+world.txt.p gets rendered with preprocessor = ◊(* 101 101)

@@ -1,1 +1,1 @@
-hello
+hello.txt needs no rendering

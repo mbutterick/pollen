@@ -55,16 +55,9 @@
 
 ;; server route that returns raw html, formatted as code
 ;; for viewing source without using "view source"
-(define/contract (route-raw-html path)
+(define/contract (route-raw path)
   (complete-path? . -> . xexpr?)
   (format-as-code (slurp path #:render #f)))
-
-;; todo: consolidate with function above, they're the same.
-;; server route that shows contents of file on disk
-(define/contract (route-source path)
-  (complete-path? . -> . xexpr?)
-  (format-as-code (slurp path)))
-
 
 ;; server route that returns xexpr (before conversion to html)
 (define/contract (route-xexpr path)
@@ -72,28 +65,38 @@
   (format-as-code (~v (file->xexpr path))))
 
 
-
-(define (route-index [dir pollen-project-directory])
+(define empty-cell (cons #f #f))
+(define (route-dashboard dir)
   (define (make-link-cell href+text)
     (match-define (cons href text) href+text) 
     (filter-not void? `(td ,(when (and href text) 
                               `(a ((href ,href)) ,text)))))
   
-  (define (make-path-row p)
-    (define pstring (->string p))
-    (define (file-in-dir? p) (file-exists? (apply build-path (map ->path (list dir p)))))
-    (define sources (filter file-in-dir? (list (->preproc-source-path pstring) (->pollen-source-path pstring))))
-    (define source (if (not (empty? sources)) (->string (car sources)) #f))
+  (define (make-path-row fn)
+    (define filename (->string fn))
+    (define (file-in-dir? fn) (file-exists? (build-path dir fn)))
+    (define possible-sources (filter file-in-dir? (list (->preproc-source-path filename) (->pollen-source-path filename))))
+    (define source (and (not (empty? possible-sources)) (->string (car possible-sources))))
     `(tr ,@(map make-link-cell 
                 (append (list 
-                         (cons pstring pstring) 
-                         (cons (format "raw/~a" pstring) "raw"))
+                         ;; folder traversal cell
+                         (if (directory-exists? (build-path dir filename)) ; link subdirs to dashboard
+                             (cons (format "~a/~a" filename DASHBOARD_NAME) "dash")
+                             empty-cell)
+                         (cons filename filename) ; main cell 
+                         (if source
+                             (cons source (format "~a input" (get-ext source)))
+                             empty-cell)
+                         (cond
+                           [(directory-exists? (build-path dir filename)) "(folder)"]
+ ;;                          [(directory-exists? (build-path dir filename)) "(binary)"]
+                           [else  (cons (format "raw/~a" filename) "output")]))
+                        
                         (if source
                             (list
-                             (cons source "source")
                              (cons (format "xexpr/~a" source) "xexpr")
-                             (cons (format "~a?force=true" pstring) pstring))
-                            (make-list 3 (cons #f #f)))))))
+                             (cons (format "~a?force=true" filename) filename))
+                            (make-list 2 empty-cell))))))
   
   (define (unique-sorted-output-paths xs)
     (sort (set->list (list->set (map ->output-path xs))) #:key ->string string<?))
@@ -115,7 +118,7 @@
 ; default route
 (define (route-default req)  
   (define request-url (request-uri req))
-  (define path (reroot-path (url->path request-url) pollen-project-directory))
+  (define path (reroot-path (url->path request-url) PROJECT_ROOT))
   (define force (equal? (get-query-value request-url 'force) "true"))
   (with-handlers ([exn:fail? (λ(e) (message "Render is skipping" (url->string request-url) "because of error\n" (exn-message e)))])
     (render path #:force force)))

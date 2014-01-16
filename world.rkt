@@ -1,4 +1,4 @@
-#lang racket/base
+#lang racket
 
 (provide (all-defined-out))
 
@@ -55,3 +55,6 @@
   (map ->path (list POLLEN_COMMAND_FILE EXTRAS_DIR)))
 
 
+(define PROJECT_ROOT (current-directory))
+
+(define DASHBOARD_NAME "poldash.html")
