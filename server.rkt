@@ -1,9 +1,7 @@
 #lang web-server
 (require "startup.rkt")
-(require web-server/servlet-env)
-(require web-server/dispatch web-server/dispatchers/dispatch)
-(require xml)
-(require "server-routes.rkt" "debug.rkt" "readability.rkt" "world.rkt")
+(require web-server/servlet-env web-server/dispatch web-server/dispatchers/dispatch xml)
+(require "server-routes.rkt" "debug.rkt" "world.rkt")
 
 (define port-number 8088)
 
@@ -34,7 +32,7 @@
    ;; (pattern matcher automatically takes out the "raw")
    [((string-arg) ... "raw" (string-arg)) (route-wrapper route-raw)]
    [((string-arg) ... "xexpr" (string-arg)) (route-wrapper route-xexpr)]
-;;   [((string-arg) ... "force" (string-arg)) (route-wrapper route-force)]
+   ;  [((string-arg) ... "force" (string-arg)) (route-wrapper route-force)]
    [else  (λ(req)
             ;; because it's the "else" route, can't use string-arg matcher
             (logger req)
@@ -44,10 +42,13 @@
 (message (format "Project dashboard is http://localhost:~a/pollen.html" port-number))
 (message "Ready to rock")
 
-
 (serve/servlet start
                #:port port-number
                #:listen-ip #f
                #:servlet-regexp #rx"" ; respond to top level
                #:command-line? #t
-               #:extra-files-paths (list (build-path PROJECT_ROOT)))
+               #:extra-files-paths (list 
+                                    ;; todo: use a function to determine directory
+                                    (build-path "/Users/mb/git/pollen/" "pollen-server-extras")
+                                    ;; for serving static files out of project directory
+                                    (build-path PROJECT_ROOT)))
