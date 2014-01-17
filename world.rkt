@@ -5,7 +5,7 @@
 (define POLLEN_VERSION "0.001")
 
 (define POLLEN_PREPROC_EXT 'p)
-(define POLLEN_SOURCE_EXT 'pd)
+(define POLLEN_DECODER_EXT 'pd)
 (define TEMPLATE_FILE_PREFIX "-")
 (define POLLEN_EXPRESSION_DELIMITER #\◊)
 (define TEMPLATE_FIELD_DELIMITER POLLEN_EXPRESSION_DELIMITER)
@@ -41,18 +41,10 @@
 (define POLLEN_ROOT 'main)
 (define POLLEN_COMMAND_FILE "polcom")
 
-; get the starting directory, which is the parent of 'run-file
-(define POLLEN_PROJECT_DIR
-  (let-values ([(dir ignored also-ignored)
-                (split-path (find-system-path 'run-file))])
-    (if (equal? dir 'relative)
-        (string->path ".")
-        dir)))
-
 
 (require "readability.rkt")
 (define RESERVED_PATHS
-  (map ->path (list POLLEN_COMMAND_FILE EXTRAS_DIR)))
+  (map ->path (list POLLEN_COMMAND_FILE EXTRAS_DIR "poldash.css")))
 
 
 (define PROJECT_ROOT (current-directory))

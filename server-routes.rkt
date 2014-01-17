@@ -65,13 +65,15 @@
   (format-as-code (~v (file->xexpr path))))
 
 
-(define empty-cell (cons #f #f))
+
 (define (route-dashboard dir)
+  (define empty-cell (cons #f #f))
   (define (make-link-cell href+text)
     (match-define (cons href text) href+text) 
-    (filter-not void? `(td ,(when (and href text) 
-                              `(a ((href ,href)) ,text)))))
-  
+    (filter-not void? `(td ,(when text 
+                              (if href 
+                                  `(a ((href ,href)) ,text)
+                                  text)))))
   (define (make-path-row fn)
     (define filename (->string fn))
     (define (file-in-dir? fn) (file-exists? (build-path dir fn)))
@@ -80,22 +82,24 @@
     `(tr ,@(map make-link-cell 
                 (append (list 
                          ;; folder traversal cell
-                         (if (directory-exists? (build-path dir filename)) ; link subdirs to dashboard
+                         (if (directory-exists? (build-path dir filename)) ; links subdir to its dashboard
                              (cons (format "~a/~a" filename DASHBOARD_NAME) "dash")
                              empty-cell)
                          (cons filename filename) ; main cell 
-                         (if source
-                             (cons source (format "~a input" (get-ext source)))
+                         (if source ; source cell (if needed)
+                             (cons source (format "~a source" (get-ext source)))
                              empty-cell)
-                         (cond
-                           [(directory-exists? (build-path dir filename)) "(folder)"]
- ;;                          [(directory-exists? (build-path dir filename)) "(binary)"]
-                           [else  (cons (format "raw/~a" filename) "output")]))
+                         (cond ; raw cell (if needed)
+                           [(directory-exists? (build-path dir filename)) (cons #f "(folder)")]
+                           [(has-binary-ext? filename) (cons #f "(binary)")]
+                           [else (cons (format "raw/~a" filename) "output")]))
                         
                         (if source
                             (list
-                             (cons (format "xexpr/~a" source) "xexpr")
-                             (cons (format "~a?force=true" filename) filename))
+                             (if (has-ext? source POLLEN_DECODER_EXT) ; xexpr cell for pollen decoder files
+                                 (cons (format "xexpr/~a" source) "xexpr")
+                                 empty-cell)
+                             (cons (format "force/~a" filename) filename)) ; force refresh cell
                             (make-list 2 empty-cell))))))
   
   (define (unique-sorted-output-paths xs)
@@ -105,7 +109,12 @@
   
   (define project-paths (filter-not ineligible-path? (directory-list dir)))
   
-  `(table ,@(map make-path-row (unique-sorted-output-paths project-paths))))
+  ;; todo: add link to parent directory
+  `(html
+    (head (link ((rel "stylesheet") (type "text/css") (href "/poldash.css"))))
+    (body
+     (table 
+      ,@(map make-path-row (unique-sorted-output-paths project-paths))))))
 
 
 (define (get-query-value url key)
@@ -122,3 +131,7 @@
   (define force (equal? (get-query-value request-url 'force) "true"))
   (with-handlers ([exn:fail? (λ(e) (message "Render is skipping" (url->string request-url) "because of error\n" (exn-message e)))])
     (render path #:force force)))
+
+
+(module+ main
+  (route-dashboard "foobar"))

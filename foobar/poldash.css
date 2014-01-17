@@ -1,0 +1,48 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    padding: 1em;
+    font-family: "Triplicate T3";
+}
+
+table {
+    border-collapse:collapse;
+    width: 100%;
+}
+
+table:before {
+    content: "Pollen dashboard";
+}
+
+
+tr > td:first-child + td {
+    font-family: "Triplicate T4";
+    background: #f6f6f6;
+}
+
+tr, tr + tr {
+    border-top: 1px solid #ccc;
+}
+
+td {
+    font-size: 20px;
+    width: 20%;
+}
+
+a:hover {
+    background: #eee;
+}
+
+a {
+    text-decoration: none;
+    color: #6a6;
+    display: block;
+    padding: 1em;    
+}
+
+a:active {
+    text-decoration: underline;
+}

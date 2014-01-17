@@ -17,7 +17,7 @@
 ;; Fallback in case ptree file isn't available.
 (define/contract (directory->ptree dir)
   (directory-pathish? . -> . ptree?)
-  (let ([files (map remove-ext (filter (λ(x) (has-ext? x POLLEN_SOURCE_EXT)) (directory-list dir)))])
+  (let ([files (map remove-ext (filter (λ(x) (has-ext? x POLLEN_DECODER_EXT)) (directory-list dir)))])
     (message "Generating ptree from file listing")
     (ptree-root->ptree (cons POLLEN_TREE_ROOT_NAME (map path->name files)))))
 

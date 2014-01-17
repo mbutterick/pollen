@@ -39,7 +39,6 @@
    [((string-arg) ... "raw" (string-arg)) (λ(req . string-args) 
                                             (logger req) 
                                             (define path (apply build-path PROJECT_ROOT (flatten string-args)))
-
                                             (response/xexpr (route-raw path)))]
    [("xexpr" (string-arg)) (route-wrapper route-xexpr)]
    [("html" (string-arg)) (route-wrapper route-html)]

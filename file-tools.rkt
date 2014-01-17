@@ -62,7 +62,22 @@
 (define/contract (has-ext? x ext)
   (pathish? stringish? . -> . boolean?)
   (define ext-of-path (filename-extension (->path x)))
-  (and ext-of-path (equal? (bytes->string/utf-8 ext-of-path) (->string ext))))
+  (and ext-of-path (equal? (string-downcase (bytes->string/utf-8 ext-of-path)) (string-downcase (->string ext)))))
+
+
+;; todo: add extensions
+(define binary-extensions
+  '(gif jpg jpeg mp3 png zip))
+
+(define/contract (has-binary-ext? x)
+  (pathish? . -> . boolean?)
+  (define path-x (->path x))
+  (ormap (λ(ext) (has-ext? path-x ext)) binary-extensions))
+
+(module+ test
+  (check-true (has-binary-ext? "foo.MP3"))
+  (check-false (has-binary-ext? "foo.py")))
+  
 
 (module+ test
   (define foo-path-strings '("foo" "foo.txt" "foo.bar" "foo.bar.txt"))
@@ -76,6 +91,7 @@
 (module+ test
   (check-false (has-ext? foo-path 'txt)) 
   (check-true (foo.txt-path . has-ext? . 'txt))
+  (check-true ((->path "foo.TXT") . has-ext? . 'txt))
   (check-true (has-ext? foo.bar.txt-path 'txt))
   (check-false (foo.bar.txt-path . has-ext? . 'doc))) ; wrong extension
 
@@ -175,7 +191,7 @@
 
 (define/contract (pollen-source? x)
   (any/c . -> . boolean?)
-  (has-ext? x POLLEN_SOURCE_EXT))
+  (has-ext? x POLLEN_DECODER_EXT))
 
 (module+ test
   (check-true (pollen-source? "foo.pd"))
@@ -242,7 +258,7 @@
   (pathish? . -> . path?)
   (->path (if (pollen-source? x)
               x
-              (add-ext x POLLEN_SOURCE_EXT))))
+              (add-ext x POLLEN_DECODER_EXT))))
 
 (module+ test
   (check-equal? (->pollen-source-path (->path "foo.pd")) (->path "foo.pd"))
