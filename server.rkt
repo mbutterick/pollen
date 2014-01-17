@@ -18,10 +18,10 @@
 
 (define/contract (route-wrapper route-proc)
   (procedure? . -> . procedure?)
-  (λ(req string-arg) 
-    (logger req)
-    (define filename string-arg) 
-    (response/xexpr (route-proc (build-path PROJECT_ROOT filename)))))
+  (λ(req . string-args) 
+    (logger req) 
+    (define path (apply build-path PROJECT_ROOT (flatten string-args)))
+    (response/xexpr (route-proc path))))
 
 (define-values (start url)
   (dispatch-rules
@@ -29,19 +29,12 @@
    ;; (as if the url is split on slashes into a list before matching)
    ;; dashboard page: works on any url of form /dir/dir/dir/poldash.html
    ;; todo: figure out how to use world:DASHBOARD_NAME here
-   [((string-arg) ... "poldash.html") (λ(req . string-args) 
-                                        (logger req) 
-                                        (define subdirs (flatten string-args))
-                                        (define dir (apply build-path PROJECT_ROOT subdirs))
-                                        (response/xexpr (route-dashboard dir)))]
+   [((string-arg) ... "poldash.html") (route-wrapper route-dashboard)]
    ;; raw viewer: works on any url of form /dir/dir/raw/name.html 
    ;; (pattern matcher automatically takes out the "raw")
-   [((string-arg) ... "raw" (string-arg)) (λ(req . string-args) 
-                                            (logger req) 
-                                            (define path (apply build-path PROJECT_ROOT (flatten string-args)))
-                                            (response/xexpr (route-raw path)))]
-   [("xexpr" (string-arg)) (route-wrapper route-xexpr)]
-   [("html" (string-arg)) (route-wrapper route-html)]
+   [((string-arg) ... "raw" (string-arg)) (route-wrapper route-raw)]
+   [((string-arg) ... "xexpr" (string-arg)) (route-wrapper route-xexpr)]
+;;   [((string-arg) ... "force" (string-arg)) (route-wrapper route-force)]
    [else  (λ(req)
             ;; because it's the "else" route, can't use string-arg matcher
             (logger req)
