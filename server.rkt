@@ -48,7 +48,6 @@
                #:servlet-regexp #rx"" ; respond to top level
                #:command-line? #t
                #:extra-files-paths (list 
-                                    ;; todo: use a function to determine directory
-                                    (build-path "/Users/mb/git/pollen/" "pollen-server-extras")
-                                    ;; for serving static files out of project directory
+                                    ;; todo: files in this directory are wrongly reported in log as missing
+                                    (build-path MODULE_ROOT "pollen-server-extras")
                                     (build-path PROJECT_ROOT)))

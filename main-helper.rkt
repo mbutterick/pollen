@@ -3,8 +3,8 @@
 
 ;; use full planet paths because this file is evaluated from source directory,
 ;; not module directory
-(require (for-syntax racket/rerequire (planet mb/pollen/tools) (planet mb/pollen/world)))
-(require (planet mb/pollen/tools) (planet mb/pollen/world))
+(require (for-syntax racket/rerequire pollen/tools pollen/world))
+(require pollen/tools pollen/world)
 
 (provide (all-defined-out))
 

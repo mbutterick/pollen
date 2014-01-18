@@ -48,5 +48,8 @@
 
 
 (define PROJECT_ROOT (current-directory))
+;; use current-contract-region to calculate containing directory of module
+(define MODULE_ROOT (apply build-path (drop-right (explode-path (current-contract-region)) 1)))
+
 
 (define DASHBOARD_NAME "poldash.html")
