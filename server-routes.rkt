@@ -1,6 +1,6 @@
 #lang racket/base
-(require racket/list racket/contract racket/rerequire racket/file racket/format xml racket/match racket/set)
-(require web-server/http/xexpr)
+(require racket/list racket/contract racket/rerequire racket/file racket/format xml racket/match racket/set racket/string)
+(require web-server/http/xexpr web-server/dispatchers/dispatch)
 (require (only-in net/url url-query url->path url->string))
 (require (only-in web-server/http/request-structs request-uri request-client-ip request?))
 (require (only-in web-server/http/response-structs response?))
@@ -12,7 +12,21 @@
 ;;; separated out for ease of testing
 ;;; because it's tedious to start the server just to check a route.
 
-(provide (all-defined-out))
+(provide route-dashboard route-raw route-xexpr route-default route-404)
+
+(define (logger req)
+  (define client (request-client-ip req))
+  (define url-string (url->string (request-uri req)))
+  (message "Request:" (string-replace url-string DASHBOARD_NAME " dashboard")
+           "from" (if (equal? client "::1") "localhost" client)))
+
+(define/contract (route-wrapper route-proc)
+  (procedure? . -> . procedure?)
+  (λ(req . string-args) 
+    (logger req) 
+    (define path (apply build-path PROJECT_ROOT (flatten string-args)))
+    (response/xexpr (route-proc path))))
+
 
 ;; extract main xexpr from a path
 (define/contract (file->xexpr path #:render [wants-render #t])
@@ -57,19 +71,17 @@
 
 ;; server route that returns raw html, formatted as code
 ;; for viewing source without using "view source"
-(define/contract (route-raw path)
+(define/contract (raw path)
   (complete-path? . -> . xexpr?)
   (format-as-code (slurp path #:render #f)))
 
 ;; server route that returns xexpr (before conversion to html)
-(define/contract (route-xexpr path)
+(define/contract (xexpr path)
   (complete-path? . -> . xexpr?)
   (format-as-code (~v (file->xexpr path))))
 
 
-
-
-(define (route-dashboard dir)
+(define (dashboard dir)
   (define empty-cell (cons #f #f))
   (define (make-link-cell href+text)
     (match-define (cons href text) href+text) 
@@ -133,9 +145,12 @@
 
 ; default route
 (define (route-default req)  
+  (logger req)
   (define force (equal? (get-query-value (request-uri req) 'force) "true"))
   (with-handlers ([exn:fail? (λ(e) (message "Render is skipping" (url->string (request-uri req)) "because of error\n" (exn-message e)))])
-    (render (req->path req) #:force force)))
+    (render (req->path req) #:force force))
+  (next-dispatcher))
+
 
 
 ; error route
@@ -146,5 +161,10 @@
   ;`(html ,(slurp (build-path SERVER_EXTRAS_DIR "404.html")))
   (response/xexpr `(html ,error-text)))
 
+
+(define route-dashboard (route-wrapper dashboard))
+(define route-raw (route-wrapper raw))
+(define route-xexpr (route-wrapper xexpr))
+
 (module+ main
-  (route-dashboard "foobar"))
+  )
