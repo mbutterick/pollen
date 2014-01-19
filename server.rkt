@@ -1,6 +1,6 @@
 #lang web-server
 (require "startup.rkt")
-(require web-server/servlet-env web-server/dispatch web-server/dispatchers/dispatch xml)
+(require web-server/servlet-env web-server/dispatch web-server/dispatchers/dispatch web-server/configuration/responders xml)
 (require "server-routes.rkt" "debug.rkt" "world.rkt")
 
 (define port-number 8088)
@@ -42,12 +42,12 @@
 (message (format "Project dashboard is http://localhost:~a/pollen.html" port-number))
 (message "Ready to rock")
 
+
+
 (serve/servlet start
                #:port port-number
                #:listen-ip #f
                #:servlet-regexp #rx"" ; respond to top level
                #:command-line? #t
-               #:extra-files-paths (list 
-                                    ;; todo: files in this directory are wrongly reported in log as missing
-                                    (build-path MODULE_ROOT "pollen-server-extras")
-                                    (build-path PROJECT_ROOT)))
+               #:file-not-found-responder route-404
+               #:extra-files-paths (list SERVER_EXTRAS_DIR PROJECT_ROOT))

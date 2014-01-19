@@ -1,7 +1,9 @@
 #lang racket/base
 (require racket/list racket/contract racket/rerequire racket/file racket/format xml racket/match racket/set)
+(require web-server/http/xexpr)
 (require (only-in net/url url-query url->path url->string))
-(require (only-in web-server/http/request-structs request-uri request-client-ip))
+(require (only-in web-server/http/request-structs request-uri request-client-ip request?))
+(require (only-in web-server/http/response-structs response?))
 (require "world.rkt" "render.rkt" "readability.rkt" "predicates.rkt" "debug.rkt")
 
 (module+ test (require rackunit))
@@ -66,6 +68,7 @@
 
 
 
+
 (define (route-dashboard dir)
   (define empty-cell (cons #f #f))
   (define (make-link-cell href+text)
@@ -124,14 +127,24 @@
     (and result (cdar result)))) ; second value of first result
 
 
+(define/contract (req->path req)
+  (request? . -> . path?)
+  (reroot-path (url->path (request-uri req)) PROJECT_ROOT))
+
 ; default route
 (define (route-default req)  
-  (define request-url (request-uri req))
-  (define path (reroot-path (url->path request-url) PROJECT_ROOT))
-  (define force (equal? (get-query-value request-url 'force) "true"))
-  (with-handlers ([exn:fail? (λ(e) (message "Render is skipping" (url->string request-url) "because of error\n" (exn-message e)))])
-    (render path #:force force)))
+  (define force (equal? (get-query-value (request-uri req) 'force) "true"))
+  (with-handlers ([exn:fail? (λ(e) (message "Render is skipping" (url->string (request-uri req)) "because of error\n" (exn-message e)))])
+    (render (req->path req) #:force force)))
 
+
+; error route
+(define/contract (route-404 req)
+  (request? . -> . response?)
+  (define error-text (format "Can't find ~a" (->string (req->path req))))
+  (message error-text)
+  ;`(html ,(slurp (build-path SERVER_EXTRAS_DIR "404.html")))
+  (response/xexpr `(html ,error-text)))
 
 (module+ main
   (route-dashboard "foobar"))

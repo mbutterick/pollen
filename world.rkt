@@ -34,13 +34,12 @@
 
 (require racket/string racket/port racket/system)
 ;; todo: is path to racket already available as an environment variable?
-;; e.g., (find-system-path 'xxx)?
+;; e.g., (find-system-path 'xxx)? Because this next line is sort of slow
 ;;(define RACKET_PATH (string-trim (with-output-to-string (λ() (system "which racket")))))
-(define RACKET_PATH "/usr/bin/racket")
+(define RACKET_PATH "/usr/bin/racket") ;; todo: this won't always work
 
 (define POLLEN_ROOT 'main)
 (define POLLEN_COMMAND_FILE "polcom")
-
 
 (require "readability.rkt")
 (define RESERVED_PATHS
@@ -50,6 +49,6 @@
 (define PROJECT_ROOT (current-directory))
 ;; use current-contract-region to calculate containing directory of module
 (define MODULE_ROOT (apply build-path (drop-right (explode-path (current-contract-region)) 1)))
-
+(define SERVER_EXTRAS_DIR (build-path MODULE_ROOT "pollen-server-extras"))
 
 (define DASHBOARD_NAME "poldash.html")

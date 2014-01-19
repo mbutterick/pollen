@@ -120,8 +120,7 @@
                                 (render-files-in-ptree ptree #:force force))]
         [(equal? FALLBACK_TEMPLATE_NAME (->string (file-name-from-path path)))
          (message "Render: using fallback template")]
-        [(file-exists? path) (message "Serving static file" (->string (file-name-from-path path)))]
-        [else (error "Render couldn't find" (->string (file-name-from-path path)))])))
+        [(file-exists? path) (message "Serving static file" (->string (file-name-from-path path)))])))
   (for-each &render xs))
 
 ;; todo: write tests
