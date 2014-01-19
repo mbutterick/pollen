@@ -24,6 +24,7 @@
   (procedure? . -> . procedure?)
   (λ(req . string-args) 
     (logger req) 
+    (message string-args)
     (define path (apply build-path PROJECT_ROOT (flatten string-args)))
     (response/xexpr (route-proc path))))
 
@@ -81,7 +82,8 @@
   (format-as-code (~v (file->xexpr path))))
 
 
-(define (dashboard dir)
+(define (dashboard dashfile)
+  (define dir (apply build-path (drop-right (explode-path dashfile) 1)))
   (define empty-cell (cons #f #f))
   (define (make-link-cell href+text)
     (match-define (cons href text) href+text) 
@@ -113,9 +115,8 @@
                             (list
                              (if (has-ext? source POLLEN_DECODER_EXT) ; xexpr cell for pollen decoder files
                                  (cons (format "xexpr/~a" source) "xexpr")
-                                 empty-cell)
-                             (cons (format "force/~a" filename) filename)) ; force refresh cell
-                            (make-list 2 empty-cell))))))
+                                 empty-cell))
+                            (make-list 1 empty-cell))))))
   
   (define (unique-sorted-output-paths xs)
     (sort (set->list (list->set (map ->output-path xs))) #:key ->string string<?))

@@ -5,13 +5,11 @@
          "debug.rkt" 
          "world.rkt")
 
-(define-values (pollen-servlet url)
+(define-values (pollen-servlet _)
   (dispatch-rules
-   ;; todo: figure out how to use world:DASHBOARD_NAME here
-   [((string-arg) ... "poldash.html") route-dashboard]
+   [((string-arg) ... (? (λ(x) (equal? DASHBOARD_NAME x)))) route-dashboard]
    [((string-arg) ... "raw" (string-arg)) route-raw]
    [((string-arg) ... "xexpr" (string-arg)) route-xexpr]
-   ;;  [((string-arg) ... "force" (string-arg)) (route-wrapper route-force)]
    [else route-default]))
 
 (message (format "Welcome to Pollen ~a" POLLEN_VERSION) (format "(Racket ~a)" (version)))
@@ -19,7 +17,7 @@
 
 (define server-name (format "http://localhost:~a" SERVER_PORT))
 (message (format "Project server is ~a" server-name) "(Ctrl-C to exit)")
-(message (format "Project dashboard is ~a/pollen.html" server-name))
+(message (format "Project dashboard is ~a/~a" server-name DASHBOARD_NAME))
 
 (message "Ready to rock")
 
