@@ -119,6 +119,7 @@
 
 (define (hyphenate x #:only [only-proc (ƒ(x) x)]) ; recursively hyphenate strings within xexpr
   (define exclusions '(style script)) ; omit these from ever being hyphenated
+  (define inclusions '(p aside))
   (define (capitalized-or-ligated? word)
     ; filter function for hyphenate
     ; filtering ligatable words because once the soft hyphens go in,
@@ -135,7 +136,7 @@
     ; Won't it make hyphenation naturally overinclusive?
     ; Problem with opt-in: conceals a lot of tags that naturally live inside other tags
     ; only reaches text at the "root level" of the tag.
-    [(named-xexpr? x) (if (and (only-proc x) (not (in? exclusions (car x))))
+    [(named-xexpr? x) (if (and (in? inclusions (car x)) (not (in? exclusions (car x))))
                           (map-xexpr-content hyphenate x)
                           (map-xexpr-content hyphenate x #:only named-xexpr?))] ; only process subxexprs
     
