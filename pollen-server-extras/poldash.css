@@ -13,10 +13,6 @@ table {
     width: 100%;
 }
 
-table:before {
-    content: "Pollen dashboard";
-}
-
 
 tr > td:first-child + td {
     font-family: "Triplicate T4";
@@ -28,7 +24,7 @@ tr, tr + tr {
 }
 
 td {
-    font-size: 20px;
+    font-size: 17px;
     width: 20%;
 }
 
@@ -45,4 +41,11 @@ a {
 
 a:active {
     text-decoration: underline;
+}
+
+tt {
+    font-family: "AlixFB";
+    font-size: 100%;
+    white-space: pre;
+    word-wrap: normal;
 }

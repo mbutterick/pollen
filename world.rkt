@@ -47,6 +47,7 @@
 
 
 (define PROJECT_ROOT (current-directory))
+(define (reset-project-root) (set! PROJECT_ROOT (current-directory)))
 ;; use current-contract-region to calculate containing directory of module
 (define MODULE_ROOT (apply build-path (drop-right (explode-path (current-contract-region)) 1)))
 (define SERVER_EXTRAS_DIR (build-path MODULE_ROOT "pollen-server-extras"))
@@ -54,3 +55,4 @@
 (define SERVER_PORT 8088)
 
 (define DASHBOARD_NAME "poldash.html")
+(define DASHBOARD_CSS "poldash.css")

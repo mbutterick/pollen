@@ -45,6 +45,25 @@
   (check-false (directory-pathish? "foobarzooblish")))
 
 
+;; compare directories by their exploded path elements,
+;; not by equal?, which will give wrong result if no slash on the end
+(define/contract (directories-equal? dirx diry)
+  (pathish? pathish? . -> . boolean?)
+  (equal? (explode-path (->path dirx)) (explode-path (->path diry))))
+
+(module+ test
+  (check-true (directories-equal? "/Users/MB/foo" "/Users/MB/foo/"))
+  (check-false (directories-equal? "/Users/MB/foo" "Users/MB/foo")))
+
+(define (get-enclosing-dir p) 
+  (pathish? . -> . path?)
+  (simplify-path (build-path (->path p) 'up)))
+
+(module+ test
+  (check-equal? (get-enclosing-dir "/Users/MB/foo.txt") (->path "/Users/MB/"))
+  (check-equal? (get-enclosing-dir "/Users/MB/foo/") (->path "/Users/MB/")))
+
+
 ;; helper function for ptree
 ;; make paths absolute to test whether files exist,
 ;; then convert back to relative
