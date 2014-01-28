@@ -12,7 +12,7 @@
 ;;; separated out for ease of testing
 ;;; because it's tedious to start the server just to check a route.
 
-(provide route-dashboard route-raw route-xexpr route-default route-404)
+(provide route-dashboard route-xexpr route-default route-404 route-in route-out)
 
 (define (html-wrapper body-xexpr)
   `(html 
@@ -81,14 +81,17 @@
 ;; server routes
 ;; these all produce an xexpr, which is handled upstream by response/xexpr
 
-
-;; server route that returns raw html, formatted as code
-;; for viewing source without using "view source"
-(define/contract (raw path)
+;; server routes that show result, formatted as code
+;; route-in just gets file from disk; route-out renders it first
+(define/contract (in path)
   (complete-path? . -> . xexpr?)
   (format-as-code (slurp path #:render #f)))
+(define route-in (route-wrapper in))
 
-(define route-raw (route-wrapper raw))
+(define/contract (out path)
+  (complete-path? . -> . xexpr?)
+  (format-as-code (slurp path #:render #t)))
+(define route-out (route-wrapper out))
 
 
 ;; dashboard route
@@ -105,14 +108,11 @@
                                   `(a ((href ,href)) ,text)
                                   text)))))
   (define (make-parent-row) 
-    (define url-to-parent-dashboard (format "/~a" (find-relative-path PROJECT_ROOT (build-path parent-dir DASHBOARD_NAME))))
-    (define url-to-parent (string-replace url-to-parent-dashboard DASHBOARD_NAME ""))
-    
-    `(tr ,@(map make-link-cell (list 
-                                (cons url-to-parent-dashboard url-to-parent) 
-                                empty-cell 
-                                (cons #f "(parent dir)") 
-                                empty-cell))))
+    (if parent-dir
+        (let* ([url-to-parent-dashboard (format "/~a" (find-relative-path PROJECT_ROOT (build-path parent-dir DASHBOARD_NAME)))]
+               [url-to-parent (string-replace url-to-parent-dashboard DASHBOARD_NAME "")])
+          `(tr (th ((colspan "3")) (a ((href ,url-to-parent-dashboard)) ,(format "up to ~a" url-to-parent))))) 
+        `(tr (th ((colspan "3")(class "root")) "Pollen root"))))
   
   (define (make-path-row fn)
     (define filename (->string fn))
@@ -124,43 +124,42 @@
     (define source (and (not (empty? possible-sources)) (->string (car possible-sources))))
     `(tr ,@(map make-link-cell 
                 (append (list                          
-                         (cond ;; main cell
+                         (cond ; main cell
                            [(directory-exists? (build-path dir filename)) ; links subdir to its dashboard
                             (cons (format "~a/~a" filename DASHBOARD_NAME) (format "~a/" filename))]
                            [source (cons #f `(a ((href ,filename)) ,filename (span ((class "file-ext")) "." ,(get-ext source))))]
                            [else   (cons filename filename)])
                          
-                         (cond ; source cell (if needed)
-                           [(has-ext? filename POLLEN_TREE_EXT) (cons (format "raw/~a" filename) "ptree")]
-                           [source  (cons (format "raw/~a" source) "in")]
+                         (cond ; in cell
+                           [(has-ext? filename POLLEN_TREE_EXT) (cons (format "in/~a" filename) "ptree")]
+                           [source  (cons (format "in/~a" source) "in")]
                            [else empty-cell])
-                         (cond ; raw cell (if needed)
+                         
+                         (cond ; out cell 
                            [(directory-exists? (build-path dir filename)) (cons #f #f)]
-                           [(has-binary-ext? filename) (cons #f "(binary)")]
+                           [(has-binary-ext? filename) (cons (format "~a" filename) "out")]
                            [(has-ext? filename POLLEN_TREE_EXT) empty-cell]
-                           [else (cons (format "raw/~a" filename) "out")]))
-                        #|(if source
-                            (list
-                             (if (has-ext? source POLLEN_DECODER_EXT) ; xexpr cell for pollen decoder files
-                                 (cons (format "xexpr/~a" source) "xexpr")
-                                 empty-cell))
-                            (make-list 1 empty-cell))|#))))
+                           [else (cons (format "out/~a" filename) "out")]))))))
   
   (define (ineligible-path? x) (or (not (visible? x)) (member x RESERVED_PATHS)))  
   (define project-paths (filter-not ineligible-path? (directory-list dir)))
   
   (define (unique-sorted-output-paths xs)
-    (define all-paths (set->list (list->set (map ->output-path xs))))
-    (define subdirectories (filter directory-exists? all-paths))
-    (define files (filter-not directory-exists? all-paths))
-    (report (append (sort subdirectories #:key ->string string<?) (sort files #:key ->string string<?))))
+    (define output-paths (map ->output-path xs))
+    (define (unique-members xs) (set->list (list->set xs)))
+    (define all-paths (unique-members output-paths))
+    (define built-directory-exists? (λ(f) (directory-exists? (build-path dir f))))
+    (define subdirectories (filter built-directory-exists? all-paths))
+    (define files (filter-not built-directory-exists? all-paths))
+    (define (sort-names xs) (sort xs #:key ->string string<?))
+    ;; put subdirs in list ahead of files (so they appear at the top)
+    (append (sort-names subdirectories) (sort-names files)))
   
   (html-wrapper
    `(body
-     ,(filter-not void? 
-                  `(table 
-                    ,(when parent-dir (make-parent-row))
-                    ,@(map make-path-row (unique-sorted-output-paths project-paths)))))))
+     (table 
+      ,@(cons (make-parent-row) 
+              (map make-path-row (unique-sorted-output-paths project-paths)))))))
 
 (define route-dashboard (route-wrapper dashboard))
 

@@ -8,7 +8,8 @@
 (define-values (pollen-servlet _)
   (dispatch-rules
    [((string-arg) ... (? (λ(x) (equal? DASHBOARD_NAME x)))) route-dashboard]
-   [((string-arg) ... "raw" (string-arg)) route-raw]
+   [((string-arg) ... "in" (string-arg)) route-in]
+   [((string-arg) ... "out" (string-arg)) route-out]
    [((string-arg) ... "xexpr" (string-arg)) route-xexpr]
    [else route-default]))
 

@@ -11,25 +11,40 @@ body {
 table {
     border-collapse:collapse;
     width: 100%;
-    max-width: 900px;
+    max-width: 700px;
 }
+
 
 tr > td:first-child {
     width: 0%;
 }
 
-tr > td:first-child {
+th, tr > td:first-child {
     font-family: "Triplicate T4";
     background: #f6f6f6;
     text-align: left; 
 }
+
+th.root {
+    background: white;
+    font-weight: normal;
+    padding: 0.4em;   
+}
+
+th a {
+    background: #e6e6e6;
+    display: block;
+    font-weight: normal;
+    padding: 0.4em;   
+}
+
 
 tr, tr + tr {
     border-top: 1px solid #ccc;
 }
 
 td {
-    font-size: 17px;
+    font-size: 16px;
     line-height: 1.35;
     text-align: center; 
 }
@@ -42,7 +57,7 @@ a {
     text-decoration: none;
     color: #6a6;
     display: block;
-    padding: 0.5em;   
+    padding: 0.4em;   
 }
 
 .file-ext {
