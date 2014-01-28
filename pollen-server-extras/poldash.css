@@ -11,12 +11,17 @@ body {
 table {
     border-collapse:collapse;
     width: 100%;
+    max-width: 900px;
 }
 
+tr > td:first-child {
+    width: 0%;
+}
 
-tr > td:first-child + td {
+tr > td:first-child {
     font-family: "Triplicate T4";
     background: #f6f6f6;
+    text-align: left; 
 }
 
 tr, tr + tr {
@@ -25,7 +30,8 @@ tr, tr + tr {
 
 td {
     font-size: 17px;
-    width: 20%;
+    line-height: 1.35;
+    text-align: center; 
 }
 
 a:hover {
@@ -36,7 +42,11 @@ a {
     text-decoration: none;
     color: #6a6;
     display: block;
-    padding: 1em;    
+    padding: 0.5em;   
+}
+
+.file-ext {
+    color: #bbb;
 }
 
 a:active {
@@ -46,6 +56,5 @@ a:active {
 tt {
     font-family: "AlixFB";
     font-size: 100%;
-    white-space: pre;
-    word-wrap: normal;
+    white-space: pre-wrap;
 }

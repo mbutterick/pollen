@@ -19,8 +19,8 @@
     (head
      (meta ((charset "UTF-8")))
      (link ((rel "stylesheet") 
-                 (type "text/css") 
-                 (href ,(format "/~a" DASHBOARD_CSS)))))
+            (type "text/css") 
+            (href ,(format "/~a" DASHBOARD_CSS)))))
     ,body-xexpr))
 
 ;; to make dummy requests for debugging
@@ -109,8 +109,7 @@
     (define url-to-parent (string-replace url-to-parent-dashboard DASHBOARD_NAME ""))
     
     `(tr ,@(map make-link-cell (list 
-                                (cons url-to-parent-dashboard "←") 
-                                (cons url-to-parent url-to-parent) 
+                                (cons url-to-parent-dashboard url-to-parent) 
                                 empty-cell 
                                 (cons #f "(parent dir)") 
                                 empty-cell))))
@@ -125,24 +124,27 @@
     (define source (and (not (empty? possible-sources)) (->string (car possible-sources))))
     `(tr ,@(map make-link-cell 
                 (append (list                          
-                         ;; folder traversal cell
-                         (if (directory-exists? (build-path dir filename)) ; links subdir to its dashboard
-                             (cons (format "~a/~a" filename DASHBOARD_NAME) "→")
-                             empty-cell)
-                         (cons filename filename) ; main cell  
-                         (if source ; source cell (if needed)
-                             (cons (format "raw/~a" source) (format "~a source" (get-ext source)))
-                             empty-cell)
+                         (cond ;; main cell
+                           [(directory-exists? (build-path dir filename)) ; links subdir to its dashboard
+                            (cons (format "~a/~a" filename DASHBOARD_NAME) (format "~a/" filename))]
+                           [source (cons #f `(a ((href ,filename)) ,filename (span ((class "file-ext")) "." ,(get-ext source))))]
+                           [else   (cons filename filename)])
+                         
+                         (cond ; source cell (if needed)
+                           [(has-ext? filename POLLEN_TREE_EXT) (cons (format "raw/~a" filename) "ptree")]
+                           [source  (cons (format "raw/~a" source) "in")]
+                           [else empty-cell])
                          (cond ; raw cell (if needed)
-                           [(directory-exists? (build-path dir filename)) (cons #f "(subdir)")]
+                           [(directory-exists? (build-path dir filename)) (cons #f #f)]
                            [(has-binary-ext? filename) (cons #f "(binary)")]
-                           [else (cons (format "raw/~a" filename) "output")]))
-                        (if source
+                           [(has-ext? filename POLLEN_TREE_EXT) empty-cell]
+                           [else (cons (format "raw/~a" filename) "out")]))
+                        #|(if source
                             (list
                              (if (has-ext? source POLLEN_DECODER_EXT) ; xexpr cell for pollen decoder files
                                  (cons (format "xexpr/~a" source) "xexpr")
                                  empty-cell))
-                            (make-list 1 empty-cell))))))
+                            (make-list 1 empty-cell))|#))))
   
   (define (ineligible-path? x) (or (not (visible? x)) (member x RESERVED_PATHS)))  
   (define project-paths (filter-not ineligible-path? (directory-list dir)))

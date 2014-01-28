@@ -86,7 +86,7 @@
 
 ;; todo: add extensions
 (define binary-extensions
-  '(gif jpg jpeg mp3 png zip))
+  '(gif jpg jpeg mp3 png zip pdf ico tar ai eps))
 
 (define/contract (has-binary-ext? x)
   (pathish? . -> . boolean?)

@@ -6,6 +6,12 @@
 
 (define POLLEN_PREPROC_EXT 'p)
 (define POLLEN_DECODER_EXT 'pd)
+(define POLLEN_TREE_EXT 'ptree)
+
+(define DEFAULT_POLLEN_TREE "main.ptree")
+(define POLLEN_TREE_PARENT_NAME 'parent)
+(define POLLEN_TREE_ROOT_NAME 'ptree-root)
+
 (define TEMPLATE_FILE_PREFIX "-")
 (define POLLEN_EXPRESSION_DELIMITER #\◊)
 (define TEMPLATE_FIELD_DELIMITER POLLEN_EXPRESSION_DELIMITER)
@@ -14,10 +20,6 @@
 (define FALLBACK_TEMPLATE_NAME "-temp-fallback-template.html")
 (define TEMPLATE_META_KEY "template")
 
-(define POLLEN_TREE_EXT 'ptree)
-(define DEFAULT_POLLEN_TREE "main.ptree")
-(define POLLEN_TREE_PARENT_NAME 'parent)
-(define POLLEN_TREE_ROOT_NAME 'ptree-root)
 
 (define MAIN_POLLEN_EXPORT 'main)
 ;(define META_POLLEN_TAG 'metas)
@@ -43,7 +45,7 @@
 
 (require "readability.rkt")
 (define RESERVED_PATHS
-  (map ->path (list POLLEN_COMMAND_FILE EXTRAS_DIR "poldash.css")))
+  (map ->path (list POLLEN_COMMAND_FILE EXTRAS_DIR "poldash.css" "compiled")))
 
 
 (define PROJECT_ROOT (current-directory))
