@@ -150,7 +150,10 @@
   (define project-paths (filter-not ineligible-path? (directory-list dir)))
   
   (define (unique-sorted-output-paths xs)
-    (sort (set->list (list->set (map ->output-path xs))) #:key ->string string<?))
+    (define all-paths (set->list (list->set (map ->output-path xs))))
+    (define subdirectories (filter directory-exists? all-paths))
+    (define files (filter-not directory-exists? all-paths))
+    (report (append (sort subdirectories #:key ->string string<?) (sort files #:key ->string string<?))))
   
   (html-wrapper
    `(body
