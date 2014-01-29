@@ -14,14 +14,15 @@
 
 (provide route-dashboard route-xexpr route-default route-404 route-in route-out)
 
-(define (html-wrapper body-xexpr)
+(define (body-wrapper content-xexpr)
   `(html 
     (head
      (meta ((charset "UTF-8")))
      (link ((rel "stylesheet") 
             (type "text/css") 
             (href ,(format "/~a" DASHBOARD_CSS)))))
-    ,body-xexpr))
+    (body
+     ,content-xexpr (div ((id "pollen-logo"))))))
 
 ;; to make dummy requests for debugging
 (define/contract (string->request u)
@@ -76,7 +77,7 @@
 ;; takes either a string or an xexpr
 (define/contract (format-as-code x)
   (xexpr? . -> . tagged-xexpr?)
-  (html-wrapper `(tt ,x)))
+  (body-wrapper `(tt ,x)))
 
 ;; server routes
 ;; these all produce an xexpr, which is handled upstream by response/xexpr
@@ -155,11 +156,10 @@
     ;; put subdirs in list ahead of files (so they appear at the top)
     (append (sort-names subdirectories) (sort-names files)))
   
-  (html-wrapper
-   `(body
-     (table 
-      ,@(cons (make-parent-row) 
-              (map make-path-row (unique-sorted-output-paths project-paths)))))))
+  (body-wrapper
+   `(table 
+     ,@(cons (make-parent-row) 
+             (map make-path-row (unique-sorted-output-paths project-paths))))))
 
 (define route-dashboard (route-wrapper dashboard))
 

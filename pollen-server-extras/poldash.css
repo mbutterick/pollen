@@ -8,6 +8,16 @@ body {
     font-family: "Triplicate T3";
 }
 
+div#pollen-logo {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    width: 76;
+    height: 76;
+    background-image: url("pollen.svg");
+    background-size: 100%;
+}
+
 table {
     border-collapse:collapse;
     width: 100%;
