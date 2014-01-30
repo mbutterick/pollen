@@ -190,8 +190,7 @@
 (define (route-default req)  
   (logger req)
   (define force (equal? (get-query-value (request-uri req) 'force) "true"))
-  (with-handlers ([exn:fail? (λ(e) (message "Render is skipping" (url->string (request-uri req)) "because of error\n" (exn-message e)))])
-    (render (req->path req) #:force force))
+  (render (req->path req) #:force force)
   (next-dispatcher))
 
 
