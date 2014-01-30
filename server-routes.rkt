@@ -79,6 +79,16 @@
   (xexpr? . -> . tagged-xexpr?)
   (body-wrapper `(tt ,x)))
 
+
+(define/contract (make-binary-info-page path)
+  (complete-path? . -> . xexpr?)
+  (cond
+    [((get-ext path) . in? . '("gif" "jpg" "jpeg" "png")) 
+     `(div
+       (img ((src ,(path->string path))))
+       (p "path =" ,(path->string path)))]
+    [else '(p "We got some other kind of binary file.")]))
+
 ;; server routes
 ;; these all produce an xexpr, which is handled upstream by response/xexpr
 
@@ -91,7 +101,9 @@
 
 (define/contract (out path)
   (complete-path? . -> . xexpr?)
-  (format-as-code (slurp path #:render #t)))
+  (cond
+    [(has-binary-ext? path) (make-binary-info-page path)]
+    [else (format-as-code (slurp path #:render #t))]))
 (define route-out (route-wrapper out))
 
 
@@ -138,7 +150,6 @@
                          
                          (cond ; out cell 
                            [(directory-exists? (build-path dir filename)) (cons #f #f)]
-                           [(has-binary-ext? filename) (cons (format "~a" filename) "out")]
                            [(has-ext? filename POLLEN_TREE_EXT) empty-cell]
                            [else (cons (format "out/~a" filename) "out")]))))))
   
