@@ -7,6 +7,18 @@
 
 (module+ test (require rackunit))
 
+;; for files like svg that are not source in pollen terms,
+;; but have a textual representation separate from their display.
+(define/contract (sourceish? x)
+  (any/c . -> . boolean?)
+  (define sourceish-extensions
+    (list "svg"))
+  (with-handlers ([exn:fail? (λ(e) #f)])
+    (->boolean ((get-ext x) . in? . sourceish-extensions))))
+
+(module+ test
+  (check-true (sourceish? "foo.svg"))
+  (check-false (sourceish? "foo.gif")))
 
 ;; if something can be successfully coerced to a url,
 ;; it's urlish.

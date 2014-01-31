@@ -79,14 +79,49 @@
   (xexpr? . -> . tagged-xexpr?)
   (body-wrapper `(tt ,x)))
 
-
-(define/contract (make-binary-info-page path)
-  (complete-path? . -> . xexpr?)
+(define/contract (bytecount->string bytecount)
+  (integer? . -> . string?)
+  (define (format-with-threshold threshold suffix)
+    ;; upconvert by factor of 100 to get two digits after decimal
+    (format "~a ~a" (exact->inexact (/ (round ((* bytecount 100) . / . threshold)) 100)) suffix))
+  
+  (define threshold-gigabyte 1000000000)
+  (define threshold-megabyte (threshold-gigabyte . / . 1000))
+  (define threshold-kilobyte (threshold-megabyte . / . 1000))
+  
   (cond
-    [((get-ext path) . in? . '("gif" "jpg" "jpeg" "png")) 
-     `(div
-       (img ((src ,(path->string path))))
-       (p "path =" ,(path->string path)))]
+    [(bytecount . > . threshold-gigabyte) (format-with-threshold threshold-gigabyte "GB")]
+    [(bytecount . > . threshold-megabyte) (format-with-threshold threshold-megabyte "MB")]
+    [(bytecount . > . threshold-kilobyte) (format-with-threshold threshold-kilobyte "KB")]
+    [else (format "~a bytes" bytecount)]))
+
+
+(define-syntax-rule (when/splice test body) (if test (list body) '()))
+
+
+(require 2htdp/image)
+(define (handle-image-path p)
+  (pathish? . -> . xexpr?)
+  (define path (->complete-path p))
+  (define img (bitmap/file path))
+  (define relative-path (->string (find-relative-path PROJECT_ROOT path)))
+  (define img-url (format "/~a" relative-path))
+  `(div    
+    (p "filename =" ,(->string relative-path))
+    (p "size = " ,(bytecount->string (file-size path)))
+    ,@(when/splice (not (equal? (get-ext path) "svg"))
+                   `(p "width = " ,(->string (image-width img)) " " 
+                       "height = " ,(->string (image-height img))))
+    (a ((href ,img-url)) (img ((style "width:100%")(src ,img-url))))))
+
+
+
+(define/contract (make-binary-info-page p)
+  (pathish? . -> . xexpr?)
+  (define path (->complete-path p))
+  (cond
+    [((get-ext path) . in? . '("gif" "jpg" "jpeg" "png" "svg")) 
+     (handle-image-path path)]
     [else '(p "We got some other kind of binary file.")]))
 
 ;; server routes
@@ -102,7 +137,7 @@
 (define/contract (out path)
   (complete-path? . -> . xexpr?)
   (cond
-    [(has-binary-ext? path) (make-binary-info-page path)]
+    [(or (has-binary-ext? path) (sourceish? path)) (make-binary-info-page path)]
     [else (format-as-code (slurp path #:render #t))]))
 (define route-out (route-wrapper out))
 
@@ -146,6 +181,7 @@
                          (cond ; in cell
                            [(has-ext? filename POLLEN_TREE_EXT) (cons (format "in/~a" filename) "ptree")]
                            [source  (cons (format "in/~a" source) "in")]
+                           [(sourceish? filename)  (cons (format "in/~a" filename) "in")]
                            [else empty-cell])
                          
                          (cond ; out cell 
@@ -213,5 +249,6 @@
 (module+ main
   (parameterize ([current-directory (build-path (current-directory) "foobar")])
     (reset-project-root)
-    (message PROJECT_ROOT)
-    (dashboard (build-path "poldash.html"))))
+    ;    (message PROJECT_ROOT)
+    ;    (make-binary-info-page (build-path "foo.gif"))
+    ))
