@@ -87,13 +87,13 @@
   (define img (bitmap/file path))
   (define relative-path (->string (find-relative-path PROJECT_ROOT path)))
   (define img-url (format "/~a" relative-path))
-  `(div    
+  `(div  
     (p "filename =" ,(->string relative-path))
     (p "size = " ,(bytecount->string (file-size path)))
     ,@(when/splice (not (equal? (get-ext path) "svg"))
                    `(p "width = " ,(->string (image-width img)) " " 
                        "height = " ,(->string (image-height img))))
-    (a ((href ,img-url)) (img ((style "width:100%")(src ,img-url))))))
+    (a ((href ,img-url)) (img ((style "width:100%;border:1px solid #eee")(src ,img-url))))))
 
 
 (define/contract (make-binary-info-page p)

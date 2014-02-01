@@ -5,7 +5,7 @@
 
 body {
     padding: 1em;
-    font-family: "Triplicate T3";
+    font-family: "Source Code Pro";
 }
 
 div#pollen-logo {
@@ -30,7 +30,7 @@ tr > td:first-child {
 }
 
 th, tr > td:first-child {
-    font-family: "Triplicate T4";
+    font-family: "Source Code Pro";
     background: #f6f6f6;
     text-align: left; 
 }
@@ -79,7 +79,7 @@ a:active {
 }
 
 tt {
-    font-family: "AlixFB";
+    font-family: "Source Code Pro";
     font-size: 100%;
     white-space: pre-wrap;
 }
