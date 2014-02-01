@@ -4,6 +4,7 @@
 (require net/url)
 (require web-server/http/request-structs)
 (require web-server/http/response-structs)
+(require 2htdp/image)
 (require "world.rkt" "render.rkt" "readability.rkt" "predicates.rkt" "debug.rkt")
 
 (module+ test (require rackunit))
@@ -79,27 +80,7 @@
   (xexpr? . -> . tagged-xexpr?)
   (body-wrapper `(tt ,x)))
 
-(define/contract (bytecount->string bytecount)
-  (integer? . -> . string?)
-  (define (format-with-threshold threshold suffix)
-    ;; upconvert by factor of 100 to get two digits after decimal
-    (format "~a ~a" (exact->inexact (/ (round ((* bytecount 100) . / . threshold)) 100)) suffix))
-  
-  (define threshold-gigabyte 1000000000)
-  (define threshold-megabyte (threshold-gigabyte . / . 1000))
-  (define threshold-kilobyte (threshold-megabyte . / . 1000))
-  
-  (cond
-    [(bytecount . > . threshold-gigabyte) (format-with-threshold threshold-gigabyte "GB")]
-    [(bytecount . > . threshold-megabyte) (format-with-threshold threshold-megabyte "MB")]
-    [(bytecount . > . threshold-kilobyte) (format-with-threshold threshold-kilobyte "KB")]
-    [else (format "~a bytes" bytecount)]))
 
-
-(define-syntax-rule (when/splice test body) (if test (list body) '()))
-
-
-(require 2htdp/image)
 (define (handle-image-path p)
   (pathish? . -> . xexpr?)
   (define path (->complete-path p))
@@ -113,7 +94,6 @@
                    `(p "width = " ,(->string (image-width img)) " " 
                        "height = " ,(->string (image-height img))))
     (a ((href ,img-url)) (img ((style "width:100%")(src ,img-url))))))
-
 
 
 (define/contract (make-binary-info-page p)
