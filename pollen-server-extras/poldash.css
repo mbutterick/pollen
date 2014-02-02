@@ -9,6 +9,7 @@ body {
 }
 
 div#pollen-logo {
+    display: none;
     position: fixed;
     right: 0;
     bottom: 0;
