@@ -210,13 +210,14 @@
   (next-dispatcher))
 
 
-;; error route
+;; 404 route
 (define/contract (route-404 req)
   (request? . -> . response?)
-  (define error-text (format "Can't find ~a" (->string (req->path req))))
+  (define error-text (format "route-404: Can't find ~a" (->string (req->path req))))
   (message error-text)
   ;`(html ,(slurp (build-path SERVER_EXTRAS_DIR "404.html")))
   (response/xexpr `(html ,error-text)))
+
 
 
 ;; server route that returns xexpr (before conversion to html)

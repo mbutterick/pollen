@@ -1,0 +1,39 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    padding: 1em;
+    font-family: "Source Code Pro";
+}
+
+
+.section {
+  border: 1px solid black;
+}
+
+.title {
+  background-color: #dfd;
+}
+
+.section > p {
+  margin-left: 5px;
+  margin-right: 5px;
+}
+
+.section > pre {
+    font-family: "Source Code Pro";
+
+ white-space: pre-wrap;       /* css-3 */
+
+  background-color: #efe;
+  margin-left: 5px;
+  margin-right: 5px;
+  padding: 5px;
+}
+
+.error {
+ color: red;
+ font-size: large;
+}
