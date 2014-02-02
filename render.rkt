@@ -173,9 +173,9 @@
         (rendering-message (format "~a from ~a" 
                                    (file-name-from-path output-path)
                                    (file-name-from-path source-path)))
-        (store-render-in-mod-dates source-path)
         (let ([main (time (render-through-eval source-dir `(dynamic-require ,source-path 'main)))])
           (display-to-file main output-path #:exists 'replace))
+        (store-render-in-mod-dates source-path) ; don't store mod date until render has completed!
         (rendered-message output-path))
       
       ;; otherwise, skip file because there's no trigger for render
@@ -270,11 +270,11 @@
           ;; d) dynamic-rerequire indicates the source had to be reloaded
           source-reloaded?)
       (begin
-        (store-render-in-mod-dates source-path template-path)
         (message "Rendering source" (->string (file-name-from-path source-path)) 
                  "with template" (->string (file-name-from-path template-path)))
         (let ([page-result (time (render-source-with-template source-path template-path))])
           (display-to-file page-result output-path #:exists 'replace)
+          (store-render-in-mod-dates source-path template-path)
           (rendered-message output-path)))
       (up-to-date-message output-path))
   
