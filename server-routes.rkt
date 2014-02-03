@@ -95,6 +95,19 @@
                        "height = " ,(->string (image-height img))))
     (a ((href ,img-url)) (img ((style "width:100%;border:1px solid #eee")(src ,img-url))))))
 
+(require file/unzip)
+(define (handle-zip-path p)
+  (pathish? . -> . xexpr?)
+  (define path (->path p))
+  (define relative-path (->string (find-relative-path PROJECT_ROOT path)))
+  (define ziplist (zip-directory-entries (read-zip-directory path)))
+  `(div  
+    (p "filename =" ,(->string relative-path))
+    (p "size = " ,(bytecount->string (file-size path)))
+    (ul ,@(map (λ(i) `(li ,(~a i))) ziplist))))
+
+
+
 
 (define/contract (make-binary-info-page p)
   (pathish? . -> . xexpr?)
@@ -102,6 +115,7 @@
   (cond
     [((get-ext path) . in? . '("gif" "jpg" "jpeg" "png" "svg")) 
      (handle-image-path path)]
+    [((get-ext path) . in? . '("zip")) (handle-zip-path path)]
     [else '(p "We got some other kind of binary file.")]))
 
 ;; server routes
