@@ -206,7 +206,7 @@
     (or  (eq? x #f) ; OK for map-key to be #f
          (and (or (symbol? x) (string? x)) 
               ;; todo: should test be same as valid module ptree-name?
-              (->boolean (regexp-match #px"^[-_A-Za-z0-9]+$" (->string x))))))
+              (->boolean (regexp-match #px"^[-_A-Za-z0-9.]+$" (->string x))))))
   (if (and (not result) loud)
       (error "Not a valid ptree key:" x)
       result))
@@ -216,7 +216,7 @@
   (check-true (ptree-name? "foo-bar"))
   (check-true (ptree-name? "Foo_Bar_0123"))
   (check-true (ptree-name? 'foo-bar))
-  (check-false (ptree-name? "foo-bar.p"))
+  (check-true (ptree-name? "foo-bar.p"))
   (check-false (ptree-name? "/Users/MB/foo-bar"))
   (check-false (ptree-name? ""))
   (check-false (ptree-name? " ")))

@@ -3,11 +3,12 @@
          web-server/dispatch)
 (require "server-routes.rkt" 
          "debug.rkt" 
-         "world.rkt")
+         "world.rkt"
+         "file-tools.rkt")
 
 (define-values (pollen-servlet _)
   (dispatch-rules
-   [((string-arg) ... (? (λ(x) (equal? DASHBOARD_NAME x)))) route-dashboard]
+   [((string-arg) ... (? (λ(x) (x . has-ext? . POLLEN_TREE_EXT)))) route-dashboard]
    [((string-arg) ... "in" (string-arg)) route-in]
    [((string-arg) ... "out" (string-arg)) route-out]
    [((string-arg) ... "xexpr" (string-arg)) route-xexpr]

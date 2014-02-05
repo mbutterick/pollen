@@ -56,5 +56,5 @@
 
 (define SERVER_PORT 8088)
 
-(define DASHBOARD_NAME "poldash.html")
+(define DASHBOARD_NAME "index.ptree")
 (define DASHBOARD_CSS "poldash.css")

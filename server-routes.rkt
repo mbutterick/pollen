@@ -5,7 +5,7 @@
 (require web-server/http/request-structs)
 (require web-server/http/response-structs)
 (require 2htdp/image)
-(require "world.rkt" "render.rkt" "readability.rkt" "predicates.rkt" "debug.rkt")
+(require "world.rkt" "render.rkt" "readability.rkt" "predicates.rkt" "debug.rkt" "ptree.rkt")
 
 (module+ test (require rackunit))
 
@@ -173,9 +173,8 @@
                            [else   (cons filename filename)])
                          
                          (cond ; in cell
-                           [(has-ext? filename POLLEN_TREE_EXT) (cons (format "in/~a" filename) "ptree")]
                            [source  (cons (format "in/~a" source) "in")]
-                           [(sourceish? filename)  (cons (format "in/~a" filename) "in")]
+                           [(or (has-ext? filename POLLEN_TREE_EXT) (sourceish? filename))  (cons (format "in/~a" filename) "in")]
                            [else empty-cell])
                          
                          (cond ; out cell 
@@ -184,7 +183,6 @@
                            [else (cons (format "out/~a" filename) "out")]))))))
   
   (define (ineligible-path? x) (or (not (visible? x)) (member x RESERVED_PATHS)))  
-  (define project-paths (filter-not ineligible-path? (directory-list dir)))
   
   (define (unique-sorted-output-paths xs)
     (define output-paths (map ->output-path xs))
@@ -197,10 +195,14 @@
     ;; put subdirs in list ahead of files (so they appear at the top)
     (append (sort-names subdirectories) (sort-names files)))
   
+  (define project-paths (filter-not ineligible-path? (if (file-exists? dashfile)
+                                                         (map ->path (all-names (ptree-source->ptree dashfile)))
+                                                         (unique-sorted-output-paths (directory-list dir)))))
+  
   (body-wrapper
    `(table 
      ,@(cons (make-parent-row) 
-             (map make-path-row (unique-sorted-output-paths project-paths))))))
+             (map make-path-row project-paths)))))
 
 (define route-dashboard (route-wrapper dashboard))
 
