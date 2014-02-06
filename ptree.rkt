@@ -168,49 +168,49 @@
 
 
 ;; get sequence of earlier names
-(define/contract (ptree-previous* name [ptree current-ptree])
+(define/contract (previous* name [ptree current-ptree])
   ((ptree-name?) (ptree?) . ->* . (or/c (listof ptree-name?) false?))
   (adjacent-names 'left name ptree))
 
 (module+ test
-  (check-equal? (ptree-previous* 'one test-ptree) '("foo" "bar"))
-  (check-equal? (ptree-previous* 'three test-ptree) '("foo" "bar" "one" "two"))
-  (check-false (ptree-previous* 'foo test-ptree)))
+  (check-equal? (previous* 'one test-ptree) '("foo" "bar"))
+  (check-equal? (previous* 'three test-ptree) '("foo" "bar" "one" "two"))
+  (check-false (previous* 'foo test-ptree)))
 
 
 
 
 ;; get sequence of next names
-(define (ptree-next* name [ptree current-ptree])
+(define (next* name [ptree current-ptree])
   ((ptree-name?) (ptree?) . ->* . (or/c (listof ptree-name?) false?))
   (adjacent-names 'right name ptree))
 
 (module+ test
-  (check-equal? (ptree-next* 'foo test-ptree) '("bar" "one" "two" "three"))
-  (check-equal? (ptree-next* 'one test-ptree) '("two" "three"))
-  (check-false (ptree-next* 'three test-ptree)))
+  (check-equal? (next* 'foo test-ptree) '("bar" "one" "two" "three"))
+  (check-equal? (next* 'one test-ptree) '("two" "three"))
+  (check-false (next* 'three test-ptree)))
 
 ;; get name immediately previous
-(define/contract (ptree-previous name [ptree current-ptree])
+(define/contract (previous name [ptree current-ptree])
   ((ptree-name?) (ptree?) . ->* . (or/c ptree-name? false?))
-  (let ([result (ptree-previous* name ptree)])
+  (let ([result (previous* name ptree)])
     (and result (last result))))
 
 (module+ test
-  (check-equal? (ptree-previous 'one test-ptree) "bar")
-  (check-equal? (ptree-previous 'three test-ptree) "two")
-  (check-false (ptree-previous 'foo test-ptree)))
+  (check-equal? (previous 'one test-ptree) "bar")
+  (check-equal? (previous 'three test-ptree) "two")
+  (check-false (previous 'foo test-ptree)))
 
 ;; get name immediately next
-(define (ptree-next name [ptree current-ptree])
+(define (next name [ptree current-ptree])
   ((ptree-name?) (ptree?) . ->* . (or/c ptree-name? false?))
-  (let ([result (ptree-next* name ptree)])
+  (let ([result (next* name ptree)])
     (and result (first result))))
 
 (module+ test
-  (check-equal? (ptree-next 'foo test-ptree) "bar")
-  (check-equal? (ptree-next 'one test-ptree) "two")
-  (check-false (ptree-next 'three test-ptree)))
+  (check-equal? (next 'foo test-ptree) "bar")
+  (check-equal? (next 'one test-ptree) "two")
+  (check-false (next 'three test-ptree)))
 
 
 
