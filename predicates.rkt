@@ -165,34 +165,16 @@
 ;; otherwise this becomes a rather expensive contract
 ;; because every function in ptree.rkt uses it.
 ;; note that a ptree is just a bunch of recursively nested ptrees.
-(define/contract (ptree? x)
+(define/contract (ptree? xs)
   (any/c . -> . boolean?)
-  (and (match x
-         ;; a tagged-xexpr with one attr ('parent)
-         ;; whose subelements recursively meet the same test.
-         [(list (? ptree-name? tag) (? ptree-attr? attr) elements ...) 
-          (andmap ptree? elements)]
-         [else #f])))
+  (and (list? xs) (andmap (λ(x) (or (ptree-name? x) (ptree? x))) xs)))
 
 (module+ test
-  (check-true (ptree? '(foo ((parent "bar")))))
-  (check-false (ptree? '(foo)))
-  (check-false (ptree? '(foo ((parent "bar")(hee "haw")))))
-  (check-true (ptree? '(foo ((parent "bar")) (hee ((parent "foo"))))))
-  (check-false (ptree? '(foo ((parent "bar")) (hee ((uncle "foo")))))))
+  (check-true (ptree? '(foo)))
+  (check-true (ptree? '(foo (hee))))
+  (check-true (ptree? '(foo (hee ((uncle "foo")))))))
 
-;; ptree attr must be ((parent "value"))
-(define/contract (ptree-attr? x)
-  (any/c . -> . boolean?)
-  (match x
-    ;; todo: how can I use POLLEN_MAP_PARENT_KEY
-    [`((parent ,(? string?))) #t]
-    [else #f]))
 
-(module+ test
-  (check-true (ptree-attr? '((parent "bar"))))
-  (check-false (ptree-attr? '((parent "bar") '(foo "bar"))))
-  (check-false (ptree-attr? '())))
 
 
 ;; ptree location must represent a possible valid filename
@@ -203,10 +185,8 @@
   ;; however, don't restrict it to existing files 
   ;; (author may want to use ptree as wireframe)
   (define result 
-    (or  (eq? x #f) ; OK for map-key to be #f
-         (and (or (symbol? x) (string? x)) 
-              ;; todo: should test be same as valid module ptree-name?
-              (->boolean (regexp-match #px"^[-_A-Za-z0-9.]+$" (->string x))))))
+    (or (eq? x #f) ; OK for map-key to be #f
+        (and (not (list? x)) (not (whitespace? (->string x))))))
   (if (and (not result) loud)
       (error "Not a valid ptree key:" x)
       result))
@@ -217,7 +197,7 @@
   (check-true (ptree-name? "Foo_Bar_0123"))
   (check-true (ptree-name? 'foo-bar))
   (check-true (ptree-name? "foo-bar.p"))
-  (check-false (ptree-name? "/Users/MB/foo-bar"))
+  (check-true (ptree-name? "/Users/MB/foo-bar"))
   (check-false (ptree-name? ""))
   (check-false (ptree-name? " ")))
 
@@ -227,6 +207,7 @@
   (any/c . -> . boolean?)
   (cond
     [(or (vector? x) (list? x) (set? x)) (andmap whitespace? (->list x))]
+    [(equal? "" x) #t] ; empty string is deemed whitespace
     [(or (symbol? x) (string? x)) (->boolean (regexp-match #px"^\\s+$" (->string x)))]
     [else #f]))
 
