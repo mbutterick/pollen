@@ -160,45 +160,6 @@
   (check-false (elements-unique? "foo")))
 
 
-;; certain ptree requirements are enforced at compile-time.
-;; (such as names must be valid strings, and unique.)
-;; otherwise this becomes a rather expensive contract
-;; because every function in ptree.rkt uses it.
-;; note that a ptree is just a bunch of recursively nested ptrees.
-(define/contract (ptree? xs)
-  (any/c . -> . boolean?)
-  (and (list? xs) (andmap (λ(x) (or (ptree-name? x) (ptree? x))) xs)))
-
-(module+ test
-  (check-true (ptree? '(foo)))
-  (check-true (ptree? '(foo (hee))))
-  (check-true (ptree? '(foo (hee ((uncle "foo")))))))
-
-
-
-
-;; ptree location must represent a possible valid filename
-(define/contract (ptree-name? x #:loud [loud #f])
-  ((any/c) (#:loud boolean?) . ->* . boolean?)
-  ;; todo: how to express the fact that the ptree-location must be 
-  ;; a valid base name for a file?
-  ;; however, don't restrict it to existing files 
-  ;; (author may want to use ptree as wireframe)
-  (define result (and x (not (list? x)) (not (whitespace? (->string x)))))
-  (if (and (not result) loud)
-      (error "Not a valid ptree key:" x)
-      result))
-
-(module+ test
-  (check-true (ptree-name? "foo-bar"))
-  (check-true (ptree-name? "Foo_Bar_0123"))
-  (check-true (ptree-name? 'foo-bar))
-  (check-true (ptree-name? "foo-bar.p"))
-  (check-true (ptree-name? "/Users/MB/foo-bar"))
-  (check-false (ptree-name? #f))
-  (check-false (ptree-name? ""))
-  (check-false (ptree-name? " ")))
-
 
 ;; recursive whitespace test
 (define/contract (whitespace? x)

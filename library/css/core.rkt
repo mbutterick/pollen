@@ -1,9 +1,9 @@
 #lang racket/base
 (require racket/string racket/list racket/contract)
-(require (planet mb/pollen/readability))
+(require pollen/readability)
 
 (provide (all-defined-out)
-         (all-from-out racket/string racket/list racket/contract (planet mb/pollen/readability)))
+         (all-from-out racket/string racket/list racket/contract pollen/readability))
 
 (define css-property-prefixes '("-moz-" "-webkit-" "-o-" "-ms-" ""))
 

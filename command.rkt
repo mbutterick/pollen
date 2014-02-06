@@ -59,7 +59,7 @@ polcom [filename] (renders individual file)")]
                      [else (let ([possible-file (->path arg)])
                              (if (file-exists? possible-file)
                                  `(begin
-                                    (require (planet mb/pollen/render))
+                                    (require pollen/render)
                                     (render ,possible-file))
                                  `(displayln (format "No command defined for '~a'" ,arg))))]))))
 

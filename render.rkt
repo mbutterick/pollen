@@ -287,17 +287,17 @@
 (require web-server/templates  
          racket/list
          xml/path
-         (planet mb/pollen/debug)
-         (planet mb/pollen/decode)
-         (planet mb/pollen/file-tools)
-         (planet mb/pollen/main-imports)
-         (planet mb/pollen/main-preproc-imports)
-         (planet mb/pollen/predicates)
-         (planet mb/pollen/ptree)
-         (planet mb/pollen/readability)
-         (planet mb/pollen/template)
-         (planet mb/pollen/tools)
-         (planet mb/pollen/world))
+         pollen/debug
+         pollen/decode
+         pollen/file-tools
+         pollen/main-imports
+         pollen/main-preproc-imports
+         pollen/predicates
+         pollen/ptree
+         pollen/readability
+         pollen/template
+         pollen/tools
+         pollen/world)
 (define original-ns (current-namespace))
 
 (define/contract (render-through-eval base-dir eval-string)
@@ -318,17 +318,17 @@
            racket/rerequire 
            racket/contract 
            racket/list
-           (planet mb/pollen/debug)
-           (planet mb/pollen/decode)
-           (planet mb/pollen/file-tools)
-           (planet mb/pollen/main-imports)
-           (planet mb/pollen/main-preproc-imports)
-           (planet mb/pollen/predicates)
-           (planet mb/pollen/ptree)
-           (planet mb/pollen/readability)
-           (planet mb/pollen/template)
-           (planet mb/pollen/tools)
-           (planet mb/pollen/world)))
+           pollen/debug
+           pollen/decode
+           pollen/file-tools
+           pollen/main-imports
+           pollen/main-preproc-imports
+           pollen/predicates
+           pollen/ptree
+           pollen/readability
+           pollen/template
+           pollen/tools
+           pollen/world))
     (namespace-require 'racket) ; use namespace-require for FIRST require, then eval after
     (eval eval-string (current-namespace))))
 
@@ -350,7 +350,7 @@
       ;; for include-template (used below)
       (require web-server/templates)
       ;; for ptree navigation functions, and template commands
-      (require  (planet mb/pollen/debug) (planet mb/pollen/ptree) (planet mb/pollen/template))
+      (require pollen/debug pollen/ptree pollen/template)
       ;; import source into eval space. This sets up main & metas
       (require ,(->string source-name))
       (set-current-ptree (make-project-ptree ,PROJECT_ROOT))

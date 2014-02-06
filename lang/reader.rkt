@@ -18,7 +18,7 @@
    (mb-read-syntax (object-name p) p)))
 
 (define (make-output-datum i)
-  `(module pollen-lang-module (planet mb/pollen) 
+  `(module pollen-lang-module pollen 
      ,@i))
 
 
@@ -27,7 +27,7 @@
   (datum->syntax i 
                  ;; select pollen dialect based on file type
                  `(module pollen-lang-module ,(if (preproc-source? path-string)
-                                                  '(planet mb/pollen/main-preproc)
-                                                  '(planet mb/pollen/main))
+                                                  'pollen/main-preproc
+                                                  'pollen/main)
                     ,@i)
                  i))

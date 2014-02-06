@@ -1,7 +1,7 @@
 #lang racket/base
 (require racket/contract racket/list racket/match)
-(require (planet mb/pollen/tools) (planet mb/pollen/decode)
-         (planet mb/pollen/library/decode-tools))
+(require pollen/tools pollen/decode
+         pollen/library/decode-tools)
 
 (provide (all-defined-out))
 

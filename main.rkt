@@ -19,10 +19,10 @@
    
    ;; doclang2_raw is a clone of scribble/doclang2 with decode disabled
    ;; helpful because it collects & exports content via 'doc
-   (module pollen-inner (planet mb/pollen/lang/doclang2_raw)
+   (module pollen-inner pollen/lang/doclang2_raw
      ;; use same requires as top of main.rkt 
      ;; (can't import them from surrounding module due to submodule rules)
-     (require (planet mb/pollen/tools) (planet mb/pollen/main-helper))
+     (require pollen/tools pollen/main-helper)
      (require-and-provide-extras) ; brings in the project require files
      
      ;; #%top binding catches ids that aren't defined
@@ -45,7 +45,7 @@
      (define inner-here-path here-path)  
      (provide (all-defined-out))
      (provide (all-from-out ; pollen file should bring its requires
-               (planet mb/pollen/tools)))) 
+               pollen/tools))) 
    
    (require 'pollen-inner) ; provides doc & #%top, among other things
    
