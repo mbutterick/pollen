@@ -4,21 +4,47 @@
 
 (module+ test (require rackunit))
 
-(provide (all-defined-out))
+(provide ptree-node? ptree? parent children previous next)
 
-;; Load ptree file & return ptree
-(define/contract (ptree-source->ptree path)
+(define/contract (ptree-node? x)
+  (any/c . -> . boolean?)
+  (and (stringish? x) (not (whitespace? (->string x)))))
+
+(define/contract (ptree-node?/error x)
+  (any/c . -> . boolean?)
+  (or (ptree-node? x) (error "Not a valid ptree node:" x)))
+
+
+(module+ test
+  (check-true (ptree-node? "foo-bar"))
+  (check-true (ptree-node? "Foo_Bar_0123"))
+  (check-true (ptree-node? 'foo-bar))
+  (check-true (ptree-node? "foo-bar.p"))
+  (check-true (ptree-node? "/Users/MB/foo-bar"))
+  (check-false (ptree-node? #f))
+  (check-false (ptree-node? ""))
+  (check-false (ptree-node? " ")))
+
+
+(define/contract (ptree? x)
+  (any/c . -> . boolean?)
+  (and (tagged-xexpr? x) (andmap (λ(i) (or (ptree-node? i) (ptree? i))) x)))
+
+(module+ test
+  (check-true (ptree? '(foo)))
+  (check-true (ptree? '(foo (hee))))
+  (check-true (ptree? '(foo (hee (uncle "foo"))))))
+
+
+(define/contract (file->ptree path)
   (pathish? . -> . ptree?)
-  ;; dynamic require of a ptree source file gets you a full ptree. 
-  (message "Loading ptree file" (->string (file-name-from-path path)))
+  (message "Loading ptree file" (file-name-from-path path))
   (dynamic-require path POLLEN_ROOT))
 
-;; Synthesize ptree from directory listing.
-;; Fallback in case ptree file isn't available.
 (define/contract (directory->ptree dir)
   (directory-pathish? . -> . ptree?)
   (let ([files (map remove-ext (filter (λ(x) (has-ext? x POLLEN_DECODER_EXT)) (directory-list dir)))])
-    (message "Generating ptree from file listing")
+    (message "Generating ptree from file listing of" dir)
     (ptree-root->ptree (cons POLLEN_TREE_ROOT_NAME files))))
 
 
@@ -27,7 +53,7 @@
   (() (directory-pathish?) . ->* . ptree?)
   (define ptree-source (build-path project-dir DEFAULT_POLLEN_TREE))
   (if (file-exists? ptree-source)
-      (ptree-source->ptree ptree-source)
+      (file->ptree ptree-source)
       (directory->ptree project-dir)))
 
 
@@ -37,14 +63,12 @@
                   `(POLLEN_TREE_ROOT_NAME "foo" "bar" (one (two "three"))))))
 
 
-
-;; return the parent of a given name
-(define/contract (parent name [ptree current-ptree])
-  (((or/c ptree-name? false?)) (ptree?) . ->* . (or/c ptree-name? false?)) 
-  (and name
-       (if (member (->string name) (map (λ(x) (->string (if (list? x) (car x) x))) (cdr ptree)))
+(define/contract (parent node [ptree (current-ptree)])
+  (((or/c ptree-node? false?)) (ptree?) . ->* . (or/c ptree-node? false?)) 
+  (and node
+       (if (member (->string node) (map (λ(x) (->string (if (list? x) (car x) x))) (cdr ptree)))
            (->string (car ptree))
-           (ormap (λ(x) (parent name x)) (filter list? ptree)))))
+           (ormap (λ(x) (parent node x)) (filter list? ptree)))))
 
 
 (module+ test
@@ -56,13 +80,12 @@
   (check-false (parent 'nonexistent-name test-ptree)))
 
 
-; get children of a particular name
-(define/contract (children name [ptree current-ptree])
-  (((or/c ptree-name? false?)) (ptree?) . ->* . (or/c (listof ptree-name?) false?))  
-  (and name 
-       (if (equal? (->string name) (->string (car ptree)))
+(define/contract (children node [ptree (current-ptree)])
+  (((or/c ptree-node? false?)) (ptree?) . ->* . (or/c (listof ptree-node?) false?))  
+  (and node 
+       (if (equal? (->string node) (->string (car ptree)))
            (map (λ(x) (->string (if (list? x) (car x) x))) (cdr ptree))
-           (ormap (λ(x) (children name x)) (filter list? ptree)))))
+           (ormap (λ(x) (children node x)) (filter list? ptree)))))
 
 (module+ test
   (check-equal? (children 'one test-ptree) (list "two"))
@@ -72,128 +95,51 @@
   (check-false (children 'fooburger test-ptree)))
 
 
-;; find all siblings on current level: go up to parent and ask for children
-(define/contract (siblings name [ptree current-ptree])
-  ;; this never returns false: name is always a sibling of itself.
-  ;; todo: how to use input value in contract? e.g., to check that name is part of output list
-  ((ptree-name?) (ptree?) . ->* . (or/c (listof string?) false?))  
-  (children (parent name ptree) ptree))
+(define/contract (siblings node [ptree (current-ptree)])
+  (((or/c ptree-node? false?)) (ptree?) . ->* . (or/c (listof string?) false?))  
+  (children (parent node ptree) ptree))
 
 
 (module+ test
   (check-equal? (siblings 'one test-ptree) '("foo" "bar" "one"))
   (check-equal? (siblings 'foo test-ptree) '("foo" "bar" "one"))
   (check-equal? (siblings 'two test-ptree) '("two"))
+  (check-false (siblings #f test-ptree))
   (check-false (siblings 'invalid-key test-ptree)))
 
 
 
-(define/contract (siblings-split name [ptree current-ptree])
-  ((ptree-name?) (ptree?) . ->* . (values (or/c (listof ptree-name?) false?) 
-                                          (or/c (listof ptree-name?) false?)))
-  (let-values ([(left right) (splitf-at (siblings name ptree) 
-                                        (λ(e) (not (equal? (->string e) (->string name)))))])
-    (values (if (empty? left) #f left) (if (empty? (cdr right)) #f (cdr right)))))
-
-(module+ test
-  (check-equal? (values->list (siblings-split 'one test-ptree)) '(("foo" "bar") #f))
-  (check-equal? (values->list (siblings-split 'bar test-ptree)) (list '("foo") '("one"))))
-
-
-;; siblings to the left of target name (i.e., precede in tree order)
-(define (siblings-left name [ptree current-ptree])
-  (let-values ([(left right) (siblings-split name ptree)])
-    left))
-
-(module+ test
-  (check-equal? (siblings-left 'one test-ptree) '("foo" "bar"))
-  (check-false (siblings-left 'foo test-ptree)))
-
-;; siblings to the right of target name (i.e., follow in tree order)
-(define (siblings-right name [ptree current-ptree])
-  (let-values ([(left right) (siblings-split name ptree)])
-    right))
-
-(module+ test
-  (check-false (siblings-right 'one test-ptree))
-  (check-equal? (siblings-right 'foo test-ptree) '("bar" "one")))
-
-
-
-;; get name immediately to the left in tree
-(define/contract (sibling-previous name [ptree current-ptree])
-  ((ptree-name?) (ptree?) . ->* . (or/c ptree-name? false?))
-  (let ([siblings (siblings-left name ptree)])
-    (and siblings (last siblings))))
-
-(module+ test
-  (check-equal? (sibling-previous 'bar test-ptree) "foo")
-  (check-false (sibling-previous 'foo test-ptree)))
-
-;; get name immediately to the right in tree
-(define/contract (sibling-next name [ptree current-ptree])
-  ((ptree-name?) (ptree?) . ->* . (or/c ptree-name? false?))
-  (let ([siblings (siblings-right name ptree)])
-    (and siblings (first siblings))))
-
-(module+ test
-  (check-equal? (sibling-next 'foo test-ptree) "bar")
-  (check-false (sibling-next 'one test-ptree)))
-
-
 ;; flatten tree to sequence
-(define/contract (all-names [ptree current-ptree])
+(define/contract (ptree->list [ptree (current-ptree)])
   (ptree? . -> . (listof string?))
   ; use cdr to get rid of root tag at front
   (map ->string (cdr (flatten ptree)))) 
 
 (module+ test
-  (check-equal? (all-names test-ptree) '("foo" "bar" "one" "two" "three")))
+  (check-equal? (ptree->list test-ptree) '("foo" "bar" "one" "two" "three")))
 
 
 
-;; helper function for get-previous-names and get-next-names
-(define/contract (adjacent-names side name [ptree current-ptree])
-  ((symbol? ptree-name?) (ptree?) . ->* . (or/c (listof ptree-name?) false?))
-  (let ([result ((if (equal? side 'left) 
-                     takef 
-                     takef-right) (all-names ptree) 
-                                  (λ(y) (not (equal? (->string name) (->string y)))))])
-    (and (not (empty? result)) result)))
-
-(module+ test
-  (check-equal? (adjacent-names 'left 'one test-ptree) '("foo" "bar"))
-  (check-equal? (adjacent-names 'left 'three test-ptree) '("foo" "bar" "one" "two"))
-  (check-false (adjacent-names 'left 'foo test-ptree)))
-
-
-;; get sequence of earlier names
-(define/contract (previous* name [ptree current-ptree])
-  ((ptree-name?) (ptree?) . ->* . (or/c (listof ptree-name?) false?))
-  (adjacent-names 'left name ptree))
+(define/contract (adjacents side node [ptree (current-ptree)])
+  ((symbol? (or/c ptree-node? false?)) (ptree?) . ->* . (or/c (listof ptree-node?) false?))
+  (and node
+       (let ([result ((if (equal? side 'left) 
+                          takef
+                          takef-right) (ptree->list ptree) 
+                                       (λ(y) (not (equal? (->string node) (->string y)))))])
+         (and (not (empty? result)) result))))
 
 (module+ test
-  (check-equal? (previous* 'one test-ptree) '("foo" "bar"))
-  (check-equal? (previous* 'three test-ptree) '("foo" "bar" "one" "two"))
-  (check-false (previous* 'foo test-ptree)))
+  (check-equal? (adjacents 'left 'one test-ptree) '("foo" "bar"))
+  (check-equal? (adjacents 'left 'three test-ptree) '("foo" "bar" "one" "two"))
+  (check-false (adjacents 'left 'foo test-ptree)))
 
+(define (left-adjacents node [ptree (current-ptree)]) (adjacents 'left node ptree))
+(define (right-adjacents node [ptree (current-ptree)]) (adjacents 'right node ptree))
 
-
-
-;; get sequence of next names
-(define (next* name [ptree current-ptree])
-  ((ptree-name?) (ptree?) . ->* . (or/c (listof ptree-name?) false?))
-  (adjacent-names 'right name ptree))
-
-(module+ test
-  (check-equal? (next* 'foo test-ptree) '("bar" "one" "two" "three"))
-  (check-equal? (next* 'one test-ptree) '("two" "three"))
-  (check-false (next* 'three test-ptree)))
-
-;; get name immediately previous
-(define/contract (previous name [ptree current-ptree])
-  ((ptree-name?) (ptree?) . ->* . (or/c ptree-name? false?))
-  (let ([result (previous* name ptree)])
+(define/contract (previous node [ptree (current-ptree)])
+  (((or/c ptree-node? false?)) (ptree?) . ->* . (or/c ptree-node? false?))
+  (let ([result (left-adjacents node ptree)])
     (and result (last result))))
 
 (module+ test
@@ -201,10 +147,10 @@
   (check-equal? (previous 'three test-ptree) "two")
   (check-false (previous 'foo test-ptree)))
 
-;; get name immediately next
-(define (next name [ptree current-ptree])
-  ((ptree-name?) (ptree?) . ->* . (or/c ptree-name? false?))
-  (let ([result (next* name ptree)])
+
+(define (next node [ptree (current-ptree)])
+  (((or/c ptree-node? false?)) (ptree?) . ->* . (or/c ptree-node? false?))
+  (let ([result (right-adjacents node ptree)])
     (and result (first result))))
 
 (module+ test
@@ -214,10 +160,8 @@
 
 
 
-
-
 (define/contract (name->url name [files current-url-context])
-  ((ptree-name?) ((listof pathish?)) . ->* . (or/c ptree-name? false?))
+  ((ptree-node?) ((listof pathish?)) . ->* . (or/c ptree-node? false?))
   ;; upconvert all files to their output path
   ;; then remove duplicates because some sources might have already been rendered
   (define output-paths (remove-duplicates (map ->output-path files) equal?))
@@ -259,7 +203,7 @@
 ;; contract for ptree-source-decode
 (define/contract (valid-names? x)
   (any/c . -> . boolean?)
-  (andmap (λ(x) (ptree-name? #:loud #t x)) (filter-not whitespace? (flatten x))))
+  (andmap ptree-node?/error (filter-not whitespace? (flatten x))))
 
 ;; contract for ptree-source-decode
 (define/contract (unique-names? x)
@@ -274,32 +218,13 @@
                              #:xexpr-elements-proc (λ(xs) (filter-not whitespace? xs)))))
 
 
+(define current-ptree (make-parameter `(,POLLEN_TREE_ROOT_NAME)))
+(define current-url-context (make-parameter PROJECT_ROOT))
 
-(define current-ptree '())
-
-(define/contract (set-current-ptree ptree)
-  (ptree? . -> . void?)
-  (set! current-ptree ptree))
-
-(set-current-ptree '(ptree-root))
-
-;; create the state variable
-(define current-url-context '())
-
-;; create the state variable setter
-(define/contract (set-current-url-context x)
-  ((or/c directory-pathish? (listof pathish?)) . -> . void)
-  ;; try treating x as a directory, 
-  ;; otherwise treat it as a list of paths
-  (set! current-url-context (with-handlers ([exn:fail? (λ(e) x)])
-                              (visible-files (->path x)))))
-
-;; set the state variable using the setter
-(set-current-url-context PROJECT_ROOT)
 
 ;; used to convert here-path into here
-(define/contract (path->ptree-name path)
-  (pathish? . -> . ptree-name?)
+(define/contract (path->ptree-node path)
+  (pathish? . -> . ptree-node?)
   (->string (->output-path (find-relative-path PROJECT_ROOT (->path path)))))
 
 
