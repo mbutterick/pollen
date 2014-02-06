@@ -4,7 +4,7 @@
 
 (module+ test (require rackunit))
 
-(provide render render-with-session)
+(provide render render-batch)
 
 ;; for shared use by eval & system
 (define nowhere-port (open-output-nowhere))
@@ -91,7 +91,7 @@
 
 
 ;; convenience function for external modules to use
-(define/contract (render-with-session . xs)
+(define/contract (render-batch . xs)
   (() #:rest (listof pathish?) . ->* . void?)
   ;; This will trigger rendering of all files.
   ;; Why not pass #:force #t through with render?
