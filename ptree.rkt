@@ -40,7 +40,7 @@
 (define ptree-cache (make-hash))
 (define ptree-source-mod-dates (make-hash))
 
-(define (not-modified? ptree-source-path)
+(define (not-modified-since-last-pass? ptree-source-path)
   (and (hash-has-key? ptree-source-mod-dates ptree-source-path) 
        ((file-or-directory-modify-seconds ptree-source-path) . = . (hash-ref ptree-source-mod-dates ptree-source-path))))
 
@@ -61,7 +61,7 @@
   (directory-pathish? . -> . ptree?)
   (define ptree-source (build-path project-dir DEFAULT_PTREE))
   (if (file-exists? ptree-source)
-      (if (not-modified? ptree-source)
+      (if (not-modified-since-last-pass? ptree-source)
           (hash-ref ptree-cache ptree-source)
           (begin
             (hash-set! ptree-source-mod-dates ptree-source (file-or-directory-modify-seconds ptree-source))
