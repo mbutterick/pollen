@@ -184,20 +184,18 @@
   ;; a valid base name for a file?
   ;; however, don't restrict it to existing files 
   ;; (author may want to use ptree as wireframe)
-  (define result 
-    (or (eq? x #f) ; OK for map-key to be #f
-        (and (not (list? x)) (not (whitespace? (->string x))))))
+  (define result (and x (not (list? x)) (not (whitespace? (->string x)))))
   (if (and (not result) loud)
       (error "Not a valid ptree key:" x)
       result))
 
 (module+ test
-  (check-true (ptree-name? #f))
   (check-true (ptree-name? "foo-bar"))
   (check-true (ptree-name? "Foo_Bar_0123"))
   (check-true (ptree-name? 'foo-bar))
   (check-true (ptree-name? "foo-bar.p"))
   (check-true (ptree-name? "/Users/MB/foo-bar"))
+  (check-false (ptree-name? #f))
   (check-false (ptree-name? ""))
   (check-false (ptree-name? " ")))
 

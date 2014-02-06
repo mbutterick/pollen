@@ -344,17 +344,18 @@
   ;; Therefore no way to arbitrarily invoke template at run-time.
   ;; This routine creates a new namespace and compiles the template within it.
   
-  (render-through-eval source-dir
-                       `(begin 
-                          ;; for include-template (used below)
-                          (require web-server/templates)
-                          ;; for ptree navigation functions, and template commands
-                          (require  (planet mb/pollen/debug) (planet mb/pollen/ptree) (planet mb/pollen/template))
-                          ;; import source into eval space. This sets up main & metas
-                          (require ,(->string source-name))
-                          (set-current-ptree (make-project-ptree ,PROJECT_ROOT))
-                          (set-current-url-context ,PROJECT_ROOT)
-                          (include-template #:command-char ,TEMPLATE_FIELD_DELIMITER ,(->string template-name)))))
+  (render-through-eval 
+   source-dir
+   `(begin 
+      ;; for include-template (used below)
+      (require web-server/templates)
+      ;; for ptree navigation functions, and template commands
+      (require  (planet mb/pollen/debug) (planet mb/pollen/ptree) (planet mb/pollen/template))
+      ;; import source into eval space. This sets up main & metas
+      (require ,(->string source-name))
+      (set-current-ptree (make-project-ptree ,PROJECT_ROOT))
+      (set-current-url-context ,PROJECT_ROOT)
+      (include-template #:command-char ,TEMPLATE_FIELD_DELIMITER ,(->string template-name)))))
 
 
 ;; render files listed in a ptree file

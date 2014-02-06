@@ -26,7 +26,7 @@ pre {
     font-size: 80%;
     font-family: "Source Code Pro";
     white-space: pre-wrap;       
-    overflow: scroll;
+    overflow: auto;
     max-height: 240px;
 }
 

@@ -40,7 +40,7 @@
 
 ;; return the parent of a given name
 (define/contract (parent name [ptree current-ptree])
-  ((ptree-name?) (ptree?) . ->* . (or/c ptree-name? false?)) 
+  (((or/c ptree-name? false?)) (ptree?) . ->* . (or/c ptree-name? false?)) 
   (and name
        (if (member (->string name) (map (λ(x) (->string (if (list? x) (car x) x))) (cdr ptree)))
            (->string (car ptree))
@@ -52,12 +52,13 @@
   (define test-ptree (ptree-root->ptree test-ptree-main))
   (check-equal? (parent 'three test-ptree) "two")
   (check-equal? (parent "three" test-ptree) "two")
+  (check-false (parent #f test-ptree))
   (check-false (parent 'nonexistent-name test-ptree)))
 
 
 ; get children of a particular name
 (define/contract (children name [ptree current-ptree])
-  ((ptree-name?) (ptree?) . ->* . (or/c (listof ptree-name?) false?))  
+  (((or/c ptree-name? false?)) (ptree?) . ->* . (or/c (listof ptree-name?) false?))  
   (and name 
        (if (equal? (->string name) (->string (car ptree)))
            (map (λ(x) (->string (if (list? x) (car x) x))) (cdr ptree))
@@ -67,6 +68,7 @@
   (check-equal? (children 'one test-ptree) (list "two"))
   (check-equal? (children 'two test-ptree) (list "three"))
   (check-false (children 'three test-ptree))
+  (check-false (children #f test-ptree))
   (check-false (children 'fooburger test-ptree)))
 
 
@@ -273,11 +275,13 @@
 
 
 
-(define current-ptree '(empty ((parent "")))) ;; simplest empty ptree that will meet ptree contract
+(define current-ptree '())
 
 (define/contract (set-current-ptree ptree)
   (ptree? . -> . void?)
   (set! current-ptree ptree))
+
+(set-current-ptree '(ptree-root))
 
 ;; create the state variable
 (define current-url-context '())
@@ -292,6 +296,12 @@
 
 ;; set the state variable using the setter
 (set-current-url-context PROJECT_ROOT)
+
+;; used to convert here-path into here
+(define/contract (path->ptree-name path)
+  (pathish? . -> . ptree-name?)
+  (->string (->output-path (find-relative-path PROJECT_ROOT (->path path)))))
+
 
 #|
 (module+ main
