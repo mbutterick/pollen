@@ -4,26 +4,22 @@
 
 (define POLLEN_VERSION "0.001")
 
-(define POLLEN_PREPROC_EXT 'p)
-(define POLLEN_DECODER_EXT 'pd)
-(define POLLEN_TREE_EXT 'ptree)
+(define PREPROC_SOURCE_EXT 'p)
+(define DECODER_SOURCE_EXT 'pd)
+(define PTREE_SOURCE_EXT 'ptree)
 
-(define DEFAULT_POLLEN_TREE "main.ptree")
-(define POLLEN_TREE_PARENT_NAME 'parent)
-(define POLLEN_TREE_ROOT_NAME 'ptree-root)
+(define DEFAULT_PTREE "main.ptree")
+(define PTREE_ROOT_NODE 'ptree-root)
 
-(define TEMPLATE_FILE_PREFIX "-")
-(define POLLEN_EXPRESSION_DELIMITER #\◊)
-(define TEMPLATE_FIELD_DELIMITER POLLEN_EXPRESSION_DELIMITER)
+(define TEMPLATE_SOURCE_PREFIX "-")
+(define EXPRESSION_DELIMITER #\◊)
+(define TEMPLATE_FIELD_DELIMITER EXPRESSION_DELIMITER)
 
 (define DEFAULT_TEMPLATE_PREFIX "-main")
-(define FALLBACK_TEMPLATE_NAME "-temp-fallback-template.html")
+(define FALLBACK_TEMPLATE "-temp-fallback-template.html")
 (define TEMPLATE_META_KEY "template")
 
-
 (define MAIN_POLLEN_EXPORT 'main)
-;(define META_POLLEN_TAG 'metas)
-;(define META_POLLEN_EXPORT 'metas)
 
 (define EXTRAS_DIR (string->path "pollen-require"))
 
@@ -40,17 +36,15 @@
 ;;(define RACKET_PATH (string-trim (with-output-to-string (λ() (system "which racket")))))
 (define RACKET_PATH "/usr/bin/racket") ;; todo: this won't always work
 
-(define POLLEN_ROOT 'main)
-(define POLLEN_COMMAND_FILE "polcom")
+(define COMMAND_FILE "polcom")
 
 (require "readability.rkt")
 (define RESERVED_PATHS
-  (map ->path (list POLLEN_COMMAND_FILE EXTRAS_DIR "poldash.css" "compiled")))
+  (map ->path (list COMMAND_FILE EXTRAS_DIR "poldash.css" "compiled")))
 
 
 (define PROJECT_ROOT (current-directory))
 (define (reset-project-root) (set! PROJECT_ROOT (current-directory)))
-;; use current-contract-region to calculate containing directory of module
 (define MODULE_ROOT (apply build-path (drop-right (explode-path (current-contract-region)) 1)))
 (define SERVER_EXTRAS_DIR (build-path MODULE_ROOT "pollen-server-extras"))
 

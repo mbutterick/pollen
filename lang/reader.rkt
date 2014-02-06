@@ -1,6 +1,6 @@
 #lang racket/base
 (require (only-in scribble/reader make-at-reader)
-         (only-in "../world.rkt" POLLEN_EXPRESSION_DELIMITER)
+         (only-in "../world.rkt" EXPRESSION_DELIMITER)
          (only-in "../file-tools.rkt" preproc-source?))
 
 (provide (rename-out [mb-read read]
@@ -9,7 +9,7 @@
          )
 
 (define read-inner
-  (make-at-reader #:command-char POLLEN_EXPRESSION_DELIMITER
+  (make-at-reader #:command-char EXPRESSION_DELIMITER
                   #:syntax? #t
                   #:inside? #t))
 

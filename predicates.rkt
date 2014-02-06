@@ -134,16 +134,19 @@
   (check-equal? (hash-ref (count-incidence '(a b c d b c)) 'b) 2)
   (check-equal? (hash-ref (count-incidence '(a b c d b c)) 'a) 1))
 
-;; exploit uniqueness constraint of set data structure
-(define/contract (elements-unique? x #:loud [loud #f])
-  ((any/c) (#:loud boolean?) . ->* . boolean?)
-  (define result 
-    (cond 
-      [(list? x) (= (len (apply set x)) (len x))]
-      [(vector? x) (elements-unique? (->list x))]
-      [(string? x) (elements-unique? (string->list x))]
-      [else #t]))
-  (if (and (not result) loud)
+
+(define/contract (members-unique? x)
+  (any/c . -> . boolean?)
+  (cond 
+    [(list? x) (= (len (apply set x)) (len x))]
+    [(vector? x) (members-unique? (->list x))]
+    [(string? x) (members-unique? (string->list x))]
+    [else #t]))
+
+(define/contract (members-unique?/error x)
+  (any/c . -> . boolean?)
+  (define result (members-unique? x))
+  (if (not result)
       (let* ([duplicate-keys (filter-not empty? (hash-map (count-incidence x) 
                                                           (λ(k v) (if (> v 1) k '()))))])
         (error (string-append (if (= (len duplicate-keys) 1) 
@@ -152,12 +155,12 @@
       result))
 
 (module+ test
-  (check-true (elements-unique? '(1 2 3)))
-  (check-false (elements-unique? '(1 2 2)))
-  (check-true (elements-unique? (->vector '(1 2 3))))
-  (check-false (elements-unique? (->vector '(1 2 2))))
-  (check-true (elements-unique? "fob"))
-  (check-false (elements-unique? "foo")))
+  (check-true (members-unique? '(1 2 3)))
+  (check-false (members-unique? '(1 2 2)))
+  (check-true (members-unique? (->vector '(1 2 3))))
+  (check-false (members-unique? (->vector '(1 2 2))))
+  (check-true (members-unique? "fob"))
+  (check-false (members-unique? "foo")))
 
 
 

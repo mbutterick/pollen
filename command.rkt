@@ -8,7 +8,7 @@
   (datum->syntax syntax-context
                  (let* ([args (current-command-line-arguments)]
                         [arg (if (> (len args) 0) (get args 0) "")])
-                   (display (format "~a: " POLLEN_COMMAND_FILE))
+                   (display (format "~a: " COMMAND_FILE))
                    (case arg
                      [("help") (displayln "valid commands are
 polcom start (starts project server)
@@ -20,7 +20,7 @@ polcom [filename] (renders individual file)")]
                                         ;; todo: take extensions off the comand line
                                         (displayln "Render preproc & ptree files ...")
                                         (require "render.rkt" "file-tools.rkt" "world.rkt")
-                                        (apply render-with-session (append-map project-files-with-ext (list POLLEN_PREPROC_EXT POLLEN_TREE_EXT))))]
+                                        (apply render-with-session (append-map project-files-with-ext (list PREPROC_SOURCE_EXT PTREE_SOURCE_EXT))))]
                      [("clone") (let ([target-path 
                                        (if (> (len args) 1)
                                            (->path (get args 1))

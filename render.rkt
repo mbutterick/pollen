@@ -118,7 +118,7 @@
         ;; this will catch ptree files
         [(ptree-source? path) (let ([ptree (dynamic-require path 'main)])
                                 (render-files-in-ptree ptree #:force force))]
-        [(equal? FALLBACK_TEMPLATE_NAME (->string (file-name-from-path path)))
+        [(equal? FALLBACK_TEMPLATE (->string (file-name-from-path path)))
          (message "Render: using fallback template")]
         [(file-exists? path) (message "Serving static file" (->string (file-name-from-path path)))])))
   (for-each &render xs))
@@ -250,9 +250,10 @@
                      ;; "-main" + extension from output path (e.g. foo.xml.p -> -main.xml)
                      (build-path source-dir (add-ext DEFAULT_TEMPLATE_PREFIX (get-ext (->output-path source-path)))))))
      ;; if none of these work, make fallback template file
-     (let ([ft-path (build-path source-dir FALLBACK_TEMPLATE_NAME)])
+     (let ([ft-path (build-path source-dir FALLBACK_TEMPLATE)])
        (display-to-file fallback-template-data ft-path #:exists 'replace)
        ft-path)))
+  
   
   ;; render template (it might have its own preprocessor file)
   (render template-path #:force force)
@@ -279,8 +280,8 @@
       (up-to-date-message output-path))
   
   ;; delete fallback template if needed
-  (let ([tp (build-path source-dir FALLBACK_TEMPLATE_NAME)])
-    (when (file-exists? tp) (delete-file tp))))
+  (let ([ft-path (build-path source-dir FALLBACK_TEMPLATE)])
+    (when (file-exists? ft-path) (delete-file ft-path))))
 
 ;; cache some modules inside this namespace so they can be shared by namespace for eval
 ;; todo: macrofy this to avoid repeating names
@@ -353,9 +354,9 @@
       (require pollen/debug pollen/ptree pollen/template)
       ;; import source into eval space. This sets up main & metas
       (require ,(->string source-name))
-      (set-current-ptree (make-project-ptree ,PROJECT_ROOT))
-      (set-current-url-context ,PROJECT_ROOT)
-      (include-template #:command-char ,TEMPLATE_FIELD_DELIMITER ,(->string template-name)))))
+      (parameterize ([current-ptree (make-project-ptree ,PROJECT_ROOT)]
+                     [current-url-context ,PROJECT_ROOT])
+        (include-template #:command-char ,TEMPLATE_FIELD_DELIMITER ,(->string template-name))))))
 
 
 ;; render files listed in a ptree file

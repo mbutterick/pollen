@@ -186,7 +186,7 @@
 
 (define/contract (preproc-source? x)
   (any/c . -> . boolean?)
-  (has-ext? (->path x) POLLEN_PREPROC_EXT))
+  (has-ext? (->path x) PREPROC_SOURCE_EXT))
 
 (module+ test
   (check-true (preproc-source? "foo.p"))
@@ -213,7 +213,7 @@
 
 (define/contract (ptree-source? x)
   (any/c . -> . boolean?)
-  (has-ext? x POLLEN_TREE_EXT))
+  (has-ext? x PTREE_SOURCE_EXT))
 
 (module+ test
   (check-true (ptree-source? "foo.ptree"))
@@ -222,7 +222,7 @@
 
 (define/contract (pollen-source? x)
   (any/c . -> . boolean?)
-  (has-ext? x POLLEN_DECODER_EXT))
+  (has-ext? x DECODER_SOURCE_EXT))
 
 (module+ test
   (check-true (pollen-source? "foo.pd"))
@@ -232,7 +232,7 @@
 (define/contract (template-source? x)
   (any/c . -> . boolean?)
   (define-values (dir name ignore) (split-path x))
-  (equal? (get (->string name) 0) TEMPLATE_FILE_PREFIX))
+  (equal? (get (->string name) 0) TEMPLATE_SOURCE_PREFIX))
 
 (module+ test
   (check-true (template-source? "-foo.html"))
@@ -258,7 +258,7 @@
   (pathish? . -> . path?)
   (->path (if (preproc-source? x)
               x
-              (add-ext x POLLEN_PREPROC_EXT))))
+              (add-ext x PREPROC_SOURCE_EXT))))
 
 (module+ test
   (check-equal? (->preproc-source-path (->path "foo.p")) (->path "foo.p"))
@@ -289,7 +289,7 @@
   (pathish? . -> . path?)
   (->path (if (pollen-source? x)
               x
-              (add-ext x POLLEN_DECODER_EXT))))
+              (add-ext x DECODER_SOURCE_EXT))))
 
 (module+ test
   (check-equal? (->pollen-source-path (->path "foo.pd")) (->path "foo.pd"))

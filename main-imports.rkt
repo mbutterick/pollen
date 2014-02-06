@@ -8,11 +8,9 @@
 (require racket/list
          pollen/tools 
          pollen/main-helper
-         (only-in pollen/ptree ptree-source-decode path->ptree-name)
-         (only-in pollen/predicates ptree?))
+         (only-in pollen/ptree ptree-source-decode path->pnode ptree?))
 
 (provide (all-from-out racket/list
                        pollen/tools 
                        pollen/main-helper
-                       pollen/ptree
-                       pollen/predicates))
+                       pollen/ptree))

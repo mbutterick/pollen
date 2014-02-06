@@ -17,7 +17,7 @@
   (any/c . -> . boolean?)
   (or (tagged-xexpr? x) 
       (has-pollen-source? x) 
-      (has-pollen-source? (name->url x))))
+      (has-pollen-source? (pnode->url x))))
 
 (define/contract (query-key? x)
   (any/c . -> . boolean?)
@@ -29,7 +29,7 @@
     ;; Using put has no effect on tagged-xexprs. It's here to make the idiom smooth.
     [(tagged-xexpr? x) x] 
     [(has-pollen-source? x) (dynamic-require (->pollen-source-path x) 'main)]
-    [(has-pollen-source? (name->url x)) (dynamic-require (->pollen-source-path (name->url x)) 'main)]))
+    [(has-pollen-source? (pnode->url x)) (dynamic-require (->pollen-source-path (pnode->url x)) 'main)]))
 
 (module+ test
   (check-equal? (put '(foo "bar")) '(foo "bar"))

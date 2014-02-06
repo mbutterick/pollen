@@ -49,7 +49,7 @@
    
    (require 'pollen-inner) ; provides doc & #%top, among other things
    
-   (define here (path->ptree-name inner-here-path))
+   (define here (path->pnode inner-here-path))
    
    ;; prepare the elements, and append inner-here-path as meta.
    ;; put it first so it can be overridden by custom meta later on

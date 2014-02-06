@@ -4,7 +4,7 @@
 
 (module+ test (require rackunit))
 
-(provide pnode? ptree? parent children previous next)
+(provide pnode? ptree? parent children previous next pnode->url ptree-source-decode path->pnode ptree->list file->ptree make-project-ptree current-ptree current-url-context)
 
 (define/contract (pnode? x)
   (any/c . -> . boolean?)
@@ -13,7 +13,6 @@
 (define/contract (pnode?/error x)
   (any/c . -> . boolean?)
   (or (pnode? x) (error "Not a valid pnode:" x)))
-
 
 (module+ test
   (check-true (pnode? "foo-bar"))
@@ -38,20 +37,20 @@
 
 (define/contract (file->ptree path)
   (pathish? . -> . ptree?)
-  (message "Loading ptree file" (file-name-from-path path))
-  (dynamic-require path POLLEN_ROOT))
+  (message "Loading ptree file" (->string (file-name-from-path path)))
+  (dynamic-require path MAIN_POLLEN_EXPORT))
 
 (define/contract (directory->ptree dir)
   (directory-pathish? . -> . ptree?)
-  (let ([files (map remove-ext (filter (λ(x) (has-ext? x POLLEN_DECODER_EXT)) (directory-list dir)))])
+  (let ([files (map remove-ext (filter (λ(x) (has-ext? x DECODER_SOURCE_EXT)) (directory-list dir)))])
     (message "Generating ptree from file listing of" dir)
-    (ptree-root->ptree (cons POLLEN_TREE_ROOT_NAME files))))
+    (ptree-root->ptree (cons PTREE_ROOT_NODE files))))
 
 
 ;; Try loading from ptree file, or failing that, synthesize ptree.
 (define/contract (make-project-ptree [project-dir PROJECT_ROOT])
   (() (directory-pathish?) . ->* . ptree?)
-  (define ptree-source (build-path project-dir DEFAULT_POLLEN_TREE))
+  (define ptree-source (build-path project-dir DEFAULT_PTREE))
   (if (file-exists? ptree-source)
       (file->ptree ptree-source)
       (directory->ptree project-dir)))
@@ -163,28 +162,30 @@
 
 
 
-(define/contract (pnode->url pnode [files (current-url-context)])
-  ((pnode?) ((listof pathish?)) . ->* . (or/c pnode? false?))
-  ;; upconvert all files to their output path
-  ;; then remove duplicates because some sources might have already been rendered
-  (define output-paths (remove-duplicates (map ->output-path files) equal?))
-  ;; find ones that match name
-  (define matching-paths (filter (λ(x) (equal? (->string x) (->string pnode))) output-paths))
-  
-  (cond
-    [((len matching-paths) . = . 1) (->string (car matching-paths))]
-    [((len matching-paths) . > . 1) (error "More than one matching URL for" pnode)]
-    [else #f] ))
-
-(define ptree-name->url pnode->url)
-
+;; this is a helper function to permit unit tests
+(define (pnode->url/paths pnode url-list)
+    ;; check for duplicates because some sources might have already been rendered
+    (define output-paths (remove-duplicates (map ->output-path url-list) equal?))
+    (define matching-paths (filter (λ(x) (equal? (->string x) (->string pnode))) output-paths))
+    
+    (cond
+      [((len matching-paths) . = . 1) (->string (car matching-paths))]
+      [((len matching-paths) . > . 1) (error "More than one matching URL for" pnode)]
+      [else #f]))
 
 (module+ test
   (define files '("foo.html" "bar.html" "bar.html.p" "zap.html" "zap.xml"))
-  (check-equal? (pnode->url 'foo.html files) "foo.html")
-  (check-equal? (pnode->url 'bar.html files) "bar.html")
+  (check-equal? (pnode->url/paths 'foo.html files) "foo.html")
+  (check-equal? (pnode->url/paths 'bar.html files) "bar.html")
   ;;  (check-equal? (name->url 'zap files) 'error) ;; todo: how to test error?
-  (check-false (pnode->url 'hee files)))
+  (check-false (pnode->url/paths 'hee files)))
+
+
+(define/contract (pnode->url pnode [url-context (current-url-context)])
+  ((pnode?) (pathish?) . ->* . (or/c pnode? false?))
+  (parameterize ([current-url-context url-context])
+    (pnode->url/paths pnode (directory-list (current-url-context)))))
+
 
 
 
@@ -196,32 +197,24 @@
 
 
 (module+ test
-  (set! test-ptree-main `(ptree-main "foo" "bar" (one (two "three"))))
+  (set! test-ptree-main `(,PTREE_ROOT_NODE "foo" "bar" (one (two "three"))))
   (check-equal? (ptree-root->ptree test-ptree-main) 
-                `(ptree-main "foo" "bar" (one (two "three")))))
+                `(,PTREE_ROOT_NODE "foo" "bar" (one (two "three")))))
 
 
-
-
-;; contract for ptree-source-decode
-(define/contract (valid-names? x)
+(define/contract (pnodes-unique?/error x)
   (any/c . -> . boolean?)
-  (andmap pnode?/error (filter-not whitespace? (flatten x))))
-
-;; contract for ptree-source-decode
-(define/contract (unique-names? x)
-  (any/c . -> . boolean?)
-  ;; use map ->string to make keys comparable
-  (elements-unique? #:loud #t (map ->string (filter-not whitespace? (flatten x)))))
-
+  (define members (filter-not whitespace? (flatten x)))
+  (and (andmap pnode?/error members)
+       (members-unique?/error (map ->string members))))
 
 (define/contract (ptree-source-decode . elements)
-  (() #:rest (and/c valid-names? unique-names?) . ->* . ptree?)
-  (ptree-root->ptree (decode (cons POLLEN_TREE_ROOT_NAME elements)
+  (() #:rest pnodes-unique?/error . ->* . ptree?)
+  (ptree-root->ptree (decode (cons PTREE_ROOT_NODE elements)
                              #:xexpr-elements-proc (λ(xs) (filter-not whitespace? xs)))))
 
 
-(define current-ptree (make-parameter `(,POLLEN_TREE_ROOT_NAME)))
+(define current-ptree (make-parameter `(,PTREE_ROOT_NODE)))
 (define current-url-context (make-parameter PROJECT_ROOT))
 
 

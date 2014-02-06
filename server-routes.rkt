@@ -174,12 +174,12 @@
                          
                          (cond ; in cell
                            [source  (cons (format "in/~a" source) "in")]
-                           [(or (has-ext? filename POLLEN_TREE_EXT) (sourceish? filename))  (cons (format "in/~a" filename) "in")]
+                           [(or (has-ext? filename PTREE_SOURCE_EXT) (sourceish? filename))  (cons (format "in/~a" filename) "in")]
                            [else empty-cell])
                          
                          (cond ; out cell 
                            [(directory-exists? (build-path dir filename)) (cons #f #f)]
-                           [(has-ext? filename POLLEN_TREE_EXT) empty-cell]
+                           [(has-ext? filename PTREE_SOURCE_EXT) empty-cell]
                            [else (cons (format "out/~a" filename) "out")]))))))
   
   (define (ineligible-path? x) (or (not (visible? x)) (member x RESERVED_PATHS)))  
@@ -196,7 +196,7 @@
     (append (sort-names subdirectories) (sort-names files)))
   
   (define project-paths (filter-not ineligible-path? (if (file-exists? dashfile)
-                                                         (map ->path (all-names (ptree-source->ptree dashfile)))
+                                                         (map ->path (ptree->list (file->ptree dashfile)))
                                                          (unique-sorted-output-paths (directory-list dir)))))
   
   (body-wrapper
