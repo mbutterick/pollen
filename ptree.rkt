@@ -35,8 +35,18 @@
   (check-true (ptree? '(foo (hee (uncle "foo"))))))
 
 
-(define/contract (file->ptree path)
+;; implement the caching with two hashes rather than composite key of (cons file mod-date)
+;; so that cached copies don't pile up indefinitely
+(define ptree-cache (make-hash))
+(define ptree-source-mod-dates (make-hash))
+
+(define (not-modified? ptree-source-path)
+  (and (hash-has-key? ptree-source-mod-dates ptree-source-path) 
+       ((file-or-directory-modify-seconds ptree-source-path) . = . (hash-ref ptree-source-mod-dates ptree-source-path))))
+
+(define/contract (file->ptree p)
   (pathish? . -> . ptree?)
+  (define path (->path p))
   (message "Loading ptree file" (->string (file-name-from-path path)))
   (dynamic-require path MAIN_POLLEN_EXPORT))
 
@@ -46,13 +56,16 @@
     (message "Generating ptree from file listing of" dir)
     (ptree-root->ptree (cons PTREE_ROOT_NODE files))))
 
-
 ;; Try loading from ptree file, or failing that, synthesize ptree.
-(define/contract (make-project-ptree [project-dir PROJECT_ROOT])
-  (() (directory-pathish?) . ->* . ptree?)
+(define/contract (make-project-ptree project-dir)
+  (directory-pathish? . -> . ptree?)
   (define ptree-source (build-path project-dir DEFAULT_PTREE))
   (if (file-exists? ptree-source)
-      (file->ptree ptree-source)
+      (if (not-modified? ptree-source)
+          (hash-ref ptree-cache ptree-source)
+          (begin
+            (hash-set! ptree-source-mod-dates ptree-source (file-or-directory-modify-seconds ptree-source))
+            (hash-ref! ptree-cache ptree-source (file->ptree ptree-source))))
       (directory->ptree project-dir)))
 
 
@@ -164,14 +177,14 @@
 
 ;; this is a helper function to permit unit tests
 (define (pnode->url/paths pnode url-list)
-    ;; check for duplicates because some sources might have already been rendered
-    (define output-paths (remove-duplicates (map ->output-path url-list) equal?))
-    (define matching-paths (filter (λ(x) (equal? (->string x) (->string pnode))) output-paths))
-    
-    (cond
-      [((len matching-paths) . = . 1) (->string (car matching-paths))]
-      [((len matching-paths) . > . 1) (error "More than one matching URL for" pnode)]
-      [else #f]))
+  ;; check for duplicates because some sources might have already been rendered
+  (define output-paths (remove-duplicates (map ->output-path url-list) equal?))
+  (define matching-paths (filter (λ(x) (equal? (->string x) (->string pnode))) output-paths))
+  
+  (cond
+    [((len matching-paths) . = . 1) (->string (car matching-paths))]
+    [((len matching-paths) . > . 1) (error "More than one matching URL for" pnode)]
+    [else #f]))
 
 (module+ test
   (define files '("foo.html" "bar.html" "bar.html.p" "zap.html" "zap.xml"))
