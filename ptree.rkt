@@ -4,31 +4,31 @@
 
 (module+ test (require rackunit))
 
-(provide ptree-node? ptree? parent children previous next)
+(provide pnode? ptree? parent children previous next)
 
-(define/contract (ptree-node? x)
+(define/contract (pnode? x)
   (any/c . -> . boolean?)
   (and (stringish? x) (not (whitespace? (->string x)))))
 
-(define/contract (ptree-node?/error x)
+(define/contract (pnode?/error x)
   (any/c . -> . boolean?)
-  (or (ptree-node? x) (error "Not a valid ptree node:" x)))
+  (or (pnode? x) (error "Not a valid pnode:" x)))
 
 
 (module+ test
-  (check-true (ptree-node? "foo-bar"))
-  (check-true (ptree-node? "Foo_Bar_0123"))
-  (check-true (ptree-node? 'foo-bar))
-  (check-true (ptree-node? "foo-bar.p"))
-  (check-true (ptree-node? "/Users/MB/foo-bar"))
-  (check-false (ptree-node? #f))
-  (check-false (ptree-node? ""))
-  (check-false (ptree-node? " ")))
+  (check-true (pnode? "foo-bar"))
+  (check-true (pnode? "Foo_Bar_0123"))
+  (check-true (pnode? 'foo-bar))
+  (check-true (pnode? "foo-bar.p"))
+  (check-true (pnode? "/Users/MB/foo-bar"))
+  (check-false (pnode? #f))
+  (check-false (pnode? ""))
+  (check-false (pnode? " ")))
 
 
 (define/contract (ptree? x)
   (any/c . -> . boolean?)
-  (and (tagged-xexpr? x) (andmap (λ(i) (or (ptree-node? i) (ptree? i))) x)))
+  (and (tagged-xexpr? x) (andmap (λ(i) (or (pnode? i) (ptree? i))) x)))
 
 (module+ test
   (check-true (ptree? '(foo)))
@@ -63,12 +63,12 @@
                   `(POLLEN_TREE_ROOT_NAME "foo" "bar" (one (two "three"))))))
 
 
-(define/contract (parent node [ptree (current-ptree)])
-  (((or/c ptree-node? false?)) (ptree?) . ->* . (or/c ptree-node? false?)) 
-  (and node
-       (if (member (->string node) (map (λ(x) (->string (if (list? x) (car x) x))) (cdr ptree)))
+(define/contract (parent pnode [ptree (current-ptree)])
+  (((or/c pnode? false?)) (ptree?) . ->* . (or/c pnode? false?)) 
+  (and pnode
+       (if (member (->string pnode) (map (λ(x) (->string (if (list? x) (car x) x))) (cdr ptree)))
            (->string (car ptree))
-           (ormap (λ(x) (parent node x)) (filter list? ptree)))))
+           (ormap (λ(x) (parent pnode x)) (filter list? ptree)))))
 
 
 (module+ test
@@ -80,12 +80,12 @@
   (check-false (parent 'nonexistent-name test-ptree)))
 
 
-(define/contract (children node [ptree (current-ptree)])
-  (((or/c ptree-node? false?)) (ptree?) . ->* . (or/c (listof ptree-node?) false?))  
-  (and node 
-       (if (equal? (->string node) (->string (car ptree)))
+(define/contract (children pnode [ptree (current-ptree)])
+  (((or/c pnode? false?)) (ptree?) . ->* . (or/c (listof pnode?) false?))  
+  (and pnode 
+       (if (equal? (->string pnode) (->string (car ptree)))
            (map (λ(x) (->string (if (list? x) (car x) x))) (cdr ptree))
-           (ormap (λ(x) (children node x)) (filter list? ptree)))))
+           (ormap (λ(x) (children pnode x)) (filter list? ptree)))))
 
 (module+ test
   (check-equal? (children 'one test-ptree) (list "two"))
@@ -95,9 +95,9 @@
   (check-false (children 'fooburger test-ptree)))
 
 
-(define/contract (siblings node [ptree (current-ptree)])
-  (((or/c ptree-node? false?)) (ptree?) . ->* . (or/c (listof string?) false?))  
-  (children (parent node ptree) ptree))
+(define/contract (siblings pnode [ptree (current-ptree)])
+  (((or/c pnode? false?)) (ptree?) . ->* . (or/c (listof string?) false?))  
+  (children (parent pnode ptree) ptree))
 
 
 (module+ test
@@ -120,26 +120,29 @@
 
 
 
-(define/contract (adjacents side node [ptree (current-ptree)])
-  ((symbol? (or/c ptree-node? false?)) (ptree?) . ->* . (or/c (listof ptree-node?) false?))
-  (and node
-       (let ([result ((if (equal? side 'left) 
-                          takef
-                          takef-right) (ptree->list ptree) 
-                                       (λ(y) (not (equal? (->string node) (->string y)))))])
+(define (adjacents side pnode [ptree (current-ptree)])
+  (and pnode
+       (let* ([proc (if (equal? side 'left) takef takef-right)]
+              [result (proc (ptree->list ptree) (λ(x) (not (equal? (->string pnode) (->string x)))))])
          (and (not (empty? result)) result))))
 
+
+(define/contract (left-adjacents pnode [ptree (current-ptree)]) 
+  (((or/c pnode? false?)) (ptree?) . ->* . (or/c (listof pnode?) false?))
+  (adjacents 'left pnode ptree))
+
 (module+ test
-  (check-equal? (adjacents 'left 'one test-ptree) '("foo" "bar"))
-  (check-equal? (adjacents 'left 'three test-ptree) '("foo" "bar" "one" "two"))
-  (check-false (adjacents 'left 'foo test-ptree)))
+  (check-equal? (left-adjacents 'one test-ptree) '("foo" "bar"))
+  (check-equal? (left-adjacents 'three test-ptree) '("foo" "bar" "one" "two"))
+  (check-false (left-adjacents 'foo test-ptree)))
 
-(define (left-adjacents node [ptree (current-ptree)]) (adjacents 'left node ptree))
-(define (right-adjacents node [ptree (current-ptree)]) (adjacents 'right node ptree))
+(define/contract (right-adjacents pnode [ptree (current-ptree)]) 
+  (((or/c pnode? false?)) (ptree?) . ->* . (or/c (listof pnode?) false?))
+  (adjacents 'right pnode ptree))
 
-(define/contract (previous node [ptree (current-ptree)])
-  (((or/c ptree-node? false?)) (ptree?) . ->* . (or/c ptree-node? false?))
-  (let ([result (left-adjacents node ptree)])
+(define/contract (previous pnode [ptree (current-ptree)])
+  (((or/c pnode? false?)) (ptree?) . ->* . (or/c pnode? false?))
+  (let ([result (left-adjacents pnode ptree)])
     (and result (last result))))
 
 (module+ test
@@ -148,9 +151,9 @@
   (check-false (previous 'foo test-ptree)))
 
 
-(define (next node [ptree (current-ptree)])
-  (((or/c ptree-node? false?)) (ptree?) . ->* . (or/c ptree-node? false?))
-  (let ([result (right-adjacents node ptree)])
+(define (next pnode [ptree (current-ptree)])
+  (((or/c pnode? false?)) (ptree?) . ->* . (or/c pnode? false?))
+  (let ([result (right-adjacents pnode ptree)])
     (and result (first result))))
 
 (module+ test
@@ -160,28 +163,28 @@
 
 
 
-(define/contract (name->url name [files current-url-context])
-  ((ptree-node?) ((listof pathish?)) . ->* . (or/c ptree-node? false?))
+(define/contract (pnode->url pnode [files (current-url-context)])
+  ((pnode?) ((listof pathish?)) . ->* . (or/c pnode? false?))
   ;; upconvert all files to their output path
   ;; then remove duplicates because some sources might have already been rendered
   (define output-paths (remove-duplicates (map ->output-path files) equal?))
   ;; find ones that match name
-  (define matching-paths (filter (λ(x) (equal? (->string x) (->string name))) output-paths))
+  (define matching-paths (filter (λ(x) (equal? (->string x) (->string pnode))) output-paths))
   
   (cond
     [((len matching-paths) . = . 1) (->string (car matching-paths))]
-    [((len matching-paths) . > . 1) (error "More than one matching URL for" name)]
+    [((len matching-paths) . > . 1) (error "More than one matching URL for" pnode)]
     [else #f] ))
 
-(define ptree-name->url name->url)
+(define ptree-name->url pnode->url)
 
 
 (module+ test
   (define files '("foo.html" "bar.html" "bar.html.p" "zap.html" "zap.xml"))
-  (check-equal? (name->url 'foo.html files) "foo.html")
-  (check-equal? (name->url 'bar.html files) "bar.html")
+  (check-equal? (pnode->url 'foo.html files) "foo.html")
+  (check-equal? (pnode->url 'bar.html files) "bar.html")
   ;;  (check-equal? (name->url 'zap files) 'error) ;; todo: how to test error?
-  (check-false (name->url 'hee files)))
+  (check-false (pnode->url 'hee files)))
 
 
 
@@ -203,7 +206,7 @@
 ;; contract for ptree-source-decode
 (define/contract (valid-names? x)
   (any/c . -> . boolean?)
-  (andmap ptree-node?/error (filter-not whitespace? (flatten x))))
+  (andmap pnode?/error (filter-not whitespace? (flatten x))))
 
 ;; contract for ptree-source-decode
 (define/contract (unique-names? x)
@@ -223,8 +226,8 @@
 
 
 ;; used to convert here-path into here
-(define/contract (path->ptree-node path)
-  (pathish? . -> . ptree-node?)
+(define/contract (path->pnode path)
+  (pathish? . -> . pnode?)
   (->string (->output-path (find-relative-path PROJECT_ROOT (->path path)))))
 
 
