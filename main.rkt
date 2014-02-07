@@ -25,19 +25,6 @@
      (require pollen/tools pollen/main-helper)
      (require-and-provide-extras) ; brings in the project require files
      
-     ;; #%top binding catches ids that aren't defined
-     ;; here, convert them to basic xexpr
-     ;; #%top is a syntax transformer that returns a function
-     ;; λ x captures all the args (vs. λ(x), which only catches one)
-     ;; and id is not spliced because it's syntax, not a true variable
-     ;; WARNING! This is convenient for writing pollen documents
-     ;; (which is why it works this way)
-     ;; but it makes debugging tricky, because an undefined (symbol item ...)
-     ;; is just treated as a valid tagged-xexpr, not an undefined function.
-     (define-syntax-rule (#%top . id)
-       ;; todo: can #%top emit a debug message when a function hits it?
-       (λ x `(id ,@x)))
-     
      expr ... ; body of module  
      
      ;; set up a hook for identifier 'here'
@@ -47,9 +34,9 @@
      (provide (all-from-out ; pollen file should bring its requires
                pollen/tools))) 
    
-   (require 'pollen-inner) ; provides doc & #%top, among other things
+   (require 'pollen-inner) ; provides doc, among other things
    
-   (define here (path->pnode inner-here-path))
+   (define here ((bound/c path->pnode) inner-here-path))
    
    ;; prepare the elements, and append inner-here-path as meta.
    ;; put it first so it can be overridden by custom meta later on
@@ -85,7 +72,7 @@
    
    (define main (apply (if here-is-ptree?
                            ;; ptree source files will go this way,
-                           ptree-source-decode
+                           (bound/c ptree-source-decode)
                            ;; ... but other files, including pollen, will go this way.
                            ;; Root is treated as a function. 
                            ;; If it's not defined elsewhere, 
