@@ -1,10 +1,18 @@
 #lang racket/base
-(require racket/contract racket/match xml/path racket/bool)
+(require racket/contract racket/match xml/path racket/bool racket/rerequire)
 (require "tools.rkt" "world.rkt" "debug.rkt" "decode.rkt")
 
 (module+ test (require rackunit))
 
-(provide pnode? ptree? parent children previous next pnode->url ptree-source-decode path->pnode ptree->list file->ptree make-project-ptree current-ptree current-url-context)
+(provide pnode? ptree? ptree-source? parent children previous next pnode->url ptree-source-decode path->pnode ptree->list file->ptree make-project-ptree current-ptree current-url-context)
+
+(define/contract (ptree-source? x)
+  (any/c . -> . boolean?)
+  ((->path x) . has-ext? . PTREE_SOURCE_EXT))
+
+(module+ test
+  (check-true (ptree-source? (format "foo.~a" PTREE_SOURCE_EXT)))
+  (check-false (ptree-source? (format "~a.foo" PTREE_SOURCE_EXT))))
 
 (define/contract (pnode? x)
   (any/c . -> . boolean?)
@@ -48,6 +56,7 @@
   (pathish? . -> . ptree?)
   (define path (->path p))
   (message "Loading ptree file" (->string (file-name-from-path path)))
+  (dynamic-rerequire path)
   (dynamic-require path MAIN_POLLEN_EXPORT))
 
 (define/contract (directory->ptree dir)
