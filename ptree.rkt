@@ -55,7 +55,7 @@
 (define/contract (file->ptree p)
   (pathish? . -> . ptree?)
   (define path (->path p))
-;;  (message "Loading ptree file" (->string (file-name-from-path path)))
+  (message "Loading ptree file" (->string (file-name-from-path path)))
   (dynamic-rerequire path)
   (dynamic-require path MAIN_POLLEN_EXPORT))
 
