@@ -22,7 +22,11 @@
    (module pollen-inner pollen/lang/doclang2_raw
      ;; use same requires as top of main.rkt 
      ;; (can't import them from surrounding module due to submodule rules)
-     (require pollen/tools pollen/main-helper)
+     ;; todo: how to keep these two lists in sync?
+     ;; and why doesn't this work:
+     ;;     (require pollen/main-imports)
+     ;;     (provide (all-from-out pollen/main-imports))
+     (require pollen/tools pollen/main-helper pollen/top pollen/ptree)
      (require-and-provide-extras) ; brings in the project require files
      
      expr ... ; body of module  

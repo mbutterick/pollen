@@ -4,20 +4,10 @@
 (require (for-syntax racket/rerequire pollen/tools pollen/world))
 (require pollen/tools pollen/world)
 
-(provide (except-out (all-defined-out) top~)
-         (rename-out (top~ #%top)))
+(provide (all-defined-out))
 
 (module+ test (require rackunit))
 
-(define-syntax-rule (top~ . id)
-  (λ x `(id ,@x)))
-
-(define-syntax (bound/c stx)
-   (syntax-case stx ()
-     [(_ x)
-      (if (identifier-binding #'x )
-          #'x
-          #'(#%top . x))]))
 
 (define-for-syntax (put-file-in-require-form file)
   `(file ,(->string file)))
