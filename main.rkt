@@ -34,7 +34,7 @@
      (provide (all-from-out ; pollen file should bring its requires
                pollen/tools))) 
    
-   (require 'pollen-inner) ; provides doc, among other things
+   (require 'pollen-inner) ; provides doc & #%top, among other things
    
    (define here ((bound/c path->pnode) inner-here-path))
    
@@ -68,7 +68,7 @@
    ;; Because if it's overridden to something other than *.ptree, 
    ;; ptree processing will fail.
    ;; This defeats rule that ptree file suffix triggers ptree decoding.
-   (define here-is-ptree? (ptree-source? (->path inner-here-path)))
+   (define here-is-ptree? ((bound/c ptree-source?) (->path inner-here-path)))
    
    (define main (apply (if here-is-ptree?
                            ;; ptree source files will go this way,

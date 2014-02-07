@@ -350,7 +350,7 @@
       ;; for include-template (used below)
       (require web-server/templates)
       ;; for ptree navigation functions, and template commands
-      (require pollen/debug pollen/ptree pollen/template)
+      (require pollen/debug pollen/ptree pollen/template pollen/main-helper)
       ;; import source into eval space. This sets up main & metas
       (require ,(->string source-name))
       (parameterize ([current-ptree (make-project-ptree ,PROJECT_ROOT)]

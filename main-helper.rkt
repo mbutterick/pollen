@@ -4,20 +4,20 @@
 (require (for-syntax racket/rerequire pollen/tools pollen/world))
 (require pollen/tools pollen/world)
 
-(provide here-path get-here-path require-extras require-and-provide-extras bound/c
+(provide (except-out (all-defined-out) top~)
          (rename-out (top~ #%top)))
 
 (module+ test (require rackunit))
 
 (define-syntax-rule (top~ . id)
-    (λ x `(id ,@x)))
+  (λ x `(id ,@x)))
 
 (define-syntax (bound/c stx)
-    (syntax-case stx ()
-      [(_ x)
-       (if (identifier-binding #'x )
-           #'x
-           #'(#%top . x))]))
+   (syntax-case stx ()
+     [(_ x)
+      (if (identifier-binding #'x )
+          #'x
+          #'(#%top . x))]))
 
 (define-for-syntax (put-file-in-require-form file)
   `(file ,(->string file)))
@@ -25,21 +25,21 @@
 (define-syntax (require-and-provide-extras stx)
   (define project-require-files (get-project-require-files))
   (if project-require-files
-     (let ([files-in-require-form (map put-file-in-require-form project-require-files)])
-       (datum->syntax stx `(begin
-                             (require ,@files-in-require-form)
-                             (provide (all-from-out ,@files-in-require-form)))))
-    ; if no files to import, do nothing
-    #'(begin)))
+      (let ([files-in-require-form (map put-file-in-require-form project-require-files)])
+        (datum->syntax stx `(begin
+                              (require ,@files-in-require-form)
+                              (provide (all-from-out ,@files-in-require-form)))))
+      ; if no files to import, do nothing
+      #'(begin)))
 
 (define-syntax (require-extras stx)
   (define project-require-files (get-project-require-files))
   (if project-require-files
-     (let ([files-in-require-form (map put-file-in-require-form project-require-files)])
-       (datum->syntax stx `(begin
-                             (require ,@files-in-require-form))))
-    ; if no files to import, do nothing
-    #'(begin)))
+      (let ([files-in-require-form (map put-file-in-require-form project-require-files)])
+        (datum->syntax stx `(begin
+                              (require ,@files-in-require-form))))
+      ; if no files to import, do nothing
+      #'(begin)))
 
 
 ;; here = path of this file, relative to current directory. 
@@ -55,13 +55,13 @@
                     ;; Therefore, best to use let.
                     (let* ([ccr (current-contract-region)] ; trick for getting current module name
                            [hp (cond
-                                        ;; if contract-region is called from within submodule,
-                                        ;; you get a list
-                                        ;; in which case, just grab the path from the front
-                                        [(list? ccr) (car ccr)]
-                                        ;; file isn't yet saved in drracket
-                                        [(equal? 'pollen-lang-module ccr) 'nowhere] 
-                                        [else ccr])])
+                                 ;; if contract-region is called from within submodule,
+                                 ;; you get a list
+                                 ;; in which case, just grab the path from the front
+                                 [(list? ccr) (car ccr)]
+                                 ;; file isn't yet saved in drracket
+                                 [(equal? 'pollen-lang-module ccr) 'nowhere] 
+                                 [else ccr])])
                       ;; pass complete path back as here value (as string)
                       ;; Why not relative to current-directory? 
                       ;; Because current-directory can't be parameterized
