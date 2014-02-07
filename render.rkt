@@ -116,7 +116,7 @@
         ;; and files without extension that correspond to p files
         [(needs-template? path) (render-with-template path #:force force)]
         ;; this will catch ptree files
-        [(report (ptree-source? path)) (let ([ptree (dynamic-require path 'main)])
+        [(ptree-source? path) (let ([ptree (dynamic-require path 'main)])
                                 (render-files-in-ptree ptree #:force force))]
         [(equal? FALLBACK_TEMPLATE (->string (file-name-from-path path)))
          (message "Render: using fallback template")]
@@ -345,9 +345,8 @@
   ;; Therefore no way to arbitrarily invoke template at run-time.
   ;; This routine creates a new namespace and compiles the template within it.
   
-  (render-through-eval 
-   source-dir
-   `(begin 
+  (define string-to-eval 
+    `(begin 
       ;; for include-template (used below)
       (require web-server/templates)
       ;; for ptree navigation functions, and template commands
@@ -356,14 +355,16 @@
       (require ,(->string source-name))
       (parameterize ([current-ptree (make-project-ptree ,PROJECT_ROOT)]
                      [current-url-context ,PROJECT_ROOT])
-        (include-template #:command-char ,TEMPLATE_FIELD_DELIMITER ,(->string template-name))))))
+        (include-template #:command-char ,TEMPLATE_FIELD_DELIMITER ,(->string template-name)))))
+  
+  (render-through-eval source-dir string-to-eval))
 
 
 ;; render files listed in a ptree file
 (define/contract (render-files-in-ptree ptree #:force [force #f])
   ((ptree?) (#:force boolean?) . ->* . void?)    
   ;; pass force parameter through 
-  (for-each (λ(i) (render (report i) #:force force)) 
+  (for-each (λ(i) (render i #:force force)) 
             ;; use dynamic-require to avoid requiring ptree.rkt every time render.rkt is required
             ((dynamic-require "ptree.rkt" 'all-pages) ptree)))
 

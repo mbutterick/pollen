@@ -35,9 +35,10 @@
 (define/contract (logger req)
   (request? . -> . void?) 
   (define client (request-client-ip req))
+  (define localhost-client "::1")
   (define url-string (url->string (request-uri req)))
   (message "Request:" (string-replace url-string DASHBOARD_NAME " dashboard")
-           "from" (if (equal? client "::1") "localhost" client)))
+           (if (not (equal? client localhost-client)) (format "from ~a" client) "")))
 
 ;; pass string args to route, then
 ;; package route into right format for web server
