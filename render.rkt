@@ -116,7 +116,7 @@
         ;; and files without extension that correspond to p files
         [(needs-template? path) (render-with-template path #:force force)]
         ;; this will catch ptree files
-        [(report (ptree-source? path)) (let ([ptree (dynamic-require path 'main)])
+        [(ptree-source? path) (let ([ptree (dynamic-require path 'main)])
                                 (render-files-in-ptree ptree #:force force))]
         [(equal? FALLBACK_TEMPLATE (->string (file-name-from-path path)))
          (message "Render: using fallback template")]
@@ -363,7 +363,7 @@
 (define/contract (render-files-in-ptree ptree #:force [force #f])
   ((ptree?) (#:force boolean?) . ->* . void?)    
   ;; pass force parameter through 
-  (for-each (λ(i) (render (report i) #:force force)) 
+  (for-each (λ(i) (render i #:force force)) 
             ;; use dynamic-require to avoid requiring ptree.rkt every time render.rkt is required
             ((dynamic-require "ptree.rkt" 'all-pages) ptree)))
 

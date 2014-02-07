@@ -18,10 +18,10 @@
 (define (body-wrapper content-xexpr)
   `(html 
     (head
-     (meta ([charset "UTF-8"]))
-     (link ([rel "stylesheet"] 
-            [type "text/css"] 
-            [href ,(format "/~a" DASHBOARD_CSS)])))
+     (meta ((charset "UTF-8")))
+     (link ((rel "stylesheet") 
+            (type "text/css") 
+            (href ,(format "/~a" DASHBOARD_CSS)))))
     (body
      ,content-xexpr (div ((id "pollen-logo"))))))
 
@@ -174,12 +174,12 @@
                          
                          (cond ; in cell
                            [source  (cons (format "in/~a" source) "in")]
-                           [(or (ptree-source? filename) (sourceish? filename))  (cons (format "in/~a" filename) "in")]
+                           [(or (has-ext? filename PTREE_SOURCE_EXT) (sourceish? filename))  (cons (format "in/~a" filename) "in")]
                            [else empty-cell])
                          
                          (cond ; out cell 
                            [(directory-exists? (build-path dir filename)) (cons #f #f)]
-                           [(ptree-source? filename) empty-cell]
+                           [(has-ext? filename PTREE_SOURCE_EXT) empty-cell]
                            [else (cons (format "out/~a" filename) "out")]))))))
   
   (define (ineligible-path? x) (or (not (visible? x)) (member x RESERVED_PATHS)))  
@@ -188,14 +188,12 @@
     (define output-paths (map ->output-path xs))
     (define (unique-members xs) (set->list (list->set xs)))
     (define all-paths (unique-members output-paths))
-    (define path-is-directory? (λ(f) (directory-exists? (build-path dir f))))
-    (define subdirectories (filter path-is-directory? all-paths))
-    (define files (filter-not path-is-directory? all-paths))
-    (define ptree-sources (filter ptree-source? files))
-    (define other-files (filter-not ptree-source? files))
+    (define built-directory-exists? (λ(f) (directory-exists? (build-path dir f))))
+    (define subdirectories (filter built-directory-exists? all-paths))
+    (define files (filter-not built-directory-exists? all-paths))
     (define (sort-names xs) (sort xs #:key ->string string<?))
     ;; put subdirs in list ahead of files (so they appear at the top)
-    (append (sort-names subdirectories) (sort-names ptree-sources) (sort-names other-files)))
+    (append (sort-names subdirectories) (sort-names files)))
   
   (define project-paths (filter-not ineligible-path? (if (file-exists? dashfile)
                                                          (map ->path (ptree->list (file->ptree dashfile)))
