@@ -4,15 +4,7 @@
 
 (module+ test (require rackunit))
 
-(provide pnode? ptree? ptree-source? parent children previous next pnode->url ptree-source-decode path->pnode ptree->list file->ptree make-project-ptree current-ptree current-url-context)
-
-(define/contract (ptree-source? x)
-  (any/c . -> . boolean?)
-  ((->path x) . has-ext? . PTREE_SOURCE_EXT))
-
-(module+ test
-  (check-true (ptree-source? (format "foo.~a" PTREE_SOURCE_EXT)))
-  (check-false (ptree-source? (format "~a.foo" PTREE_SOURCE_EXT))))
+(provide pnode? ptree? parent children previous next pnode->url ptree-source-decode path->pnode ptree->list file->ptree make-project-ptree current-ptree current-url-context)
 
 (define/contract (pnode? x)
   (any/c . -> . boolean?)

@@ -212,6 +212,15 @@
   (ormap (λ(proc) (proc (->path x))) (list pollen-source? has-pollen-source?)))
 
 
+(define/contract (ptree-source? x)
+  (any/c . -> . boolean?)
+  ((->path x) . has-ext? . PTREE_SOURCE_EXT))
+
+(module+ test
+  (check-true (ptree-source? (format "foo.~a" PTREE_SOURCE_EXT)))
+  (check-false (ptree-source? (format "~a.foo" PTREE_SOURCE_EXT))))
+
+
 
 (define/contract (pollen-source? x)
   (any/c . -> . boolean?)
