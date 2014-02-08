@@ -16,8 +16,8 @@
 (define/contract (puttable-item? x)
   (any/c . -> . boolean?)
   (or (tagged-xexpr? x) 
-      (has-pollen-source? x) 
-      (and (pnode->url x) (has-pollen-source? (pnode->url x)))))
+      (has-decoder-source? x) 
+      (and (pnode->url x) (has-decoder-source? (pnode->url x)))))
 
 (define/contract (query-key? x)
   (any/c . -> . boolean?)
@@ -28,8 +28,8 @@
   (cond
     ;; Using put has no effect on tagged-xexprs. It's here to make the idiom smooth.
     [(tagged-xexpr? x) x] 
-    [(has-pollen-source? x) (dynamic-require (->pollen-source-path x) 'main)]
-    [(has-pollen-source? (pnode->url x)) (dynamic-require (->pollen-source-path (pnode->url x)) 'main)]))
+    [(has-decoder-source? x) (dynamic-require (->decoder-source-path x) 'main)]
+    [(has-decoder-source? (pnode->url x)) (dynamic-require (->decoder-source-path (pnode->url x)) 'main)]))
 
 (module+ test
   (check-equal? (put '(foo "bar")) '(foo "bar"))
@@ -51,15 +51,15 @@
 
 (define/contract (find-in-metas px key)
   (puttable-item? query-key? . -> . (or/c xexpr-elements? false?))
-  (and (has-pollen-source? px)
-       (let ([metas (dynamic-require (->pollen-source-path px) 'metas)]
+  (and (has-decoder-source? px)
+       (let ([metas (dynamic-require (->decoder-source-path px) 'metas)]
              [key (->string key)])
          (and (key . in? . metas ) (->list (get metas key))))))
 
 (module+ test
   (parameterize ([current-directory "tests/template"])
     (check-equal? (find-in-metas "put" "foo") (list "bar"))
-    (let* ([metas (dynamic-require (->pollen-source-path 'put) 'metas)]
+    (let* ([metas (dynamic-require (->decoder-source-path 'put) 'metas)]
            [here (find-in-metas 'put 'here)])     
       (check-equal? here (list "tests/template/put")))))
 

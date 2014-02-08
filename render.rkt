@@ -212,18 +212,18 @@
   ;; this becomes the return value
   (->boolean (> (len (get-output-string port-for-catching-file-info)) 0)))
 
-(define (complete-pollen-source-path x)
-  (->complete-path (->pollen-source-path (->path x))))
+(define (complete-decoder-source-path x)
+  (->complete-path (->decoder-source-path (->path x))))
 
 ;; apply template
 (define/contract (render-with-template x [template-name #f] #:force [force #f]) 
   (((and/c pathish? 
            (flat-named-contract 'file-exists
-                                (λ(x) (file-exists? (complete-pollen-source-path x))))))
+                                (λ(x) (file-exists? (complete-decoder-source-path x))))))
    (path? #:force boolean?) . ->* . void?)
   
   ;; set up information about source
-  (define source-path (complete-pollen-source-path x))
+  (define source-path (complete-decoder-source-path x))
   ;; todo: this won't work with source files nested down one level
   (define-values (source-dir ignored also-ignored) (split-path source-path))
   

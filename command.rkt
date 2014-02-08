@@ -32,7 +32,7 @@ polcom [filename] (renders individual file)")]
                                      
                                      (define (pollen-related-file? file)
                                        (ormap (λ(proc) (proc file)) (list
-                                                                     pollen-source? 
+                                                                     decoder-source? 
                                                                      preproc-source? 
                                                                      template-source?
                                                                      ptree-source?

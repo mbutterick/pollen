@@ -196,9 +196,9 @@
   (any/c . -> . boolean?)
   (file-exists? (->preproc-source-path (->path x))))
 
-(define/contract (has-pollen-source? x)
+(define/contract (has-decoder-source? x)
   (any/c . -> . boolean?)
-  (file-exists? (->pollen-source-path (->path x))))
+  (file-exists? (->decoder-source-path (->path x))))
 
 (define/contract (needs-preproc? x)
   (any/c . -> . boolean?)
@@ -209,7 +209,7 @@
   (any/c . -> . boolean?)
   ; it's a pollen source file
   ; or a file (e.g., html) that has a pollen source file
-  (ormap (λ(proc) (proc (->path x))) (list pollen-source? has-pollen-source?)))
+  (ormap (λ(proc) (proc (->path x))) (list decoder-source? has-decoder-source?)))
 
 
 (define/contract (ptree-source? x)
@@ -222,13 +222,13 @@
 
 
 
-(define/contract (pollen-source? x)
+(define/contract (decoder-source? x)
   (any/c . -> . boolean?)
   (has-ext? x DECODER_SOURCE_EXT))
 
 (module+ test
-  (check-true (pollen-source? "foo.pd"))
-  (check-false (pollen-source? "foo.p")))
+  (check-true (decoder-source? "foo.pd"))
+  (check-false (decoder-source? "foo.p")))
 
 
 (define/contract (template-source? x)
@@ -271,7 +271,7 @@
 (define/contract (->output-path x)
   (pathish? . -> . path?)
   (->path 
-   (if (or (pollen-source? x) (preproc-source? x))
+   (if (or (decoder-source? x) (preproc-source? x))
        (remove-ext x)
        x)))
 
@@ -287,17 +287,17 @@
 ;; does not, however, validate that new path exists
 ;; todo: should it? I don't think so, sometimes handy to make the name for later use
 ;; OK to use pollen source as input (comes out the same way)
-(define/contract (->pollen-source-path x)
+(define/contract (->decoder-source-path x)
   (pathish? . -> . path?)
-  (->path (if (pollen-source? x)
+  (->path (if (decoder-source? x)
               x
               (add-ext x DECODER_SOURCE_EXT))))
 
 (module+ test
-  (check-equal? (->pollen-source-path (->path "foo.pd")) (->path "foo.pd"))
-  (check-equal? (->pollen-source-path (->path "foo.html")) (->path "foo.html.pd"))
-  (check-equal? (->pollen-source-path "foo") (->path "foo.pd"))
-  (check-equal? (->pollen-source-path 'foo) (->path "foo.pd")))
+  (check-equal? (->decoder-source-path (->path "foo.pd")) (->path "foo.pd"))
+  (check-equal? (->decoder-source-path (->path "foo.html")) (->path "foo.html.pd"))
+  (check-equal? (->decoder-source-path "foo") (->path "foo.pd"))
+  (check-equal? (->decoder-source-path 'foo) (->path "foo.pd")))
 
 (define/contract (project-files-with-ext ext)
   (symbol? . -> . (listof complete-path?))
