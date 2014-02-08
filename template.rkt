@@ -17,7 +17,7 @@
   (any/c . -> . boolean?)
   (or (tagged-xexpr? x) 
       (has-pollen-source? x) 
-      (has-pollen-source? (pnode->url x))))
+      (and (pnode->url x) (has-pollen-source? (pnode->url x)))))
 
 (define/contract (query-key? x)
   (any/c . -> . boolean?)
@@ -33,20 +33,21 @@
 
 (module+ test
   (check-equal? (put '(foo "bar")) '(foo "bar"))
-  (check-equal? (put "tests/template/put.p") 
+  (check-equal? (put "tests/template/put.pd") 
                 '(root "\n" "\n" (em "One") " paragraph" "\n" "\n" "Another " (em "paragraph") "\n" "\n")))
 
 
 
-(define/contract (find px query)
-  (puttable-item? query-key? . -> . (or/c xexpr-elements? false?))
-  (or (find-in-metas px query) (find-in-main px query)))
+(define/contract (find query px)
+  (query-key? puttable-item? . -> . (or/c xexpr-element? false?))
+  (define result (or (find-in-metas px query) (find-in-main px query)))
+  (and result (car result))) ;; return false or first element
 
 (module+ test 
   (parameterize ([current-directory "tests/template"])
-    (check-false (find "put" "nonexistent-key"))
-    (check-equal? (find "put" "foo") (list "bar"))
-    (check-equal? (find "put" "em") (list "One" "paragraph"))))
+    (check-false (find "nonexistent-key" "put"))
+    (check-equal? (find "foo" "put") "bar")
+    (check-equal? (find "em" "put") "One")))
 
 (define/contract (find-in-metas px key)
   (puttable-item? query-key? . -> . (or/c xexpr-elements? false?))
@@ -59,9 +60,8 @@
   (parameterize ([current-directory "tests/template"])
     (check-equal? (find-in-metas "put" "foo") (list "bar"))
     (let* ([metas (dynamic-require (->pollen-source-path 'put) 'metas)]
-           [here (find-in-metas 'put 'here)]
-           [here-relative (list (->string (find-relative-path (current-directory) (car here))))])     
-      (check-equal? here-relative (list "put")))))
+           [here (find-in-metas 'put 'here)])     
+      (check-equal? here (list "tests/template/put")))))
 
 
 (define/contract (find-in-main px query) 
@@ -108,3 +108,14 @@
 ; generate *-as-html versions of functions
 (define-values (put-as-html splice-as-html)
   (apply values (map (λ(proc) (λ(x) (make-html (proc x)))) (list put splice))))
+
+(define ->html put-as-html)
+
+
+;; improves the syntax for conditional blocks in templates
+;; ordinarily it would be ◊when[condition]{◊list{stuff ...}}
+;; now it can be ◊when/block[condition]{stuff ...}
+(define (when/block condition . strings)
+  (if condition (string-append* strings) ""))
+
+

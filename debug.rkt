@@ -4,14 +4,15 @@
 (require racket/format)
 
 
-(provide describe report message make-datestamp make-timestamp)
+(provide describe report message make-datestamp make-timestamp display-stack-trace)
 
 ; todo: contracts, tests, docs
 
 (require (prefix-in williams: (planet williams/describe/describe)))
 
 (define (describe x)
-  (williams:describe x)
+  (parameterize ([current-output-port (current-error-port)])
+    (williams:describe x))
   x)
 
 ; debug utilities
@@ -76,3 +77,22 @@
   (begin 
     (basic-message 'var "=" var) 
     var))
+
+
+
+(define (exn+stack->string exn)
+  (string-append 
+   (string-append "Exception: " (exn-message exn)) 
+   "\n"
+   "Stack:\n"
+   (string-join
+    (map (lambda (x)
+           (format "'~a' ~a ~a"
+                   (if (car x) (car x) "")
+                   (if (cdr x) (srcloc-source (cdr x)) "")
+                   (if (cdr x) (srcloc-line (cdr x)) "")))
+         (continuation-mark-set->context (exn-continuation-marks exn)))
+    "\n")))
+
+(define (display-stack-trace exn)
+  (displayln (exn+stack->string exn)))

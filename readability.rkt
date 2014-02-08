@@ -1,5 +1,5 @@
 #lang racket/base
-(require racket/contract net/url)
+(require racket/contract net/url xml)
 (require (only-in racket/list empty? range splitf-at dropf dropf-right))
 (require (only-in racket/format ~a))
 (require (only-in racket/string string-join))
@@ -31,9 +31,10 @@
     [(empty? x) ""]
     [(symbol? x) (symbol->string x)]
     [(number? x) (number->string x)]
-    [(url? x) (->string (->path x))]
+    [(url? x) (->string (->path x))] ; todo: a url is more than just a path-string ... it has character encoding issues
     [(path? x) (path->string x)]
     [(char? x) (~a x)]
+    [(xexpr? x) (xexpr->string x)] ; put this last so other xexprish things don't get caught
     [else (error (format "Can't make ~a into string" x))]))
 
 (module+ test
@@ -44,7 +45,8 @@
   (check-equal? (->string (string->url "foo/bar.html")) "foo/bar.html")
   (define file-name-as-text "foo.txt")
   (check-equal? (->string (string->path file-name-as-text)) file-name-as-text)
-  (check-equal? (->string #\¶) "¶"))
+  (check-equal? (->string #\¶) "¶")
+  (check-equal? (->string '(foo "bar")) "<foo>bar</foo>"))
 
 
 ;; general way of coercing to symbol

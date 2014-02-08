@@ -303,4 +303,8 @@
   (symbol? . -> . (listof complete-path?))
   (map ->complete-path (filter (λ(i) (has-ext? i ext)) (directory-list PROJECT_ROOT))))
 
+;; to identify unsaved sources in DrRacket
+(define (unsaved-source? path-string)
+    ((substring (->string path-string) 0 7) . equal? . "unsaved"))
+
 ;; todo: write tests for project-files-with-ext
