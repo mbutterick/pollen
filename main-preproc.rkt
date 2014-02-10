@@ -18,7 +18,7 @@
    ; doclang2_raw is a clone of scribble/doclang2 with decode disabled
    ; helpful because it collects & exports content via 'doc
    (module pollen-inner pollen/lang/doclang2_raw
-     (require pollen/tools pollen/main-helper)
+     (require pollen/tools pollen/main-helper pollen/top)
      (require-and-provide-extras) ; brings in the project require files
      
      expr ...) ; body of module 

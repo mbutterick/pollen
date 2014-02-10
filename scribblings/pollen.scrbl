@@ -10,7 +10,93 @@ Skip to: Why Pollen?
 Skip to: Why Racket?
 Skip to: Quick tutorial
 
-@section{Why Pollen?}
+@section{Setting up Pollen}
+
+Download Racket & install.
+
+@code{raco pkg install pollen}
+
+Open terminal and cd to your project directory.
+
+Run @code{racket}.
+
+At the prompt, type @code{(require pollen/setup)}.
+
+Then type @code{(setup)}. 
+
+Quit Racket with ctrl+D.
+
+At the terminal prompt, @code{./polcom start}.
+
+
+
+@section{Quick start}
+
+
+
+@subsection{You had me at Hello World}
+
+Launch DrRacket. Open a new document.
+
+Change the top line to #lang pollen. This will be the first line of any source file where you want to invoke the Pollen language.
+
+Type @code{Hello World} underneath.
+
+Run the file by clicking the Run button, or typing cmd-R.
+
+The result window will show @code{Hello World}.
+
+Congratulations, you've made your first Pollen document.
+
+If you like, change the text and run the file again. The new text will appear in the result window.
+
+Pollen is a programming language that operates in text mode by default. Meaning, all plain text in the source file is considered valid input, and gets passed through intact.
+
+@subsection{The plot thickens}
+
+Start a new Pollen document. Remember to change the top line.
+
+Underneath, type @code{Hello ◊(+ 1 2) Worlds}. The character before the left parenthesis is called a lozenge. Type it by [doing such and such].
+
+Ask yourself: what are you likely to get when you run the file?
+
+OK, now run the file.
+
+The result will be @code{Hello 3 Worlds}. Hopefully, that's what you expected. 
+
+Feel free to change the numbers inside the parenthesized expression and run the file again. The printed sum will change. You can also change the @code{+} sign to a @code{*} sign and make really big numbers. If you want to see your first stupid Pollen trick, type @code{Hello ◊(/ 38 57) of a World} and watch what happens.
+
+Erase everything but the top line.
+
+Type this: @code{
+◊(define name "Roxy")
+
+Hello ◊name}. 
+
+What do you suppose you'll get this time?
+
+Run the file. You'll see @code{Hello Roxy}.
+
+The lozenge character (◊) tells Pollen to interpret what follows as code rather than plain text. This character is therefore the gateway to all the programming functions available in Pollen. In the first case, it denoted a math expression. In the second case, it denoted the definition of a variable, and then the variable itself.
+
+
+@subsection{Making an HTML page with Pollen}
+
+By default, Pollen operates in preprocessor mode. That means it evaluates all the expressions in your document, renders each as text, and then outputs the whole document as a text file. 
+
+In this tutorial, you're going to make an HTML file. But you can use Pollen as a preprocessor for any kind of text file.
+
+@margin-note{That means Pollen can act as a preprocessor for CSS, JavaScript, XML — and even source files for other programming languages.}
+
+
+@subsection{Making an HTML page with Pollen in decoder mode}
+
+@subsection{Using the Pollen dashboard}
+
+
+
+
+@section{Why I made Pollen}
 
 The nerds have already raced ahead to the quick tutorial. That's okay. Because software isn't just data structures and functions. It's ideas, and choices, and policies. It's design. 
 
@@ -25,7 +111,7 @@ I made my first web page in 1994, shortly after the web was invented. I opened m
 
 If you weren't around then, you didn't miss much. Everything about the web was horrible: the web browsers, the computers running the browsers, the dial-up connections feeding the browsers, and of course HTML itself. At that point, the desktop-software experience was already slick and refined. By comparison, using the web felt like banging rocks together.
 
-That's no longer true. The web is now 20 years old. And many parts of the web have improved dramatically — the connections are faster, the browsers are more sophisticated, the screens have more pixels. 
+That's no longer true. The web is now 20 years old. During that time, most parts of the web have improved dramatically — the connections are faster, the browsers are more sophisticated, the screens have more pixels. 
 
 But one part has not: the way we make web pages. Over the years, tools promising to simplify HTML development have come and mostly gone — from PageMill to Dreamweaver. Meanwhile, true web jocks have remained loyal to the original HTML power tool: the humble text editor.
 
@@ -69,7 +155,15 @@ A CSS preprocessor automates the generation of CSS data. These preprocessors do 
 @subsection{The book-publishing problem}
 
 
+@section{Why I used Racket}
 
-@section{Why Racket?}
 
-@section{Quick tutorial}
+
+@subsection{Writing & editing}
+
+@subsection{Design & layout}
+
+@subsection{Programming}
+
+
+@section{License & credits}
