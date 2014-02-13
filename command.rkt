@@ -1,4 +1,5 @@
-#lang racket
+#lang racket/base
+(require (for-syntax racket/base))
 
 ;; todo: add command to check validity of installation
 

@@ -1,4 +1,4 @@
-#lang racket
+#lang racket/base
 
 ;; Changes the default behavior of #%top.
 ;; Unbound identifiers are allowed, and treated as the 
@@ -6,6 +6,7 @@
 ;; To suppress this behavior, use bound/c to wrap any name.
 ;; If that name isn't already defined, you'll get the usual syntax error.
 
+(require (for-syntax racket/base))
 
 (provide (except-out (all-defined-out) top~)
          (rename-out (top~ #%top)))

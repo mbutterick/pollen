@@ -1,4 +1,4 @@
-#lang racket
+#lang racket/base
 (require racket/port racket/file racket/rerequire racket/contract)
 (require "world.rkt" "tools.rkt" "readability.rkt" "template.rkt")
 
@@ -311,7 +311,7 @@
     ;; the eval namespace doesn't have to re-import these
     ;; because otherwise, most of its time is spent traversing imports.
     (map (λ(mod-name) (namespace-attach-module original-ns mod-name)) 
-         '(racket 
+         '(racket/base 
            web-server/templates 
            xml/path
            racket/port 
@@ -330,7 +330,8 @@
            pollen/template
            pollen/tools
            pollen/world))
-    (namespace-require 'racket) ; use namespace-require for FIRST require, then eval after
+    (namespace-require 'racket/base) ; use namespace-require for FIRST require, then eval after
+    (eval '(require (for-syntax racket/base)))
     (eval eval-string (current-namespace))))
 
 (define/contract (render-source-with-template source-path template-path)

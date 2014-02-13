@@ -1,4 +1,4 @@
-#lang racket
+#lang racket/base
 
 ;; These are separated from main.rkt as a performance improvement:
 ;; so they can be imported into the render.rkt namespace

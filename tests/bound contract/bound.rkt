@@ -1,4 +1,5 @@
-#lang racket
+#lang racket/base
+(require (for-syntax racket/base))
 
 (provide bound/c (rename-out (top~ #%top)))
 

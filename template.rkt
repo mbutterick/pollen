@@ -17,7 +17,11 @@
   (any/c . -> . boolean?)
   (or (tagged-xexpr? x) 
       (has-decoder-source? x) 
-      (and (pnode->url x) (has-decoder-source? (pnode->url x)))))
+      (and (pnode? x) (pnode->url x) (has-decoder-source? (pnode->url x)))))
+
+(module+ test
+  (check-false (puttable-item? #t))
+  (check-false (puttable-item? #f)))
 
 (define/contract (query-key? x)
   (any/c . -> . boolean?)
@@ -39,18 +43,19 @@
 
 
 (define/contract (find query px)
-  (query-key? puttable-item? . -> . (or/c xexpr-element? false?))
-  (define result (or (find-in-metas px query) (find-in-main px query)))
+  (query-key? (or/c false? puttable-item?) . -> . (or/c false? xexpr-element?))
+  (define result (and px (or (find-in-metas px query) (find-in-main px query))))
   (and result (car result))) ;; return false or first element
 
 (module+ test 
   (parameterize ([current-directory "tests/template"])
     (check-false (find "nonexistent-key" "put"))
     (check-equal? (find "foo" "put") "bar")
-    (check-equal? (find "em" "put") "One")))
+    (check-equal? (find "em" "put") "One"))
+  (check-equal? (find "foo" #f) #f))
 
 (define/contract (find-in-metas px key)
-  (puttable-item? query-key? . -> . (or/c xexpr-elements? false?))
+  (puttable-item? query-key? . -> . (or/c false? xexpr-elements?))
   (and (has-decoder-source? px)
        (let ([metas (dynamic-require (->decoder-source-path px) 'metas)]
              [key (->string key)])
@@ -66,7 +71,7 @@
 
 (define/contract (find-in-main px query) 
   (puttable-item? (or/c query-key? (listof query-key?)) 
-                  . -> . (or/c xexpr-elements? false?))
+                  . -> . (or/c  false? xexpr-elements?))
   (let* ([px (put px)]
          ;; make sure query is a list of symbols (required by se-path*/list)
          [query (map ->symbol (->list query))]
@@ -115,7 +120,12 @@
 ;; improves the syntax for conditional blocks in templates
 ;; ordinarily it would be ◊when[condition]{◊list{stuff ...}}
 ;; now it can be ◊when/block[condition]{stuff ...}
-(define (when/block condition . strings)
-  (if condition (string-append* strings) ""))
+;; has to be a macro otherwise body expressions will be evaluated regardless of condition
+;; this is bad: if condition is false, expression should exit
+(require (for-syntax racket/base))
+(define-syntax (when/block stx)
+  (syntax-case stx ()
+    [(_ condition body ...)
+  #'(if condition (string-append* (map ->string (list body ...))) "")]))
 
 

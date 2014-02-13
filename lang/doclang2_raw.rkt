@@ -1,4 +1,4 @@
-#lang racket
+#lang racket/base
 
 ;; A slightly nicer version of doclang where the parameters are keyword-based
 ;; rather than positional.  Delegates off to the original doclang.
@@ -7,7 +7,7 @@
          (for-syntax racket/base
                      syntax/parse)) 
 
-(provide (except-out (all-from-out racket) #%module-begin)
+(provide (except-out (all-from-out racket/base) #%module-begin)
          (rename-out [*module-begin #%module-begin]))
 
 ;; Module wrapper ----------------------------------------

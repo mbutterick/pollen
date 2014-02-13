@@ -1,35 +1,32 @@
-#lang racket
+#lang racket/base
+(require (for-syntax racket/base pollen/tools))
+
 (require racket/contract/region)
 
-(require (for-syntax racket/rerequire pollen/tools pollen/world))
-(require pollen/tools pollen/world)
-
-(provide (all-defined-out))
-
-(module+ test (require rackunit))
+(provide (all-defined-out) (all-from-out racket/contract/region))
 
 
 (define-for-syntax (put-file-in-require-form file)
   `(file ,(->string file)))
 
-(define-syntax (require-and-provide-extras stx)
+
+(define-for-syntax (make-require-extras-syntax stx #:provide? [provide? #f])
   (define project-require-files (get-project-require-files))
   (if project-require-files
       (let ([files-in-require-form (map put-file-in-require-form project-require-files)])
         (datum->syntax stx `(begin
                               (require ,@files-in-require-form)
-                              (provide (all-from-out ,@files-in-require-form)))))
+                              ,@(if provide? 
+                                    (list `(provide (all-from-out ,@files-in-require-form))) 
+                                    '()))))
       ; if no files to import, do nothing
       #'(begin)))
 
+(define-syntax (require-and-provide-extras stx)
+  (make-require-extras-syntax stx #:provide? #t))
+
 (define-syntax (require-extras stx)
-  (define project-require-files (get-project-require-files))
-  (if project-require-files
-      (let ([files-in-require-form (map put-file-in-require-form project-require-files)])
-        (datum->syntax stx `(begin
-                              (require ,@files-in-require-form))))
-      ; if no files to import, do nothing
-      #'(begin)))
+  (make-require-extras-syntax stx))
 
 
 ;; here = path of this file, relative to current directory. 
@@ -41,8 +38,7 @@
                  '(begin 
                     ;; Even though begin permits defines,
                     ;; This macro might be used in an expression context, 
-                    ;; whereupon define would cause an error.
-                    ;; Therefore, best to use let.
+                    ;; whereupon define would cause an error. Therefore, use let.
                     (let* ([ccr (current-contract-region)] ; trick for getting current module name
                            [hp (cond
                                  ;; if contract-region is called from within submodule,
@@ -60,17 +56,11 @@
                       ;; and can be made relative by the caller (or otherwise altered).
                       (->string hp)))))
 
-;; todo: update tests
-;(module+ test
-;  (check-equal? (get-here) "main-helper.rkt"))
 
 ; Second step: apply a separate syntax transform to the identifier itself
 ; We can't do this in one step, because if the macro goes from identifier to function definition,
 ; The macro processor will evaluate the body at compile-time, not at runtime.
 (define-syntax here-path (λ(stx) (datum->syntax stx '(get-here-path))))
 
-;; todo: update test
-;(module+ test
-;  (check-equal? here "main-helper.rkt"))
 
 

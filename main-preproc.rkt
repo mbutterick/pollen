@@ -1,7 +1,7 @@
-#lang racket
+#lang racket/base
 
 (require "main-preproc-imports.rkt" "readability.rkt")
-(provide (except-out (all-from-out racket) #%module-begin)
+(provide (except-out (all-from-out racket/base) #%module-begin)
          (rename-out [module-begin #%module-begin]))
 
 (require (only-in scribble/text output)

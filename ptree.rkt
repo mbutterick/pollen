@@ -77,7 +77,7 @@
 
 
 (define/contract (parent pnode [ptree (current-ptree)])
-  (((or/c pnode? false?)) (ptree?) . ->* . (or/c pnode? false?)) 
+  (((or/c false? pnode?)) (ptree?) . ->* . (or/c false? pnode?)) 
   (and pnode
        (if (member (->string pnode) (map (λ(x) (->string (if (list? x) (car x) x))) (cdr ptree)))
            (->string (car ptree))
@@ -94,7 +94,7 @@
 
 
 (define/contract (children pnode [ptree (current-ptree)])
-  (((or/c pnode? false?)) (ptree?) . ->* . (or/c (listof pnode?) false?))  
+  (((or/c false? pnode?)) (ptree?) . ->* . (or/c false? (listof pnode?)))  
   (and pnode 
        (if (equal? (->string pnode) (->string (car ptree)))
            (map (λ(x) (->string (if (list? x) (car x) x))) (cdr ptree))
@@ -109,7 +109,7 @@
 
 
 (define/contract (siblings pnode [ptree (current-ptree)])
-  (((or/c pnode? false?)) (ptree?) . ->* . (or/c (listof string?) false?))  
+  (((or/c false? pnode?)) (ptree?) . ->* . (or/c false? (listof string?)))  
   (children (parent pnode ptree) ptree))
 
 
@@ -141,7 +141,7 @@
 
 
 (define/contract (left-adjacents pnode [ptree (current-ptree)]) 
-  (((or/c pnode? false?)) (ptree?) . ->* . (or/c (listof pnode?) false?))
+  (((or/c false? pnode?)) (ptree?) . ->* . (or/c false? (listof pnode?)))
   (adjacents 'left pnode ptree))
 
 (module+ test
@@ -150,11 +150,11 @@
   (check-false (left-adjacents 'foo test-ptree)))
 
 (define/contract (right-adjacents pnode [ptree (current-ptree)]) 
-  (((or/c pnode? false?)) (ptree?) . ->* . (or/c (listof pnode?) false?))
+  (((or/c false? pnode?)) (ptree?) . ->* . (or/c false? (listof pnode?)))
   (adjacents 'right pnode ptree))
 
 (define/contract (previous pnode [ptree (current-ptree)])
-  (((or/c pnode? false?)) (ptree?) . ->* . (or/c pnode? false?))
+  (((or/c false? pnode?)) (ptree?) . ->* . (or/c false? pnode?))
   (let ([result (left-adjacents pnode ptree)])
     (and result (last result))))
 
@@ -165,7 +165,7 @@
 
 
 (define (next pnode [ptree (current-ptree)])
-  (((or/c pnode? false?)) (ptree?) . ->* . (or/c pnode? false?))
+  (((or/c false? pnode?)) (ptree?) . ->* . (or/c false? pnode?))
   (let ([result (right-adjacents pnode ptree)])
     (and result (first result))))
 
@@ -196,7 +196,7 @@
 
 
 (define/contract (pnode->url pnode [url-context (current-url-context)])
-  ((pnode?) (pathish?) . ->* . (or/c pnode? false?))
+  ((pnode?) (pathish?) . ->* . (or/c false? pnode?))
   (parameterize ([current-url-context url-context])
     (pnode->url/paths pnode (directory-list (current-url-context)))))
 

@@ -1,6 +1,6 @@
-#lang racket
+#lang racket/base
 (require "main-imports.rkt")
-(provide (except-out (all-from-out racket) #%module-begin)
+(provide (except-out (all-from-out racket/base) #%module-begin)
          (rename-out [module-begin #%module-begin]))
 
 (define-syntax-rule (module-begin expr ...)

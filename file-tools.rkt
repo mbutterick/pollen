@@ -80,7 +80,7 @@
 ;; make paths absolute to test whether files exist,
 ;; then convert back to relative
 (define (visible? path)
-    (not ((->string path) . starts-with? . ".")))
+  (not ((->string path) . starts-with? . ".")))
 
 (define/contract (visible-files dir)
   (directory-pathish? . -> . (listof path?))
@@ -108,7 +108,7 @@
 (module+ test
   (check-true (has-binary-ext? "foo.MP3"))
   (check-false (has-binary-ext? "foo.py")))
-  
+
 
 (module+ test
   (define foo-path-strings '("foo" "foo.txt" "foo.bar" "foo.bar.txt"))
@@ -186,59 +186,64 @@
 
 (define/contract (preproc-source? x)
   (any/c . -> . boolean?)
-  (has-ext? (->path x) PREPROC_SOURCE_EXT))
+  (and (pathish? x) (has-ext? (->path x) PREPROC_SOURCE_EXT)))
 
 (module+ test
   (check-true (preproc-source? "foo.p"))
-  (check-false (preproc-source? "foo.bar")))
+  (check-false (preproc-source? "foo.bar"))
+  (check-false (preproc-source? #f)))
 
 (define/contract (has-preproc-source? x)
   (any/c . -> . boolean?)
-  (file-exists? (->preproc-source-path (->path x))))
+  (and (pathish? x) (file-exists? (->preproc-source-path (->path x)))))
 
 (define/contract (has-decoder-source? x)
   (any/c . -> . boolean?)
-  (file-exists? (->decoder-source-path (->path x))))
+  (and (pathish? x) (file-exists? (->decoder-source-path (->path x)))))
 
 (define/contract (needs-preproc? x)
   (any/c . -> . boolean?)
   ; it's a preproc source file, or a file that's the result of a preproc source
-  (ormap (λ(proc) (proc (->path x))) (list preproc-source? has-preproc-source?)))
+  (and (pathish? x) (ormap (λ(proc) (proc (->path x))) (list preproc-source? has-preproc-source?))))
 
 (define/contract (needs-template? x)
   (any/c . -> . boolean?)
   ; it's a pollen source file
   ; or a file (e.g., html) that has a pollen source file
-  (ormap (λ(proc) (proc (->path x))) (list decoder-source? has-decoder-source?)))
+  (and (pathish? x) (ormap (λ(proc) (proc (->path x))) (list decoder-source? has-decoder-source?))))
 
 
 (define/contract (ptree-source? x)
   (any/c . -> . boolean?)
-  ((->path x) . has-ext? . PTREE_SOURCE_EXT))
+  (and (pathish? x) ((->path x) . has-ext? . PTREE_SOURCE_EXT)))
 
 (module+ test
   (check-true (ptree-source? (format "foo.~a" PTREE_SOURCE_EXT)))
-  (check-false (ptree-source? (format "~a.foo" PTREE_SOURCE_EXT))))
+  (check-false (ptree-source? (format "~a.foo" PTREE_SOURCE_EXT)))
+  (check-false (ptree-source? #f)))
 
 
 
 (define/contract (decoder-source? x)
   (any/c . -> . boolean?)
-  (has-ext? x DECODER_SOURCE_EXT))
+  (and (pathish? x) (has-ext? x DECODER_SOURCE_EXT)))
 
 (module+ test
   (check-true (decoder-source? "foo.pd"))
-  (check-false (decoder-source? "foo.p")))
+  (check-false (decoder-source? "foo.p"))
+  (check-false (decoder-source? #f)))
 
 
 (define/contract (template-source? x)
   (any/c . -> . boolean?)
-  (define-values (dir name ignore) (split-path x))
-  (equal? (get (->string name) 0) TEMPLATE_SOURCE_PREFIX))
+  (and (pathish? x)
+       (let-values ([(dir name ignore) (split-path x)])
+         (equal? (get (->string name) 0) TEMPLATE_SOURCE_PREFIX))))
 
 (module+ test
   (check-true (template-source? "-foo.html"))
-  (check-false (template-source? "foo.html")))
+  (check-false (template-source? "foo.html"))
+  (check-false (template-source? #f)))
 
 
 ;; predicate for files that are eligible to be required
@@ -246,7 +251,7 @@
 ;; todo: extend this beyond just racket files?
 (define/contract (project-require-file? x)
   (any/c . -> . boolean?)
-  (has-ext? x 'rkt))
+  (and (pathish? x) (has-ext? x 'rkt)))
 
 (module+ test
   (check-true (project-require-file? "foo.rkt"))
@@ -305,6 +310,6 @@
 
 ;; to identify unsaved sources in DrRacket
 (define (unsaved-source? path-string)
-    ((substring (->string path-string) 0 7) . equal? . "unsaved"))
+  ((substring (->string path-string) 0 7) . equal? . "unsaved"))
 
 ;; todo: write tests for project-files-with-ext
