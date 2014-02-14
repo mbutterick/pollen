@@ -3,14 +3,40 @@
 (require (only-in racket/path filename-extension))
 (require "world.rkt" "readability.rkt")
 
-(provide (all-defined-out))
+(provide (contract-out
+          [sourceish? (any/c . -> . boolean?)]
+          [urlish? (any/c . -> . boolean?)]
+          [pathish? (any/c . -> . boolean?)]
+          [directory-pathish? (any/c . -> . boolean?)]
+          [directories-equal? (pathish? pathish? . -> . boolean?)]
+          [get-enclosing-dir (pathish? . -> . path?)]
+          [has-ext? (pathish? stringish? . -> . boolean?)]
+          [has-binary-ext? (pathish? . -> . boolean?)]
+          [get-ext (pathish? . -> . (or/c string? #f))]
+          [add-ext (pathish? stringish? . -> . path?)] 
+          [remove-ext (pathish? . -> . path?)]
+          [remove-all-ext (pathish? . -> . path?)]
+          [preproc-source? (any/c . -> . boolean?)]
+          [has-preproc-source? (any/c . -> . boolean?)]
+          [has-decoder-source? (any/c . -> . boolean?)]
+          [needs-preproc? (any/c . -> . boolean?)]
+          [needs-template? (any/c . -> . boolean?)]
+          [ptree-source? (any/c . -> . boolean?)]
+          [decoder-source? (any/c . -> . boolean?)]
+          [template-source? (any/c . -> . boolean?)]
+          [project-require-file? (any/c . -> . boolean?)]
+          [->preproc-source-path (pathish? . -> . path?)]
+          [->output-path (pathish? . -> . path?)]
+          [->decoder-source-path (pathish? . -> . path?)]
+          [project-files-with-ext (symbol? . -> . (listof complete-path?))]))
+
+(provide visible? visible-files)
 
 (module+ test (require rackunit))
 
 ;; for files like svg that are not source in pollen terms,
 ;; but have a textual representation separate from their display.
-(define/contract (sourceish? x)
-  (any/c . -> . boolean?)
+(define (sourceish? x)
   (define sourceish-extensions
     (list "svg"))
   (with-handlers ([exn:fail? (λ(e) #f)])
@@ -22,8 +48,7 @@
 
 ;; if something can be successfully coerced to a url,
 ;; it's urlish.
-(define/contract (urlish? x)
-  (any/c . -> . boolean?)
+(define (urlish? x)
   (with-handlers ([exn:fail? (λ(e) #f)])
     (->boolean (->url x))))
 
@@ -34,8 +59,7 @@
 
 ;; if something can be successfully coerced to a path,
 ;; it's pathish.
-(define/contract (pathish? x)
-  (any/c . -> . boolean?)
+(define (pathish? x)
   (with-handlers ([exn:fail? (λ(e) #f)])
     (->boolean (->path x))))
 
@@ -48,8 +72,7 @@
 ;; todo: is this contract too restrictive?
 ;; pathish doesn't require the path to exist,
 ;; but this one does.
-(define/contract (directory-pathish? x)
-  (any/c . -> . boolean?)
+(define (directory-pathish? x)
   (->boolean (and (pathish? x) (directory-exists? (->path x)))))
 
 (module+ test
@@ -59,8 +82,7 @@
 
 ;; compare directories by their exploded path elements,
 ;; not by equal?, which will give wrong result if no slash on the end
-(define/contract (directories-equal? dirx diry)
-  (pathish? pathish? . -> . boolean?)
+(define (directories-equal? dirx diry)
   (equal? (explode-path (->path dirx)) (explode-path (->path diry))))
 
 (module+ test
@@ -68,7 +90,6 @@
   (check-false (directories-equal? "/Users/MB/foo" "Users/MB/foo")))
 
 (define (get-enclosing-dir p) 
-  (pathish? . -> . path?)
   (simplify-path (build-path (->path p) 'up)))
 
 (module+ test
@@ -82,7 +103,7 @@
 (define (visible? path)
   (not ((->string path) . starts-with? . ".")))
 
-(define/contract (visible-files dir)
+(define (visible-files dir)
   (directory-pathish? . -> . (listof path?))
   (filter visible? 
           (map (λ(p) (find-relative-path dir p)) 
@@ -90,8 +111,7 @@
                        (directory-list dir #:build? #t)))))
 
 ;; does path have a certain extension
-(define/contract (has-ext? x ext)
-  (pathish? stringish? . -> . boolean?)
+(define (has-ext? x ext)
   (define ext-of-path (filename-extension (->path x)))
   (and ext-of-path (equal? (string-downcase (bytes->string/utf-8 ext-of-path)) (string-downcase (->string ext)))))
 
@@ -100,8 +120,7 @@
 (define binary-extensions
   '(gif jpg jpeg mp3 png zip pdf ico tar ai eps))
 
-(define/contract (has-binary-ext? x)
-  (pathish? . -> . boolean?)
+(define (has-binary-ext? x)
   (define path-x (->path x))
   (ormap (λ(ext) (has-ext? path-x ext)) binary-extensions))
 
@@ -128,8 +147,7 @@
 
 
 ;; get file extension as a string, or return #f
-(define/contract (get-ext x)
-  (pathish? . -> . (or/c string? #f))
+(define (get-ext x)
   (let ([fe-result (filename-extension (->path x))])
     (and fe-result (bytes->string/utf-8 fe-result))))
 
@@ -139,16 +157,14 @@
 
 
 ;; put extension on path
-(define/contract (add-ext x ext)
-  (pathish? stringish? . -> . path?)
+(define (add-ext x ext)
   (->path (string-append (->string x) "." (->string ext))))
 
 (module+ test
   (check-equal? (add-ext (string->path "foo") "txt") (string->path "foo.txt")))
 
 ;; take one extension off path
-(define/contract (remove-ext x)
-  (pathish? . -> . path?)
+(define (remove-ext x)
   ;; pass through hidden files (those starting with a dot)
   (if (x . starts-with? . ".")
       x
@@ -163,8 +179,7 @@
 
 
 ;; take all extensions off path
-(define/contract (remove-all-ext x)
-  (pathish? . -> . path?)
+(define (remove-all-ext x)
   ;; pass through hidden files (those starting with a dot)
   (if (x . starts-with? . ".")
       x
@@ -184,8 +199,8 @@
 
 ;; todo: tests for these predicates
 
-(define/contract (preproc-source? x)
-  (any/c . -> . boolean?)
+
+(define (preproc-source? x)
   (and (pathish? x) (has-ext? (->path x) PREPROC_SOURCE_EXT)))
 
 (module+ test
@@ -193,28 +208,23 @@
   (check-false (preproc-source? "foo.bar"))
   (check-false (preproc-source? #f)))
 
-(define/contract (has-preproc-source? x)
-  (any/c . -> . boolean?)
+(define (has-preproc-source? x)
   (and (pathish? x) (file-exists? (->preproc-source-path (->path x)))))
 
-(define/contract (has-decoder-source? x)
-  (any/c . -> . boolean?)
+(define (has-decoder-source? x)
   (and (pathish? x) (file-exists? (->decoder-source-path (->path x)))))
 
-(define/contract (needs-preproc? x)
-  (any/c . -> . boolean?)
+(define (needs-preproc? x)
   ; it's a preproc source file, or a file that's the result of a preproc source
   (and (pathish? x) (ormap (λ(proc) (proc (->path x))) (list preproc-source? has-preproc-source?))))
 
-(define/contract (needs-template? x)
-  (any/c . -> . boolean?)
+(define (needs-template? x)
   ; it's a pollen source file
   ; or a file (e.g., html) that has a pollen source file
   (and (pathish? x) (ormap (λ(proc) (proc (->path x))) (list decoder-source? has-decoder-source?))))
 
 
-(define/contract (ptree-source? x)
-  (any/c . -> . boolean?)
+(define (ptree-source? x)
   (and (pathish? x) ((->path x) . has-ext? . PTREE_SOURCE_EXT)))
 
 (module+ test
@@ -224,8 +234,7 @@
 
 
 
-(define/contract (decoder-source? x)
-  (any/c . -> . boolean?)
+(define (decoder-source? x)
   (and (pathish? x) (has-ext? x DECODER_SOURCE_EXT)))
 
 (module+ test
@@ -234,8 +243,7 @@
   (check-false (decoder-source? #f)))
 
 
-(define/contract (template-source? x)
-  (any/c . -> . boolean?)
+(define (template-source? x)
   (and (pathish? x)
        (let-values ([(dir name ignore) (split-path x)])
          (equal? (get (->string name) 0) TEMPLATE_SOURCE_PREFIX))))
@@ -249,8 +257,7 @@
 ;; predicate for files that are eligible to be required
 ;; from the project/require directory
 ;; todo: extend this beyond just racket files?
-(define/contract (project-require-file? x)
-  (any/c . -> . boolean?)
+(define (project-require-file? x)
   (and (pathish? x) (has-ext? x 'rkt)))
 
 (module+ test
@@ -259,10 +266,11 @@
 
 
 
+
+
 ;; todo: tighten these input contracts
 ;; so that, say, a source-path cannot be input for make-preproc-source-path
-(define/contract (->preproc-source-path x)
-  (pathish? . -> . path?)
+(define (->preproc-source-path x)
   (->path (if (preproc-source? x)
               x
               (add-ext x PREPROC_SOURCE_EXT))))
@@ -273,8 +281,7 @@
   (check-equal? (->preproc-source-path "foo") (->path "foo.p"))
   (check-equal? (->preproc-source-path 'foo) (->path "foo.p")))
 
-(define/contract (->output-path x)
-  (pathish? . -> . path?)
+(define (->output-path x)
   (->path 
    (if (or (decoder-source? x) (preproc-source? x))
        (remove-ext x)
@@ -292,8 +299,7 @@
 ;; does not, however, validate that new path exists
 ;; todo: should it? I don't think so, sometimes handy to make the name for later use
 ;; OK to use pollen source as input (comes out the same way)
-(define/contract (->decoder-source-path x)
-  (pathish? . -> . path?)
+(define (->decoder-source-path x)
   (->path (if (decoder-source? x)
               x
               (add-ext x DECODER_SOURCE_EXT))))
@@ -304,8 +310,7 @@
   (check-equal? (->decoder-source-path "foo") (->path "foo.pd"))
   (check-equal? (->decoder-source-path 'foo) (->path "foo.pd")))
 
-(define/contract (project-files-with-ext ext)
-  (symbol? . -> . (listof complete-path?))
+(define (project-files-with-ext ext)
   (map ->complete-path (filter (λ(i) (has-ext? i ext)) (directory-list PROJECT_ROOT))))
 
 ;; to identify unsaved sources in DrRacket

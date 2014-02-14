@@ -1,19 +1,11 @@
 #lang racket/base
-(require racket/date)
-(require racket/string)
-(require racket/format)
+(require racket/date racket/string)
+(require sugar/debug)
 
-
-(provide describe report message make-datestamp make-timestamp display-stack-trace)
+(provide message make-datestamp make-timestamp display-stack-trace (all-from-out sugar/debug))
 
 ; todo: contracts, tests, docs
 
-(require (prefix-in williams: (planet williams/describe/describe)))
-
-(define (describe x)
-  (parameterize ([current-output-port (current-error-port)])
-    (williams:describe x))
-  x)
 
 ; debug utilities
 (define months (list "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"))
@@ -28,7 +20,7 @@
       "0"))
 
 (define (zero-fill str count)
-  (set! str (~a str))
+  (set! str (format "~a" str))
   (if (> (string-length str) count)
       str
       (string-append (make-string (- count (string-length str)) #\0) str)))
@@ -66,17 +58,10 @@
 
 ;; todo: consolidate these two message functions
 (define (basic-message . items)
-  (displayln (string-join `(,@(map (λ(x)(if (string? x) x (~v x))) items))) (current-error-port)))
+  (displayln (string-join `(,@(map (λ(x)(if (string? x) x (format "~v" x))) items))) (current-error-port)))
 
 (define (message . items)
-  (displayln (string-join `(,(make-debug-timestamp) ,@(map (λ(x)(if (string? x) x (~v x))) items))) (current-error-port)))
-
-
-; report the current value of the variable, then return it
-(define-syntax-rule (report var)
-  (begin 
-    (basic-message 'var "=" var) 
-    var))
+  (displayln (string-join `(,(make-debug-timestamp) ,@(map (λ(x)(if (string? x) x (format "~v" x))) items))) (current-error-port)))
 
 
 

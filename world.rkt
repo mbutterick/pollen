@@ -1,6 +1,8 @@
 #lang racket/base
 (require racket/list racket/contract)
 
+;; todo: how to make project- or user-specific prefs
+
 (provide (all-defined-out))
 
 (define POLLEN_VERSION "0.001")
@@ -31,7 +33,7 @@
 
 (define OUTPUT_SUBDIR 'public)
 
-(require racket/string racket/port racket/system)
+;;(require racket/string racket/port racket/system)
 ;; todo: is path to racket already available as an environment variable?
 ;; e.g., (find-system-path 'xxx)? Because this next line is sort of slow
 ;;(define RACKET_PATH (string-trim (with-output-to-string (λ() (system "which racket")))))

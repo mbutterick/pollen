@@ -5,40 +5,41 @@
 
 (module+ test (require rackunit))
 
-(provide (all-defined-out))
+(provide (contract-out
+          [decode ((xexpr/c) ;; use xexpr/c for contract on nx because it gives better error messages
+                   
+                   ;; todo: how to write more specific contracts for these procedures?
+                   ;; e.g., string-proc should be restricted to procs that accept a string as input
+                   ;; and return a string as output
+                   (#:exclude-xexpr-tags list?
+                                         #:xexpr-tag-proc procedure?
+                                         #:xexpr-attr-proc procedure?
+                                         #:xexpr-elements-proc procedure?
+                                         #:block-xexpr-proc procedure?
+                                         #:inline-xexpr-proc procedure?
+                                         #:string-proc procedure?)
+                   . ->* . tagged-xexpr?)]
+          [register-block-tag (symbol? . -> . void?)]))
 
 ;; add a block tag to the list
 ;; this function is among the predicates because it alters a predicate globally.
-(define/contract (register-block-tag tag)
-  (symbol? . -> . void?)
+(define (register-block-tag tag)
   (append-block-tag tag))
 
 (module+ test
-    (check-true (begin (register-block-tag 'barfoo) (block-xexpr? '(barfoo "foo")))))
+  (check-true (begin (register-block-tag 'barfoo) (block-xexpr? '(barfoo "foo")))))
 
 
 ;; decoder wireframe
-(define/contract (decode nx
-                         #:exclude-xexpr-tags [excluded-xexpr-tags '()]
-                         #:xexpr-tag-proc [xexpr-tag-proc (λ(x)x)]
-                         #:xexpr-attr-proc [xexpr-attr-proc (λ(x)x)]
-                         #:xexpr-elements-proc [xexpr-elements-proc (λ(x)x)]
-                         #:block-xexpr-proc [block-xexpr-proc (λ(x)x)]
-                         #:inline-xexpr-proc [inline-xexpr-proc (λ(x)x)]
-                         #:string-proc [string-proc (λ(x)x)])
-  ((xexpr/c) ;; use xexpr/c for contract on nx because it gives better error messages
-   
-   ;; todo: how to write more specific contracts for these procedures?
-   ;; e.g., string-proc should be restricted to procs that accept a string as input
-   ;; and return a string as output
-   (#:exclude-xexpr-tags list?
-                         #:xexpr-tag-proc procedure?
-                         #:xexpr-attr-proc procedure?
-                         #:xexpr-elements-proc procedure?
-                         #:block-xexpr-proc procedure?
-                         #:inline-xexpr-proc procedure?
-                         #:string-proc procedure?)
-   . ->* . tagged-xexpr?)
+(define (decode nx
+                #:exclude-xexpr-tags [excluded-xexpr-tags '()]
+                #:xexpr-tag-proc [xexpr-tag-proc (λ(x)x)]
+                #:xexpr-attr-proc [xexpr-attr-proc (λ(x)x)]
+                #:xexpr-elements-proc [xexpr-elements-proc (λ(x)x)]
+                #:block-xexpr-proc [block-xexpr-proc (λ(x)x)]
+                #:inline-xexpr-proc [inline-xexpr-proc (λ(x)x)]
+                #:string-proc [string-proc (λ(x)x)])
+  
   (when (not (tagged-xexpr? nx))
     (error (format "decode: ~v not a full tagged-xexpr" nx)))
   

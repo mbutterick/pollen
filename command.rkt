@@ -3,7 +3,7 @@
 
 ;; todo: add command to check validity of installation
 
-(require (for-syntax "readability.rkt" "world.rkt"))
+(require (for-syntax sugar "world.rkt"))
 
 (define-syntax (handle-pollen-command syntax-context)
   (datum->syntax syntax-context
