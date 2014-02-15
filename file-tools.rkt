@@ -1,7 +1,7 @@
 #lang racket/base
 (require racket/contract racket/path)
 (require (only-in racket/path filename-extension))
-(require "world.rkt" "readability.rkt")
+(require "world.rkt" sugar)
 
 (provide (contract-out
           [sourceish? (any/c . -> . boolean?)]

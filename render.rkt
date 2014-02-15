@@ -1,6 +1,6 @@
 #lang racket/base
 (require racket/port racket/file racket/rerequire racket/contract)
-(require "world.rkt" "tools.rkt" "readability.rkt" "template.rkt")
+(require "world.rkt" "tools.rkt" "template.rkt")
 
 (module+ test (require rackunit))
 
@@ -295,7 +295,7 @@
          pollen/main-preproc-imports
          pollen/predicates
          pollen/ptree
-         pollen/readability
+         sugar
          pollen/template
          pollen/tools
          pollen/world)
@@ -326,7 +326,7 @@
            pollen/main-preproc-imports
            pollen/predicates
            pollen/ptree
-           pollen/readability
+           sugar
            pollen/template
            pollen/tools
            pollen/world))

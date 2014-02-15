@@ -41,7 +41,7 @@
 
 (define COMMAND_FILE "polcom")
 
-(require "readability.rkt")
+(require sugar)
 (define RESERVED_PATHS
   (map ->path (list COMMAND_FILE EXTRAS_DIR "poldash.css" "compiled")))
 

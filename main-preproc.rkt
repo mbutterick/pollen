@@ -1,6 +1,6 @@
 #lang racket/base
 
-(require "main-preproc-imports.rkt" "readability.rkt")
+(require "main-preproc-imports.rkt" sugar)
 (provide (except-out (all-from-out racket/base) #%module-begin)
          (rename-out [module-begin #%module-begin]))
 

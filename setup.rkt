@@ -1,7 +1,7 @@
 #lang racket/base
 (require racket/system racket/port racket/file 
            racket/class racket/list)
-(require "debug.rkt" "readability.rkt" "world.rkt")
+(require "debug.rkt" sugar "world.rkt")
 
 (provide setup)
 
@@ -75,10 +75,10 @@
 ;; task: make polcom file
 
 (define (delete-polcom-file-if-existing)
-  (when (file-exists? POLLEN_COMMAND_FILE)
+  (when (file-exists? COMMAND_FILE)
     (begin
       (message (format "Deleting existing polcom file in ~a" cd))
-      (delete-file POLLEN_COMMAND_FILE))))
+      (delete-file COMMAND_FILE))))
 
 (define (save-polcom-file)
   (define path-to-racket-exists? (> (len RACKET_PATH) 0)) 
@@ -90,8 +90,8 @@
         (message (format "Creating new polcom file in ~a" cd))
         (if (not (test-mode))
             (begin
-              (display-to-file polcom-data POLLEN_COMMAND_FILE)
-              (with-output-to-string (λ() (system (format "chmod 755 ~a" POLLEN_COMMAND_FILE)))))
+              (display-to-file polcom-data COMMAND_FILE)
+              (with-output-to-string (λ() (system (format "chmod 755 ~a" COMMAND_FILE)))))
             (message "[test mode: file would be saved now]")))
       (begin 
         (message "No path to Racket binary")
@@ -111,7 +111,7 @@
 
 (define (success-messages)
   (message "Setup complete")
-  (define path-to-polcom (format "~a~a" cd POLLEN_COMMAND_FILE))
+  (define path-to-polcom (format "~a~a" cd COMMAND_FILE))
   (message (format "Run '~a start' to start project server" path-to-polcom))
   (message (format "Or run '~a help' for a list of commands" path-to-polcom))
   (when (not (test-mode)) (exit)))

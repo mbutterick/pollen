@@ -5,7 +5,7 @@
 (require web-server/http/request-structs)
 (require web-server/http/response-structs)
 (require 2htdp/image)
-(require "world.rkt" "render.rkt" "readability.rkt" "predicates.rkt" "debug.rkt" "ptree.rkt")
+(require "world.rkt" "render.rkt" sugar "predicates.rkt" "debug.rkt" "ptree.rkt")
 
 (module+ test (require rackunit))
 

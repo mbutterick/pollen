@@ -5,8 +5,8 @@
 (require (only-in racket/string string-join))
 (require (only-in xml xexpr? xexpr/c))
 
-(require "readability.rkt" "debug.rkt" "predicates.rkt" "world.rkt")
-(provide (all-defined-out) (all-from-out "readability.rkt" "debug.rkt" "predicates.rkt" racket/list racket/path))
+(require sugar "debug.rkt" "predicates.rkt" "world.rkt")
+(provide (all-defined-out) (all-from-out sugar "debug.rkt" "predicates.rkt" racket/list racket/path))
 
 ;; setup for test cases
 (module+ test (require rackunit))
