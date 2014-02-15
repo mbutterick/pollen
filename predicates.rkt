@@ -1,6 +1,6 @@
 #lang racket/base
 (require racket/contract racket/match racket/list xml racket/set)
-(require (prefix-in html: css-tools/html))
+(require css-tools/html)
 (require "world.rkt" sugar "file-tools.rkt" "debug.rkt")
 
 (module+ test (require rackunit))
@@ -99,18 +99,18 @@
 
 
 ;; initial set of block tags: from html
-(define block-tags html:block-tags)
+(define project-block-tags block-tags)
 
 (define/contract (append-block-tag tag)
   (xexpr-tag? . -> . void?)
-  (set! block-tags (cons tag block-tags)))
+  (set! project-block-tags (cons tag project-block-tags)))
 
 ;; is the tagged-xexpr a block element (as opposed to inline)
 ;; tags are inline unless they're registered as block tags.
 (define/contract (block-xexpr? x)
   (any/c . -> . boolean?)
   ;; (car x) = shorthand for tag of xexpr
-  ((tagged-xexpr? x) . and . ((car x) . in? . block-tags)))
+  ((tagged-xexpr? x) . and . ((car x) . in? . project-block-tags)))
 
 (module+ test
   (check-true (block-xexpr? '(p "foo")))
