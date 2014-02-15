@@ -1,6 +1,6 @@
 #lang racket/base
 (require racket/contract racket/list racket/string racket/match)
-(require "../readability.rkt" "../predicates.rkt" "../tools.rkt")
+(require sugar "../predicates.rkt" "../tools.rkt")
 
 (module+ test (require rackunit))
 
