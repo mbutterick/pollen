@@ -1,6 +1,6 @@
 #lang racket/base
 (require racket/contract racket/match racket/list xml racket/set)
-(require (prefix-in html: "library/html.rkt"))
+(require (prefix-in html: css-tools/html))
 (require "world.rkt" sugar "file-tools.rkt" "debug.rkt")
 
 (module+ test (require rackunit))
