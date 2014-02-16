@@ -86,8 +86,7 @@
 
 ;; put extension on path
 ;; use local contract here because this function is used within module
-(provide add-ext)
-(define/contract (add-ext x ext)
+(define/contract/provide (add-ext x ext)
   (coerce/string? coerce/string? . -> . coerce/path?)
   (string-append x "." ext))
 
