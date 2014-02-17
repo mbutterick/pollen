@@ -1,6 +1,8 @@
 #lang racket/base
-(require racket/port racket/file racket/rerequire racket/contract)
-(require "world.rkt" "tools.rkt" "template.rkt")
+(require racket/port racket/file racket/rerequire racket/contract racket/path)
+;(require "world.rkt" )
+
+;;todo: why is pollen/top operating in this file?
 
 (module+ test (require rackunit))
 

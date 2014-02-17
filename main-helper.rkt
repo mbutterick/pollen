@@ -1,5 +1,5 @@
 #lang racket/base
-(require (for-syntax racket/base pollen/tools))
+(require (for-syntax racket/base pollen/tools sugar))
 
 (require racket/contract/region)
 
@@ -54,7 +54,7 @@
                       ;; so raises possibility of inconsistent values.
                       ;; Whereas the complete path is unambiguous,
                       ;; and can be made relative by the caller (or otherwise altered).
-                      (->string hp)))))
+                      ((bound/c ->string) hp)))))
 
 
 ; Second step: apply a separate syntax transform to the identifier itself

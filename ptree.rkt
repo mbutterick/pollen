@@ -1,6 +1,6 @@
 #lang racket/base
-(require racket/contract racket/match xml/path racket/bool racket/rerequire)
-(require "tools.rkt" "world.rkt" "debug.rkt" "decode.rkt")
+(require racket/contract racket/match racket/path xml/path racket/bool racket/rerequire)
+(require "tools.rkt" "world.rkt" "debug.rkt" "decode.rkt" sugar tagged-xexpr)
 
 (module+ test (require rackunit))
 
@@ -8,7 +8,8 @@
 
 (define/contract (pnode? x)
   (any/c . -> . boolean?)
-  (and (stringish? x) (not (whitespace? (->string x)))))
+  (try (not (whitespace? (->string x)))
+       (except [exn:fail? (λ(e) #f)])))
 
 (define/contract (pnode?/error x)
   (any/c . -> . boolean?)

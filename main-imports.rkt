@@ -8,10 +8,14 @@
          pollen/tools 
          pollen/main-helper
          pollen/top
+         tagged-xexpr
+         sugar
          (only-in pollen/ptree ptree-source-decode path->pnode ptree?))
 
 (provide (all-from-out racket/list
                        pollen/tools 
                        pollen/main-helper
                        pollen/top
+                       tagged-xexpr
+                       sugar
                        pollen/ptree))

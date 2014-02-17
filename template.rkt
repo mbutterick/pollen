@@ -1,11 +1,12 @@
 #lang racket/base
 (require racket/contract racket/string xml xml/path racket/bool)
-(require "tools.rkt" "ptree.rkt" sugar/scribble)
+(require "tools.rkt" "ptree.rkt" sugar/scribble sugar/coerce sugar tagged-xexpr)
 
 ;; setup for test cases
 (module+ test (require rackunit racket/path))
 
 (provide (all-defined-out))
+(provide (all-from-out sugar/scribble sugar/coerce))
 
 ;; todo: better fallback template
 
@@ -35,11 +36,11 @@
     [(has-decoder-source? x) (dynamic-require (->decoder-source-path x) 'main)]
     [(has-decoder-source? (pnode->url x)) (dynamic-require (->decoder-source-path (pnode->url x)) 'main)]))
 
-(module+ test
+#|(module+ test
   (check-equal? (put '(foo "bar")) '(foo "bar"))
   (check-equal? (put "tests/template/put.pd") 
                 '(root "\n" "\n" (em "One") " paragraph" "\n" "\n" "Another " (em "paragraph") "\n" "\n")))
-
+|#
 
 
 (define/contract (find query px)
@@ -47,12 +48,14 @@
   (define result (and px (or (find-in-metas px query) (find-in-main px query))))
   (and result (car result))) ;; return false or first element
 
+#|
 (module+ test 
   (parameterize ([current-directory "tests/template"])
     (check-false (find "nonexistent-key" "put"))
     (check-equal? (find "foo" "put") "bar")
     (check-equal? (find "em" "put") "One"))
   (check-equal? (find "foo" #f) #f))
+|#
 
 (define/contract (find-in-metas px key)
   (puttable-item? query-key? . -> . (or/c false? xexpr-elements?))
@@ -61,13 +64,13 @@
              [key (->string key)])
          (and (key . in? . metas ) (->list (get metas key))))))
 
-(module+ test
+#|(module+ test
   (parameterize ([current-directory "tests/template"])
     (check-equal? (find-in-metas "put" "foo") (list "bar"))
     (let* ([metas (dynamic-require (->decoder-source-path 'put) 'metas)]
            [here (find-in-metas 'put 'here)])     
       (check-equal? here (list "tests/template/put")))))
-
+|#
 
 (define/contract (find-in-main px query) 
   (puttable-item? (or/c query-key? (listof query-key?)) 
@@ -79,11 +82,12 @@
     ;; if results exist, send back xexpr as output
     (and (not (empty? results)) results)))
 
+#|
 (module+ test
   (parameterize ([current-directory "tests/template"])
     (check-false (find-in-main "put" "nonexistent-key"))
     (check-equal? (find-in-main "put" "em") (list "One" "paragraph"))))
-
+|#
 
 ;; turns input into xexpr-elements so they can be spliced into template
 ;; (as opposed to dropped in as a full tagged-xexpr)

@@ -5,12 +5,10 @@
 ;; and cached for the benefit of the render eval function.
 
 (require pollen/top
-         (only-in sugar ->list)
-         (only-in pollen/tools trim)
+         (only-in sugar ->list ->string trim)
          (only-in pollen/predicates whitespace?))
 
 (provide (all-from-out
           pollen/top
           sugar
-          pollen/tools
           pollen/predicates))

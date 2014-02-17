@@ -5,8 +5,8 @@
 
 (require (for-syntax sugar "world.rkt"))
 
-(define-syntax (handle-pollen-command syntax-context)
-  (datum->syntax syntax-context
+(define-syntax (handle-pollen-command stx)
+  (datum->syntax stx
                  (let* ([args (current-command-line-arguments)]
                         [arg (if (> (len args) 0) (get args 0) "")])
                    (display (format "~a: " COMMAND_FILE))
@@ -65,3 +65,4 @@ polcom [filename] (renders individual file)")]
                                  `(displayln (format "No command defined for '~a'" ,arg))))]))))
 
 (handle-pollen-command)
+

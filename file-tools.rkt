@@ -3,8 +3,6 @@
 (require (only-in racket/path filename-extension))
 (require "world.rkt" sugar)
 
-(module+ test (require rackunit))
-
 ;; for files like svg that are not source in pollen terms,
 ;; but have a textual representation separate from their display.
 (define+provide/contract (sourceish? x)

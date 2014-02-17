@@ -26,7 +26,7 @@
      ;; and why doesn't this work:
      ;;     (require pollen/main-imports)
      ;;     (provide (all-from-out pollen/main-imports))
-     (require pollen/tools pollen/main-helper pollen/top pollen/ptree)
+     (require pollen/tools pollen/main-helper pollen/top pollen/ptree sugar tagged-xexpr)
      (require-and-provide-extras) ; brings in the project require files
      
      expr ... ; body of module  
@@ -57,7 +57,7 @@
    
    ;; split out the metas now (in raw form)
    (define-values (metas-raw main-raw) 
-     (split-tag-from-xexpr 'meta (make-tagged-xexpr 'irrelevant-tag empty all-elements)))
+     ((bound/c split-tag-from-xexpr) 'meta (make-tagged-xexpr 'irrelevant-tag empty all-elements)))
    
    (define metas (make-meta-hash metas-raw))
    
@@ -72,7 +72,7 @@
    ;; Because if it's overridden to something other than *.ptree, 
    ;; ptree processing will fail.
    ;; This defeats rule that ptree file suffix triggers ptree decoding.
-   (define here-is-ptree? ((bound/c ptree-source?) (->path inner-here-path)))
+   (define here-is-ptree? ((bound/c ptree-source?) ((bound/c ->path) inner-here-path)))
    
    (define main (apply (if here-is-ptree?
                            ;; ptree source files will go this way,
@@ -81,7 +81,7 @@
                            ;; Root is treated as a function. 
                            ;; If it's not defined elsewhere, 
                            ;; it just hits #%top and becomes a tagged-xexpr.
-                           root) (tagged-xexpr-elements main-raw)))
+                           root) ((bound/c tagged-xexpr-elements) main-raw)))
    
    
    (provide main metas here

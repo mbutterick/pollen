@@ -1,8 +1,8 @@
 #lang racket/base
 (require racket/date racket/string)
-(require sugar/debug)
+(require sugar/debug sugar/define)
 
-(provide message make-datestamp make-timestamp display-stack-trace (all-from-out sugar/debug))
+(provide  (all-from-out sugar/debug))
 
 ; todo: contracts, tests, docs
 
@@ -25,7 +25,7 @@
       str
       (string-append (make-string (- count (string-length str)) #\0) str)))
 
-(define (make-datestamp)
+(define+provide (make-datestamp)
   (define date (current-date))
   (define date-fields (map (λ(x) (zero-fill x 2)) 
                            (list
@@ -35,7 +35,7 @@
                             )))
   (string-join date-fields "-"))
 
-(define (make-timestamp)  
+(define+provide (make-timestamp)  
   (define date (current-date))
   (define time-fields (map (λ(x) (zero-fill x 2)) 
                            (list
@@ -57,13 +57,11 @@
 
 
 ;; todo: consolidate these two message functions
-(define (basic-message . items)
+(define+provide (basic-message . items)
   (displayln (string-join `(,@(map (λ(x)(if (string? x) x (format "~v" x))) items))) (current-error-port)))
 
-(define (message . items)
+(define+provide (message . items)
   (displayln (string-join `(,(make-debug-timestamp) ,@(map (λ(x)(if (string? x) x (format "~v" x))) items))) (current-error-port)))
-
-
 
 (define (exn+stack->string exn)
   (string-append 
