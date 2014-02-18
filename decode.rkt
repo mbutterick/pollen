@@ -22,7 +22,7 @@
 (define+provide/contract (decode nx
                 #:exclude-xexpr-tags [excluded-xexpr-tags '()]
                 #:xexpr-tag-proc [xexpr-tag-proc (λ(x)x)]
-                #:xexpr-attr-proc [xexpr-attr-proc (λ(x)x)]
+                #:xexpr-attrs-proc [xexpr-attrs-proc (λ(x)x)]
                 #:xexpr-elements-proc [xexpr-elements-proc (λ(x)x)]
                 #:block-xexpr-proc [block-xexpr-proc (λ(x)x)]
                 #:inline-xexpr-proc [inline-xexpr-proc (λ(x)x)]
@@ -34,7 +34,7 @@
                    ;; and return a string as output
                    (#:exclude-xexpr-tags list?
                                          #:xexpr-tag-proc procedure?
-                                         #:xexpr-attr-proc procedure?
+                                         #:xexpr-attrs-proc procedure?
                                          #:xexpr-elements-proc procedure?
                                          #:block-xexpr-proc procedure?
                                          #:inline-xexpr-proc procedure?
@@ -46,7 +46,7 @@
   
   (define (&decode x)
     (cond
-      [(tagged-xexpr? x) (let-values([(tag attr elements) (break-tagged-xexpr x)]) 
+      [(tagged-xexpr? x) (let-values([(tag attr elements) (tagged-xexpr->values x)]) 
                            (if (tag . in? . excluded-xexpr-tags)    
                                x ; let x pass through untouched
                                (let ([decoded-xexpr (apply make-tagged-xexpr 
@@ -54,10 +54,10 @@
                                  ((if (block-xexpr? decoded-xexpr)
                                       block-xexpr-proc
                                       inline-xexpr-proc) decoded-xexpr))))]
-      [(xexpr-tag? x) (xexpr-tag-proc x)]
-      [(xexpr-attr? x) (xexpr-attr-proc x)]
+      [(tagged-xexpr-tag? x) (xexpr-tag-proc x)]
+      [(tagged-xexpr-attrs? x) (xexpr-attrs-proc x)]
       ;; need this for operations that may depend on context in list
-      [(xexpr-elements? x) (map &decode (xexpr-elements-proc x))]
+      [(tagged-xexpr-elements? x) (map &decode (xexpr-elements-proc x))]
       [(string? x) (string-proc x)]
       ;; if something has made it through undecoded, that's a problem
       [else (error "Can't decode" x)]))
@@ -140,7 +140,7 @@
     (cond
       [(string? x) (replace-last-space x)] 
       [(tagged-xexpr? x) 
-       (let-values([(tag attr elements) (break-tagged-xexpr x)])
+       (let-values([(tag attr elements) (tagged-xexpr->values x)])
          (if (> (length elements) 0) ; elements is list of xexprs
              (let-values ([(all-but-last last) (split-at elements (sub1 (length elements)))]) 
                (make-tagged-xexpr tag attr `(,@all-but-last ,(find-last-word-space (car last)))))
@@ -169,7 +169,7 @@
                                       #:double-prepend  [double-pp '(dquo)])
   ((tagged-xexpr?) (#:single-prepend list? #:double-prepend list?) . ->* . tagged-xexpr?)
   (define two-or-more-char-string? (λ(i) (and (string? i) (>= (len i) 2))))
-  (define-values (tag attr elements) (break-tagged-xexpr nx))
+  (define-values (tag attr elements) (tagged-xexpr->values nx))
   (make-tagged-xexpr tag attr
                      (if (and (list? elements) (not (empty? elements)))
                          (let ([new-car-elements  (match (car elements)
@@ -209,7 +209,7 @@
 
 ;; turn the right items into <br> tags
 (define/contract (convert-linebreaks xc #:newline [newline "\n"])
-  ((xexpr-elements?) (#:newline string?) . ->* . xexpr-elements?)
+  ((tagged-xexpr-elements?) (#:newline string?) . ->* . tagged-xexpr-elements?)
   ;; todo: should this test be not block + not whitespace?
   (define not-block? (λ(i) (not (block-xexpr? i))))
   (filter-not empty?
@@ -292,7 +292,7 @@
 
 ;; prepare elements for paragraph testing
 (define/contract (prep-paragraph-flow xc)
-  (xexpr-elements? . -> . xexpr-elements?)
+  (tagged-xexpr-elements? . -> . tagged-xexpr-elements?)
   (convert-linebreaks (merge-newlines (trim xc whitespace?))))
 
 (module+ test
@@ -301,7 +301,7 @@
 
 ;; apply paragraph tag
 (define/contract (wrap-paragraph xc #:tag [tag 'p]) 
-  ((xexpr-elements?) (#:tag symbol?) . ->* . block-xexpr?)
+  ((tagged-xexpr-elements?) (#:tag symbol?) . ->* . block-xexpr?)
   (match xc
     [(list (? block-xexpr? bx)) bx] ; leave a single block xexpr alone
     [else (make-tagged-xexpr tag empty xc)])) ; otherwise wrap in p tag
@@ -317,7 +317,7 @@
 ;; detect paragraphs
 ;; todo: unit tests
 (define/contract (detect-paragraphs elements)
-  (xexpr-elements? . -> . xexpr-elements?)
+  (tagged-xexpr-elements? . -> . tagged-xexpr-elements?)
   (let ([elements (prep-paragraph-flow elements)]) 
     (if (ormap paragraph-break? elements) ; need this condition to prevent infinite recursion
         (map wrap-paragraph (splitf-at* elements paragraph-break?)) ; split into ¶¶

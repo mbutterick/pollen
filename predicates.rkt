@@ -16,7 +16,7 @@
 (define project-block-tags block-tags)
 
 (define+provide/contract (append-block-tag tag)
-  (xexpr-tag? . -> . void?)
+  (tagged-xexpr-tag? . -> . void?)
   (set! project-block-tags (cons tag project-block-tags)))
 
 ;; is the tagged-xexpr a block element (as opposed to inline)

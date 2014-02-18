@@ -1,5 +1,5 @@
 #lang racket/base
-(require racket/contract racket/string xml xml/path racket/bool)
+(require racket/contract racket/string xml xml/path)
 (require "tools.rkt" "ptree.rkt" sugar/scribble sugar/coerce sugar tagged-xexpr)
 
 ;; setup for test cases
@@ -44,7 +44,7 @@
 
 
 (define/contract (find query px)
-  (query-key? (or/c false? puttable-item?) . -> . (or/c false? xexpr-element?))
+  (query-key? (or/c #f puttable-item?) . -> . (or/c #f tagged-xexpr-element?))
   (define result (and px (or (find-in-metas px query) (find-in-main px query))))
   (and result (car result))) ;; return false or first element
 
@@ -58,7 +58,7 @@
 |#
 
 (define/contract (find-in-metas px key)
-  (puttable-item? query-key? . -> . (or/c false? xexpr-elements?))
+  (puttable-item? query-key? . -> . (or/c #f tagged-xexpr-elements?))
   (and (has-decoder-source? px)
        (let ([metas (dynamic-require (->decoder-source-path px) 'metas)]
              [key (->string key)])
@@ -74,7 +74,7 @@
 
 (define/contract (find-in-main px query) 
   (puttable-item? (or/c query-key? (listof query-key?)) 
-                  . -> . (or/c  false? xexpr-elements?))
+                  . -> . (or/c  #f tagged-xexpr-elements?))
   (let* ([px (put px)]
          ;; make sure query is a list of symbols (required by se-path*/list)
          [query (map ->symbol (->list query))]
@@ -95,10 +95,10 @@
 ;; todo: explain why
 ;; todo: do I need this?
 (define/contract (splice x)
-  ((or/c tagged-xexpr? xexpr-elements? string?) . -> . xexpr-elements?)
+  ((or/c tagged-xexpr? tagged-xexpr-elements? string?) . -> . tagged-xexpr-elements?)
   (cond
     [(tagged-xexpr? x) (tagged-xexpr-elements x)]
-    [(xexpr-elements? x) x]
+    [(tagged-xexpr-elements? x) x]
     [(string? x) (->list x)]))
 
 (module+ test
@@ -108,7 +108,7 @@
 
 
 (define/contract (make-html x)
-  ((or/c tagged-xexpr? xexpr-elements? xexpr-element?) . -> . string?)
+  ((or/c tagged-xexpr? tagged-xexpr-elements? tagged-xexpr-element?) . -> . string?)
   (cond
     [(tagged-xexpr? x) (xexpr->string x)]
     [else (let ([x (->list x)])
@@ -118,7 +118,6 @@
 (define-values (put-as-html splice-as-html)
   (apply values (map (λ(proc) (λ(x) (make-html (proc x)))) (list put splice))))
 
-(define ->html put-as-html)
 
 
 
