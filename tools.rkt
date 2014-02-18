@@ -30,3 +30,29 @@
                 (hash "foo" "haw")))
 
 
+
+;; function to split tag out of tagged-xexpr
+(define+provide/contract (split-tag-from-xexpr tag tx)
+  (xexpr-tag? tagged-xexpr? . -> . (values (listof xexpr-element?) tagged-xexpr? ))
+  (define matches '())
+  (define (extract-tag x)
+    (cond
+      [(and (tagged-xexpr? x) (equal? tag (car x)))
+       ; stash matched tag but return empty value
+       (begin
+         (set! matches (cons x matches))
+         empty)]
+      [(tagged-xexpr? x) (let-values([(tag attr body) (tagged-xexpr->values x)]) 
+                           (make-tagged-xexpr tag attr (extract-tag body)))]
+      [(xexpr-elements? x) (filter-not empty? (map extract-tag x))]
+      [else x]))
+  (define tx-extracted (extract-tag tx)) ;; do this first to fill matches
+  (values (reverse matches) tx-extracted)) 
+
+
+(module+ test
+  (define xx '(root (meta "foo" "bar") "hello" "world" (meta "foo2" "bar2") 
+                    (em "goodnight" "moon" (meta "foo3" "bar3"))))
+  (check-equal? (call-with-values (λ() (split-tag-from-xexpr 'meta xx)) list) 
+                (list '((meta "foo" "bar") (meta "foo2" "bar2") (meta "foo3" "bar3")) 
+                      '(root "hello" "world" (em "goodnight" "moon")))))
