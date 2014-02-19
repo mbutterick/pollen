@@ -1,6 +1,6 @@
 #lang racket/base
 (require racket/contract racket/match racket/path xml/path racket/bool racket/rerequire)
-(require "tools.rkt" "world.rkt" "debug.rkt" "decode.rkt" sugar tagged-xexpr)
+(require "tools.rkt" "world.rkt" "debug.rkt" "decode.rkt" sugar txexpr)
 
 (module+ test (require rackunit))
 
@@ -28,7 +28,7 @@
 
 (define/contract (ptree? x)
   (any/c . -> . boolean?)
-  (and (tagged-xexpr? x) (andmap (λ(i) (or (pnode? i) (ptree? i))) x)))
+  (and (txexpr? x) (andmap (λ(i) (or (pnode? i) (ptree? i))) x)))
 
 (module+ test
   (check-true (ptree? '(foo)))
@@ -207,7 +207,7 @@
 ;; this sets default input for following functions
 (define/contract (ptree-root->ptree tx)
   ;; (not/c ptree) prevents ptrees from being accepted as input
-  ((and/c tagged-xexpr?) . -> . ptree?)
+  ((and/c txexpr?) . -> . ptree?)
   tx)
 
 

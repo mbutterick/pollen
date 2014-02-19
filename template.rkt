@@ -1,11 +1,12 @@
 #lang racket/base
 (require racket/contract racket/string xml xml/path)
-(require "tools.rkt" "ptree.rkt" sugar/scribble sugar/coerce sugar tagged-xexpr)
+(require "tools.rkt" "ptree.rkt" sugar txexpr)
 
 ;; setup for test cases
 (module+ test (require rackunit racket/path))
 
 (provide (all-defined-out))
+(require sugar/scribble sugar/coerce)
 (provide (all-from-out sugar/scribble sugar/coerce))
 
 ;; todo: better fallback template
@@ -16,7 +17,7 @@
 
 (define/contract (puttable-item? x)
   (any/c . -> . boolean?)
-  (or (tagged-xexpr? x) 
+  (or (txexpr? x) 
       (has-decoder-source? x) 
       (and (pnode? x) (pnode->url x) (has-decoder-source? (pnode->url x)))))
 
@@ -29,10 +30,10 @@
   (or (string? x) (symbol? x)))
 
 (define/contract (put x)
-  (puttable-item? . -> . tagged-xexpr?)
+  (puttable-item? . -> . txexpr?)
   (cond
-    ;; Using put has no effect on tagged-xexprs. It's here to make the idiom smooth.
-    [(tagged-xexpr? x) x] 
+    ;; Using put has no effect on txexprs. It's here to make the idiom smooth.
+    [(txexpr? x) x] 
     [(has-decoder-source? x) (dynamic-require (->decoder-source-path x) 'main)]
     [(has-decoder-source? (pnode->url x)) (dynamic-require (->decoder-source-path (pnode->url x)) 'main)]))
 
@@ -44,7 +45,7 @@
 
 
 (define/contract (find query px)
-  (query-key? (or/c #f puttable-item?) . -> . (or/c #f tagged-xexpr-element?))
+  (query-key? (or/c #f puttable-item?) . -> . (or/c #f txexpr-element?))
   (define result (and px (or (find-in-metas px query) (find-in-main px query))))
   (and result (car result))) ;; return false or first element
 
@@ -58,7 +59,7 @@
 |#
 
 (define/contract (find-in-metas px key)
-  (puttable-item? query-key? . -> . (or/c #f tagged-xexpr-elements?))
+  (puttable-item? query-key? . -> . (or/c #f txexpr-elements?))
   (and (has-decoder-source? px)
        (let ([metas (dynamic-require (->decoder-source-path px) 'metas)]
              [key (->string key)])
@@ -74,7 +75,7 @@
 
 (define/contract (find-in-main px query) 
   (puttable-item? (or/c query-key? (listof query-key?)) 
-                  . -> . (or/c  #f tagged-xexpr-elements?))
+                  . -> . (or/c  #f txexpr-elements?))
   (let* ([px (put px)]
          ;; make sure query is a list of symbols (required by se-path*/list)
          [query (map ->symbol (->list query))]
@@ -90,15 +91,15 @@
 |#
 
 ;; turns input into xexpr-elements so they can be spliced into template
-;; (as opposed to dropped in as a full tagged-xexpr)
+;; (as opposed to dropped in as a full txexpr)
 ;; by returning a list, pollen rules will automatically merge into main flow
 ;; todo: explain why
 ;; todo: do I need this?
 (define/contract (splice x)
-  ((or/c tagged-xexpr? tagged-xexpr-elements? string?) . -> . tagged-xexpr-elements?)
+  ((or/c txexpr? txexpr-elements? string?) . -> . txexpr-elements?)
   (cond
-    [(tagged-xexpr? x) (tagged-xexpr-elements x)]
-    [(tagged-xexpr-elements? x) x]
+    [(txexpr? x) (get-elements x)]
+    [(txexpr-elements? x) x]
     [(string? x) (->list x)]))
 
 (module+ test
@@ -108,9 +109,9 @@
 
 
 (define/contract (make-html x)
-  ((or/c tagged-xexpr? tagged-xexpr-elements? tagged-xexpr-element?) . -> . string?)
+  ((or/c txexpr? txexpr-elements? txexpr-element?) . -> . string?)
   (cond
-    [(tagged-xexpr? x) (xexpr->string x)]
+    [(txexpr? x) (xexpr->string x)]
     [else (let ([x (->list x)])
             (string-join (map xexpr->string x) ""))]))
 

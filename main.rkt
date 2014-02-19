@@ -26,7 +26,7 @@
      ;; and why doesn't this work:
      ;;     (require pollen/main-imports)
      ;;     (provide (all-from-out pollen/main-imports))
-     (require pollen/tools pollen/main-helper pollen/top pollen/ptree sugar tagged-xexpr)
+     (require pollen/tools pollen/main-helper pollen/top pollen/ptree sugar txexpr)
      (require-and-provide-extras) ; brings in the project require files
      
      expr ... ; body of module  
@@ -50,14 +50,14 @@
                                       ;; doc is probably a list, but might be a single string
                                       [(string? doc) (list doc)] 
                                       ;; if it's a single nx, just leave it
-                                      [(tagged-xexpr? doc) (list doc)]
+                                      [(txexpr? doc) (list doc)]
                                       ;; if it's nx content, splice it in
                                       [(list? doc) doc])))) 
    
    
    ;; split out the metas now (in raw form)
    (define-values (metas-raw main-raw) 
-     ((bound/c split-tag-from-xexpr) 'meta (make-tagged-xexpr 'irrelevant-tag empty all-elements)))
+     ((bound/c split-tag-from-xexpr) 'meta (make-txexpr 'irrelevant-tag empty all-elements)))
    
    (define metas (make-meta-hash metas-raw))
    
@@ -80,8 +80,8 @@
                            ;; ... but other files, including pollen, will go this way.
                            ;; Root is treated as a function. 
                            ;; If it's not defined elsewhere, 
-                           ;; it just hits #%top and becomes a tagged-xexpr.
-                           root) ((bound/c tagged-xexpr-elements) main-raw)))
+                           ;; it just hits #%top and becomes a txexpr.
+                           root) ((bound/c get-elements) main-raw)))
    
    
    (provide main metas here
@@ -97,7 +97,7 @@
      
      (if here-is-ptree?
          (displayln (format "(ptree? main) ~a" (ptree? main)))
-         (displayln (format "(tagged-xexpr? main) ~a" (tagged-xexpr? main))))
+         (displayln (format "(txexpr? main) ~a" (txexpr? main))))
      (displayln "")
      (displayln ";-------------------------")
      (displayln "; pollen 'metas")

@@ -5,7 +5,7 @@
 (require web-server/http/request-structs)
 (require web-server/http/response-structs)
 (require 2htdp/image)
-(require "world.rkt" "render.rkt" sugar tagged-xexpr "predicates.rkt" "debug.rkt" "ptree.rkt")
+(require "world.rkt" "render.rkt" sugar txexpr "predicates.rkt" "debug.rkt" "ptree.rkt")
 
 (module+ test (require rackunit))
 
@@ -54,7 +54,7 @@
 
 ;; extract main xexpr from a path
 (define/contract (file->xexpr path #:render [wants-render #t])
-  ((complete-path?) (#:render boolean?) . ->* . tagged-xexpr?)
+  ((complete-path?) (#:render boolean?) . ->* . txexpr?)
   (when wants-render (render path))
   (dynamic-rerequire path) ; stores module mod date; reloads if it's changed
   (dynamic-require path 'main))
@@ -74,11 +74,11 @@
   (check-equal? (slurp (build-path (current-directory) "tests/server-routes/bar.html") #:render #f) "<html><body><p>bar</p></body></html>"))
 
 
-;; add a wrapper to tagged-xexpr that displays it as monospaced text
+;; add a wrapper to txexpr that displays it as monospaced text
 ;; for "view source"ish functions
 ;; takes either a string or an xexpr
 (define/contract (format-as-code x)
-  (xexpr? . -> . tagged-xexpr?)
+  (xexpr? . -> . txexpr?)
   (body-wrapper `(tt ,x)))
 
 

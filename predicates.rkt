@@ -1,6 +1,6 @@
 #lang racket/base
 (require racket/contract racket/match racket/set)
-(require css-tools/html sugar tagged-xexpr)
+(require css-tools/html sugar txexpr)
 (require "world.rkt" "file-tools.rkt" "debug.rkt")
 
 (provide (all-from-out "file-tools.rkt"))
@@ -16,15 +16,15 @@
 (define project-block-tags block-tags)
 
 (define+provide/contract (append-block-tag tag)
-  (tagged-xexpr-tag? . -> . void?)
+  (txexpr-tag? . -> . void?)
   (set! project-block-tags (cons tag project-block-tags)))
 
-;; is the tagged-xexpr a block element (as opposed to inline)
+;; is the txexpr a block element (as opposed to inline)
 ;; tags are inline unless they're registered as block tags.
 (define+provide/contract (block-xexpr? x)
   (any/c . -> . boolean?)
   ;; (car x) = shorthand for tag of xexpr
-  ((tagged-xexpr? x) . and . ((car x) . in? . project-block-tags)))
+  ((txexpr? x) . and . ((car x) . in? . project-block-tags)))
 
 
 ;; recursive whitespace test

@@ -8,7 +8,7 @@
          pollen/tools 
          pollen/main-helper
          pollen/top
-         tagged-xexpr
+         txexpr
          sugar
          (only-in pollen/ptree ptree-source-decode path->pnode ptree?))
 
@@ -16,6 +16,6 @@
                        pollen/tools 
                        pollen/main-helper
                        pollen/top
-                       tagged-xexpr
+                       txexpr
                        sugar
                        pollen/ptree))
