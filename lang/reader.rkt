@@ -1,15 +1,10 @@
 #lang racket/base
-(require (only-in scribble/reader make-at-reader)
-         (only-in "../world.rkt" EXPRESSION_DELIMITER)
-         (only-in "../file-tools.rkt" decoder-source? ptree-source?))
+(require (only-in scribble/reader make-at-reader))
 
-(provide (rename-out [mb-read read]
-                     [mb-read-syntax read-syntax])
-         read-inner
-         )
+(provide (rename-out [mb-read read] [mb-read-syntax read-syntax]) read-inner)
 
 (define read-inner
-  (make-at-reader #:command-char EXPRESSION_DELIMITER
+  (make-at-reader #:command-char #\◊
                   #:syntax? #t
                   #:inside? #t))
 
@@ -25,9 +20,5 @@
 (define (mb-read-syntax path-string p)
   (define i (read-inner path-string p)) 
   (datum->syntax i 
-                 ;; select pollen dialect based on file type
-                 `(module pollen-lang-module ,(if (or (decoder-source? path-string) (ptree-source? path-string))
-                                                  'pollen/main
-                                                  'pollen/main-preproc)
-                    ,@i)
+                 `(module pollen-lang-module pollen/main-preproc ,@i)
                  i))
