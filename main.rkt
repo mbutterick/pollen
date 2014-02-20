@@ -7,43 +7,39 @@
   (#%module-begin
    (module inner pollen/lang/doclang_raw
      ;; first three lines are positional arguments for doclang_raw
+     ;; doclang_raw is a version of scribble/doclang with the decoder disabled
      main-raw ; id of export
      (λ(x) x) ; post-process function
      () ; prepended exprs
      
      (require pollen/lang/lang-helper)
      (require-project-require-files)
-     (provide (all-defined-out))
      
-     ;; Change behavior of undefined identifiers
+     ;; Change behavior of undefined identifiers with #%top
      (require pollen/top)
      (provide (all-from-out pollen/top))
      
      ;; Build 'inner-here-path and 'inner-here
      (define inner-here-path (get-here-path))
-     (require (only-in pollen/world PROJECT_ROOT))
      (require (only-in racket/path find-relative-path))
-     (require (only-in pollen/file-tools ->output-path))
-     (define inner-here (path->string (->output-path (find-relative-path PROJECT_ROOT inner-here-path))))
+     (define inner-here (path->string (path-replace-suffix (find-relative-path (current-directory) inner-here-path) "")))
+     
+     (provide (all-defined-out))
      
      body-exprs ...)
    
    (require 'inner)
    
-   ;; Split out the metas. We want to catch user-defined metas too.
-   ;; First, append "here-path" and "here" as metas.
-   ;; Because they might have been overridden by custom metas in the source.
+   ;; Split out the metas. 
    (require txexpr)   
-   (define one-with-everything `(placeholder-root 
-                                 (meta "here-path" ,inner-here-path)
-                                 (meta "here" ,inner-here)                         
-                                 ,@(cdr main-raw))) ;; cdr strips initial linebreak
-   
-   (define is-meta-element? (λ(x) (and (txexpr? x) (equal? 'meta (get-tag x)))))
+   (define main-txexpr `(placeholder-root ,@(cdr main-raw))) ;; cdr strips initial linebreak
+   (define is-meta-element? (λ(x) (and (txexpr? x) (equal? 'meta (car x)))))
    (define-values (main-without-metas meta-elements) 
-     (splitf-txexpr one-with-everything is-meta-element?))
+     (splitf-txexpr main-txexpr is-meta-element?))
    (define meta-element->assoc (λ(x) (cons (cadr x) (caddr x))))
-   (define metas (make-hash (map meta-element->assoc meta-elements)))
+   ;; Prepend 'here-path and 'here as metas so they can be overridden by metas embedded in source.
+   (define metas (make-hash (map meta-element->assoc (cons `(meta "here-path" ,inner-here-path) 
+                                                           (cons `(meta "here" ,inner-here) meta-elements)))))
    
    
    ;; set up the 'main export
@@ -53,7 +49,7 @@
                            ;; 'root is the hook for the decoder function.
                            ;; If it's not a defined identifier, it just hits #%top and becomes `(root ,@body ...)
                            root
-                           ;; for textual (preprocessor-style) output. Converts x-expressions to HTML.
+                           ;; for preprocessor output, just make a string. Converts x-expressions to HTML.
                            (λ xs (apply string-append (map (dynamic-require 'xml 'xexpr->string) xs))))
                        (cdr main-without-metas))) ;; cdr strips placeholder-root tag
    
