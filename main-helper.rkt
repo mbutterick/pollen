@@ -8,7 +8,7 @@
 (define-for-syntax (put-file-in-require-form file)
   `(file ,(path->string file)))
 
-(define-for-syntax (make-require-extras-syntax stx #:provide? [provide? #f])
+(define-for-syntax (do-project-require-file-syntax stx #:provide? [provide? #f])
   (define project-require-files (get-project-require-files))
   (if project-require-files
       (let ([files-in-require-form (map put-file-in-require-form project-require-files)])
@@ -20,11 +20,11 @@
       ; if no files to import, do nothing
       #'(begin)))
 
-(define-syntax (require-and-provide-extras stx)
-  (make-require-extras-syntax stx #:provide? #t))
+(define-syntax (require-and-provide-project-require-files stx)
+  (do-project-require-file-syntax stx #:provide? #t))
 
-(define-syntax (require-extras stx)
-  (make-require-extras-syntax stx))
+(define-syntax (require-project-require-files stx)
+  (do-project-require-file-syntax stx))
 
 
 ;; here = path of this file, relative to current directory. 
