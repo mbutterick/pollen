@@ -164,11 +164,11 @@
   
   (define render-needed? 
     (or
-       force-render 
-       (not (file-exists? output-path))
-       (mod-date-expired? source-path)
-       (let ([source-reloaded? (handle-source-rerequire source-path)])
-         source-reloaded?)))
+     force-render 
+     (not (file-exists? output-path))
+     (mod-date-expired? source-path)
+     (let ([source-reloaded? (handle-source-rerequire source-path)])
+       source-reloaded?)))
   
   (if render-needed?
       (render-preproc-source source-path output-path)      
@@ -220,8 +220,6 @@
   ;; todo: this won't work with source files nested down one level
   (define-values (source-dir ignored also-ignored) (split-path source-path))
   
-  ;; find out whether source had to be reloaded
-  (define source-reloaded? (handle-source-rerequire source-path))
   
   ;; Then the rest: 
   ;; set the template, render the source file with template, and catch the output.
@@ -262,7 +260,8 @@
           ;; c) mod-dates indicates render is needed
           (mod-date-expired? source-path template-path) 
           ;; d) dynamic-rerequire indicates the source had to be reloaded
-          source-reloaded?)
+          (let ([source-reloaded? (handle-source-rerequire source-path)])
+            source-reloaded?))
       (begin
         (message "Rendering source" (->string (file-name-from-path source-path)) 
                  "with template" (->string (file-name-from-path template-path)))
@@ -306,24 +305,24 @@
     ;; the eval namespace doesn't have to re-import these
     ;; because otherwise, most of its time is spent traversing imports.
     (for-each (λ(mod-name) (namespace-attach-module original-ns mod-name)) 
-         '(web-server/templates 
-           xml/path
-           racket/port 
-           racket/file 
-           racket/rerequire 
-           racket/contract 
-           racket/list
-           pollen/debug
-           pollen/decode
-           pollen/file-tools
-           ;         pollen/main-imports
-           ;        pollen/main-preproc-imports
-           pollen/predicates
-           pollen/ptree
-           sugar
-           pollen/template
-           pollen/tools
-           pollen/world))
+              '(web-server/templates 
+                xml/path
+                racket/port 
+                racket/file 
+                racket/rerequire 
+                racket/contract 
+                racket/list
+                pollen/debug
+                pollen/decode
+                pollen/file-tools
+                ;         pollen/main-imports
+                ;        pollen/main-preproc-imports
+                pollen/predicates
+                pollen/ptree
+                sugar
+                pollen/template
+                pollen/tools
+                pollen/world))
     (namespace-require 'racket/base) ; use namespace-require for FIRST require, then eval after
     (eval eval-string (current-namespace))))
 
@@ -344,7 +343,6 @@
        ;; for include-template (used below)
        (require web-server/templates)
        ;; for ptree navigation functions, and template commands
-       ;; todo: main-helper is here for #%top and bound/c — should they go elsewhere?
        (require pollen/debug pollen/ptree pollen/template pollen/top)
        ;; import source into eval space. This sets up main & metas
        (require ,(->string source-name))
