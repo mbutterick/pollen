@@ -13,7 +13,7 @@
      () ; prepended exprs
      
      (require pollen/lang/lang-helper)
-     (require-project-require-files)
+     (require-and-provide-project-require-files)
      
      ;; Change behavior of undefined identifiers with #%top
      (require pollen/top)
