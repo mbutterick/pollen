@@ -234,7 +234,6 @@
   (request? . -> . response?)
   (define error-text (format "route-404: Can't find ~a" (->string (req->path req))))
   (message error-text)
-  ;`(html ,(slurp (build-path SERVER_EXTRAS_DIR "404.html")))
   (response/xexpr `(html ,error-text)))
 
 
@@ -245,10 +244,3 @@
   (format-as-code (~v (file->xexpr path))))
 
 (define route-xexpr (route-wrapper xexpr))
-
-(module+ main
-  (parameterize ([current-directory (build-path (current-directory) "foobar")])
-    (reset-project-root)
-    ;    (message PROJECT_ROOT)
-    ;    (make-binary-info-page (build-path "foo.gif"))
-    ))

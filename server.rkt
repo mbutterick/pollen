@@ -23,6 +23,9 @@
 
 (message "Ready to rock")
 
+(define MODULE_ROOT (apply build-path (drop-right (explode-path (current-contract-region)) 1)))
+(define SERVER_EXTRAS_DIR (build-path MODULE_ROOT "pollen-server-extras"))
+
 (serve/servlet pollen-servlet
                #:port SERVER_PORT
                #:listen-ip #f

@@ -1,5 +1,4 @@
 #lang racket/base
-(require racket/list racket/contract)
 
 ;; todo: how to make project- or user-specific prefs
 
@@ -8,8 +7,9 @@
 (define POLLEN_VERSION "0.001")
 
 (define PREPROC_SOURCE_EXT 'p)
-(define DECODER_SOURCE_EXT 'pd)
+(define DECODER_SOURCE_EXT 'pm)
 (define PTREE_SOURCE_EXT 'ptree)
+(define DECODABLE_EXTENSIONS (list DECODER_SOURCE_EXT PTREE_SOURCE_EXT))
 
 (define DEFAULT_PTREE "main.ptree")
 (define PTREE_ROOT_NODE 'ptree-root)
@@ -41,15 +41,11 @@
 
 (define COMMAND_FILE "polcom")
 
-(require sugar)
 (define RESERVED_PATHS
-  (map ->path (list COMMAND_FILE EXTRAS_DIR "poldash.css" "compiled")))
+  (map string->path (list COMMAND_FILE (path->string EXTRAS_DIR) "poldash.css" "compiled")))
 
 
 (define PROJECT_ROOT (current-directory))
-(define (reset-project-root) (set! PROJECT_ROOT (current-directory)))
-(define MODULE_ROOT (apply build-path (drop-right (explode-path (current-contract-region)) 1)))
-(define SERVER_EXTRAS_DIR (build-path MODULE_ROOT "pollen-server-extras"))
 
 (define SERVER_PORT 8088)
 

@@ -12,18 +12,20 @@
      (λ(x) x) ; post-process function
      () ; prepended exprs
      
-     (require pollen/lang/lang-helper)
-     (require-and-provide-project-require-files)
+     (require pollen/lang/inner-lang-helper)
+     (require-and-provide-project-require-files) ; only works if current-directory is set correctly
      
      ;; Change behavior of undefined identifiers with #%top
      (require pollen/top)
      (provide (all-from-out pollen/top))
      
      ;; Build 'inner-here-path and 'inner-here
-     (define inner-here-path (get-here-path))
      (require (only-in racket/path find-relative-path))
      (require (only-in pollen/world PROJECT_ROOT))
-     (define inner-here (path->string (path-replace-suffix (find-relative-path PROJECT_ROOT inner-here-path) "")))
+     (define (here-path->here here-path)
+       (path->string (path-replace-suffix (find-relative-path PROJECT_ROOT here-path) "")))
+     (define inner-here-path (get-here-path))
+     (define inner-here (here-path->here inner-here-path))
      
      (provide (all-defined-out))
      
@@ -31,24 +33,30 @@
    
    (require 'inner)
    
-   ;; Split out the metas. 
+   ;; Split out the metas.   
+   (require (only-in racket/path find-relative-path))
+   (require (only-in pollen/world PROJECT_ROOT))
+   (define (here-path->here here-path)
+     (path->string (path-replace-suffix (find-relative-path PROJECT_ROOT here-path) "")))
+   
    (require txexpr)   
-   (define main-txexpr `(placeholder-root ,@(cdr main-raw))) ;; cdr strips initial linebreak
-   (define is-meta-element? (λ(x) (and (txexpr? x) (equal? 'meta (car x)))))
-   (define-values (main-without-metas meta-elements) 
-     (splitf-txexpr main-txexpr is-meta-element?))
-   (define meta-element->assoc (λ(x) (cons (cadr x) (caddr x))))
-   ;; Prepend 'here-path and 'here as metas so they can be overridden by metas embedded in source.
-   (define metas (make-hash (map meta-element->assoc (cons `(meta "here-path" ,inner-here-path) 
-                                                           (cons `(meta "here" ,inner-here) meta-elements)))))
+   (define (split-metas-to-hash tx)
+     ;; return tx without metas, and meta hash
+     (define is-meta-element? (λ(x) (and (txexpr? x) (equal? 'meta (car x)))))
+     (define-values (main-without-metas meta-elements) 
+       (splitf-txexpr tx is-meta-element?))
+     (define meta-element->assoc (λ(x) (cons (cadr x) (caddr x))))
+     (define metas (make-hash (map meta-element->assoc meta-elements)))
+     (values main-without-metas metas))
+   (define main-txexpr `(placeholder-root ,@(cons `(meta "here" ,inner-here) (cons `(meta "here-path" ,inner-here-path) 
+                                                                                   (cdr main-raw))))) ;; cdr strips initial linebreak
+   (define-values (main-without-metas metas) (split-metas-to-hash main-txexpr))
    
-   
-     
    ;; set up the 'main export
-   (require pollen/decode)
+   (require pollen/decode pollen/world)
    (require (only-in racket/list filter-not))
    (define here-ext (car (regexp-match #px"\\w+$" inner-here-path)))
-   (define wants-decoder? (member here-ext (list "pd" "ptree")))
+   (define wants-decoder? (member here-ext (map to-string DECODABLE_EXTENSIONS)))
    ;(print (cdr main-without-metas))
    (define main (apply (cond
                          [(equal? here-ext "ptree") (λ xs (decode (cons 'ptree-root xs)
