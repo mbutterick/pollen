@@ -237,6 +237,16 @@
 
 
 
+;; recursive whitespace test
+(define/contract (whitespace? x)
+  (any/c . -> . boolean?)
+  (cond
+    [(or (string? x) (symbol? x)) (->boolean (regexp-match #px"^\\s+$" (->string x)))]
+    [(equal? "" x) #t] ; empty string is deemed whitespace
+    [(or (list? x) (vector? x)) (andmap whitespace? (->list x))]
+    [else #f]))
+
+
 ;; is x a paragraph break?
 (define/contract (paragraph-break? x #:pattern [paragraph-pattern #px"^\n\n+$"])
   ((any/c) (#:pattern pregexp?) . ->* . boolean?)

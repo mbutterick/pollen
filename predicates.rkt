@@ -27,14 +27,6 @@
   ((txexpr? x) . and . ((car x) . in? . project-block-tags)))
 
 
-;; recursive whitespace test
-(define+provide/contract (whitespace? x)
-  (any/c . -> . boolean?)
-  (cond
-    [(or (vector? x) (list? x) (set? x)) (andmap whitespace? (->list x))]
-    [(equal? "" x) #t] ; empty string is deemed whitespace
-    [(or (symbol? x) (string? x)) (->boolean (regexp-match #px"^\\s+$" (->string x)))]
-    [else #f]))
 
 
 
