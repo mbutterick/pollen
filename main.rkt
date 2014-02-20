@@ -63,7 +63,7 @@
    (define here-path (hash-ref metas "here-path"))
    
    (provide metas main here here-path
-            ;; hide the exports that were only for internal use
+            ;; hide the exports that were only for internal use.
             (except-out (all-from-out 'inner) inner-here inner-here-path main-raw #%top))
    
    ;; for output in DrRacket
