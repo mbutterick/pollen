@@ -43,8 +43,7 @@
                                                            (cons `(meta "here" ,inner-here) meta-elements)))))
    
    
-   
-   
+     
    ;; set up the 'main export
    (require pollen/decode)
    (require (only-in racket/list filter-not))
@@ -53,25 +52,25 @@
    ;(print (cdr main-without-metas))
    (define main (apply (cond
                          [(equal? here-ext "ptree") (λ xs (decode (cons 'ptree-root xs)
-                                                      #:xexpr-elements-proc (λ(xs) (filter-not whitespace? xs))))]
+                                                                  #:xexpr-elements-proc (λ(xs) (filter-not whitespace? xs))))]
                          ;; 'root is the hook for the decoder function.
                          ;; If it's not a defined identifier, it just hits #%top and becomes `(root ,@body ...)
                          [wants-decoder? root]
-                         ;; for preprocessor output, just make a string. Converts x-expressions to HTML.
-                         [else (λ xs (apply string-append (map (dynamic-require 'xml 'xexpr->string) xs)))])
-(cdr main-without-metas))) ;; cdr strips placeholder-root tag
-
-
-;; derive 'here & 'here-path from the hash (because they might have been overridden in the source) 
-(define here (hash-ref metas "here"))
-(define here-path (hash-ref metas "here-path"))
-
-(provide metas main here here-path
-         ;; hide the exports that were only for internal use.
-         (except-out (all-from-out 'inner) inner-here inner-here-path main-raw #%top))
-
-;; for output in DrRacket
-(module+ main
-  (if wants-decoder? 
-      (print main) 
-      (display main)))))
+                         ;; for preprocessor output, just make a string.
+                         [else (λ xs (apply string-append (map to-string xs)))])
+                       (cdr main-without-metas))) ;; cdr strips placeholder-root tag
+   
+   
+   ;; derive 'here & 'here-path from the hash (because they might have been overridden in the source) 
+   (define here (hash-ref metas "here"))
+   (define here-path (hash-ref metas "here-path"))
+   
+   (provide metas main here here-path
+            ;; hide the exports that were only for internal use.
+            (except-out (all-from-out 'inner) inner-here inner-here-path main-raw #%top))
+   
+   ;; for output in DrRacket
+   (module+ main
+     (if wants-decoder? 
+         (print main) 
+         (display main)))))

@@ -233,10 +233,12 @@
                     (list
                      ;; path based on template-name
                      (and template-name (build-path source-dir template-name))
-                     ;; path based on metas
-                     (let ([source-metas (dynamic-require source-path 'metas)])
-                       (and (TEMPLATE_META_KEY . in? . source-metas)
-                            (build-path source-dir (get source-metas TEMPLATE_META_KEY))))
+                     ;; path based on metas. Need to parameterize a source file for it to find pollen-requires.
+                     ;; If you want standard behavior, requires can be declared explicitly.
+                     (parameterize ([current-directory PROJECT_ROOT])
+                       (let ([source-metas (dynamic-require source-path 'metas)])
+                         (and (TEMPLATE_META_KEY . in? . source-metas)
+                              (build-path source-dir (get source-metas TEMPLATE_META_KEY)))))
                      ;; path using default template name =
                      ;; "-main" + extension from output path (e.g. foo.xml.p -> -main.xml)
                      (build-path source-dir (add-ext DEFAULT_TEMPLATE_PREFIX (get-ext (->output-path source-path)))))))
@@ -277,15 +279,17 @@
 
 ;; cache some modules inside this namespace so they can be shared by namespace for eval
 ;; todo: macrofy this to avoid repeating names
-(require web-server/templates  
+(require web-server/templates 
+         xml/path
+         racket/port 
+         racket/file 
+         racket/rerequire 
+         racket/contract 
          racket/list
          xml/path
          pollen/debug
          pollen/decode
          pollen/file-tools
-         ;; commented out so we don't get #%top in this file
-         ;      pollen/main-imports
-         ;     pollen/main-preproc-imports
          pollen/predicates
          pollen/ptree
          sugar
@@ -315,15 +319,15 @@
                 pollen/debug
                 pollen/decode
                 pollen/file-tools
-                ;         pollen/main-imports
-                ;        pollen/main-preproc-imports
                 pollen/predicates
                 pollen/ptree
                 sugar
                 pollen/template
                 pollen/tools
-                pollen/world))
+                pollen/world
+                pollen/project-requires))
     (namespace-require 'racket/base) ; use namespace-require for FIRST require, then eval after
+    
     (eval eval-string (current-namespace))))
 
 (define/contract (render-source-with-template source-path template-path)
@@ -340,6 +344,8 @@
   
   (define string-to-eval 
     `(begin 
+       ;; enables macrofication
+       (require (for-syntax racket/base))
        ;; for include-template (used below)
        (require web-server/templates)
        ;; for ptree navigation functions, and template commands

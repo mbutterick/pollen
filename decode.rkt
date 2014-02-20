@@ -7,6 +7,19 @@
 
 (provide (except-out (all-defined-out) decode register-block-tag))
 
+;; general way of coercing to string
+(define (to-string x)
+  (if (string? x)
+      x ; fast exit for strings
+      (with-handlers  ([exn:fail? (λ(exn) (error "Can't convert ~a to ~a" x 'string))])
+        (cond
+          [(equal? '() x) ""]
+          [(symbol? x) (symbol->string x)]
+          [(number? x) (number->string x)]
+          [(path? x) (path->string x)]
+          [(char? x) (format "~a" x)]
+          [else (error)])))) ; put this last so other xexprish things don't get caught
+
 
 ;; add a block tag to the list
 ;; this function is among the predicates because it alters a predicate globally.
@@ -20,26 +33,26 @@
 
 ;; decoder wireframe
 (define+provide/contract (decode nx
-                #:exclude-xexpr-tags [excluded-xexpr-tags '()]
-                #:xexpr-tag-proc [xexpr-tag-proc (λ(x)x)]
-                #:xexpr-attrs-proc [xexpr-attrs-proc (λ(x)x)]
-                #:xexpr-elements-proc [xexpr-elements-proc (λ(x)x)]
-                #:block-xexpr-proc [block-xexpr-proc (λ(x)x)]
-                #:inline-xexpr-proc [inline-xexpr-proc (λ(x)x)]
-                #:string-proc [string-proc (λ(x)x)])
+                                 #:exclude-xexpr-tags [excluded-xexpr-tags '()]
+                                 #:xexpr-tag-proc [xexpr-tag-proc (λ(x)x)]
+                                 #:xexpr-attrs-proc [xexpr-attrs-proc (λ(x)x)]
+                                 #:xexpr-elements-proc [xexpr-elements-proc (λ(x)x)]
+                                 #:block-xexpr-proc [block-xexpr-proc (λ(x)x)]
+                                 #:inline-xexpr-proc [inline-xexpr-proc (λ(x)x)]
+                                 #:string-proc [string-proc (λ(x)x)])
   ((xexpr/c) ;; use xexpr/c for contract on nx because it gives better error messages
-                   
-                   ;; todo: how to write more specific contracts for these procedures?
-                   ;; e.g., string-proc should be restricted to procs that accept a string as input
-                   ;; and return a string as output
-                   (#:exclude-xexpr-tags list?
-                                         #:xexpr-tag-proc procedure?
-                                         #:xexpr-attrs-proc procedure?
-                                         #:xexpr-elements-proc procedure?
-                                         #:block-xexpr-proc procedure?
-                                         #:inline-xexpr-proc procedure?
-                                         #:string-proc procedure?)
-                   . ->* . txexpr?)
+   
+   ;; todo: how to write more specific contracts for these procedures?
+   ;; e.g., string-proc should be restricted to procs that accept a string as input
+   ;; and return a string as output
+   (#:exclude-xexpr-tags list?
+                         #:xexpr-tag-proc procedure?
+                         #:xexpr-attrs-proc procedure?
+                         #:xexpr-elements-proc procedure?
+                         #:block-xexpr-proc procedure?
+                         #:inline-xexpr-proc procedure?
+                         #:string-proc procedure?)
+   . ->* . txexpr?)
   (when (not (txexpr? nx))
     (error (format "decode: ~v not a full txexpr" nx)))
   
@@ -47,13 +60,13 @@
   (define (&decode x)
     (cond
       [(txexpr? x) (let-values([(tag attr elements) (txexpr->values x)]) 
-                           (if (tag . in? . excluded-xexpr-tags)    
-                               x ; let x pass through untouched
-                               (let ([decoded-xexpr (apply make-txexpr 
-                                                           (map &decode (list tag attr elements)))])
-                                 ((if (block-xexpr? decoded-xexpr)
-                                      block-xexpr-proc
-                                      inline-xexpr-proc) decoded-xexpr))))]
+                     (if (tag . in? . excluded-xexpr-tags)    
+                         x ; let x pass through untouched
+                         (let ([decoded-xexpr (apply make-txexpr 
+                                                     (map &decode (list tag attr elements)))])
+                           ((if (block-xexpr? decoded-xexpr)
+                                block-xexpr-proc
+                                inline-xexpr-proc) decoded-xexpr))))]
       [(txexpr-tag? x) (xexpr-tag-proc x)]
       [(txexpr-attrs? x) (xexpr-attrs-proc x)]
       ;; need this for operations that may depend on context in list
@@ -171,23 +184,23 @@
   (define two-or-more-char-string? (λ(i) (and (string? i) (>= (len i) 2))))
   (define-values (tag attr elements) (txexpr->values nx))
   (make-txexpr tag attr
-                     (if (and (list? elements) (not (empty? elements)))
-                         (let ([new-car-elements  (match (car elements)
-                                                    [(? two-or-more-char-string? tcs)
-                                                     (define str-first (get tcs 0))
-                                                     (define str-rest (get tcs 1 'end))
-                                                     (cond
-                                                       [(str-first . in? . '("\"" "“"))
-                                                        ;; can wrap with any inline tag
-                                                        ;; so that linebreak detection etc still works
-                                                        `(,@double-pp ,(->string #\“) ,str-rest)]
-                                                       [(str-first . in? . '("\'" "‘")) 
-                                                        `(,@single-pp ,(->string #\‘) ,str-rest)]
-                                                       [else tcs])]
-                                                    [(? txexpr? nx) (wrap-hanging-quotes nx)]
-                                                    [else (car elements)])])
-                           (cons new-car-elements (cdr elements)))
-                         elements)))
+               (if (and (list? elements) (not (empty? elements)))
+                   (let ([new-car-elements  (match (car elements)
+                                              [(? two-or-more-char-string? tcs)
+                                               (define str-first (get tcs 0))
+                                               (define str-rest (get tcs 1 'end))
+                                               (cond
+                                                 [(str-first . in? . '("\"" "“"))
+                                                  ;; can wrap with any inline tag
+                                                  ;; so that linebreak detection etc still works
+                                                  `(,@double-pp ,(->string #\“) ,str-rest)]
+                                                 [(str-first . in? . '("\'" "‘")) 
+                                                  `(,@single-pp ,(->string #\‘) ,str-rest)]
+                                                 [else tcs])]
+                                              [(? txexpr? nx) (wrap-hanging-quotes nx)]
+                                              [else (car elements)])])
+                     (cons new-car-elements (cdr elements)))
+                   elements)))
 
 
 
