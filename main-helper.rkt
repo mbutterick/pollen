@@ -1,14 +1,12 @@
 #lang racket/base
-(require (for-syntax racket/base pollen/tools sugar))
+(require (for-syntax racket/base pollen/project-requires))
 
 (require racket/contract/region)
 
 (provide (all-defined-out) (all-from-out racket/contract/region))
 
-
 (define-for-syntax (put-file-in-require-form file)
-  `(file ,(->string file)))
-
+  `(file ,(path->string file)))
 
 (define-for-syntax (make-require-extras-syntax stx #:provide? [provide? #f])
   (define project-require-files (get-project-require-files))

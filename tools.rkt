@@ -6,15 +6,6 @@
 ;; setup for test cases
 (module+ test (require rackunit))
 
-;; list of all eligible requires in project require directory
-(define+provide/contract (get-project-require-files)
-  (-> (or/c #f (listof complete-path?)))
-  (define extras-directory (build-path PROJECT_ROOT EXTRAS_DIR))
-  (and (directory-exists? extras-directory)
-       ;; #:build? option returns complete paths (instead of just file names)
-       (let ([files (filter project-require-file? (directory-list extras-directory #:build? #t))])
-         (and (not (empty? files)) files))))
-
 
 ;; convert list of meta tags to a hash for export from pollen document.
 ;; every meta is form (meta "key" "value") (enforced by contract)

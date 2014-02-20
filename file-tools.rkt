@@ -153,13 +153,6 @@
        (let-values ([(dir name ignore) (split-path x)])
          (equal? (get (->string name) 0) TEMPLATE_SOURCE_PREFIX))))
 
-;; predicate for files that are eligible to be required
-;; from the project/require directory
-;; todo: extend this beyond just racket files?
-(define+provide/contract (project-require-file? x)
-  (any/c . -> . coerce/boolean?)
-  (and (pathish? x) (has-ext? x 'rkt)))
-
 
 
 ;; todo: tighten these input contracts

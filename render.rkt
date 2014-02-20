@@ -1,8 +1,5 @@
 #lang racket/base
 (require racket/port racket/file racket/rerequire racket/contract racket/path)
-;(require "world.rkt" )
-
-;;todo: why is pollen/top operating in this file?
 
 (module+ test (require rackunit))
 
@@ -22,6 +19,8 @@
 ;; Possible: store hash on disk so mod records are preserved 
 ;; between development sessions (prob a worthless optimization)
 (define mod-dates (make-hash))
+
+
 
 (define/contract (make-mod-dates-key paths)
   ((listof path?) . -> . (listof path?))
@@ -113,7 +112,7 @@
       ;   (message "Dispatching render for" (->string (file-name-from-path path)))
       (cond
         ;; this will catch preprocessor files
-        [(needs-preproc? path) (render-preproc-source path #:force force)]
+        [(needs-preproc? path) (render-preproc-source-if-needed path #:force force)]
         ;; this will catch pollen source files, 
         ;; and files without extension that correspond to p files
         [(needs-template? path) (render-with-template path #:force force)]
@@ -142,45 +141,37 @@
   (any/c . -> . void?)
   (message (->string (file-name-from-path path)) "is up to date, using cached copy"))
 
-
-(define/contract (render-preproc-source x #:force [force #f])
-  (((and/c pathish?
-           (flat-named-contract 'file-exists
-                                (λ(x) (file-exists? (->complete-path (->preproc-source-path x))))))) (#:force boolean?) . ->* . void?)
-  
-  ;; x might be either a preproc-source path or preproc-output path
-  (define source-path (->complete-path (->preproc-source-path x)))
+(define (render-preproc-source source-path output-path)
+  ;; how we render: import 'main from preproc source file, 
+  ;; which is rendered during source parsing,
+  ;; and write that to output path
   (define-values (source-dir source-name _) (split-path source-path))
-  (define output-path (->complete-path (->output-path x)))
+  (rendering-message (format "~a from ~a" 
+                             (file-name-from-path output-path)
+                             (file-name-from-path source-path)))
+  (let ([main (time (render-through-eval source-dir `(dynamic-require ,source-path 'main)))]) ;; todo: how to use world global here? Wants an identifier, not a value
+    (display-to-file main output-path #:exists 'replace))
+  (store-render-in-mod-dates source-path) ; don't store mod date until render has completed!
+  (rendered-message output-path))
+
+(define/contract (render-preproc-source-if-needed input-path #:force [force-render #f])
+  ((pathish?) (#:force boolean?) . ->* . void?)
   
-  (define source-reloaded? (handle-source-rerequire source-path))
+  ;; input-path might be either a preproc-source path or preproc-output path
+  ;; But the coercion functions will figure it out.
+  (define source-path (->complete-path (->preproc-source-path input-path)))
+  (define output-path (->complete-path (->output-path input-path)))
   
-  ;; Four conditions under which we render preproc sources:
-  (if (or
-       ;; 1) explicitly forced render:
-       force 
-       ;; 2) output file doesn't exist (so it definitely won't appear in mod-dates)
-       ;; also, this is convenient for development: 
-       ;; you can trigger a render just by deleting the file
+  (define render-needed? 
+    (or
+       force-render 
        (not (file-exists? output-path))
-       ;; 3) file otherwise needs render (e.g., it changed)
        (mod-date-expired? source-path)
-       ;; 4) source had to be reloaded (some other change)
-       source-reloaded?)
-      
-      ;; how we render: import 'main from preproc source file, 
-      ;; which is rendered during source parsing,
-      ;; and write that to output path
-      (begin
-        (rendering-message (format "~a from ~a" 
-                                   (file-name-from-path output-path)
-                                   (file-name-from-path source-path)))
-        (let ([main (time (render-through-eval source-dir `(dynamic-require ,source-path 'main)))])
-          (display-to-file main output-path #:exists 'replace))
-        (store-render-in-mod-dates source-path) ; don't store mod date until render has completed!
-        (rendered-message output-path))
-      
-      ;; otherwise, skip file because there's no trigger for render
+       (let ([source-reloaded? (handle-source-rerequire source-path)])
+         source-reloaded?)))
+  
+  (if render-needed?
+      (render-preproc-source source-path output-path)      
       (up-to-date-message output-path)))
 
 ;; todo: write tests
@@ -293,28 +284,29 @@
          pollen/debug
          pollen/decode
          pollen/file-tools
-         pollen/main-imports
-         pollen/main-preproc-imports
+         ;; commented out so we don't get #%top in this file
+         ;      pollen/main-imports
+         ;     pollen/main-preproc-imports
          pollen/predicates
          pollen/ptree
          sugar
          pollen/template
          pollen/tools
-         pollen/world)
+         pollen/world
+         pollen/project-requires)
 (define original-ns (current-namespace))
 
 (define/contract (render-through-eval base-dir eval-string)
   (directory-pathish? list? . -> . string?)
   (parameterize ([current-namespace (make-base-empty-namespace)]
                  [current-directory (->complete-path base-dir)]
-                 [current-output-port nowhere-port])
+                 [current-output-port (current-error-port)])
     ;; attach already-imported modules 
     ;; this is a performance optimization: this way,
     ;; the eval namespace doesn't have to re-import these
     ;; because otherwise, most of its time is spent traversing imports.
-    (map (λ(mod-name) (namespace-attach-module original-ns mod-name)) 
-         '(racket/base 
-           web-server/templates 
+    (for-each (λ(mod-name) (namespace-attach-module original-ns mod-name)) 
+         '(web-server/templates 
            xml/path
            racket/port 
            racket/file 
@@ -324,8 +316,8 @@
            pollen/debug
            pollen/decode
            pollen/file-tools
-           pollen/main-imports
-           pollen/main-preproc-imports
+           ;         pollen/main-imports
+           ;        pollen/main-preproc-imports
            pollen/predicates
            pollen/ptree
            sugar
@@ -333,7 +325,6 @@
            pollen/tools
            pollen/world))
     (namespace-require 'racket/base) ; use namespace-require for FIRST require, then eval after
-    (eval '(require (for-syntax racket/base)))
     (eval eval-string (current-namespace))))
 
 (define/contract (render-source-with-template source-path template-path)
@@ -350,16 +341,16 @@
   
   (define string-to-eval 
     `(begin 
-      ;; for include-template (used below)
-      (require web-server/templates)
-      ;; for ptree navigation functions, and template commands
-      ;; todo: main-helper is here for #%top and bound/c — should they go elsewhere?
-      (require pollen/debug pollen/ptree pollen/template pollen/top)
-      ;; import source into eval space. This sets up main & metas
-      (require ,(->string source-name))
-      (parameterize ([current-ptree (make-project-ptree ,PROJECT_ROOT)]
-                     [current-url-context ,PROJECT_ROOT])
-        (include-template #:command-char ,TEMPLATE_FIELD_DELIMITER ,(->string template-name)))))
+       ;; for include-template (used below)
+       (require web-server/templates)
+       ;; for ptree navigation functions, and template commands
+       ;; todo: main-helper is here for #%top and bound/c — should they go elsewhere?
+       (require pollen/debug pollen/ptree pollen/template pollen/top)
+       ;; import source into eval space. This sets up main & metas
+       (require ,(->string source-name))
+       (parameterize ([current-ptree (make-project-ptree ,PROJECT_ROOT)]
+                      [current-url-context ,PROJECT_ROOT])
+         (include-template #:command-char ,TEMPLATE_FIELD_DELIMITER ,(->string template-name)))))
   
   (render-through-eval source-dir string-to-eval))
 
