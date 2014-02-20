@@ -22,7 +22,8 @@
      ;; Build 'inner-here-path and 'inner-here
      (define inner-here-path (get-here-path))
      (require (only-in racket/path find-relative-path))
-     (define inner-here (path->string (path-replace-suffix (find-relative-path (current-directory) inner-here-path) "")))
+     (require (only-in pollen/world PROJECT_ROOT))
+     (define inner-here (path->string (path-replace-suffix (find-relative-path PROJECT_ROOT inner-here-path) "")))
      
      (provide (all-defined-out))
      
