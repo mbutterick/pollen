@@ -36,8 +36,6 @@
    ;; Split out the metas.   
    (require (only-in racket/path find-relative-path))
    (require (only-in pollen/world PROJECT_ROOT))
-   (define (here-path->here here-path)
-     (path->string (path-replace-suffix (find-relative-path PROJECT_ROOT here-path) "")))
    
    (require txexpr)   
    (define (split-metas-to-hash tx)
@@ -48,9 +46,14 @@
      (define meta-element->assoc (λ(x) (cons (cadr x) (caddr x))))
      (define metas (make-hash (map meta-element->assoc meta-elements)))
      (values main-without-metas metas))
-   (define main-txexpr `(placeholder-root ,@(cons `(meta "here" ,inner-here) (cons `(meta "here-path" ,inner-here-path) 
-                                                                                   (cdr main-raw))))) ;; cdr strips initial linebreak
+   
+   (define main-txexpr `(placeholder-root 
+                         ,@(cons `(meta "here" ,inner-here) 
+                                 (cons `(meta "here-path" ,inner-here-path) 
+                                       ;; cdr strips initial linebreak, but make sure main-raw isn't blank
+                                       (if (and (list? main-raw) (> 0 (length main-raw))) (cdr main-raw) main-raw))))) 
    (define-values (main-without-metas metas) (split-metas-to-hash main-txexpr))
+   
    
    ;; set up the 'main export
    (require pollen/decode pollen/world)
