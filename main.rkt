@@ -36,7 +36,7 @@
    (require 'inner)
    
    ;; Split out the metas.   
-   (require txexpr)   
+   (require txexpr/fast)   
    (define (split-metas-to-hash tx)
      ;; return tx without metas, and meta hash
      (define is-meta-element? (λ(x) (and (txexpr? x) (equal? 'meta (car x)))))
@@ -59,8 +59,8 @@
    (define here-ext (car (regexp-match #px"\\w+$" inner-here-path)))
    (define wants-decoder? (member here-ext (map to-string DECODABLE_EXTENSIONS)))
    (define main (apply (cond
-                         [(equal? here-ext "ptree") (λ xs (decode (cons 'ptree-root xs)
-                                                                  #:xexpr-elements-proc (λ(xs) (filter-not whitespace? xs))))]
+                         [(equal? here-ext "ptree") (λ xs (decode (cons PTREE_ROOT_NODE xs)
+                             #:xexpr-elements-proc (λ(xs) (filter (compose1 not (bound/c whitespace?)) xs))))]
                          ;; 'root is the hook for the decoder function.
                          ;; If it's not a defined identifier, it just hits #%top and becomes `(root ,@body ...)
                          [wants-decoder? root]
