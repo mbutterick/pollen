@@ -19,9 +19,11 @@
      (require pollen/top)
      (provide (all-from-out pollen/top))
      
+     ;; Get project values
+     (require pollen/world)
+     (provide (all-from-out pollen/world))
+     
      ;; Build 'inner-here-path and 'inner-here
-     (require (only-in racket/path find-relative-path))
-     (require (only-in pollen/world PROJECT_ROOT))
      (define (here-path->here here-path)
        (path->string (path-replace-suffix (find-relative-path PROJECT_ROOT here-path) "")))
      (define inner-here-path (get-here-path))
@@ -34,9 +36,6 @@
    (require 'inner)
    
    ;; Split out the metas.   
-   (require (only-in racket/path find-relative-path))
-   (require (only-in pollen/world PROJECT_ROOT))
-   
    (require txexpr)   
    (define (split-metas-to-hash tx)
      ;; return tx without metas, and meta hash
@@ -56,11 +55,9 @@
    
    
    ;; set up the 'main export
-   (require pollen/decode pollen/world)
-   (require (only-in racket/list filter-not))
+   (require pollen/decode)
    (define here-ext (car (regexp-match #px"\\w+$" inner-here-path)))
    (define wants-decoder? (member here-ext (map to-string DECODABLE_EXTENSIONS)))
-   ;(print (cdr main-without-metas))
    (define main (apply (cond
                          [(equal? here-ext "ptree") (λ xs (decode (cons 'ptree-root xs)
                                                                   #:xexpr-elements-proc (λ(xs) (filter-not whitespace? xs))))]

@@ -45,11 +45,10 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-; Copied out from racket/contract/private/base for speed
-; Used to be called current-contract-region
+; Copied out from racket/contract/private/base to avoid import
 ; Importing racket/contract/region is slow
+; Used to be called current-contract-region
 ;
-
 (require racket/stxparam syntax/location)
 
 (define-syntax-parameter current-file-path
@@ -64,8 +63,64 @@
                                   id))])
             #'id))
         (quasisyntax/loc stx (#%expression #,stx)))))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; Copied out from racket/path to avoid import
+;
+(define (find-relative-path directory filename #:more-than-root? [more-than-root? #f])
+  
+  (define (do-explode-path who orig-path)
+    (define l (explode-path orig-path))
+    (for ([p (in-list l)])
+      (when (not (path-for-some-system? p))
+        (raise-argument-error who 
+                              "(and/c path-for-some-system? simple-form?)"
+                              orig-path)))
+    l)
+  
+  (let ([dir (do-explode-path 'find-relative-path directory)]
+        [file (do-explode-path 'find-relative-path filename)])
+    (if (and (equal? (car dir) (car file))
+             (or (not more-than-root?)
+                 (not (eq? 'unix (path-convention-type directory)))
+                 (null? (cdr dir))
+                 (null? (cdr file))
+                 (equal? (cadr dir) (cadr file))))
+        (let loop ([dir (cdr dir)]
+                   [file (cdr file)])
+          (cond [(null? dir) (if (null? file) filename (apply build-path file))]
+                [(null? file) (apply build-path/convention-type 
+                                     (path-convention-type filename)
+                                     (map (lambda (x) 'up) dir))]
+                [(equal? (car dir) (car file))
+                 (loop (cdr dir) (cdr file))]
+                [else
+                 (apply build-path (append (map (lambda (x) 'up) dir) file))]))
+        filename)))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; Copied out from racket/list to avoid import
+;
+(define (filter-not f list)
+  (unless (and (procedure? f)
+               (procedure-arity-includes? f 1))
+    (raise-argument-error 'filter-not "(any/c . -> . any/c)" 0 f list))
+  (unless (list? list)
+    (raise-argument-error 'filter-not "list?" 1 f list))
+  ;; accumulating the result and reversing it is currently slightly
+  ;; faster than a plain loop
+  (let loop ([l list] [result null])
+    (if (null? l)
+      (reverse result)
+      (loop (cdr l) (if (f (car l)) result (cons (car l) result))))))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 (define-syntax (get-here-path stx)
