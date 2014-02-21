@@ -55,7 +55,7 @@
    
    
    ;; set up the 'main export
-   (require pollen/decode)
+   (require pollen/decode/fast)
    (define here-ext (car (regexp-match #px"\\w+$" inner-here-path)))
    (define wants-decoder? (member here-ext (map to-string DECODABLE_EXTENSIONS)))
    (define main (apply (cond
