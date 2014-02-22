@@ -1,6 +1,6 @@
 #lang racket/base
 (require racket/match xml)
-(require "../tools.rkt" "../predicates.rkt" txexpr/fast "typography-fast.rkt")
+(require "../tools.rkt" "../predicates.rkt" txexpr "typography-fast.rkt")
 
 
 (provide (all-defined-out) (all-from-out "typography-fast.rkt"))

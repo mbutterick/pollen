@@ -1,6 +1,6 @@
 #lang racket/base
 (require racket/match)
-(require "../tools.rkt" "../predicates.rkt" sugar txexpr/fast)
+(require "../tools.rkt" "../predicates.rkt" sugar txexpr)
 
 
 (provide (all-defined-out))
