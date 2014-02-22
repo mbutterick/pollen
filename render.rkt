@@ -1,5 +1,6 @@
 #lang racket/base
 (require racket/port racket/file racket/rerequire racket/contract racket/path)
+(require sugar)
 
 (module+ test (require rackunit))
 
@@ -33,9 +34,10 @@
   (and (file-exists? path) ; returns #f if a file doesn't exist
        (file-or-directory-modify-seconds path)))
 
+
 (module+ test
   (check-false (path->mod-date-value (->path "foobarfoo.rkt")))
-  (check-true (exact-integer? (path->mod-date-value (build-path (current-directory) (->path "render.rkt"))))))
+  (check-true (exact-integer? (path->mod-date-value (build-path (current-directory) (string->path "render.rkt"))))))
 
 ;; put list of paths into mod-dates
 ;; need list as input (rather than individual path)
@@ -280,81 +282,74 @@
 ;; cache some modules inside this namespace so they can be shared by namespace for eval
 ;; todo: macrofy this to avoid repeating names
 (require web-server/templates 
-         xml/path
+         xml
          racket/port 
          racket/file 
          racket/rerequire 
          racket/contract 
          racket/list
-         xml/path
+         racket/match
          pollen/debug
          pollen/decode
          pollen/file-tools
+         pollen/main
+         pollen/lang/inner-lang-helper
          pollen/predicates
          pollen/ptree
          sugar
+         txexpr
          pollen/template
          pollen/tools
+         ;; not pollen/top, because we don't want it in the current ns
          pollen/world
          pollen/project-requires)
 (define original-ns (current-namespace))
 
-(define/contract (render-through-eval base-dir eval-string)
-  (directory-pathish? list? . -> . string?)
-  (parameterize ([current-namespace (make-base-empty-namespace)]
+(define (render-through-eval base-dir eval-string)
+  ; (directory-pathish? list? . -> . string?)
+  (parameterize ([current-namespace (make-base-namespace)]
                  [current-directory (->complete-path base-dir)]
-                 [current-output-port (current-error-port)])
-    ;; attach already-imported modules 
-    ;; this is a performance optimization: this way,
-    ;; the eval namespace doesn't have to re-import these
-    ;; because otherwise, most of its time is spent traversing imports.
+                 [current-output-port (current-error-port)]
+                 [current-ptree (make-project-ptree PROJECT_ROOT)]
+                 [current-url-context PROJECT_ROOT])
     (for-each (λ(mod-name) (namespace-attach-module original-ns mod-name)) 
               '(web-server/templates 
-                xml/path
+                xml
                 racket/port 
                 racket/file 
                 racket/rerequire 
                 racket/contract 
                 racket/list
+                racket/match
                 pollen/debug
                 pollen/decode
                 pollen/file-tools
+                pollen/main
+                pollen/lang/inner-lang-helper
                 pollen/predicates
                 pollen/ptree
                 sugar
+                txexpr
                 pollen/template
                 pollen/tools
                 pollen/world
-                pollen/project-requires))
-    (namespace-require 'racket/base) ; use namespace-require for FIRST require, then eval after
-    
+                pollen/project-requires))   
     (eval eval-string (current-namespace))))
 
-(define/contract (render-source-with-template source-path template-path)
-  (file-exists? file-exists? . -> . string?)
+
+(define (render-source-with-template source-path template-path)
+  ;  (file-exists? file-exists? . -> . string?)
   
-  ;; set up information about source and template paths
-  ;; todo: how to write these without blanks?
-  (define-values (source-dir source-name _) (split-path source-path))
-  (define-values (___ template-name __) (split-path template-path))
-  
-  ;; Templates are part of the compile operation.
-  ;; Therefore no way to arbitrarily invoke template at run-time.
-  ;; This routine creates a new namespace and compiles the template within it.
+  (match-define-values (source-dir source-name _) (split-path source-path))
+  (match-define-values (_ template-name _) (split-path template-path))
   
   (define string-to-eval 
     `(begin 
-       ;; enables macrofication
        (require (for-syntax racket/base))
-       ;; for include-template (used below)
        (require web-server/templates)
-       ;; for ptree navigation functions, and template commands
        (require pollen/debug pollen/ptree pollen/template pollen/top)
-       ;; import source into eval space. This sets up main & metas
        (require ,(->string source-name))
-       (parameterize ([current-ptree (make-project-ptree ,PROJECT_ROOT)]
-                      [current-url-context ,PROJECT_ROOT])
-         (include-template #:command-char ,TEMPLATE_FIELD_DELIMITER ,(->string template-name)))))
+       (include-template #:command-char ,TEMPLATE_FIELD_DELIMITER ,(->string template-name))))
   
   (render-through-eval source-dir string-to-eval))
 

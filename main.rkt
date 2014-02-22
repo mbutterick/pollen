@@ -25,7 +25,7 @@
      
      ;; Build 'inner-here-path and 'inner-here
      (define (here-path->here here-path)
-       (path->string (path-replace-suffix (find-relative-path PROJECT_ROOT here-path) "")))
+       (path->string (path-replace-suffix (pollen-find-relative-path PROJECT_ROOT here-path) "")))
      (define inner-here-path (get-here-path))
      (define inner-here (here-path->here inner-here-path))
      
@@ -36,7 +36,7 @@
    (require 'inner)
    
    ;; Split out the metas.   
-   (require txexpr/fast)   
+   (require txexpr)   
    (define (split-metas-to-hash tx)
      ;; return tx without metas, and meta hash
      (define is-meta-element? (λ(x) (and (txexpr? x) (equal? 'meta (car x)))))
@@ -55,7 +55,7 @@
    
    
    ;; set up the 'main export
-   (require pollen/decode/fast)
+   (require pollen/decode)
    (define here-ext (car (regexp-match #px"\\w+$" inner-here-path)))
    (define wants-decoder? (member here-ext (map to-string DECODABLE_EXTENSIONS)))
    (define main (apply (cond

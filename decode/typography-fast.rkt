@@ -151,11 +151,10 @@
 
 
 ;; recursive whitespace test
-(define (whitespace? x)
-  
+(define (whitespace? x)  
   (cond
-    [(or (string? x) (symbol? x)) (->boolean (regexp-match #px"^\\s+$" (->string x)))]
     [(equal? "" x) #t] ; empty string is deemed whitespace
+    [(or (string? x) (symbol? x)) (->boolean (regexp-match #px"^\\s+$" (->string x)))]
     [(or (list? x) (vector? x)) (andmap whitespace? (->list x))]
     [else #f]))
 

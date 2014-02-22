@@ -70,7 +70,7 @@
 ;
 ; Copied out from racket/path to avoid import
 ;
-(define (find-relative-path directory filename #:more-than-root? [more-than-root? #f])
+(define (pollen-find-relative-path directory filename #:more-than-root? [more-than-root? #f])
   
   (define (do-explode-path who orig-path)
     (define l (explode-path orig-path))
@@ -103,24 +103,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; Copied out from racket/list to avoid import
-;
-(define (filter-not f list)
-  (unless (and (procedure? f)
-               (procedure-arity-includes? f 1))
-    (raise-argument-error 'filter-not "(any/c . -> . any/c)" 0 f list))
-  (unless (list? list)
-    (raise-argument-error 'filter-not "list?" 1 f list))
-  ;; accumulating the result and reversing it is currently slightly
-  ;; faster than a plain loop
-  (let loop ([l list] [result null])
-    (if (null? l)
-      (reverse result)
-      (loop (cdr l) (if (f (car l)) result (cons (car l) result))))))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 (define-syntax (get-here-path stx)
