@@ -291,9 +291,7 @@
        (require pollen/lang/inner-lang-helper)
        (require-project-require-files) 
        (let ([main (cached-require ,source-name 'main)]
-             [metas (cached-require ,source-name 'metas)]
-             [here (cached-require ,source-name 'here)]
-             [here-path (cached-require ,source-name 'here-path)])
+             [metas (cached-require ,source-name 'metas)])
          (local-require pollen/debug pollen/ptree pollen/template pollen/top)
          (include-template #:command-char ,TEMPLATE_FIELD_DELIMITER ,(->string template-name)))))
   

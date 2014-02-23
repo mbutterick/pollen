@@ -35,8 +35,6 @@
     (hash-set! cache-hash 'mod-time (file-or-directory-modify-seconds path))
     (hash-set! cache-hash 'main (dynamic-require path 'main))
     (hash-set! cache-hash 'metas (dynamic-require path 'metas))
-    (hash-set! cache-hash 'here (dynamic-require path 'here))
-    (hash-set! cache-hash 'here-path (dynamic-require path 'here-path))
     (void))
   
   (when (or (not (hash-has-key? (current-cache) path))

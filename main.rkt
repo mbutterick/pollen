@@ -69,11 +69,7 @@
                        (cdr main-without-metas))) ;; cdr strips placeholder-root tag
    
    
-   ;; derive 'here & 'here-path from the hash (because they might have been overridden in the source) 
-   (define here (hash-ref metas 'here))
-   (define here-path (hash-ref metas 'here-path))
-   
-   (provide metas main here here-path
+   (provide metas main
             ;; hide the exports that were only for internal use.
             (except-out (all-from-out 'inner) inner-here inner-here-path main-raw #%top))
    
