@@ -1,29 +1,30 @@
 #lang racket/base
-(require racket/rerequire racket/contract)
+(require racket/rerequire)
+;(require racket/contract)
 (require "debug.rkt" sugar/coerce)
 
 (provide current-cache make-cache cached-require get-cache-hash)
 
 (define current-cache (make-parameter #f))
 
-(define/contract (path-string->path path-string)
-  (path-string? . -> . complete-path?)
+(define (path-string->path path-string)
+ ; (path-string? . -> . complete-path?)
   (->complete-path (if (string? path-string) (string->path path-string) path-string)))
 
-(define/contract (make-cache)
-  ( ->  hash?)
+(define (make-cache)
+ ; ( ->  hash?)
   (make-hash))
 
-(define/contract (get-cache-hash path-string)
-  (path-string? . -> . hash?)
+(define (get-cache-hash path-string)
+ ; (path-string? . -> . hash?)
   (hash-ref (current-cache) (path-string->path path-string)))
 
-(define/contract (cache-ref path sym)
-  (path? symbol? . -> . any/c)
+(define (cache-ref path sym)
+ ; (path? symbol? . -> . any/c)
   (hash-ref (get-cache-hash path) sym))
 
-(define/contract (cached-require path-string sym)
-  (path-string? symbol? . -> . any/c)
+(define (cached-require path-string sym)
+ ; (path-string? symbol? . -> . any/c)
   (when (not (current-cache)) (error "cached-require: No cache set up."))
   
   (define path (path-string->path path-string))
