@@ -1,7 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base))
 (require racket/path racket/bool racket/rerequire racket/contract)
-(require "tools.rkt" "world.rkt" "decode.rkt" sugar txexpr)
+(require "tools.rkt" "world.rkt" "decode.rkt" sugar txexpr "cache.rkt")
 
 (module+ test (require rackunit))
 
@@ -48,9 +48,7 @@
 (define+provide/contract (file->ptree p)
   (pathish? . -> . ptree?)
   (define path (->path p))
-;;  (message "Loading ptree file" (->string (file-name-from-path path)))
-  (dynamic-rerequire path)
-  (dynamic-require path MAIN_POLLEN_EXPORT))
+  (cached-require path MAIN_POLLEN_EXPORT))
 
 (define+provide/contract (directory->ptree dir)
   (directory-pathish? . -> . ptree?)
@@ -61,13 +59,7 @@
 (define+provide/contract (make-project-ptree project-dir)
   (directory-pathish? . -> . ptree?)
   (define ptree-source (build-path project-dir DEFAULT_PTREE))
-  (if (file-exists? ptree-source)
-      (if (not-modified-since-last-pass? ptree-source)
-          (hash-ref ptree-cache ptree-source)
-          (begin
-            (hash-set! ptree-source-mod-dates ptree-source (file-or-directory-modify-seconds ptree-source))
-            (hash-ref! ptree-cache ptree-source (file->ptree ptree-source))))
-      (directory->ptree project-dir)))
+  (cached-require ptree-source 'main))
 
 
 (module+ test
@@ -230,14 +222,14 @@
 
 
 (define current-ptree (make-parameter `(,PTREE_ROOT_NODE)))
-(define current-url-context (make-parameter PROJECT_ROOT))
+(define current-url-context (make-parameter (CURRENT_PROJECT_ROOT)))
 (provide current-ptree current-url-context)
 
 
 ;; used to convert here-path into here
 (define+provide/contract (path->pnode path)
   (pathish? . -> . pnode?)
-  (->string (->output-path (find-relative-path PROJECT_ROOT (->path path)))))
+  (->string (->output-path (find-relative-path (CURRENT_PROJECT_ROOT) (->path path)))))
 
 
 #|

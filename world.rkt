@@ -45,7 +45,7 @@
   (map string->path (list COMMAND_FILE (path->string EXTRAS_DIR) "poldash.css" "compiled")))
 
 
-(define PROJECT_ROOT (current-directory))
+(define CURRENT_PROJECT_ROOT (make-parameter (current-directory)))
 
 (define SERVER_PORT 8088)
 

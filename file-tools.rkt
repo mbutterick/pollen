@@ -182,7 +182,7 @@
 
 (define+provide/contract (project-files-with-ext ext)
   (coerce/symbol? . -> . (listof complete-path?))
-  (map ->complete-path (filter (λ(i) (has-ext? i ext)) (directory-list PROJECT_ROOT))))
+  (map ->complete-path (filter (λ(i) (has-ext? i ext)) (directory-list (CURRENT_PROJECT_ROOT)))))
 
 ;; to identify unsaved sources in DrRacket
 (define (unsaved-source? path-string)

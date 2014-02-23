@@ -48,7 +48,7 @@
   (procedure? . -> . procedure?)
   (λ(req . string-args) 
     (logger req) 
-    (define path (apply build-path PROJECT_ROOT (flatten string-args)))
+    (define path (apply build-path (CURRENT_PROJECT_ROOT) (flatten string-args)))
     (response/xexpr (route-proc path))))
 
 
@@ -86,7 +86,7 @@
   (pathish? . -> . xexpr?)
   (define path (->complete-path p))
   (define img (bitmap/file path))
-  (define relative-path (->string (find-relative-path PROJECT_ROOT path)))
+  (define relative-path (->string (find-relative-path (CURRENT_PROJECT_ROOT) path)))
   (define img-url (format "/~a" relative-path))
   `(div  
     (p "filename =" ,(->string relative-path))
@@ -100,7 +100,7 @@
 (define (handle-zip-path p)
   (pathish? . -> . xexpr?)
   (define path (->path p))
-  (define relative-path (->string (find-relative-path PROJECT_ROOT path)))
+  (define relative-path (->string (find-relative-path (CURRENT_PROJECT_ROOT) path)))
   (define ziplist (zip-directory-entries (read-zip-directory path)))
   `(div  
     (p "filename =" ,(->string relative-path))
@@ -141,7 +141,7 @@
 (define (dashboard dashfile)
   (define dir (get-enclosing-dir dashfile))
   (define (in-project-root?)
-    (directories-equal? dir PROJECT_ROOT))
+    (directories-equal? dir (CURRENT_PROJECT_ROOT)))
   (define parent-dir (and (not (in-project-root?)) (get-enclosing-dir dir)))
   (define empty-cell (cons #f #f))
   (define (make-link-cell href+text)
@@ -152,7 +152,7 @@
                                   text)))))
   (define (make-parent-row) 
     (if parent-dir
-        (let* ([url-to-parent-dashboard (format "/~a" (find-relative-path PROJECT_ROOT (build-path parent-dir DASHBOARD_NAME)))]
+        (let* ([url-to-parent-dashboard (format "/~a" (find-relative-path (CURRENT_PROJECT_ROOT) (build-path parent-dir DASHBOARD_NAME)))]
                [url-to-parent (string-replace url-to-parent-dashboard DASHBOARD_NAME "")])
           `(tr (th ((colspan "3")) (a ((href ,url-to-parent-dashboard)) ,(format "up to ~a" url-to-parent))))) 
         `(tr (th ((colspan "3")(class "root")) "Pollen root"))))
@@ -219,7 +219,7 @@
 
 (define/contract (req->path req)
   (request? . -> . path?)
-  (reroot-path (url->path (request-uri req)) PROJECT_ROOT))
+  (reroot-path (url->path (request-uri req)) (CURRENT_PROJECT_ROOT)))
 
 ;; default route
 (define (route-default req)  

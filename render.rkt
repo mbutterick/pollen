@@ -1,10 +1,22 @@
 #lang racket/base
-(require racket/port racket/file racket/rerequire racket/contract racket/path)
+(require (for-syntax racket/base))
+(require racket/port racket/file racket/rerequire racket/path)
 (require sugar)
 
 (module+ test (require rackunit))
 
-(provide render render-batch)
+(define-syntax (define+provide+safe stx)
+  (syntax-case stx ()
+    [(_ (proc arg ... . rest-arg) contract body ...)
+     #'(define+provide+safe proc contract
+         (λ(arg ... . rest-arg) body ...))]
+    [(_ name contract body ...)
+     #'(begin
+         (define name body ...)
+         (provide name)
+         (module+ safe 
+           (provide (contract-out [name contract]))))]))
+
 
 ;; for shared use by eval & system
 (define nowhere-port (open-output-nowhere))
@@ -12,48 +24,26 @@
 
 ;; mod-dates is a hash that takes lists of paths as keys,
 ;; and lists of modification times as values.
-;; Reason: a templated page is a combination of two source files.
-;; Because templates have a one-to-many relationship with source files,
-;; Need to track template mod-date for each source file.
-;; Otherwise a changed template will get reloaded only once, 
-;; and after that get reported as being up to date.
-;; Possible: store hash on disk so mod records are preserved 
-;; between development sessions (prob a worthless optimization)
 (define mod-dates (make-hash))
 
 
-
-(define/contract (make-mod-dates-key paths)
-  ((listof path?) . -> . (listof path?))
+(define (make-mod-dates-key paths)
+  ;; project require files are appended to the mod-date path key.
+  ;; Why? So a change in a require file will trigger a render 
   (define project-require-files (or (get-project-require-files) empty))
   (flatten (append paths project-require-files)))
 
-;; convert a path to a modification date value
-(define/contract (path->mod-date-value path)
-  (path? . -> . (or/c exact-integer? #f))
+
+(define (path->mod-date-value path)
   (and (file-exists? path) ; returns #f if a file doesn't exist
        (file-or-directory-modify-seconds path)))
 
 
 (module+ test
-  (check-false (path->mod-date-value (->path "foobarfoo.rkt")))
-  (check-true (exact-integer? (path->mod-date-value (build-path (current-directory) (string->path "render.rkt"))))))
+  (check-false (path->mod-date-value (->path "nonexistent-file-is-false.rkt"))))
 
-;; put list of paths into mod-dates
-;; need list as input (rather than individual path)
-;; because hash key needs to be a list
-;; so it's convenient to use a rest argument
-;; therefore, use function by just listing out the paths
-(define/contract (store-render-in-mod-dates . rest-paths)
-  (() #:rest (listof path?) . ->* . void?)
-  ;; project require files are appended to the mod-date key.
-  ;; Why? So a change in a require file will trigger a render 
-  ;; (which is the right thing to do, since pollen files are 
-  ;; dependent on those requires)
-  ;; It's convenient for development, because otherwise
-  ;; you'd need to restart the server when you change a require
-  ;; or explicitly use the force parameter.
-  ;; This way, require files and pollen files have the same behavior.
+
+(define (store-render-in-mod-dates . rest-paths)
   (define key (make-mod-dates-key rest-paths))
   (hash-set! mod-dates key (map path->mod-date-value key)))
 
@@ -63,11 +53,11 @@
   (check-true (= (len mod-dates) 1))
   (reset-mod-dates))
 
+
 ;; when you want to generate everything fresh, 
 ;; but without having to #:force everything.
 ;; render functions will always go when no mod-date is found.
-(define/contract (reset-mod-dates)
-  (-> void?)
+(define (reset-mod-dates)
   (set! mod-dates (make-hash)))
 
 (module+ test 
@@ -76,10 +66,8 @@
   (reset-mod-dates)
   (check-true (= (len mod-dates) 0)))
 
-;; how to know whether a certain combination of paths needs a render
-;; use rest argument here so calling pattern matches store-render
-(define/contract (mod-date-expired? . rest-paths)
-  (() #:rest (listof path?) . ->* . boolean?)
+
+(define (mod-date-expired? . rest-paths)
   (define key (make-mod-dates-key rest-paths))
   (or (not (key . in? . mod-dates))  ; no stored mod date
       (not (equal? (map path->mod-date-value key) (get mod-dates key))))) ; data has changed
@@ -93,8 +81,7 @@
     (check-true (mod-date-expired? path))))
 
 
-;; convenience function for external modules to use
-(define/contract (render-batch . xs)
+(define+provide/contract (render-batch . xs)
   (() #:rest (listof pathish?) . ->* . void?)
   ;; This will trigger rendering of all files.
   ;; Why not pass #:force #t through with render?
@@ -105,21 +92,15 @@
   (reset-mod-dates) 
   (for-each render xs))
 
-;; dispatches path to the right rendering function
-;; use #:force to render regardless of cached state
-(define/contract (render #:force [force #f] . xs)
+
+(define+provide/contract (render #:force [force #f] . xs)
   (() (#:force boolean?) #:rest (listof pathish?) . ->* . void?)
   (define (&render x) 
     (let ([path (->complete-path x)])              
-      ;   (message "Dispatching render for" (->string (file-name-from-path path)))
       (cond
-        ;; this will catch preprocessor files
         [(needs-preproc? path) (render-preproc-source-if-needed path #:force force)]
-        ;; this will catch pollen source files, 
-        ;; and files without extension that correspond to p files
         [(needs-template? path) (render-with-template path #:force force)]
-        ;; this will catch ptree files
-        [(ptree-source? path) (let ([ptree (dynamic-require path 'main)])
+        [(ptree-source? path) (let ([ptree (cached-require path 'main)])
                                 (render-files-in-ptree ptree #:force force))]
         [(equal? FALLBACK_TEMPLATE (->string (file-name-from-path path)))
          (message "Render: using fallback template")]
@@ -129,35 +110,28 @@
 ;; todo: write tests
 
 
-(define/contract (rendering-message path)
-  (any/c . -> . void?)
-  ;; you can actually stuff whatever string you want into path —
-  ;; if it's not really a path, file-name-from-path won't choke
+(define (rendering-message path)
   (message "Rendering" (->string (file-name-from-path path))))
 
-(define/contract (rendered-message path)
-  (any/c . -> . void?)
+(define (rendered-message path)
   (message "Rendered" (->string (file-name-from-path path))))
 
-(define/contract (up-to-date-message path)
-  (any/c . -> . void?)
+(define (up-to-date-message path)
   (message (->string (file-name-from-path path)) "is up to date, using cached copy"))
 
 (define (render-preproc-source source-path output-path)
   ;; how we render: import 'main from preproc source file, 
-  ;; which is rendered during source parsing,
-  ;; and write that to output path
+  ;; which is rendered during source parsing, and write that to output path
   (define-values (source-dir source-name _) (split-path source-path))
   (rendering-message (format "~a from ~a" 
                              (file-name-from-path output-path)
                              (file-name-from-path source-path)))
-  (let ([main (time (render-through-eval source-dir `(dynamic-require ,source-path 'main)))]) ;; todo: how to use world global here? Wants an identifier, not a value
+  (let ([main (time (render-through-eval source-dir `(begin (require pollen/cache)(cached-require ,source-path 'main))))]) ;; todo: how to use world global here? Wants an identifier, not a value
     (display-to-file main output-path #:exists 'replace))
   (store-render-in-mod-dates source-path) ; don't store mod date until render has completed!
   (rendered-message output-path))
 
-(define/contract (render-preproc-source-if-needed input-path #:force [force-render #f])
-  ((pathish?) (#:force boolean?) . ->* . void?)
+(define (render-preproc-source-if-needed input-path #:force [force-render #f])
   
   ;; input-path might be either a preproc-source path or preproc-output path
   ;; But the coercion functions will figure it out.
@@ -179,92 +153,55 @@
 ;; todo: write tests
 
 
-;; utility function for render-with-template
-(define/contract (handle-source-rerequire source-path)
-  ((and/c path? file-exists?) . -> . boolean?)
-  
-  ;; dynamic-rerequire watches files to see if they change.
-  ;; if so, then it reloads them.
-  ;; therefore, it's useful in a development environment
-  ;; because it reloads as needed, but otherwise not.
-  
+(define (handle-source-rerequire source-path)
   (define-values (source-dir source-name _) (split-path source-path))
-  ;; need to require source file (to retrieve template name, which is in metas)
-  ;; but use dynamic-rerequire now to force render for dynamic-require later,
-  ;; otherwise the source file will cache
-  ;; by default, rerequire reports reloads to error port.
-  ;; set up a port to catch messages from dynamic-rerequire
-  ;; and then examine this message to find out if anything was reloaded. 
+  ;; use dynamic-rerequire now to force render for cached-require later,
+  ;; otherwise the source file will get cached by compiler
   (define port-for-catching-file-info (open-output-string))
-  
-  ;; parameterize needed because source files have relative requires in project directory
-  ;; parameterize is slow, IIRC
   (parameterize ([current-directory source-dir]
                  [current-error-port port-for-catching-file-info])
     (dynamic-rerequire source-path))
-  
   ;; if the file needed to be reloaded, there will be a message in the port
-  ;; this becomes the return value
   (->boolean (> (len (get-output-string port-for-catching-file-info)) 0)))
+
 
 (define (complete-decoder-source-path x)
   (->complete-path (->decoder-source-path (->path x))))
 
-;; apply template
-(define/contract (render-with-template x [template-name #f] #:force [force #f]) 
-  (((and/c pathish? 
-           (flat-named-contract 'file-exists
-                                (λ(x) (file-exists? (complete-decoder-source-path x))))))
-   (path? #:force boolean?) . ->* . void?)
-  
-  ;; set up information about source
+
+(define (render-with-template x [template-name #f] #:force [force-render #f]) 
   (define source-path (complete-decoder-source-path x))
   ;; todo: this won't work with source files nested down one level
   (define-values (source-dir ignored also-ignored) (split-path source-path))
   
-  
   ;; Then the rest: 
-  ;; set the template, render the source file with template, and catch the output.
   ;; 1) Set the template. 
   (define template-path 
     (or 
-     ;; Build the possible paths and use the first one  
-     ;; that either exists, or has a preproc source that exists.
+     ;; Build the possible paths and use the first one that either exists, or has a preproc source that exists.
      (ormap (λ(p) (if (ormap file-exists? (list p (->preproc-source-path p))) p #f)) 
-            (filter (λ(x) (->boolean x)) ;; if any of the possibilities below are invalid, they return #f 
-                    (list
-                     ;; path based on template-name
-                     (and template-name (build-path source-dir template-name))
-                     ;; path based on metas. Need to parameterize a source file for it to find pollen-requires.
-                     ;; If you want standard behavior, requires can be declared explicitly.
-                     (parameterize ([current-directory PROJECT_ROOT])
-                       (let ([source-metas (dynamic-require source-path 'metas)])
+            (filter (λ(x) (->boolean x)) ; if any of the possibilities below are invalid, they return #f 
+                    (list                     
+                     (and template-name (build-path source-dir template-name)) ; path based on template-name
+                     (parameterize ([current-directory (CURRENT_PROJECT_ROOT)])
+                       (let ([source-metas (cached-require source-path 'metas)])
                          (and (TEMPLATE_META_KEY . in? . source-metas)
-                              (build-path source-dir (get source-metas TEMPLATE_META_KEY)))))
-                     ;; path using default template name =
-                     ;; "-main" + extension from output path (e.g. foo.xml.p -> -main.xml)
-                     (build-path source-dir (add-ext DEFAULT_TEMPLATE_PREFIX (get-ext (->output-path source-path)))))))
-     ;; if none of these work, make fallback template file
-     (let ([ft-path (build-path source-dir FALLBACK_TEMPLATE)])
+                              (build-path source-dir (get source-metas TEMPLATE_META_KEY))))) ; path based on metas
+                     (build-path source-dir 
+                                 (add-ext DEFAULT_TEMPLATE_PREFIX (get-ext (->output-path source-path))))))) ; path using default template
+     (let ([ft-path (build-path source-dir FALLBACK_TEMPLATE)]) ; if none of these work, make fallback template file
        (display-to-file fallback-template-data ft-path #:exists 'replace)
        ft-path)))
   
-  
-  ;; render template (it might have its own preprocessor file)
-  (render template-path #:force force)
-  
-  ;; calculate new path for generated file
+  (render template-path #:force force-render) ; bc template might have its own preprocessor source
   (define output-path (->output-path source-path))
   
   ;; 2) Render the source file with template, if needed.
-  ;; Render is expensive, so we avoid it when we can.
-  ;; Four conditions where we render:
-  (if (or force ; a) it's explicitly demanded
+  ;; Render is expensive, so we avoid it when we can. Four conditions where we render:
+  (if (or force-render ; a) it's explicitly demanded
           (not (file-exists? output-path)) ; b) output file does not exist
-          ;; c) mod-dates indicates render is needed
-          (mod-date-expired? source-path template-path) 
-          ;; d) dynamic-rerequire indicates the source had to be reloaded
-          (let ([source-reloaded? (handle-source-rerequire source-path)])
+          (mod-date-expired? source-path template-path) ; c) mod-dates indicates render is needed
+          (let ([source-reloaded? (handle-source-rerequire source-path)]) ; d) dynamic-rerequire says refresh needed
             source-reloaded?))
       (begin
         (message "Rendering source" (->string (file-name-from-path source-path)) 
@@ -275,8 +212,7 @@
           (rendered-message output-path)))
       (up-to-date-message output-path))
   
-  ;; delete fallback template if needed
-  (let ([ft-path (build-path source-dir FALLBACK_TEMPLATE)])
+  (let ([ft-path (build-path source-dir FALLBACK_TEMPLATE)]) ; delete fallback template if needed
     (when (file-exists? ft-path) (delete-file ft-path))))
 
 ;; cache some modules inside this namespace so they can be shared by namespace for eval
@@ -292,10 +228,11 @@
          pollen/debug
          pollen/decode
          pollen/file-tools
-         pollen/main
+         ;; not pollen/main, because it brings in pollen/top
          pollen/lang/inner-lang-helper
          pollen/predicates
          pollen/ptree
+         pollen/cache
          sugar
          txexpr
          pollen/template
@@ -306,12 +243,11 @@
 (define original-ns (current-namespace))
 
 (define (render-through-eval base-dir eval-string)
-  ; (directory-pathish? list? . -> . string?)
   (parameterize ([current-namespace (make-base-namespace)]
                  [current-directory (->complete-path base-dir)]
                  [current-output-port (current-error-port)]
-                 [current-ptree (make-project-ptree PROJECT_ROOT)]
-                 [current-url-context PROJECT_ROOT])
+                 [current-ptree (make-project-ptree (CURRENT_PROJECT_ROOT))]
+                 [current-url-context (CURRENT_PROJECT_ROOT)])
     (for-each (λ(mod-name) (namespace-attach-module original-ns mod-name)) 
               '(web-server/templates 
                 xml
@@ -324,10 +260,10 @@
                 pollen/debug
                 pollen/decode
                 pollen/file-tools
-                pollen/main
                 pollen/lang/inner-lang-helper
                 pollen/predicates
                 pollen/ptree
+                pollen/cache
                 sugar
                 txexpr
                 pollen/template
@@ -338,29 +274,42 @@
 
 
 (define (render-source-with-template source-path template-path)
-  ;  (file-exists? file-exists? . -> . string?)
   
   (match-define-values (source-dir source-name _) (split-path source-path))
   (match-define-values (_ template-name _) (split-path template-path))
   
+  (set! source-name (->string source-name))
   (define string-to-eval 
     `(begin 
        (require (for-syntax racket/base))
-       (require web-server/templates)
-       (require pollen/debug pollen/ptree pollen/template pollen/top)
-       (require ,(->string source-name))
-       (include-template #:command-char ,TEMPLATE_FIELD_DELIMITER ,(->string template-name))))
+       (require web-server/templates pollen/cache)
+       ;; we could require the source-name directly,
+       ;; and get its exports and also the project-requires transitively.
+       ;; but this is slow.
+       ;; So do it separately: require the project require files on their own,
+       ;; then fetch the other exports out of the cache.
+       (require pollen/lang/inner-lang-helper)
+       (require-project-require-files) 
+       (let ([main (cached-require ,source-name 'main)]
+             [metas (cached-require ,source-name 'metas)]
+             [here (cached-require ,source-name 'here)]
+             [here-path (cached-require ,source-name 'here-path)])
+         (local-require pollen/debug pollen/ptree pollen/template pollen/top)
+         (include-template #:command-char ,TEMPLATE_FIELD_DELIMITER ,(->string template-name)))))
   
   (render-through-eval source-dir string-to-eval))
 
+(module+ main
+  (parameterize ([current-cache (make-cache)]
+                 [CURRENT_PROJECT_ROOT (string->path "/Users/mb/git/bpt")])
+    (render-source-with-template
+     (string->path "/Users/mb/git/bpt/test.html.pm")
+     (string->path "/Users/mb/git/bpt/-test.html"))))
 
-;; render files listed in a ptree file
-(define/contract (render-files-in-ptree ptree #:force [force #f])
-  ((ptree?) (#:force boolean?) . ->* . void?)    
-  ;; pass force parameter through 
+
+(define (render-files-in-ptree ptree #:force [force #f])    
   (for-each (λ(i) (render i #:force force)) 
-            ;; use dynamic-require to avoid requiring ptree.rkt every time render.rkt is required
-            ((dynamic-require "ptree.rkt" 'all-pages) ptree)))
+            ((cached-require "ptree.rkt" 'all-pages) ptree)))
 
 
 

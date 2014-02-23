@@ -4,7 +4,8 @@
 (require "server-routes.rkt" 
          "debug.rkt" 
          "world.rkt"
-         "file-tools.rkt")
+         "file-tools.rkt"
+         "cache.rkt")
 
 (define-values (pollen-servlet _)
   (dispatch-rules
@@ -15,7 +16,7 @@
    [else route-default]))
 
 (message (format "Welcome to Pollen ~a" POLLEN_VERSION) (format "(Racket ~a)" (version)))
-(message (format "Project root is ~a" PROJECT_ROOT))
+(message (format "Project root is ~a" (CURRENT_PROJECT_ROOT)))
 
 (define server-name (format "http://localhost:~a" SERVER_PORT))
 (message (format "Project server is ~a" server-name) "(Ctrl-C to exit)")
@@ -26,10 +27,11 @@
 (define MODULE_ROOT (apply build-path (drop-right (explode-path (current-contract-region)) 1)))
 (define SERVER_EXTRAS_DIR (build-path MODULE_ROOT "pollen-server-extras"))
 
-(serve/servlet pollen-servlet
-               #:port SERVER_PORT
-               #:listen-ip #f
-               #:servlet-regexp #rx"" ; respond to top level
-               #:command-line? #t
-               #:file-not-found-responder route-404
-               #:extra-files-paths (list SERVER_EXTRAS_DIR PROJECT_ROOT))
+(parameterize ([current-cache (make-cache)])
+  (serve/servlet pollen-servlet
+                 #:port SERVER_PORT
+                 #:listen-ip #f
+                 #:servlet-regexp #rx"" ; respond to top level
+                 #:command-line? #t
+                 #:file-not-found-responder route-404
+                 #:extra-files-paths (list SERVER_EXTRAS_DIR (CURRENT_PROJECT_ROOT))))

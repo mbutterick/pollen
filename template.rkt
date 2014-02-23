@@ -1,6 +1,6 @@
 #lang racket/base
 (require racket/contract racket/string xml xml/path)
-(require "tools.rkt" "ptree.rkt" sugar txexpr)
+(require "tools.rkt" "ptree.rkt" "cache.rkt" sugar txexpr)
 
 ;; setup for test cases
 (module+ test (require rackunit racket/path))
@@ -11,7 +11,7 @@
 
 ;; todo: better fallback template
 
-(define fallback-template-data "FALLBACK! ◊(put-as-html main)")
+(define fallback-template-data "FALLBACK! ◊(main)")
 
 ;; todo: docstrings for this subsection
 
@@ -34,8 +34,8 @@
   (cond
     ;; Using put has no effect on txexprs. It's here to make the idiom smooth.
     [(txexpr? x) x] 
-    [(has-decoder-source? x) (dynamic-require (->decoder-source-path x) 'main)]
-    [(has-decoder-source? (pnode->url x)) (dynamic-require (->decoder-source-path (pnode->url x)) 'main)]))
+    [(has-decoder-source? x) (cached-require (->decoder-source-path x) 'main)]
+    [(has-decoder-source? (pnode->url x)) (cached-require (->decoder-source-path (pnode->url x)) 'main)]))
 
 #|(module+ test
   (check-equal? (put '(foo "bar")) '(foo "bar"))
@@ -61,14 +61,14 @@
 (define/contract (find-in-metas px key)
   (puttable-item? query-key? . -> . (or/c #f txexpr-elements?))
   (and (has-decoder-source? px)
-       (let ([metas (dynamic-require (->decoder-source-path px) 'metas)]
+       (let ([metas (cached-require (->decoder-source-path px) 'metas)]
              [key (->string key)])
          (and (key . in? . metas ) (->list (get metas key))))))
 
 #|(module+ test
   (parameterize ([current-directory "tests/template"])
     (check-equal? (find-in-metas "put" "foo") (list "bar"))
-    (let* ([metas (dynamic-require (->decoder-source-path 'put) 'metas)]
+    (let* ([metas (cached-require (->decoder-source-path 'put) 'metas)]
            [here (find-in-metas 'put 'here)])     
       (check-equal? here (list "tests/template/put")))))
 |#

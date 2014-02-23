@@ -25,7 +25,7 @@
      
      ;; Build 'inner-here-path and 'inner-here
      (define (here-path->here here-path)
-       (path->string (path-replace-suffix (pollen-find-relative-path PROJECT_ROOT here-path) "")))
+       (path->string (path-replace-suffix (pollen-find-relative-path (CURRENT_PROJECT_ROOT) here-path) "")))
      (define inner-here-path (get-here-path))
      (define inner-here (here-path->here inner-here-path))
      
@@ -42,13 +42,13 @@
      (define is-meta-element? (λ(x) (and (txexpr? x) (equal? 'meta (car x)))))
      (define-values (main-without-metas meta-elements) 
        (splitf-txexpr tx is-meta-element?))
-     (define meta-element->assoc (λ(x) (cons (cadr x) (caddr x))))
+     (define meta-element->assoc (λ(x) (let ([key (car (caadr x))][value (cadr (caadr x))]) (cons key value))))
      (define metas (make-hash (map meta-element->assoc meta-elements)))
      (values main-without-metas metas))
    
    (define main-txexpr `(placeholder-root 
-                         ,@(cons `(meta "here" ,inner-here) 
-                                 (cons `(meta "here-path" ,inner-here-path) 
+                         ,@(cons (meta 'here: inner-here) 
+                                 (cons (meta 'here-path: inner-here-path) 
                                        ;; cdr strips initial linebreak, but make sure main-raw isn't blank
                                        (if (and (list? main-raw) (> 0 (length main-raw))) (cdr main-raw) main-raw))))) 
    (define-values (main-without-metas metas) (split-metas-to-hash main-txexpr))
@@ -70,8 +70,8 @@
    
    
    ;; derive 'here & 'here-path from the hash (because they might have been overridden in the source) 
-   (define here (hash-ref metas "here"))
-   (define here-path (hash-ref metas "here-path"))
+   (define here (hash-ref metas 'here))
+   (define here-path (hash-ref metas 'here-path))
    
    (provide metas main here here-path
             ;; hide the exports that were only for internal use.
