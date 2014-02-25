@@ -116,6 +116,9 @@
   (any/c . -> . coerce/boolean?)
   (and (pathish? x) (has-ext? (->path x) PREPROC_SOURCE_EXT)))
 
+(define+provide/contract (has-null-source? x)
+  (any/c . -> . coerce/boolean?)
+  (and (pathish? x) (file-exists? (->null-source-path (->path x)))))
 
 (define+provide/contract (has-preproc-source? x)
   (any/c . -> . coerce/boolean?)
@@ -136,6 +139,11 @@
   ; or a file (e.g., html) that has a pollen source file
   (and (pathish? x) (ormap (λ(proc) (proc (->path x))) (list decoder-source? has-decoder-source?))))
 
+(define+provide/contract (needs-null? x)
+  (any/c . -> . coerce/boolean?)
+  ; it's a null source file, or a file that's the result of a null source
+  (and (pathish? x) (ormap (λ(proc) (proc (->path x))) (list null-source? has-null-source?))))
+
 
 (define+provide/contract (ptree-source? x)
   (any/c . -> . coerce/boolean?)
@@ -144,7 +152,12 @@
 
 (define+provide/contract (decoder-source? x)
   (any/c . -> . coerce/boolean?)
-  (and (pathish? x) (has-ext? x DECODER_SOURCE_EXT)))
+  (and (pathish? x) ((->path x) . has-ext? . DECODER_SOURCE_EXT)))
+
+
+(define+provide/contract (null-source? x)
+  (any/c . -> . coerce/boolean?)
+  (and (pathish? x) ((->path x) . has-ext? . NULL_SOURCE_EXT)))
 
 
 (define+provide/contract (template-source? x)
@@ -163,9 +176,15 @@
       x
       (add-ext x PREPROC_SOURCE_EXT)))
 
+(define+provide/contract (->null-source-path x)
+  (coerce/path? . -> . coerce/path?)
+  (if (decoder-source? x)
+      x
+      (add-ext x NULL_SOURCE_EXT)))
+
 (define+provide/contract (->output-path x)
   (coerce/path? . -> . coerce/path?)
-  (if (or (decoder-source? x) (preproc-source? x))
+  (if (or (decoder-source? x) (preproc-source? x) (null-source? x))
       (remove-ext x)
       x))
 

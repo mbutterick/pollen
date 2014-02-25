@@ -24,14 +24,16 @@
 
 (message "Ready to rock")
 
-(define MODULE_ROOT (apply build-path (drop-right (explode-path (current-contract-region)) 1)))
-(define SERVER_EXTRAS_DIR (build-path MODULE_ROOT "pollen-server-extras"))
+(current-module-root (apply build-path (drop-right (explode-path (current-contract-region)) 1)))
+(current-server-extras-path (build-path (current-module-root) "pollen-server-extras"))
 
-(parameterize ([current-cache (make-cache)])
+(parameterize ([current-module-root (current-module-root)]
+               [current-server-extras-path (current-server-extras-path)]
+               [current-cache (make-cache)])
   (serve/servlet pollen-servlet
                  #:port SERVER_PORT
                  #:listen-ip #f
                  #:servlet-regexp #rx"" ; respond to top level
                  #:command-line? #t
                  #:file-not-found-responder route-404
-                 #:extra-files-paths (list SERVER_EXTRAS_DIR (CURRENT_PROJECT_ROOT))))
+                 #:extra-files-paths (list (current-server-extras-path) (CURRENT_PROJECT_ROOT))))

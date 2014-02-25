@@ -98,6 +98,7 @@
   (define (&render x) 
     (let ([path (->complete-path x)])              
       (cond
+        [(needs-null? path) (render-null-source path #:force force)]
         [(needs-preproc? path) (render-preproc-source-if-needed path #:force force)]
         [(needs-template? path) (render-with-template path #:force force)]
         [(ptree-source? path) (let ([ptree (cached-require path 'main)])
@@ -118,6 +119,15 @@
 
 (define (up-to-date-message path)
   (message (->string (file-name-from-path path)) "is up to date, using cached copy"))
+
+(define (render-null-source path #:force force)
+  ;; this op is trivial & fast, so do it every time.
+  (define source-path (->complete-path (->null-source-path path)))
+  (define output-path (->complete-path (->output-path path)))
+  (message (format "Copying ~a to ~a" 
+                             (file-name-from-path source-path)
+                             (file-name-from-path output-path)))
+  (copy-file source-path output-path #t))
 
 (define (render-preproc-source source-path output-path)
   ;; how we render: import 'main from preproc source file, 
@@ -187,10 +197,10 @@
                        (let ([source-metas (cached-require source-path 'metas)])
                          (and (TEMPLATE_META_KEY . in? . source-metas)
                               (build-path source-dir (get source-metas TEMPLATE_META_KEY))))) ; path based on metas
-                     (build-path source-dir 
-                                 (add-ext DEFAULT_TEMPLATE_PREFIX (get-ext (->output-path source-path))))))) ; path using default template
+                     (report (build-path source-dir 
+                                 (add-ext (add-ext DEFAULT_TEMPLATE_PREFIX (get-ext (->output-path source-path))) TEMPLATE_EXT)))))) ; path using default template
      (let ([ft-path (build-path source-dir FALLBACK_TEMPLATE)]) ; if none of these work, make fallback template file
-       (display-to-file fallback-template-data ft-path #:exists 'replace)
+       (copy-file (build-path (current-server-extras-path) FALLBACK_TEMPLATE) ft-path #t)
        ft-path)))
   
   (render template-path #:force force-render) ; bc template might have its own preprocessor source
@@ -227,10 +237,10 @@
          racket/match
          pollen/debug
          pollen/decode
-         pollen/file-tools
+         ;;         pollen/file-tools
          ;; not pollen/main, because it brings in pollen/top
          pollen/lang/inner-lang-helper
-         pollen/predicates
+         pollen/predicates ;; exports file-tools
          pollen/ptree
          pollen/cache
          sugar
@@ -259,7 +269,6 @@
                 racket/match
                 pollen/debug
                 pollen/decode
-                pollen/file-tools
                 pollen/lang/inner-lang-helper
                 pollen/predicates
                 pollen/ptree
@@ -297,12 +306,15 @@
   
   (render-through-eval source-dir string-to-eval))
 
+#|
 (module+ main
   (parameterize ([current-cache (make-cache)]
                  [CURRENT_PROJECT_ROOT (string->path "/Users/mb/git/bpt")])
     (render-source-with-template
      (string->path "/Users/mb/git/bpt/test.html.pm")
      (string->path "/Users/mb/git/bpt/-test.html"))))
+|#
+
 
 
 (define (render-files-in-ptree ptree #:force [force #f])    

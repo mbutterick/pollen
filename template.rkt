@@ -9,9 +9,6 @@
 (require sugar/scribble sugar/coerce)
 (provide (all-from-out sugar/scribble sugar/coerce))
 
-;; todo: better fallback template
-
-(define fallback-template-data "FALLBACK! ◊(main)")
 
 ;; todo: docstrings for this subsection
 

@@ -8,6 +8,7 @@
 
 (define PREPROC_SOURCE_EXT 'p)
 (define DECODER_SOURCE_EXT 'pm)
+(define NULL_SOURCE_EXT 'px)
 (define PTREE_SOURCE_EXT 'ptree)
 (define DECODABLE_EXTENSIONS (list DECODER_SOURCE_EXT PTREE_SOURCE_EXT))
 
@@ -18,8 +19,9 @@
 (define EXPRESSION_DELIMITER #\◊)
 (define TEMPLATE_FIELD_DELIMITER EXPRESSION_DELIMITER)
 
-(define DEFAULT_TEMPLATE_PREFIX "-main")
-(define FALLBACK_TEMPLATE "-temp-fallback-template.html")
+(define DEFAULT_TEMPLATE_PREFIX "main")
+(define TEMPLATE_EXT 'pt)
+(define FALLBACK_TEMPLATE "fallback.html.pt")
 (define TEMPLATE_META_KEY "template")
 
 (define MAIN_POLLEN_EXPORT 'main)
@@ -51,3 +53,6 @@
 
 (define DASHBOARD_NAME "index.ptree")
 (define DASHBOARD_CSS "poldash.css")
+
+(define current-module-root (make-parameter #f))
+(define current-server-extras-path (make-parameter #f))

@@ -163,7 +163,7 @@
     (define possible-sources 
       (if (directory-exists? fn)
           empty ;; folders don't have source files
-          (filter file-in-dir? (list (->preproc-source-path filename) (->decoder-source-path filename)))))
+          (filter file-in-dir? (list (->preproc-source-path filename) (->decoder-source-path filename) (->null-source-path filename)))))
     (define source (and (not (empty? possible-sources)) (->string (car possible-sources))))
     `(tr ,@(map make-link-cell 
                 (append (list                          
