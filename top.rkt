@@ -37,7 +37,7 @@
     `(id ,@(if (equal? attrs null) null (list (reverse attrs))) ,@body)))
 
 
-(define-syntax (bound/c stx)
+(define-syntax (def/c stx)
   (syntax-case stx ()
     [(_ x)
      (if (identifier-binding #'x )

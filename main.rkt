@@ -5,8 +5,8 @@
 
 (define-syntax-rule (new-module-begin body-exprs ...)
   (#%module-begin
-   (module inner pollen/lang/doclang_raw
-     ;; first three lines are positional arguments for doclang_raw
+   (module inner pollen/lang/doclang-raw
+     ;; first three lines are positional arguments for doclang-raw
      ;; doclang_raw is a version of scribble/doclang with the decoder disabled
      main-raw ; id of export
      (λ(x) x) ; post-process function
@@ -60,7 +60,7 @@
    (define wants-decoder? (member here-ext (map to-string DECODABLE_EXTENSIONS)))
    (define main (apply (cond
                          [(equal? here-ext "ptree") (λ xs (decode (cons PTREE_ROOT_NODE xs)
-                             #:xexpr-elements-proc (λ(xs) (filter (compose1 not (bound/c whitespace?)) xs))))]
+                             #:xexpr-elements-proc (λ(xs) (filter (compose1 not (def/c whitespace?)) xs))))]
                          ;; 'root is the hook for the decoder function.
                          ;; If it's not a defined identifier, it just hits #%top and becomes `(root ,@body ...)
                          [wants-decoder? root]
