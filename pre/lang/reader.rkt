@@ -1,6 +1,6 @@
 #lang racket/base
 
-(require pollen/reader-base)
+(require pollen/lang/reader-base)
 
 (provide (rename-out [pollen-read read] [pollen-read-syntax read-syntax]) read-inner)
 
