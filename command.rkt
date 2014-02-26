@@ -9,7 +9,7 @@
   (datum->syntax stx
                  (let* ([args (current-command-line-arguments)]
                         [arg (if (> (len args) 0) (get args 0) "")])
-                   (display (format "~a: " COMMAND_FILE))
+                   (display (format "~a: " world:command-file))
                    (case arg
                      [("help") (displayln "valid commands are
 polcom start (starts project server)
@@ -21,7 +21,7 @@ polcom [filename] (renders individual file)")]
                                         ;; todo: take extensions off the comand line
                                         (displayln "Render preproc & ptree files ...")
                                         (require "render.rkt" "file-tools.rkt" "world.rkt")
-                                        (apply render-batch (append-map project-files-with-ext (list PREPROC_SOURCE_EXT PTREE_SOURCE_EXT))))]
+                                        (apply render-batch (append-map project-files-with-ext (list world:preproc-source-ext world:ptree-source-ext))))]
                      [("clone") (let ([target-path 
                                        (if (> (len args) 1)
                                            (->path (get args 1))

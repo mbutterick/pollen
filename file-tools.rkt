@@ -114,7 +114,7 @@
 
 (define+provide/contract (preproc-source? x)
   (any/c . -> . coerce/boolean?)
-  (and (pathish? x) (has-ext? (->path x) PREPROC_SOURCE_EXT)))
+  (and (pathish? x) (has-ext? (->path x) world:preproc-source-ext)))
 
 (define+provide/contract (has-null-source? x)
   (any/c . -> . coerce/boolean?)
@@ -147,24 +147,24 @@
 
 (define+provide/contract (ptree-source? x)
   (any/c . -> . coerce/boolean?)
-  (and (pathish? x) ((->path x) . has-ext? . PTREE_SOURCE_EXT)))
+  (and (pathish? x) ((->path x) . has-ext? . world:ptree-source-ext)))
 
 
 (define+provide/contract (decoder-source? x)
   (any/c . -> . coerce/boolean?)
-  (and (pathish? x) ((->path x) . has-ext? . MARKUP_SOURCE_EXT)))
+  (and (pathish? x) ((->path x) . has-ext? . world:markup-source-ext)))
 
 
 (define+provide/contract (null-source? x)
   (any/c . -> . coerce/boolean?)
-  (and (pathish? x) ((->path x) . has-ext? . NULL_SOURCE_EXT)))
+  (and (pathish? x) ((->path x) . has-ext? . world:null-source-ext)))
 
 
 (define+provide/contract (template-source? x)
   (any/c . -> . coerce/boolean?)
   (and (pathish? x)
        (let-values ([(dir name ignore) (split-path x)])
-         (equal? (get (->string name) 0) TEMPLATE_SOURCE_PREFIX))))
+         (equal? (get (->string name) 0) world:template-source-prefix))))
 
 
 
@@ -174,13 +174,13 @@
   (coerce/path? . -> . coerce/path?)
   (if (preproc-source? x)
       x
-      (add-ext x PREPROC_SOURCE_EXT)))
+      (add-ext x world:preproc-source-ext)))
 
 (define+provide/contract (->null-source-path x)
   (coerce/path? . -> . coerce/path?)
   (if (decoder-source? x)
       x
-      (add-ext x NULL_SOURCE_EXT)))
+      (add-ext x world:null-source-ext)))
 
 (define+provide/contract (->output-path x)
   (coerce/path? . -> . coerce/path?)
@@ -196,12 +196,12 @@
   (coerce/path? . -> . coerce/path?)
   (if (decoder-source? x)
       x
-      (add-ext x MARKUP_SOURCE_EXT)))
+      (add-ext x world:markup-source-ext)))
 
 
 (define+provide/contract (project-files-with-ext ext)
   (coerce/symbol? . -> . (listof complete-path?))
-  (map ->complete-path (filter (λ(i) (has-ext? i ext)) (directory-list (CURRENT_PROJECT_ROOT)))))
+  (map ->complete-path (filter (λ(i) (has-ext? i ext)) (directory-list (world:current-project-root)))))
 
 ;; to identify unsaved sources in DrRacket
 (define (unsaved-source? path-string)

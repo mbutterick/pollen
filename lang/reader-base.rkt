@@ -4,7 +4,7 @@
 (provide make-reader-with-mode (all-from-out pollen/world))
 
 (define read-inner (make-at-reader 
-                    #:command-char EXPRESSION_DELIMITER 
+                    #:command-char world:expression-delimiter 
                     #:syntax? #t 
                     #:inside? #t))
 

@@ -103,7 +103,7 @@
         [(needs-template? path) (render-with-template path #:force force)]
         [(ptree-source? path) (let ([ptree (cached-require path 'main)])
                                 (render-files-in-ptree ptree #:force force))]
-        [(equal? FALLBACK_TEMPLATE (->string (file-name-from-path path)))
+        [(equal? world:fallback-template (->string (file-name-from-path path)))
          (message "Render: using fallback template")]
         [(file-exists? path) (message "Serving static file" (->string (file-name-from-path path)))])))
   (for-each &render xs))
@@ -193,14 +193,14 @@
             (filter (λ(x) (->boolean x)) ; if any of the possibilities below are invalid, they return #f 
                     (list                     
                      (and template-name (build-path source-dir template-name)) ; path based on template-name
-                     (parameterize ([current-directory (CURRENT_PROJECT_ROOT)])
+                     (parameterize ([current-directory (world:current-project-root)])
                        (let ([source-metas (cached-require source-path 'metas)])
-                         (and (TEMPLATE_META_KEY . in? . source-metas)
-                              (build-path source-dir (get source-metas TEMPLATE_META_KEY))))) ; path based on metas
+                         (and (world:template-meta-key . in? . source-metas)
+                              (build-path source-dir (get source-metas world:template-meta-key))))) ; path based on metas
                      (build-path source-dir 
-                                 (add-ext (add-ext DEFAULT_TEMPLATE_PREFIX (get-ext (->output-path source-path))) TEMPLATE_EXT))))) ; path using default template
-     (let ([ft-path (build-path source-dir FALLBACK_TEMPLATE)]) ; if none of these work, make fallback template file
-       (copy-file (build-path (current-server-extras-path) FALLBACK_TEMPLATE) ft-path #t)
+                                 (add-ext (add-ext world:default-template-prefix (get-ext (->output-path source-path))) world:template-ext))))) ; path using default template
+     (let ([ft-path (build-path source-dir world:fallback-template)]) ; if none of these work, make fallback template file
+       (copy-file (build-path (world:current-server-extras-path) world:fallback-template) ft-path #t)
        ft-path)))
   
   (render template-path #:force force-render) ; bc template might have its own preprocessor source
@@ -222,7 +222,7 @@
           (rendered-message output-path)))
       (up-to-date-message output-path))
   
-  (let ([ft-path (build-path source-dir FALLBACK_TEMPLATE)]) ; delete fallback template if needed
+  (let ([ft-path (build-path source-dir world:fallback-template)]) ; delete fallback template if needed
     (when (file-exists? ft-path) (delete-file ft-path))))
 
 ;; cache some modules inside this namespace so they can be shared by namespace for eval
@@ -256,8 +256,8 @@
   (parameterize ([current-namespace (make-base-namespace)]
                  [current-directory (->complete-path base-dir)]
                  [current-output-port (current-error-port)]
-                 [current-ptree (make-project-ptree (CURRENT_PROJECT_ROOT))]
-                 [current-url-context (CURRENT_PROJECT_ROOT)])
+                 [current-ptree (make-project-ptree (world:current-project-root))]
+                 [current-url-context (world:current-project-root)])
     (for-each (λ(mod-name) (namespace-attach-module original-ns mod-name)) 
               '(web-server/templates 
                 xml
@@ -302,14 +302,14 @@
        (let ([main (cached-require ,source-name 'main)]
              [metas (cached-require ,source-name 'metas)])
          (local-require pollen/debug pollen/ptree pollen/template pollen/top)
-         (include-template #:command-char ,TEMPLATE_FIELD_DELIMITER ,(->string template-name)))))
+         (include-template #:command-char ,world:template-field-delimiter ,(->string template-name)))))
   
   (render-through-eval source-dir string-to-eval))
 
 #|
 (module+ main
   (parameterize ([current-cache (make-cache)]
-                 [CURRENT_PROJECT_ROOT (string->path "/Users/mb/git/bpt")])
+                 [world:current-project-root (string->path "/Users/mb/git/bpt")])
     (render-source-with-template
      (string->path "/Users/mb/git/bpt/test.html.pm")
      (string->path "/Users/mb/git/bpt/-test.html"))))

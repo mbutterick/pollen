@@ -21,7 +21,7 @@
      (meta ([charset "UTF-8"]))
      (link ([rel "stylesheet"] 
             [type "text/css"] 
-            [href ,(format "/~a" DASHBOARD_CSS)])))
+            [href ,(format "/~a" world:dashboard-css)])))
     (body
      ,content-xexpr (div ((id "pollen-logo"))))))
 
@@ -37,7 +37,7 @@
   (define client (request-client-ip req))
   (define localhost-client "::1")
   (define url-string (url->string (request-uri req)))
-  (message "Request:" (string-replace url-string DASHBOARD_NAME " dashboard")
+  (message "Request:" (string-replace url-string world:dashboard-name " dashboard")
            (if (not (equal? client localhost-client)) (format "from ~a" client) "")))
 
 ;; pass string args to route, then
@@ -48,7 +48,7 @@
   (procedure? . -> . procedure?)
   (λ(req . string-args) 
     (logger req) 
-    (define path (apply build-path (CURRENT_PROJECT_ROOT) (flatten string-args)))
+    (define path (apply build-path (world:current-project-root) (flatten string-args)))
     (response/xexpr (route-proc path))))
 
 
@@ -86,7 +86,7 @@
   (pathish? . -> . xexpr?)
   (define path (->complete-path p))
   (define img (bitmap/file path))
-  (define relative-path (->string (find-relative-path (CURRENT_PROJECT_ROOT) path)))
+  (define relative-path (->string (find-relative-path (world:current-project-root) path)))
   (define img-url (format "/~a" relative-path))
   `(div  
     (p "filename =" ,(->string relative-path))
@@ -100,7 +100,7 @@
 (define (handle-zip-path p)
   (pathish? . -> . xexpr?)
   (define path (->path p))
-  (define relative-path (->string (find-relative-path (CURRENT_PROJECT_ROOT) path)))
+  (define relative-path (->string (find-relative-path (world:current-project-root) path)))
   (define ziplist (zip-directory-entries (read-zip-directory path)))
   `(div  
     (p "filename =" ,(->string relative-path))
@@ -141,7 +141,7 @@
 (define (dashboard dashfile)
   (define dir (get-enclosing-dir dashfile))
   (define (in-project-root?)
-    (directories-equal? dir (CURRENT_PROJECT_ROOT)))
+    (directories-equal? dir (world:current-project-root)))
   (define parent-dir (and (not (in-project-root?)) (get-enclosing-dir dir)))
   (define empty-cell (cons #f #f))
   (define (make-link-cell href+text)
@@ -152,8 +152,8 @@
                                   text)))))
   (define (make-parent-row) 
     (if parent-dir
-        (let* ([url-to-parent-dashboard (format "/~a" (find-relative-path (CURRENT_PROJECT_ROOT) (build-path parent-dir DASHBOARD_NAME)))]
-               [url-to-parent (string-replace url-to-parent-dashboard DASHBOARD_NAME "")])
+        (let* ([url-to-parent-dashboard (format "/~a" (find-relative-path (world:current-project-root) (build-path parent-dir world:dashboard-name)))]
+               [url-to-parent (string-replace url-to-parent-dashboard world:dashboard-name "")])
           `(tr (th ((colspan "3")) (a ((href ,url-to-parent-dashboard)) ,(format "up to ~a" url-to-parent))))) 
         `(tr (th ((colspan "3")(class "root")) "Pollen root"))))
   
@@ -169,7 +169,7 @@
                 (append (list                          
                          (cond ; main cell
                            [(directory-exists? (build-path dir filename)) ; links subdir to its dashboard
-                            (cons (format "~a/~a" filename DASHBOARD_NAME) (format "~a/" filename))]
+                            (cons (format "~a/~a" filename world:dashboard-name) (format "~a/" filename))]
                            [source (cons #f `(a ((href ,filename)) ,filename (span ((class "file-ext")) "." ,(get-ext source))))]
                            [else   (cons filename filename)])
                          
@@ -183,7 +183,7 @@
                            [(ptree-source? filename) empty-cell]
                            [else (cons (format "out/~a" filename) "out")]))))))
   
-  (define (ineligible-path? x) (or (not (visible? x)) (member x RESERVED_PATHS)))  
+  (define (ineligible-path? x) (or (not (visible? x)) (member x world:reserved-paths)))  
   
   (define (unique-sorted-output-paths xs)
     (define output-paths (map ->output-path xs))
@@ -219,7 +219,7 @@
 
 (define/contract (req->path req)
   (request? . -> . path?)
-  (reroot-path (url->path (request-uri req)) (CURRENT_PROJECT_ROOT)))
+  (reroot-path (url->path (request-uri req)) (world:current-project-root)))
 
 ;; default route
 (define (route-default req)  

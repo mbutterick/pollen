@@ -47,24 +47,24 @@
 
 (define+provide/contract (file->ptree p)
   (pathish? . -> . ptree?)
-  (cached-require (->path p) MAIN_POLLEN_EXPORT))
+  (cached-require (->path p) world:main-pollen-export))
 
 (define+provide/contract (directory->ptree dir)
   (directory-pathish? . -> . ptree?)
-  (let ([files (map remove-ext (filter (λ(x) (has-ext? x MARKUP_SOURCE_EXT)) (directory-list dir)))])
-    (ptree-root->ptree (cons PTREE_ROOT_NODE files))))
+  (let ([files (map remove-ext (filter (λ(x) (has-ext? x world:markup-source-ext)) (directory-list dir)))])
+    (ptree-root->ptree (cons world:ptree-root-node files))))
 
 ;; Try loading from ptree file, or failing that, synthesize ptree.
 (define+provide/contract (make-project-ptree project-dir)
   (directory-pathish? . -> . ptree?)
-  (define ptree-source (build-path project-dir DEFAULT_PTREE))
+  (define ptree-source (build-path project-dir world:default-ptree))
   (cached-require ptree-source 'main))
 
 
 (module+ test
-  (let ([sample-main `(POLLEN_TREE_ROOT_NAME "foo" "bar" (one (two "three")))])
+  (let ([sample-main `(world:pollen-tree-root-name "foo" "bar" (one (two "three")))])
     (check-equal? (ptree-root->ptree sample-main) 
-                  `(POLLEN_TREE_ROOT_NAME "foo" "bar" (one (two "three"))))))
+                  `(world:pollen-tree-root-name "foo" "bar" (one (two "three"))))))
 
 
 (define+provide/contract (parent pnode [ptree (current-ptree)])
@@ -203,9 +203,9 @@
 
 
 (module+ test
-  (set! test-ptree-main `(,PTREE_ROOT_NODE "foo" "bar" (one (two "three"))))
+  (set! test-ptree-main `(,world:ptree-root-node "foo" "bar" (one (two "three"))))
   (check-equal? (ptree-root->ptree test-ptree-main) 
-                `(,PTREE_ROOT_NODE "foo" "bar" (one (two "three")))))
+                `(,world:ptree-root-node "foo" "bar" (one (two "three")))))
 
 
 (define+provide/contract (pnodes-unique?/error x)
@@ -216,19 +216,19 @@
 
 (define+provide/contract (ptree-source-decode . elements)
   (() #:rest pnodes-unique?/error . ->* . ptree?)
-  (ptree-root->ptree (decode (cons PTREE_ROOT_NODE elements)
+  (ptree-root->ptree (decode (cons world:ptree-root-node elements)
                              #:xexpr-elements-proc (λ(xs) (filter-not whitespace? xs)))))
 
 
-(define current-ptree (make-parameter `(,PTREE_ROOT_NODE)))
-(define current-url-context (make-parameter (CURRENT_PROJECT_ROOT)))
+(define current-ptree (make-parameter `(,world:ptree-root-node)))
+(define current-url-context (make-parameter (world:current-project-root)))
 (provide current-ptree current-url-context)
 
 
 ;; used to convert here-path into here
 (define+provide/contract (path->pnode path)
   (pathish? . -> . pnode?)
-  (->string (->output-path (find-relative-path (CURRENT_PROJECT_ROOT) (->path path)))))
+  (->string (->output-path (find-relative-path (world:current-project-root) (->path path)))))
 
 
 #|

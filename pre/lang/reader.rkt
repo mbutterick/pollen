@@ -1,4 +1,4 @@
 #lang racket/base
 (require pollen/lang/reader-base)
 
-(make-reader-with-mode reader-mode-preproc)
+(make-reader-with-mode world:reader-mode-preproc)

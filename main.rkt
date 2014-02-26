@@ -25,7 +25,7 @@
      
      ;; Build 'inner-here-path and 'inner-here
      (define (here-path->here here-path)
-       (path->string (path-replace-suffix (pollen-find-relative-path (CURRENT_PROJECT_ROOT) here-path) "")))
+       (path->string (path-replace-suffix (pollen-find-relative-path (world:current-project-root) here-path) "")))
      (define inner-here-path (get-here-path))
      (define inner-here (here-path->here inner-here-path))
      
@@ -60,22 +60,22 @@
 
    ;; set the parser mode based on reader mode
    (define parser-mode 
-     (if (reader-mode . equal? . reader-mode-auto)
+     (if (reader-mode . equal? . world:reader-mode-auto)
          (let* ([file-ext-pattern (pregexp "\\w+$")]
                 [here-ext (car (regexp-match file-ext-pattern inner-here-path))])
            (cond
-             [(equal? (string->symbol here-ext) PTREE_SOURCE_EXT) reader-mode-ptree]
-             [(equal? (string->symbol here-ext) MARKUP_SOURCE_EXT) reader-mode-markup]
-             [else 'pre]))
+             [(equal? (string->symbol here-ext) world:ptree-source-ext) world:reader-mode-ptree]
+             [(equal? (string->symbol here-ext) world:markup-source-ext) world:reader-mode-markup]
+             [else world:reader-mode-preproc]))
          reader-mode))
       
    (define main (apply (cond
-                         [(equal? parser-mode reader-mode-ptree) 
-                          (λ xs (decode (cons PTREE_ROOT_NODE xs)
+                         [(equal? parser-mode world:reader-mode-ptree) 
+                          (λ xs (decode (cons world:ptree-root-node xs)
                                         #:xexpr-elements-proc (λ(xs) (filter (compose1 not (def/c whitespace?)) xs))))]
                          ;; 'root is the hook for the decoder function.
                          ;; If it's not a defined identifier, it just hits #%top and becomes `(root ,@body ...)
-                         [(equal? parser-mode 'markup) root]
+                         [(equal? parser-mode world:reader-mode-markup) root]
                          ;; for preprocessor output, just make a string.
                          [else (λ xs (apply string-append (map to-string xs)))])
                        (cdr main-without-metas))) ;; cdr strips placeholder-root tag
@@ -87,6 +87,6 @@
    
    ;; for output in DrRacket
    (module+ main
-     (if (equal? parser-mode reader-mode-preproc)
+     (if (equal? parser-mode world:reader-mode-preproc)
          (display main)
          (print main)))))
