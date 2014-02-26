@@ -4,9 +4,9 @@
 
 (define pollen-version "0.001")
 
-(define preproc-source-ext 'p)
+(define preproc-source-ext 'pp)
 (define markup-source-ext 'pm)
-(define null-source-ext 'px)
+(define null-source-ext 'p)
 (define ptree-source-ext 'ptree)
 (define template-source-ext 'pt)
 
