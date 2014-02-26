@@ -140,6 +140,7 @@
              (pathish? . -> . path?)
              (->path (if (stem-source? x) x (add-ext x file-ext))))
            
+           ;; coerce either a source or output file to both
            (define+provide/contract (->stem-source+output-paths path)
              (pathish? . -> . (values path? path?))
              (values (->complete-path (->stem-source-path path))
