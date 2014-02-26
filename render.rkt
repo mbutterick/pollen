@@ -197,8 +197,8 @@
                        (let ([source-metas (cached-require source-path 'metas)])
                          (and (TEMPLATE_META_KEY . in? . source-metas)
                               (build-path source-dir (get source-metas TEMPLATE_META_KEY))))) ; path based on metas
-                     (report (build-path source-dir 
-                                 (add-ext (add-ext DEFAULT_TEMPLATE_PREFIX (get-ext (->output-path source-path))) TEMPLATE_EXT)))))) ; path using default template
+                     (build-path source-dir 
+                                 (add-ext (add-ext DEFAULT_TEMPLATE_PREFIX (get-ext (->output-path source-path))) TEMPLATE_EXT))))) ; path using default template
      (let ([ft-path (build-path source-dir FALLBACK_TEMPLATE)]) ; if none of these work, make fallback template file
        (copy-file (build-path (current-server-extras-path) FALLBACK_TEMPLATE) ft-path #t)
        ft-path)))

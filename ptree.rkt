@@ -47,8 +47,7 @@
 
 (define+provide/contract (file->ptree p)
   (pathish? . -> . ptree?)
-  (define path (->path p))
-  (cached-require path MAIN_POLLEN_EXPORT))
+  (cached-require (->path p) MAIN_POLLEN_EXPORT))
 
 (define+provide/contract (directory->ptree dir)
   (directory-pathish? . -> . ptree?)
