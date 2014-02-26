@@ -51,7 +51,7 @@
 
 (define+provide/contract (directory->ptree dir)
   (directory-pathish? . -> . ptree?)
-  (let ([files (map remove-ext (filter (λ(x) (has-ext? x DECODER_SOURCE_EXT)) (directory-list dir)))])
+  (let ([files (map remove-ext (filter (λ(x) (has-ext? x MARKUP_SOURCE_EXT)) (directory-list dir)))])
     (ptree-root->ptree (cons PTREE_ROOT_NODE files))))
 
 ;; Try loading from ptree file, or failing that, synthesize ptree.

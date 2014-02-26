@@ -60,17 +60,17 @@
 
    ;; set the parser mode based on reader mode
    (define parser-mode 
-     (if (reader-mode . equal? . 'auto)
+     (if (reader-mode . equal? . reader-mode-auto)
          (let* ([file-ext-pattern (pregexp "\\w+$")]
                 [here-ext (car (regexp-match file-ext-pattern inner-here-path))])
            (cond
-             [(equal? here-ext (symbol->string PTREE_SOURCE_EXT)) 'ptree]
-             [(equal? here-ext (symbol->string DECODER_SOURCE_EXT)) 'markup]
+             [(equal? (string->symbol here-ext) PTREE_SOURCE_EXT) reader-mode-ptree]
+             [(equal? (string->symbol here-ext) MARKUP_SOURCE_EXT) reader-mode-markup]
              [else 'pre]))
          reader-mode))
       
    (define main (apply (cond
-                         [(equal? parser-mode 'ptree) 
+                         [(equal? parser-mode reader-mode-ptree) 
                           (λ xs (decode (cons PTREE_ROOT_NODE xs)
                                         #:xexpr-elements-proc (λ(xs) (filter (compose1 not (def/c whitespace?)) xs))))]
                          ;; 'root is the hook for the decoder function.
@@ -87,6 +87,6 @@
    
    ;; for output in DrRacket
    (module+ main
-     (if (equal? parser-mode 'pre)
+     (if (equal? parser-mode reader-mode-preproc)
          (display main)
          (print main)))))

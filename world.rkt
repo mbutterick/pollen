@@ -7,10 +7,10 @@
 (define POLLEN_VERSION "0.001")
 
 (define PREPROC_SOURCE_EXT 'p)
-(define DECODER_SOURCE_EXT 'pm)
+(define MARKUP_SOURCE_EXT 'pm)
 (define NULL_SOURCE_EXT 'px)
 (define PTREE_SOURCE_EXT 'ptree)
-(define DECODABLE_EXTENSIONS (list DECODER_SOURCE_EXT PTREE_SOURCE_EXT))
+(define DECODABLE_EXTENSIONS (list MARKUP_SOURCE_EXT PTREE_SOURCE_EXT))
 
 (define DEFAULT_PTREE "main.ptree")
 (define PTREE_ROOT_NODE 'ptree-root)
@@ -56,3 +56,9 @@
 
 (define current-module-root (make-parameter #f))
 (define current-server-extras-path (make-parameter #f))
+
+
+(define reader-mode-auto 'auto)
+(define reader-mode-preproc 'pre)
+(define reader-mode-markup 'markup)
+(define reader-mode-ptree 'ptree)

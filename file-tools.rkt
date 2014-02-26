@@ -152,7 +152,7 @@
 
 (define+provide/contract (decoder-source? x)
   (any/c . -> . coerce/boolean?)
-  (and (pathish? x) ((->path x) . has-ext? . DECODER_SOURCE_EXT)))
+  (and (pathish? x) ((->path x) . has-ext? . MARKUP_SOURCE_EXT)))
 
 
 (define+provide/contract (null-source? x)
@@ -196,7 +196,7 @@
   (coerce/path? . -> . coerce/path?)
   (if (decoder-source? x)
       x
-      (add-ext x DECODER_SOURCE_EXT)))
+      (add-ext x MARKUP_SOURCE_EXT)))
 
 
 (define+provide/contract (project-files-with-ext ext)
