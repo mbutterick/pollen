@@ -117,7 +117,8 @@
      (with-syntax ([stem-source? (format-id stx "~a-source?" #'stem)]
                    [has-stem-source? (format-id stx "has-~a-source?" #'stem)]
                    [has/is-stem-source? (format-id stx "has/is-~a-source?" #'stem)]
-                   [->stem-source-path (format-id stx "->~a-source-path" #'stem)])
+                   [->stem-source-path (format-id stx "->~a-source-path" #'stem)]
+                   [->stem-source+output-paths (format-id stx "->~a-source+output-paths" #'stem)])
        #'(begin
            ;; does file have particular extension
            (define+provide/contract (stem-source? x)
@@ -137,7 +138,12 @@
            ;; add the file extension if it's not there
            (define+provide/contract (->stem-source-path x)
              (pathish? . -> . path?)
-             (->path (if (stem-source? x) x (add-ext x file-ext))))))]))
+             (->path (if (stem-source? x) x (add-ext x file-ext))))
+           
+           (define+provide/contract (->stem-source+output-paths path)
+             (pathish? . -> . (values path? path?))
+             (values (->complete-path (->stem-source-path path))
+                     (->complete-path (->output-path path))))))]))
 
 
 (make-source-utility-functions preproc world:preproc-source-ext)
@@ -145,7 +151,6 @@
 (make-source-utility-functions ptree world:ptree-source-ext)
 (make-source-utility-functions markup world:markup-source-ext)
 (make-source-utility-functions template world:template-source-ext)
-
 
 
 

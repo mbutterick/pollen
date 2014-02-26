@@ -122,11 +122,11 @@
 
 (define (render-null-source path #:force force)
   ;; this op is trivial & fast, so do it every time.
-  (define source-path (->complete-path (->null-source-path path)))
-  (define output-path (->complete-path (->output-path path)))
+  (define-values (source-path output-path) (->null-source+output-paths path))
+  
   (message (format "Copying ~a to ~a" 
-                             (file-name-from-path source-path)
-                             (file-name-from-path output-path)))
+                   (file-name-from-path source-path)
+                   (file-name-from-path output-path)))
   (copy-file source-path output-path #t))
 
 (define (render-preproc-source source-path output-path)
@@ -141,12 +141,9 @@
   (store-render-in-mod-dates source-path) ; don't store mod date until render has completed!
   (rendered-message output-path))
 
-(define (render-preproc-source-if-needed input-path #:force [force-render #f])
+(define (render-preproc-source-if-needed path #:force [force-render #f])
   
-  ;; input-path might be either a preproc-source path or preproc-output path
-  ;; But the coercion functions will figure it out.
-  (define source-path (->complete-path (->preproc-source-path input-path)))
-  (define output-path (->complete-path (->output-path input-path)))
+  (define-values (source-path output-path) (->preproc-source+output-paths path))
   
   (define render-needed? 
     (or
@@ -175,12 +172,9 @@
   (->boolean (> (len (get-output-string port-for-catching-file-info)) 0)))
 
 
-(define (complete-markup-source-path x)
-  (->complete-path (->markup-source-path (->path x))))
-
-
-(define (render-markup x [template-name #f] #:force [force-render #f]) 
-  (define source-path (complete-markup-source-path x))
+(define (render-markup path [template-name #f] #:force [force-render #f]) 
+  (define-values (source-path output-path) (->markup-source+output-paths path))
+  
   ;; todo: this won't work with source files nested down one level
   (define-values (source-dir ignored also-ignored) (split-path source-path))
   
@@ -204,7 +198,7 @@
        ft-path)))
   
   (render template-path #:force force-render) ; bc template might have its own preprocessor source
-  (define output-path (->output-path source-path))
+  
   
   ;; 2) Render the source file with template, if needed.
   ;; Render is expensive, so we avoid it when we can. Four conditions where we render:
