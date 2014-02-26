@@ -85,7 +85,7 @@
   (check-false (markup-source? #f)))
 
 (module+ test
-  (check-true (template-source? "-foo.html"))
+  (check-true (template-source? "foo.html.pt"))
   (check-false (template-source? "foo.html"))
   (check-false (template-source? #f)))
 
