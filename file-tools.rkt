@@ -1,4 +1,5 @@
 #lang racket/base
+(require (for-syntax racket/base racket/syntax))
 (require racket/contract racket/path)
 (require (only-in racket/path filename-extension))
 (require "world.rkt" sugar)
@@ -110,93 +111,49 @@
 
 
 
-;; todo: tests for these predicates
-
-(define+provide/contract (preproc-source? x)
-  (any/c . -> . coerce/boolean?)
-  (and (pathish? x) (has-ext? (->path x) world:preproc-source-ext)))
-
-(define+provide/contract (has-null-source? x)
-  (any/c . -> . coerce/boolean?)
-  (and (pathish? x) (file-exists? (->null-source-path (->path x)))))
-
-(define+provide/contract (has-preproc-source? x)
-  (any/c . -> . coerce/boolean?)
-  (and (pathish? x) (file-exists? (->preproc-source-path (->path x)))))
-
-(define+provide/contract (has-decoder-source? x)
-  (any/c . -> . coerce/boolean?)
-  (and (pathish? x) (file-exists? (->decoder-source-path (->path x)))))
-
-(define+provide/contract (needs-preproc? x)
-  (any/c . -> . coerce/boolean?)
-  ; it's a preproc source file, or a file that's the result of a preproc source
-  (and (pathish? x) (ormap (λ(proc) (proc (->path x))) (list preproc-source? has-preproc-source?))))
-
-(define+provide/contract (needs-template? x)
-  (any/c . -> . coerce/boolean?)
-  ; it's a pollen source file
-  ; or a file (e.g., html) that has a pollen source file
-  (and (pathish? x) (ormap (λ(proc) (proc (->path x))) (list decoder-source? has-decoder-source?))))
-
-(define+provide/contract (needs-null? x)
-  (any/c . -> . coerce/boolean?)
-  ; it's a null source file, or a file that's the result of a null source
-  (and (pathish? x) (ormap (λ(proc) (proc (->path x))) (list null-source? has-null-source?))))
+(define-syntax (make-source-utility-functions stx)
+  (syntax-case stx ()
+    [(_ stem file-ext)
+     (with-syntax ([stem-source? (format-id stx "~a-source?" #'stem)]
+                   [has-stem-source? (format-id stx "has-~a-source?" #'stem)]
+                   [has/is-stem-source? (format-id stx "has/is-~a-source?" #'stem)]
+                   [->stem-source-path (format-id stx "->~a-source-path" #'stem)])
+       #'(begin
+           ;; does file have particular extension
+           (define+provide/contract (stem-source? x)
+             (any/c . -> . boolean?)
+             (->boolean (and (pathish? x) (has-ext? (->path x) file-ext))))
+           
+           ;; does the source-ified version of the file exist
+           (define+provide/contract (has-stem-source? x)
+             (any/c . -> . boolean?)
+             (->boolean (and (pathish? x) (file-exists? (->stem-source-path (->path x))))))
+           
+           ;; it's a file-ext source file, or a file that's the result of a file-ext source
+           (define+provide/contract (has/is-stem-source? x)
+             (any/c . -> . boolean?)
+             (->boolean (and (pathish? x) (ormap (λ(proc) (proc (->path x))) (list stem-source? has-stem-source?)))))
+           
+           ;; add the file extension if it's not there
+           (define+provide/contract (->stem-source-path x)
+             (pathish? . -> . path?)
+             (->path (if (stem-source? x) x (add-ext x file-ext))))))]))
 
 
-(define+provide/contract (ptree-source? x)
-  (any/c . -> . coerce/boolean?)
-  (and (pathish? x) ((->path x) . has-ext? . world:ptree-source-ext)))
-
-
-(define+provide/contract (decoder-source? x)
-  (any/c . -> . coerce/boolean?)
-  (and (pathish? x) ((->path x) . has-ext? . world:markup-source-ext)))
-
-
-(define+provide/contract (null-source? x)
-  (any/c . -> . coerce/boolean?)
-  (and (pathish? x) ((->path x) . has-ext? . world:null-source-ext)))
-
-
-(define+provide/contract (template-source? x)
-  (any/c . -> . coerce/boolean?)
-  (and (pathish? x)
-       (let-values ([(dir name ignore) (split-path x)])
-         (equal? (get (->string name) 0) world:template-source-prefix))))
+(make-source-utility-functions preproc world:preproc-source-ext)
+(make-source-utility-functions null world:null-source-ext)
+(make-source-utility-functions ptree world:ptree-source-ext)
+(make-source-utility-functions markup world:markup-source-ext)
+(make-source-utility-functions template world:template-source-ext)
 
 
 
-;; todo: tighten these input contracts
-;; so that, say, a source-path cannot be input for make-preproc-source-path
-(define+provide/contract (->preproc-source-path x)
-  (coerce/path? . -> . coerce/path?)
-  (if (preproc-source? x)
-      x
-      (add-ext x world:preproc-source-ext)))
-
-(define+provide/contract (->null-source-path x)
-  (coerce/path? . -> . coerce/path?)
-  (if (decoder-source? x)
-      x
-      (add-ext x world:null-source-ext)))
 
 (define+provide/contract (->output-path x)
   (coerce/path? . -> . coerce/path?)
-  (if (or (decoder-source? x) (preproc-source? x) (null-source? x))
+  (if (or (markup-source? x) (preproc-source? x) (null-source? x))
       (remove-ext x)
       x))
-
-;; turns input into corresponding pollen source path
-;; does not, however, validate that new path exists
-;; todo: should it? I don't think so, sometimes handy to make the name for later use
-;; OK to use pollen source as input (comes out the same way)
-(define+provide/contract (->decoder-source-path x)
-  (coerce/path? . -> . coerce/path?)
-  (if (decoder-source? x)
-      x
-      (add-ext x world:markup-source-ext)))
 
 
 (define+provide/contract (project-files-with-ext ext)

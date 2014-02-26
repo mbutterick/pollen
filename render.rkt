@@ -98,9 +98,9 @@
   (define (&render x) 
     (let ([path (->complete-path x)])              
       (cond
-        [(needs-null? path) (render-null-source path #:force force)]
-        [(needs-preproc? path) (render-preproc-source-if-needed path #:force force)]
-        [(needs-template? path) (render-with-template path #:force force)]
+        [(has/is-null-source? path) (render-null-source path #:force force)]
+        [(has/is-preproc-source? path) (render-preproc-source-if-needed path #:force force)]
+        [(has/is-markup-source? path) (render-markup path #:force force)]
         [(ptree-source? path) (let ([ptree (cached-require path 'main)])
                                 (render-files-in-ptree ptree #:force force))]
         [(equal? world:fallback-template (->string (file-name-from-path path)))
@@ -175,12 +175,12 @@
   (->boolean (> (len (get-output-string port-for-catching-file-info)) 0)))
 
 
-(define (complete-decoder-source-path x)
-  (->complete-path (->decoder-source-path (->path x))))
+(define (complete-markup-source-path x)
+  (->complete-path (->markup-source-path (->path x))))
 
 
-(define (render-with-template x [template-name #f] #:force [force-render #f]) 
-  (define source-path (complete-decoder-source-path x))
+(define (render-markup x [template-name #f] #:force [force-render #f]) 
+  (define source-path (complete-markup-source-path x))
   ;; todo: this won't work with source files nested down one level
   (define-values (source-dir ignored also-ignored) (split-path source-path))
   
@@ -198,7 +198,7 @@
                          (and (world:template-meta-key . in? . source-metas)
                               (build-path source-dir (get source-metas world:template-meta-key))))) ; path based on metas
                      (build-path source-dir 
-                                 (add-ext (add-ext world:default-template-prefix (get-ext (->output-path source-path))) world:template-ext))))) ; path using default template
+                                 (add-ext (add-ext world:default-template-prefix (get-ext (->output-path source-path))) world:template-source-ext))))) ; path using default template
      (let ([ft-path (build-path source-dir world:fallback-template)]) ; if none of these work, make fallback template file
        (copy-file (build-path (world:current-server-extras-path) world:fallback-template) ft-path #t)
        ft-path)))
@@ -310,11 +310,11 @@
 (module+ main
   (parameterize ([current-cache (make-cache)]
                  [world:current-project-root (string->path "/Users/mb/git/bpt")])
-    (render-source-with-template
+    (render
      (string->path "/Users/mb/git/bpt/test.html.pm")
-     (string->path "/Users/mb/git/bpt/-test.html"))))
-|#
+     )))
 
+|#
 
 
 (define (render-files-in-ptree ptree #:force [force #f])    

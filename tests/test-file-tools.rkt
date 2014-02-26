@@ -76,21 +76,20 @@
   (check-false (preproc-source? #f)))
 
 (module+ test
-  (check-true (ptree-source? (format "foo.~a" PTREE_SOURCE_EXT)))
-  (check-false (ptree-source? (format "~a.foo" PTREE_SOURCE_EXT)))
+  (check-true (ptree-source? (format "foo.~a" world:ptree-source-ext)))
+  (check-false (ptree-source? (format "~a.foo" world:ptree-source-ext)))
   (check-false (ptree-source? #f)))
 (module+ test
-  (check-true (decoder-source? "foo.pd"))
-  (check-false (decoder-source? "foo.p"))
-  (check-false (decoder-source? #f)))
+  (check-true (markup-source? "foo.pm"))
+  (check-false (markup-source? "foo.p"))
+  (check-false (markup-source? #f)))
 
 (module+ test
   (check-true (template-source? "-foo.html"))
   (check-false (template-source? "foo.html"))
   (check-false (template-source? #f)))
-(module+ test
-  (check-true (project-require-file? "foo.rkt"))
-  (check-false (project-require-file? "foo.html")))
+
+
 (module+ test
   (check-equal? (->preproc-source-path (->path "foo.p")) (->path "foo.p"))
   (check-equal? (->preproc-source-path (->path "foo.html")) (->path "foo.html.p"))
@@ -104,7 +103,7 @@
   (check-equal? (->output-path "foo.xml.p") (->path "foo.xml"))
   (check-equal? (->output-path 'foo.barml.p) (->path "foo.barml")))
 (module+ test
-  (check-equal? (->decoder-source-path (->path "foo.pd")) (->path "foo.pd"))
-  (check-equal? (->decoder-source-path (->path "foo.html")) (->path "foo.html.pd"))
-  (check-equal? (->decoder-source-path "foo") (->path "foo.pd"))
-  (check-equal? (->decoder-source-path 'foo) (->path "foo.pd")))
+  (check-equal? (->markup-source-path (->path "foo.pm")) (->path "foo.pm"))
+  (check-equal? (->markup-source-path (->path "foo.html")) (->path "foo.html.pm"))
+  (check-equal? (->markup-source-path "foo") (->path "foo.pm"))
+  (check-equal? (->markup-source-path 'foo) (->path "foo.pm")))

@@ -15,8 +15,8 @@
 (define/contract (puttable-item? x)
   (any/c . -> . boolean?)
   (or (txexpr? x) 
-      (has-decoder-source? x) 
-      (and (pnode? x) (pnode->url x) (has-decoder-source? (pnode->url x)))))
+      (has-markup-source? x) 
+      (and (pnode? x) (pnode->url x) (has-markup-source? (pnode->url x)))))
 
 (module+ test
   (check-false (puttable-item? #t))
@@ -31,8 +31,8 @@
   (cond
     ;; Using put has no effect on txexprs. It's here to make the idiom smooth.
     [(txexpr? x) x] 
-    [(has-decoder-source? x) (cached-require (->decoder-source-path x) 'main)]
-    [(has-decoder-source? (pnode->url x)) (cached-require (->decoder-source-path (pnode->url x)) 'main)]))
+    [(has-markup-source? x) (cached-require (->markup-source-path x) 'main)]
+    [(has-markup-source? (pnode->url x)) (cached-require (->markup-source-path (pnode->url x)) 'main)]))
 
 #|(module+ test
   (check-equal? (put '(foo "bar")) '(foo "bar"))
@@ -57,15 +57,15 @@
 
 (define/contract (find-in-metas px key)
   (puttable-item? query-key? . -> . (or/c #f txexpr-elements?))
-  (and (has-decoder-source? px)
-       (let ([metas (cached-require (->decoder-source-path px) 'metas)]
+  (and (has-markup-source? px)
+       (let ([metas (cached-require (->markup-source-path px) 'metas)]
              [key (->string key)])
          (and (key . in? . metas ) (->list (get metas key))))))
 
 #|(module+ test
   (parameterize ([current-directory "tests/template"])
     (check-equal? (find-in-metas "put" "foo") (list "bar"))
-    (let* ([metas (cached-require (->decoder-source-path 'put) 'metas)]
+    (let* ([metas (cached-require (->markup-source-path 'put) 'metas)]
            [here (find-in-metas 'put 'here)])     
       (check-equal? here (list "tests/template/put")))))
 |#

@@ -8,6 +8,7 @@
 (define markup-source-ext 'pm)
 (define null-source-ext 'px)
 (define ptree-source-ext 'ptree)
+(define template-source-ext 'pt)
 
 (define reader-mode-auto 'auto)
 (define reader-mode-preproc 'pre)
@@ -24,7 +25,6 @@
 (define template-field-delimiter expression-delimiter)
 
 (define default-template-prefix "main")
-(define template-ext 'pt)
 (define fallback-template "fallback.html.pt")
 (define template-meta-key "template")
 
