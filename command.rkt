@@ -22,7 +22,6 @@
   (if arg-command-name
       (datum->syntax stx 
                      (case arg-command-name
-                       [("nothing") '(begin)]
                        [("test") `(displayln "All systems go")]
                        [("start")
                         (if (not (directory-exists? arg-project-directory))
