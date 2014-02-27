@@ -1,6 +1,6 @@
 #lang racket/base
 (require racket/date racket/string)
-(require sugar/debug sugar/define)
+(require sugar/debug sugar/define "world.rkt")
 
 (provide  (all-from-out sugar/debug))
 
@@ -61,7 +61,11 @@
   (displayln (string-join `(,@(map (λ(x)(if (string? x) x (format "~v" x))) items))) (current-error-port)))
 
 (define+provide (message . items)
-  (displayln (string-join `(,(make-debug-timestamp) ,@(map (λ(x)(if (string? x) x (format "~v" x))) items))) (current-error-port)))
+  (apply message-threshold world:threshold-normal items))
+
+(define+provide (message-threshold threshold . items)
+  (when (threshold . <= . (world:current-message-threshold))
+    (displayln (string-join `(,(make-debug-timestamp) ,@(map (λ(x)(if (string? x) x (format "~v" x))) items))) (current-error-port))))
 
 (define (exn+stack->string exn)
   (string-append 

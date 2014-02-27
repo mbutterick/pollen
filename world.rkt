@@ -57,4 +57,8 @@
 (define current-module-root (make-parameter #f))
 (define current-server-extras-path (make-parameter #f))
 
+(define threshold-silent 0)
+(define threshold-normal 10)
+(define threshold-debug 100)
+(define current-message-threshold (make-parameter threshold-debug))
 
