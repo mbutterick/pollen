@@ -28,7 +28,7 @@
   (check-true (members-unique? "fob"))
   (check-false (members-unique? "foo")))
 
-
+#|
 (module+ test
   (check-true (whitespace? " "))
   (check-false (whitespace? "foo"))
@@ -37,4 +37,4 @@
   (check-false (whitespace? " ")) ; a nonbreaking space. todo: why is this so?
   (check-true (whitespace? "\n \n"))
   (check-true (whitespace? (list "\n" " " "\n")))
-  (check-true (whitespace? (list "\n" " " "\n" (list "\n" "\n")))))
+  (check-true (whitespace? (list "\n" " " "\n" (list "\n" "\n")))))|#
