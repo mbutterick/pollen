@@ -25,7 +25,7 @@
 (message "Ready to rock")
 
 (world:current-module-root (apply build-path (drop-right (explode-path (current-contract-region)) 1)))
-(world:current-server-extras-path (build-path (world:current-module-root) "pollen-server-extras"))
+(world:current-server-extras-path (build-path (world:current-module-root) "server-extras"))
 
 (parameterize ([world:current-module-root (world:current-module-root)]
                [world:current-server-extras-path (world:current-server-extras-path)]
