@@ -75,23 +75,23 @@
 ;; task: make polcom file
 
 (define (delete-polcom-file-if-existing)
-  (when (file-exists? COMMAND_FILE)
+  (when (file-exists? world:command-file)
     (begin
       (message (format "Deleting existing polcom file in ~a" cd))
-      (delete-file COMMAND_FILE))))
+      (delete-file world:command-file))))
 
 (define (save-polcom-file)
-  (define path-to-racket-exists? (> (len RACKET_PATH) 0)) 
+  (define path-to-racket-exists? (> (len world:racket-path) 0)) 
   
   (if path-to-racket-exists?
-      (let ([polcom-data (make-polcom-data RACKET_PATH)])
-        (message (format "Using ~a as racket path" RACKET_PATH))
+      (let ([polcom-data (make-polcom-data world:racket-path)])
+        (message (format "Using ~a as racket path" world:racket-path))
         (delete-polcom-file-if-existing)
         (message (format "Creating new polcom file in ~a" cd))
         (if (not (test-mode))
             (begin
-              (display-to-file polcom-data COMMAND_FILE)
-              (with-output-to-string (λ() (system (format "chmod 755 ~a" COMMAND_FILE)))))
+              (display-to-file polcom-data world:command-file)
+              (with-output-to-string (λ() (system (format "chmod 755 ~a" world:command-file)))))
             (message "[test mode: file would be saved now]")))
       (begin 
         (message "No path to Racket binary")
@@ -111,7 +111,7 @@
 
 (define (success-messages)
   (message "Setup complete")
-  (define path-to-polcom (format "~a~a" cd COMMAND_FILE))
+  (define path-to-polcom (format "~a~a" cd world:command-file))
   (message (format "Run '~a start' to start project server" path-to-polcom))
   (message (format "Or run '~a help' for a list of commands" path-to-polcom))
   (when (not (test-mode)) (exit)))
