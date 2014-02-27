@@ -16,7 +16,7 @@
       (current-directory)))
 
 (define-for-syntax (command-error error-string)
-  `(displayln (string-append "Pollen error: ", error-string)))
+  `(displayln (string-append "Error: ", error-string)))
 
 (define-syntax (just-a-hook-for-the-macro stx)
   (if arg-command-name
@@ -31,9 +31,9 @@
                                (parameterize ([world:current-project-root ,arg-project-directory])
                                  (start-server))))]
                        [else (if (regexp-match #rx"(shit|fuck)" arg-command-name)
-                                 `(displayln ,(let ([responses '("Cursing at free software? Really?" "How uncouth." "Same to you, buddy.")])
+                                 (displayln (let ([responses '("Cursing at free software? Really?" "How uncouth." "Same to you, buddy.")])
                                               (list-ref responses (random (length responses)))))
-                                 (command-error (format "unknown command '~a'" arg-command-name)))]))
+                                 (command-error (format "unknown command ~a" arg-command-name)))]))
       #'(begin)))
 
 (just-a-hook-for-the-macro)
