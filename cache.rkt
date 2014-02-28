@@ -19,22 +19,22 @@
 (define (cache-has-key? path)
   (hash-has-key? (current-cache) path))
 
+(define (cache path)
+  (dynamic-rerequire path)
+  (hash-set! (current-cache) path (make-hash))
+  (define cache-hash (cache-ref path))
+  (hash-set! cache-hash 'mod-time (file-or-directory-modify-seconds path))
+  (hash-set! cache-hash 'main (dynamic-require path 'main))
+  (hash-set! cache-hash 'metas (dynamic-require path 'metas))
+  (void))
+
 
 (define (cached-require path-string key)
   (when (not (current-cache)) (error "cached-require: No cache set up."))
   
   (define path 
     (with-handlers ([exn:fail? (λ(exn) (displayln (format "cached-require: ~a is not a valid path" path-string)))])
-      (->complete-path path-string)))
-  
-  (define (cache path)
-    (dynamic-rerequire path)
-    (hash-set! (current-cache) path (make-hash))
-    (define cache-hash (cache-ref path))
-    (hash-set! cache-hash 'mod-time (file-or-directory-modify-seconds path))
-    (hash-set! cache-hash 'main (dynamic-require path 'main))
-    (hash-set! cache-hash 'metas (dynamic-require path 'metas))
-    (void))
+      (->complete-path path-string)))  
   
   (when (or (not (cache-has-key? path))
             (> (file-or-directory-modify-seconds path) (hash-ref (cache-ref path) 'mod-time)))
