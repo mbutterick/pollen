@@ -73,3 +73,6 @@
 (make-message-logger-functions warning)
 (make-message-logger-functions info)
 (make-message-logger-functions debug)
+
+(define+provide (message . items)
+             (displayln (string-join `(,(make-debug-timestamp) ,@(map (λ(x)(if (string? x) x (format "~v" x))) items)))))
