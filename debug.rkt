@@ -1,4 +1,5 @@
 #lang racket/base
+(require (for-syntax racket/base racket/syntax))
 (require racket/date racket/string)
 (require sugar/debug sugar/define)
 
@@ -60,26 +61,18 @@
 (define-logger pollen) 
 
 
-;; todo: consolidate these two message functions
-(define+provide (basic-message . items)
-  (displayln (string-join `(,@(map (λ(x)(if (string? x) x (format "~v" x))) items))) (current-error-port)))
+(define-syntax (make-message-logger-functions stx)
+  (syntax-case stx ()
+    [(_ stem)
+     (with-syntax ([message-stem (format-id stx "message-~a" #'stem)]
+                   [log-pollen-stem (format-id stx "log-pollen-~a" #'stem)])
+       #'(begin
+           ;; does file have particular extension
+           (define+provide (message-stem . items)
+             (log-pollen-stem (string-join `(,(make-debug-timestamp) ,@(map (λ(x)(if (string? x) x (format "~v" x))) items)))))))]))
 
-(define+provide (message . items)
-  (log-pollen-debug (string-join `(,(make-debug-timestamp) ,@(map (λ(x)(if (string? x) x (format "~v" x))) items)))))
-
-(define (exn+stack->string exn)
-  (string-append 
-   (string-append "Exception: " (exn-message exn)) 
-   "\n"
-   "Stack:\n"
-   (string-join
-    (map (lambda (x)
-           (format "'~a' ~a ~a"
-                   (if (car x) (car x) "")
-                   (if (cdr x) (srcloc-source (cdr x)) "")
-                   (if (cdr x) (srcloc-line (cdr x)) "")))
-         (continuation-mark-set->context (exn-continuation-marks exn)))
-    "\n")))
-
-(define (display-stack-trace exn)
-  (displayln (exn+stack->string exn)))
+(make-message-logger-functions fatal)
+(make-message-logger-functions error)
+(make-message-logger-functions warning)
+(make-message-logger-functions info)
+(make-message-logger-functions debug)
