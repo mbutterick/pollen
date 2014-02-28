@@ -54,6 +54,10 @@
 (define (make-debug-timestamp)
   (format "[~a ∆~as]" (make-timestamp) (seconds-since-last-message)))
 
+;; creates pollen-logger and associated functions:
+;; log-pollen-fatal, log-pollen-error, log-pollen-warning, 
+;; log-pollen-info, and log-pollen-debug
+(define-logger pollen) 
 
 
 ;; todo: consolidate these two message functions
@@ -61,7 +65,7 @@
   (displayln (string-join `(,@(map (λ(x)(if (string? x) x (format "~v" x))) items))) (current-error-port)))
 
 (define+provide (message . items)
-  (displayln (string-join `(,(make-debug-timestamp) ,@(map (λ(x)(if (string? x) x (format "~v" x))) items))) (current-error-port)))
+  (log-pollen-debug (string-join `(,(make-debug-timestamp) ,@(map (λ(x)(if (string? x) x (format "~v" x))) items)))))
 
 (define (exn+stack->string exn)
   (string-append 
