@@ -7,17 +7,13 @@
 
 (define current-cache (make-parameter #f))
 
-(define (path-string->path path-string)
- ; (path-string? . -> . complete-path?)
-  (->complete-path (if (string? path-string) (string->path path-string) path-string)))
-
 (define (make-cache)
  ; ( ->  hash?)
   (make-hash))
 
 (define (get-cache-hash path-string)
  ; (path-string? . -> . hash?)
-  (hash-ref (current-cache) (path-string->path path-string)))
+  (hash-ref (current-cache) (->complete-path path-string)))
 
 (define (cache-ref path sym)
  ; (path? symbol? . -> . any/c)
@@ -27,7 +23,7 @@
  ; (path-string? symbol? . -> . any/c)
   (when (not (current-cache)) (error "cached-require: No cache set up."))
   
-  (define path (path-string->path path-string))
+  (define path (->complete-path path-string))
   
   (define (cache path)
     (dynamic-rerequire path)

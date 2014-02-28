@@ -46,10 +46,7 @@
                                 (date-hour date) ; am hours + noon hour
                                 (modulo (date-hour date) 12)) ; pm hours after noon hour
                             (date-minute date)
-                            (date-second date)
-                            
-                            
-                            )))  
+                            (date-second date))))  
   (string-append (string-join time-fields ":") (if (< (date-hour date) 12) "am" "pm")))
 
 (define (make-debug-timestamp)
