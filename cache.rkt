@@ -1,6 +1,5 @@
 #lang racket/base
 (require racket/rerequire)
-(require "debug.rkt" sugar/coercion/values)
 
 ;; The cache is a hash with paths as keys.
 ;; The cache values are also hashes, with key/value pairs for that path.
@@ -12,6 +11,9 @@
 (define current-cache (make-parameter #f))
 
 (define (make-cache) (make-hash))
+
+(define (->complete-path path-string)
+  (path->complete-path (if (string? path-string) (string->path path-string) path-string)))
 
 (define (cache-ref path-string)
   (hash-ref (current-cache) (->complete-path path-string)))
@@ -27,7 +29,6 @@
   (hash-set! cache-hash 'main (dynamic-require path 'main))
   (hash-set! cache-hash 'metas (dynamic-require path 'metas))
   (void))
-
 
 (define (cached-require path-string key)
   (when (not (current-cache)) (error "cached-require: No cache set up."))
