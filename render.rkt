@@ -88,7 +88,7 @@
         [(has/is-null-source? path) (render-null-source path #:force force)]
         [(has/is-preproc-source? path) (render-preproc-source-if-needed path #:force force)]
         [(has/is-markup-source? path) (render-markup path #:force force)]
-        [(ptree-source? path) (let ([ptree (cached-require path 'main)])
+        [(ptree-source? path) (let ([ptree (cached-require path world:main-pollen-export)])
                                 (render-files-in-ptree ptree #:force force))]
         [(equal? world:fallback-template (->string (file-name-from-path path)))
          (message "Render: using fallback template")]
@@ -117,14 +117,14 @@
   (copy-file source-path output-path #t))
 
 (define (render-preproc-source source-path output-path)
-  ;; how we render: import 'main from preproc source file, 
+  ;; how we render: import world:main-pollen-export from preproc source file, 
   ;; which is rendered during source parsing, and write that to output path
   (define-values (source-dir source-name _) (split-path source-path))
   (rendering-message (format "~a from ~a" 
                              (file-name-from-path output-path)
                              (file-name-from-path source-path)))
-  (let ([main (time (render-through-eval source-dir `(begin (require pollen/cache)(cached-require ,source-path 'main))))]) ;; todo: how to use world global here? Wants an identifier, not a value
-    (display-to-file main output-path #:exists 'replace))
+  (let ([doc (time (render-through-eval source-dir `(begin (require pollen/cache)(cached-require ,source-path ',world:main-pollen-export))))]) ;; todo: how to use world global here? Wants an identifier, not a value
+    (display-to-file doc output-path #:exists 'replace))
   (store-render-in-mod-dates source-path) ; don't store mod date until render has completed!
   (rendered-message output-path))
 
@@ -269,6 +269,7 @@
   (match-define-values (_ template-name _) (split-path template-path))
   
   (set! source-name (->string source-name))
+    
   (define string-to-eval 
     `(begin 
        (require (for-syntax racket/base))
@@ -280,8 +281,8 @@
        ;; then fetch the other exports out of the cache.
        (require pollen/lang/inner-lang-helper)
        (require-project-require-files) 
-       (let ([main (cached-require ,source-name 'main)]
-             [metas (cached-require ,source-name 'metas)])
+       (let ([doc (cached-require ,source-name ',world:main-pollen-export)]
+             [metas (cached-require ,source-name ',world:meta-pollen-export)])
          (local-require pollen/debug pollen/ptree pollen/template pollen/top)
          (include-template #:command-char ,world:template-field-delimiter ,(->string template-name)))))
   

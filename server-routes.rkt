@@ -57,7 +57,7 @@
   ((complete-path?) (#:render boolean?) . ->* . txexpr?)
   (when wants-render (render path))
   (dynamic-rerequire path) ; stores module mod date; reloads if it's changed
-  (dynamic-require path 'main))
+  (dynamic-require path world:main-pollen-export))
 
 ;; todo: rewrite this test, obsolete since filename convention changed
 ;;(module+ test

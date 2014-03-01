@@ -28,7 +28,8 @@
 (define fallback-template "fallback.html.pt")
 (define template-meta-key "template")
 
-(define main-pollen-export 'main)
+(define main-pollen-export 'doc)
+(define meta-pollen-export 'metas)
 
 (define extras-dir (string->path "pollen-require"))
 

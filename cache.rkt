@@ -1,5 +1,5 @@
 #lang racket/base
-(require racket/rerequire)
+(require racket/rerequire "world.rkt")
 
 ;; The cache is a hash with paths as keys.
 ;; The cache values are also hashes, with key/value pairs for that path.
@@ -26,8 +26,8 @@
   (hash-set! (current-cache) path (make-hash))
   (define cache-hash (cache-ref path))
   (hash-set! cache-hash 'mod-time (file-or-directory-modify-seconds path))
-  (hash-set! cache-hash 'main (dynamic-require path 'main))
-  (hash-set! cache-hash 'metas (dynamic-require path 'metas))
+  (hash-set! cache-hash world:main-pollen-export (dynamic-require path world:main-pollen-export))
+  (hash-set! cache-hash world:meta-pollen-export (dynamic-require path world:meta-pollen-export))
   (void))
 
 (define (cached-require path-string key)

@@ -58,7 +58,7 @@
 (define+provide/contract (make-project-ptree project-dir)
   (directory-pathish? . -> . ptree?)
   (define ptree-source (build-path project-dir world:default-ptree))
-  (cached-require ptree-source 'main))
+  (cached-require ptree-source world:main-pollen-export))
 
 
 (module+ test

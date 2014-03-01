@@ -8,7 +8,7 @@
    (module inner pollen/lang/doclang-raw
      ;; doclang_raw is a version of scribble/doclang with the decoder disabled
      ;; first three lines are positional arguments for doclang-raw
-     main-raw ; id of export
+     doc-raw ; id of export
      (λ(x) x) ; post-process function
      () ; prepended exprs
      
@@ -40,22 +40,22 @@
    (define (split-metas-to-hash tx)
      ;; return tx without metas, and meta hash
      (define is-meta-element? (λ(x) (and (txexpr? x) (equal? 'meta (car x)))))
-     (define-values (main-without-metas meta-elements) 
+     (define-values (doc-without-metas meta-elements) 
        (splitf-txexpr tx is-meta-element?))
      (define meta-element->assoc (λ(x) (let ([key (car (caadr x))][value (cadr (caadr x))]) (cons key value))))
      (define metas (make-hash (map meta-element->assoc meta-elements)))
-     (values main-without-metas metas))
+     (values doc-without-metas metas))
    
-   (define main-txexpr `(placeholder-root 
+   (define doc-txexpr `(placeholder-root 
                          ,@(cons (meta 'here: inner-here) 
                                  (cons (meta 'here-path: inner-here-path) 
-                                       ;; cdr strips initial linebreak, but make sure main-raw isn't blank
-                                       (if (and (list? main-raw) (> 0 (length main-raw))) (cdr main-raw) main-raw))))) 
+                                       ;; cdr strips initial linebreak, but make sure doc-raw isn't blank
+                                       (if (and (list? doc-raw) (> 0 (length doc-raw))) (cdr doc-raw) doc-raw))))) 
    
-   (define-values (main-without-metas metas) (split-metas-to-hash main-txexpr))
+   (define-values (doc-without-metas metas) (split-metas-to-hash doc-txexpr))
    
    
-   ;; set up the 'main export
+   ;; set up the 'doc export
    (require pollen/decode)
 
    ;; set the parser mode based on reader mode
@@ -69,7 +69,7 @@
              [else world:reader-mode-preproc]))
          reader-mode))
       
-   (define main (apply (cond
+   (define doc (apply (cond
                          [(equal? parser-mode world:reader-mode-ptree) 
                           (λ xs (decode (cons world:ptree-root-node xs)
                                         #:xexpr-elements-proc (λ(xs) (filter (compose1 not (def/c whitespace?)) xs))))]
@@ -78,15 +78,15 @@
                          [(equal? parser-mode world:reader-mode-markup) root]
                          ;; for preprocessor output, just make a string.
                          [else (λ xs (apply string-append (map to-string xs)))])
-                       (cdr main-without-metas))) ;; cdr strips placeholder-root tag
+                       (cdr doc-without-metas))) ;; cdr strips placeholder-root tag
    
    
-   (provide metas main
+   (provide metas doc
             ;; hide the exports that were only for internal use.
-            (except-out (all-from-out 'inner) inner-here inner-here-path main-raw #%top))
+            (except-out (all-from-out 'inner) inner-here inner-here-path doc-raw #%top))
    
    ;; for output in DrRacket
    (module+ main
      (if (equal? parser-mode world:reader-mode-preproc)
-         (display main)
-         (print main)))))
+         (display doc)
+         (print doc)))))

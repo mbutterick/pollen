@@ -1,6 +1,6 @@
 #lang racket/base
 (require racket/contract racket/string xml xml/path)
-(require "tools.rkt" "ptree.rkt" "cache.rkt" sugar txexpr)
+(require "tools.rkt" "ptree.rkt" "cache.rkt" sugar txexpr "world.rkt")
 
 ;; setup for test cases
 (module+ test (require rackunit racket/path))
@@ -31,8 +31,8 @@
   (cond
     ;; Using put has no effect on txexprs. It's here to make the idiom smooth.
     [(txexpr? x) x] 
-    [(has-markup-source? x) (cached-require (->markup-source-path x) 'main)]
-    [(has-markup-source? (pnode->url x)) (cached-require (->markup-source-path (pnode->url x)) 'main)]))
+    [(has-markup-source? x) (cached-require (->markup-source-path x) world:main-pollen-export)]
+    [(has-markup-source? (pnode->url x)) (cached-require (->markup-source-path (pnode->url x)) world:main-pollen-export)]))
 
 #|(module+ test
   (check-equal? (put '(foo "bar")) '(foo "bar"))
@@ -43,7 +43,7 @@
 
 (define/contract (find query px)
   (query-key? (or/c #f puttable-item?) . -> . (or/c #f txexpr-element?))
-  (define result (and px (or (find-in-metas px query) (find-in-main px query))))
+  (define result (and px (or (find-in-metas px query) (find-in-doc px query))))
   (and result (car result))) ;; return false or first element
 
 #|
@@ -70,7 +70,7 @@
       (check-equal? here (list "tests/template/put")))))
 |#
 
-(define/contract (find-in-main px query) 
+(define/contract (find-in-doc px query) 
   (puttable-item? (or/c query-key? (listof query-key?)) 
                   . -> . (or/c  #f txexpr-elements?))
   (let* ([px (put px)]
@@ -83,8 +83,8 @@
 #|
 (module+ test
   (parameterize ([current-directory "tests/template"])
-    (check-false (find-in-main "put" "nonexistent-key"))
-    (check-equal? (find-in-main "put" "em") (list "One" "paragraph"))))
+    (check-false (find-in-doc "put" "nonexistent-key"))
+    (check-equal? (find-in-doc "put" "em") (list "One" "paragraph"))))
 |#
 
 ;; turns input into xexpr-elements so they can be spliced into template
