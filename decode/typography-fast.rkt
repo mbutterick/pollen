@@ -28,8 +28,8 @@
   (define dashes 
     ;; fix em dashes first, else they'll be mistaken for en dashes
     ;; [\\s ] is whitespace + nonbreaking space
-    '((#px"[\\s ]*(---|—)[\\s ]*" "—") ; em dash
-      (#px"[\\s ]*(--|–)[\\s ]*" "–"))) ; en dash
+    '((#px"[\\s ]*(---|—)[\\s ]*" "—") ; em dash
+      (#px"[\\s ]*(--|–)[\\s ]*" "–"))) ; en dash
   
   (define smart-quotes
     '((#px"(?<=\\w)'(?=\\w)" "’") ; apostrophe
@@ -48,11 +48,9 @@
     ((apply compose1 (reverse replacers)) str)))
 
 
-
 ;; insert nbsp between last two words
-(define (nonbreaking-last-space x 
-                                         #:nbsp [nbsp (->string #\u00A0)] 
-                                         #:minimum-word-length [minimum-word-length 6])
+(define (nonbreaking-last-space x #:nbsp [nbsp (->string #\u00A0)] 
+                                #:minimum-word-length [minimum-word-length 6])
   
   ;; todo: parameterize this, as it will be different for each project
   (define tags-to-pay-attention-to '(p aside)) ; only apply to paragraphs
@@ -60,25 +58,27 @@
   (define (replace-last-space str)
     (if (#\space . in? . str)
         (let ([reversed-str-list (reverse (string->list str))]
-              [reversed-nbsp (reverse (string->list nbsp))])
+              [reversed-nbsp (reverse (string->list (->string nbsp)))])
           (define-values (last-word-chars other-chars) 
             (splitf-at reversed-str-list (λ(i) (not (eq? i #\space)))))
-          (list->string (reverse (append last-word-chars 
-                                         ; OK for long words to be on their own line.
-                                         (if (< (len last-word-chars) minimum-word-length)
-                                             ; first char of other-chars will be the space, so use cdr
-                                             (append reversed-nbsp (cdr other-chars))
-                                             other-chars)))))
-        str))
+          
+          (define front-chars (if (< (len last-word-chars) minimum-word-length) ; OK for long words to be on their own line
+                                  ; first char of other-chars will be the space, so use cdr
+                                  (string-append (list->string (reverse (cdr other-chars))) (->string nbsp))
+                                  (list->string (reverse other-chars))))
+          `(,front-chars (span [[pollen "no-hyphens"]] ,(list->string (reverse last-word-chars)))))
+        (list str)))
   
   (define (find-last-word-space x) ; recursively traverse xexpr
     (cond
-      [(string? x) (replace-last-space x)] 
-      [(txexpr? x) 
+      [(string? x) (replace-last-space x)] ; todo: this assumes a paragraph only has one string in it.
+      [(txexpr? x)
        (let-values([(tag attr elements) (txexpr->values x)])
          (if (> (length elements) 0) ; elements is list of xexprs
              (let-values ([(all-but-last last) (split-at elements (sub1 (length elements)))]) 
-               (make-txexpr tag attr `(,@all-but-last ,(find-last-word-space (car last)))))
+               (define result (find-last-word-space (car last)))
+               (define result-items (if (txexpr? result) (list result) result)) ; might be txexpr, or list of new elements
+               (make-txexpr tag attr `(,@all-but-last ,@result-items)))
              x))]
       [else x]))
   
@@ -87,14 +87,12 @@
       x))
 
 
-
-
 ; wrap initial quotes for hanging punctuation
 ; todo: improve this
 ; does not handle <p>“<em>thing</em> properly
 (define (wrap-hanging-quotes nx 
-                                      #:single-prepend [single-pp '(squo)]
-                                      #:double-prepend  [double-pp '(dquo)])
+                             #:single-prepend [single-pp '(squo)]
+                             #:double-prepend  [double-pp '(dquo)])
   
   (define two-or-more-char-string? (λ(i) (and (string? i) (>= (len i) 2))))
   (define-values (tag attr elements) (txexpr->values nx))

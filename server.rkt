@@ -33,6 +33,7 @@
   
   (parameterize ([world:current-module-root (world:current-module-root)]
                  [world:current-server-extras-path (world:current-server-extras-path)]
+                 [error-print-width 1000]
                  [current-cache (make-cache)])
     (serve/servlet pollen-servlet
                    #:port world:server-port
