@@ -32,7 +32,8 @@
 
 (define (store-render-in-mod-dates . rest-paths)
   (define key (make-mod-dates-key rest-paths))
-  (hash-set! mod-dates key (map path->mod-date-value key)))
+  (report key)
+  (hash-set! mod-dates key (report (map path->mod-date-value key))))
 
 (module+ test
   (reset-mod-dates)
@@ -136,7 +137,7 @@
     (or
      force-render 
      (not (file-exists? output-path))
-     (mod-date-expired? source-path)
+     (report (mod-date-expired? source-path))
      (let ([source-reloaded? (handle-source-rerequire source-path)])
        source-reloaded?)))
   
