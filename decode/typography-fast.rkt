@@ -27,9 +27,9 @@
   ;; just store the query strings + replacement strings
   (define dashes 
     ;; fix em dashes first, else they'll be mistaken for en dashes
-    ;; [\\s ] is whitespace + nonbreaking space
-    '((#px"[\\s ]*(---|—)[\\s ]*" "—") ; em dash
-      (#px"[\\s ]*(--|–)[\\s ]*" "–"))) ; en dash
+    ;; [\\s ] is whitespace + #\u00A0 is nonbreaking space
+    '((#px"[\\s#\u00A0]*(---|—)[\\s#\u00A0]*" "—") ; em dash
+      (#px"[\\s#\u00A0]*(--|–)[\\s#\u00A0]*" "–"))) ; en dash
   
   (define smart-quotes
     '((#px"(?<=\\w)'(?=\\w)" "’") ; apostrophe
