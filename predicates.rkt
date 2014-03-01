@@ -1,6 +1,6 @@
 #lang racket/base
 (require racket/contract racket/match racket/set)
-(require chirp/html sugar txexpr)
+(require css-tools/html sugar txexpr)
 (require "world.rkt" "file-tools.rkt" "debug.rkt")
 
 (provide (all-from-out "file-tools.rkt"))
