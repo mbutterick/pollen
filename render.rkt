@@ -5,19 +5,6 @@
 
 (module+ test (require rackunit))
 
-(define-syntax (define+provide+safe stx)
-  (syntax-case stx ()
-    [(_ (proc arg ... . rest-arg) contract body ...)
-     #'(define+provide+safe proc contract
-         (λ(arg ... . rest-arg) body ...))]
-    [(_ name contract body ...)
-     #'(begin
-         (define name body ...)
-         (provide name)
-         (module+ safe 
-           (provide (contract-out [name contract]))))]))
-
-
 ;; for shared use by eval & system
 (define nowhere-port (open-output-nowhere))
 
@@ -197,7 +184,7 @@
        (copy-file (build-path (world:current-server-extras-path) world:fallback-template) ft-path #t)
        ft-path)))
   
-  (render template-path #:force force-render) ; bc template might have its own preprocessor source
+  (render template-path #:force force-render) ; because template might have its own preprocessor source
   
   
   ;; 2) Render the source file with template, if needed.

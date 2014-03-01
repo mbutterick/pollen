@@ -6,8 +6,8 @@
 (module+ test (require rackunit racket/path))
 
 (provide (all-defined-out))
-(require sugar/scribble sugar/coerce)
-(provide (all-from-out sugar/scribble sugar/coerce))
+(require sugar/scribble sugar/coercion/values)
+(provide (all-from-out sugar/scribble sugar/coercion/values))
 
 
 ;; todo: docstrings for this subsection
@@ -118,5 +118,8 @@
 
 
 
+(define/contract (->html x)
+  (txexpr? . -> . string?)
+  (txexpr->html x))
 
 

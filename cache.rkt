@@ -1,6 +1,6 @@
 #lang racket/base
 (require racket/rerequire)
-(require "debug.rkt" sugar/coerce)
+(require "debug.rkt" sugar/coercion/values)
 
 ;; The cache is a hash with paths as keys.
 ;; The cache values are also hashes, with key/value pairs for that path.
