@@ -3,8 +3,17 @@
 (require "../tools.rkt" "../predicates.rkt" sugar txexpr)
 
 
-(provide (all-defined-out))
-
+(provide (contract-out 
+          [typogrify (string? . -> . string?)]
+          [nonbreaking-last-space ((txexpr?) (#:nbsp string? #:minimum-word-length integer?) . ->* . txexpr?)]
+          [wrap-hanging-quotes ((txexpr?) (#:single-prepend list? #:double-prepend list?) . ->* . txexpr?)]
+          [convert-linebreaks ((txexpr-elements?) (#:newline string?) . ->* . txexpr-elements?)]
+          [whitespace? (any/c . -> . boolean?)]
+          [paragraph-break? ((any/c) (#:pattern pregexp?) . ->* . boolean?)]
+          [merge-newlines (list? . -> . list?)]
+          [prep-paragraph-flow (txexpr-elements? . -> . txexpr-elements?)]
+          [wrap-paragraph ((txexpr-elements?) (#:tag symbol?) . ->* . block-xexpr?)]
+          [detect-paragraphs (txexpr-elements? . -> . txexpr-elements?)]))
 
 ;; This module is a library of functions to be used in building pollen decoders.
 
