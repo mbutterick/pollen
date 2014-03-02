@@ -1,7 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base))
-(require racket/port racket/file racket/rerequire racket/path)
-(require sugar)
+(require racket/port racket/file racket/rerequire racket/path racket/list racket/match)
+(require sugar "file-tools.rkt" "cache.rkt" "world.rkt" "debug.rkt" "ptree.rkt" "project-requires.rkt")
 
 (module+ test (require rackunit))
 
@@ -203,36 +203,39 @@
   (let ([ft-path (build-path source-dir world:fallback-template)]) ; delete fallback template if needed
     (when (file-exists? ft-path) (delete-file ft-path))))
 
-;; cache some modules inside this namespace so they can be shared by namespace for eval
-;; todo: macrofy this to avoid repeating names
-(require web-server/templates 
-         xml
-         racket/port 
-         racket/file 
-         racket/rerequire 
-         racket/contract 
-         racket/list
-         racket/match
-         pollen/debug
-         pollen/decode
-         ;;         pollen/file-tools
-         ;; not pollen/main, because it brings in pollen/top
-         pollen/lang/inner-lang-helper
-         pollen/predicates ;; exports file-tools
-         pollen/ptree
-         pollen/cache
-         sugar
-         txexpr
-         pollen/template
-         pollen/tools
-         ;; not pollen/top, because we don't want it in the current ns
-         pollen/world
-         pollen/project-requires)
-;; cache project requires in this ns.
-;; This means changes to project requires require server restart.
-;; But this seems mandatory anyhow because no dynamic-rerequire for whole module.
-(require-project-require-files) 
-(define original-ns (current-namespace))
+;; cache some modules inside a separate namespace 
+;; to speed up for eval
+
+(module my-module-cache racket/base
+  (require web-server/templates 
+           xml
+           racket/port 
+           racket/file 
+           racket/rerequire 
+           racket/contract 
+           racket/list
+           racket/match
+           pollen/debug
+           pollen/decode
+           pollen/file-tools
+           pollen/main
+           pollen/lang/inner-lang-helper
+           pollen/predicates
+           pollen/ptree
+           pollen/cache
+           sugar
+           txexpr
+           pollen/template
+           pollen/tools
+           pollen/world
+           pollen/project-requires)
+  (require-project-require-files)
+  (define-namespace-anchor my-module-cache-ns-anchor)
+  (provide my-module-cache-ns-anchor))
+
+(require 'my-module-cache)
+(define cache-ns (namespace-anchor->namespace my-module-cache-ns-anchor))
+
 
 (define (render-through-eval base-dir eval-string)
   (parameterize ([current-namespace (make-base-namespace)]
@@ -240,7 +243,7 @@
                  [current-output-port (current-error-port)]
                  [current-ptree (make-project-ptree (world:current-project-root))]
                  [current-url-context (world:current-project-root)])
-    (for-each (λ(mod-name) (namespace-attach-module original-ns mod-name)) 
+    (for-each (λ(mod-name) (namespace-attach-module cache-ns mod-name)) 
               `(web-server/templates 
                 xml
                 racket/port 
@@ -271,7 +274,7 @@
   (match-define-values (_ template-name _) (split-path template-path))
   
   (set! source-name (->string source-name))
-    
+  
   (define string-to-eval 
     `(begin 
        (require (for-syntax racket/base))
@@ -297,8 +300,8 @@
     (render
      (string->path "/Users/mb/git/bpt/test.html.pm")
      )))
-
 |#
+
 
 
 (define (render-files-in-ptree ptree #:force [force #f])    
