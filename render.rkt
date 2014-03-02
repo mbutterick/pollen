@@ -102,7 +102,7 @@
   (message "Rendered" (->string (file-name-from-path path))))
 
 (define (up-to-date-message path)
-  (message (->string (file-name-from-path path)) "is up to date, using cached copy"))
+  (message (->string (file-name-from-path path)) "is up to date, using existing copy"))
 
 (define (render-null-source path #:force force)
   ;; this op is trivial & fast, so do it every time.
@@ -153,7 +153,7 @@
                  [current-error-port port-for-catching-file-info])
     (dynamic-rerequire source-path))
   ;; if the file needed to be reloaded, there will be a message in the port
-  (->boolean (> (len (get-output-string port-for-catching-file-info)) 0)))
+  (> (len (get-output-string port-for-catching-file-info)) 0))
 
 
 (define (render-markup path [template-name #f] #:force [force-render #f]) 
@@ -203,8 +203,8 @@
   (let ([ft-path (build-path source-dir world:fallback-template)]) ; delete fallback template if needed
     (when (file-exists? ft-path) (delete-file ft-path))))
 
-;; cache some modules inside a separate namespace 
-;; to speed up for eval
+;; cache some modules to speed up eval.
+;; Do it in separate module so as not to pollute this one.
 
 (module my-module-cache racket/base
   (require web-server/templates 
@@ -279,11 +279,6 @@
     `(begin 
        (require (for-syntax racket/base))
        (require web-server/templates pollen/cache)
-       ;; we could require the source-name directly,
-       ;; and get its exports and also the project-requires transitively.
-       ;; but this is slow.
-       ;; So do it separately: require the project require files on their own,
-       ;; then fetch the other exports out of the cache.
        (require pollen/lang/inner-lang-helper)
        (require-project-require-files) 
        (let ([doc (cached-require ,source-name ',world:main-pollen-export)]
