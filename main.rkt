@@ -35,9 +35,22 @@
    
    (require 'inner)
    
+   ;; set the parser mode based on reader mode
+   (define parser-mode 
+     (if (equal? reader-mode world:reader-mode-auto)
+         (let* ([file-ext-pattern (pregexp "\\w+$")]
+                [here-ext (string->symbol (car (regexp-match file-ext-pattern inner-here-path)))])
+           (cond
+             [(equal? here-ext world:ptree-source-ext) world:reader-mode-ptree]
+             [(equal? here-ext world:markup-source-ext) world:reader-mode-markup]
+             [(equal? here-ext world:markdown-source-ext) world:reader-mode-markdown]
+             [else world:reader-mode-preproc]))
+         reader-mode))
+   
+   
    ;; Split out the metas.   
    (require txexpr)   
-   (define (split-metas-to-hash tx)
+   (define (split-metas-to-hash tx) ; helper function
      ;; return tx without metas, and meta hash
      (define is-meta-element? (λ(x) (and (txexpr? x) (equal? 'meta (car x)))))
      (define-values (doc-without-metas meta-elements) 
@@ -47,7 +60,7 @@
      (values doc-without-metas metas))
    
    (define doc-txexpr 
-     (let ([doc-raw (if (equal? reader-mode world:reader-mode-markdown)
+     (let ([doc-raw (if (equal? parser-mode world:reader-mode-markdown)
                         (apply (compose1 (dynamic-require 'markdown 'parse-markdown) string-append) doc-raw)
                         doc-raw)])
        `(placeholder-root 
@@ -55,33 +68,20 @@
                  (cons (meta 'here-path: inner-here-path) 
                        ;; cdr strips initial linebreak, but make sure doc-raw isn't blank
                        (if (and (list? doc-raw) (> 0 (length doc-raw))) (cdr doc-raw) doc-raw)))))) 
-
+   
    (define-values (doc-without-metas metas) (split-metas-to-hash doc-txexpr))
    
    
    ;; set up the 'doc export
    (require pollen/decode)
-   
-   ;; set the parser mode based on reader mode
-   (define parser-mode 
-     (if (reader-mode . equal? . world:reader-mode-auto)
-         (let* ([file-ext-pattern (pregexp "\\w+$")]
-                [here-ext (car (regexp-match file-ext-pattern inner-here-path))])
-           (cond
-             [(equal? (string->symbol here-ext) world:ptree-source-ext) world:reader-mode-ptree]
-             [(equal? (string->symbol here-ext) world:markup-source-ext) world:reader-mode-markup]
-             [(equal? (string->symbol here-ext) world:markdown-source-ext) 'apply-root]
-             [else world:reader-mode-preproc]))
-         reader-mode))
-   
    (define doc (apply (cond
                         [(equal? parser-mode world:reader-mode-ptree) 
                          (λ xs (decode (cons world:ptree-root-node xs)
                                        #:xexpr-elements-proc (λ(xs) (filter (compose1 not (def/c whitespace?)) xs))))]
                         ;; 'root is the hook for the decoder function.
                         ;; If it's not a defined identifier, it just hits #%top and becomes `(root ,@body ...)
-                        [(equal? parser-mode world:reader-mode-markup) root]
-                        [(equal? parser-mode world:reader-mode-markdown) (λ xs `(root ,@xs))] ; do nothing, it's already decoded
+                        [(or (equal? parser-mode world:reader-mode-markup)
+                             (equal? parser-mode world:reader-mode-markdown)) root]
                         ;; for preprocessor output, just make a string.
                         [else (λ xs (apply string-append (map to-string xs)))])
                       (cdr doc-without-metas))) ;; cdr strips placeholder-root tag
