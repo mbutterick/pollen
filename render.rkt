@@ -15,10 +15,7 @@
 
 
 (define (make-mod-dates-key paths)
-  ;; project require files are appended to the mod-date path key.
-  ;; Why? So a change in a require file will trigger a render 
-  (define project-require-files (or (get-project-require-files) empty))
-  (flatten (append paths project-require-files)))
+  (flatten paths))
 
 
 (define (path->mod-date-value path)
@@ -32,8 +29,7 @@
 
 (define (store-render-in-mod-dates . rest-paths)
   (define key (make-mod-dates-key rest-paths))
-  (report key)
-  (hash-set! mod-dates key (report (map path->mod-date-value key))))
+  (hash-set! mod-dates key (map path->mod-date-value key)))
 
 (module+ test
   (reset-mod-dates)
@@ -137,7 +133,7 @@
     (or
      force-render 
      (not (file-exists? output-path))
-     (report (mod-date-expired? source-path))
+     (mod-date-expired? source-path)
      (let ([source-reloaded? (handle-source-rerequire source-path)])
        source-reloaded?)))
   
@@ -232,6 +228,10 @@
          ;; not pollen/top, because we don't want it in the current ns
          pollen/world
          pollen/project-requires)
+;; cache project requires in this ns.
+;; This means changes to project requires require server restart.
+;; But this seems mandatory anyhow because no dynamic-rerequire for whole module.
+(require-project-require-files) 
 (define original-ns (current-namespace))
 
 (define (render-through-eval base-dir eval-string)
@@ -241,7 +241,7 @@
                  [current-ptree (make-project-ptree (world:current-project-root))]
                  [current-url-context (world:current-project-root)])
     (for-each (λ(mod-name) (namespace-attach-module original-ns mod-name)) 
-              '(web-server/templates 
+              `(web-server/templates 
                 xml
                 racket/port 
                 racket/file 
@@ -260,7 +260,8 @@
                 pollen/template
                 pollen/tools
                 pollen/world
-                pollen/project-requires))   
+                pollen/project-requires 
+                ,@(get-project-require-files)))   
     (eval eval-string (current-namespace))))
 
 
