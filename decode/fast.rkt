@@ -9,7 +9,7 @@
 (define (to-string x)
   (if (string? x)
       x ; fast exit for strings
-      (with-handlers  ([exn:fail? (λ(exn) (error (format "Pollen parser: can't convert ~a to ~a" x 'string)))])
+      (with-handlers  ([exn:fail? (λ(exn) (error (format "Pollen parser: can't convert ~v to ~a" x 'string)))])
         (cond
           [(equal? '() x) ""]
           [(symbol? x) (symbol->string x)]
