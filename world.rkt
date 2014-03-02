@@ -6,6 +6,7 @@
 
 (define preproc-source-ext 'pp)
 (define markup-source-ext 'pm)
+(define markdown-source-ext 'pmd)
 (define null-source-ext 'p)
 (define ptree-source-ext 'ptree)
 (define template-source-ext 'pt)
@@ -13,6 +14,7 @@
 (define reader-mode-auto 'auto)
 (define reader-mode-preproc 'pre)
 (define reader-mode-markup 'markup)
+(define reader-mode-markdown 'markdown)
 (define reader-mode-ptree 'ptree)
 
 (define decodable-extensions (list markup-source-ext ptree-source-ext))

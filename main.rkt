@@ -66,6 +66,7 @@
            (cond
              [(equal? (string->symbol here-ext) world:ptree-source-ext) world:reader-mode-ptree]
              [(equal? (string->symbol here-ext) world:markup-source-ext) world:reader-mode-markup]
+             [(equal? (string->symbol here-ext) world:markdown-source-ext) world:reader-mode-markdown]
              [else world:reader-mode-preproc]))
          reader-mode))
       
@@ -76,6 +77,7 @@
                          ;; 'root is the hook for the decoder function.
                          ;; If it's not a defined identifier, it just hits #%top and becomes `(root ,@body ...)
                          [(equal? parser-mode world:reader-mode-markup) root]
+                         [(equal? parser-mode world:reader-mode-markdown) (compose1 (λ(x) `(root ,@x)) (dynamic-require 'markdown 'parse-markdown) string-append)]
                          ;; for preprocessor output, just make a string.
                          [else (λ xs (apply string-append (map to-string xs)))])
                        (cdr doc-without-metas))) ;; cdr strips placeholder-root tag
