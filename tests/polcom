@@ -1,3 +1,0 @@
-#! /usr/bin/racket
-#lang racket/base
-(require (planet mb/pollen/command))

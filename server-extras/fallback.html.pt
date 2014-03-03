@@ -1,1 +1,1 @@
-◊(->html (html (head (meta 'charset: "UTF-8")) (body "Rendered without template:" (hr) main)))
+◊(->html (html (head (meta 'charset: "UTF-8")) (body "Rendered without template:" (hr) doc)))
