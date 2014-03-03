@@ -120,7 +120,7 @@
 
 (define/contract (render-markup-source source-path [maybe-template-path #f]) 
   ((complete-path?) ((or/c #f complete-path?)) . ->* . bytes?)
-  (match-define-values (source-dir _ _) (split-path source-path)) ; todo: this won't work with source files nested down one level
+  (match-define-values (source-dir _ _) (split-path source-path))
   (define template-path (or maybe-template-path (get-template-for source-path)))
   (render-for-dev-server template-path) ; because template might have its own preprocessor source
   
@@ -156,7 +156,7 @@
                           (let ([source-metas (cached-require source-path 'metas)])
                             (and (world:template-meta-key . in? . source-metas)
                                  (build-path source-dir (get source-metas world:template-meta-key))))) ; path based on metas
-                        (build-path source-dir 
+                        (build-path (world:current-project-root) 
                                     (add-ext (add-ext world:default-template-prefix (get-ext (->output-path source-path))) world:template-source-ext))))) ; path to default template
         (build-path (world:current-server-extras-path) world:fallback-template)))) ; fallback template
 
