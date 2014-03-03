@@ -55,7 +55,7 @@
 ;; extract main xexpr from a path
 (define/contract (file->xexpr path #:render [wants-render #t])
   ((complete-path?) (#:render boolean?) . ->* . txexpr?)
-  (when wants-render (render path))
+  (when wants-render (render-for-dev-server path))
   (dynamic-rerequire path) ; stores module mod date; reloads if it's changed
   (dynamic-require path world:main-pollen-export))
 
@@ -67,7 +67,7 @@
 ;; just file->string with a render option
 (define/contract (slurp path #:render [wants-render #t])
   ((complete-path?) (#:render boolean?) . ->* . string?) 
-  (when wants-render (render path))
+  (when wants-render (render-for-dev-server path))
   (file->string path))
 
 (module+ test
@@ -225,7 +225,7 @@
 (define (route-default req)  
   (logger req)
   (define force (equal? (get-query-value (request-uri req) 'force) "true"))
-  (render (req->path req) #:force force)
+  (render-for-dev-server (req->path req) #:force force)
   (next-dispatcher))
 
 
