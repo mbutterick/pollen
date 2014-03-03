@@ -14,7 +14,3 @@
        ;; #:build? option returns complete paths (instead of just file names)
        (let ([files (filter project-require-file? (directory-list extras-directory #:build? #t))])
          (and (not (equal? null files)) files))))
-
-(module+ main
-(parameterize ([world:current-project-root (string->path "/Users/mb/git/bpt/")])
-  (get-project-require-files)))

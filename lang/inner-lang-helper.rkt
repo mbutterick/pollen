@@ -1,25 +1,9 @@
 #lang racket/base
-(require (for-syntax racket/base))
+(require (for-syntax racket/base "../project-requires.rkt"))
 
 (provide (all-defined-out))
 
 ;; A place to stash functions that don't change between compiles of Pollen files.
-
-;; duplicate of contents of project-require.rkt.
-;; Goes faster if it's not in a separate module.
-;; todo: use include? But this one has to be available as syntax
-;; todo: get rid of magic value
-(define-for-syntax (project-require-file? path)
-  (define path-string (path->string path))
-  (equal? (substring path-string (- (string-length path-string) 3) (string-length path-string)) "rkt"))
-
-;; list of all eligible requires in project require directory
-(define-for-syntax (get-project-require-files)
-  (define extras-directory (build-path (current-directory) "pollen-require"))
-  (and (directory-exists? extras-directory)
-       ;; #:build? option returns complete paths (instead of just file names)
-       (let ([files (filter project-require-file? (directory-list extras-directory #:build? #t))])
-         (and (not (equal? '() files)) files))))
 
 (define-for-syntax (put-file-in-require-form file)
   `(file ,(path->string file)))
