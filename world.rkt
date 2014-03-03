@@ -19,7 +19,7 @@
 
 (define decodable-extensions (list markup-source-ext ptree-source-ext))
 
-(define default-ptree "main.ptree")
+(define default-ptree "index.ptree")
 (define ptree-root-node 'ptree-root)
 
 (define template-source-prefix "-")
