@@ -1,5 +1,5 @@
 #lang racket/base
-(require (for-syntax racket/base "../project-requires.rkt"))
+(require (for-syntax racket/base pollen/project-requires))
 
 (provide (all-defined-out))
 
