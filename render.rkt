@@ -88,7 +88,7 @@
   (define render-needed? 
     (or force 
         (not (file-exists? (or output-path (->output-path source-path))))
-        (mod-date-expired? source-path)
+        (mod-date-expired? source-path) ; todo: markup takes template path as key
         (source-needs-rerequire? source-path)))
   
   (if render-needed?
