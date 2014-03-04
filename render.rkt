@@ -118,16 +118,11 @@
           (render-through-eval `(begin (require pollen/cache)(cached-require ,source-path ',world:main-pollen-export))))))
 
 
-(require racket/rerequire)
-
 (define/contract (render-markup-source source-path [maybe-template-path #f]) 
   ((complete-path?) ((or/c #f complete-path?)) . ->* . bytes?)
   (match-define-values (source-dir _ _) (split-path source-path))
   (define template-path (or maybe-template-path (get-template-for source-path)))
   (render-for-dev-server template-path) ; because template might have its own preprocessor source
-  
-  (displayln "REREQ!")
-  (dynamic-rerequire (string->path "/Users/mb/git/bpt/pollen-require/bpt-elements.rkt"))
   
   (define expr-to-eval 
     `(begin 
@@ -205,7 +200,7 @@
            pollen/tools
            pollen/world
            pollen/project-requires)
-  ;  (require-project-require-files)
+  (require-project-require-files)
   (define-namespace-anchor my-module-cache-ns-anchor)
   (provide my-module-cache-ns-anchor))
 
@@ -241,5 +236,5 @@
                 pollen/tools
                 pollen/world
                 pollen/project-requires 
-                ))   
+                ,@(get-project-require-files)))   
     (string->bytes/utf-8 (eval expr-to-eval (current-namespace)))))
