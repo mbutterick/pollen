@@ -3,8 +3,18 @@
 (provide (except-out (all-from-out racket/base) #%module-begin)
          (rename-out [new-module-begin #%module-begin]))
 
+(require pollen/lang/inner-lang-helper)
+
 (define-syntax-rule (new-module-begin body-exprs ...)
   (#%module-begin
+   
+      ; this is here only so that dynamic-rerequire of a pollen module
+   ; transitively reloads the extras also.
+   ; if this isn't here, then dynamic-rerequire can't see them
+   ; and thus they are not tracked for changes.
+   
+   (require-project-require-files)
+   
    (module inner pollen/lang/doclang-raw
      ;; doclang_raw is a version of scribble/doclang with the decoder disabled
      ;; first three lines are positional arguments for doclang-raw
