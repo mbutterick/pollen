@@ -69,11 +69,23 @@
   (file-proc source-or-output-path))
 
 
+(define (project-requires-changed?)
+  (define changed? (ormap file-needs-rerequire? (get-project-require-files)))
+  (when changed?
+    (begin
+      (message "render: project requires have changed, resetting cache")
+      (current-cache (make-cache))
+      ;; also need to dirty up the mod-dates table so existing files are deemed invalid
+      (reset-modification-dates)))
+  changed?)
+
+
 (define/contract (render-needed? source-path template-path output-path)
   (complete-path? (or/c #f complete-path?) complete-path? . -> . boolean?)
   (or (not (file-exists? output-path))
-      (modification-date-expired? source-path template-path)
-      (and (not (null-source? source-path)) (source-needs-rerequire? source-path))))
+      (report (modification-date-expired? source-path template-path))
+      (and (not (null-source? source-path)) (file-needs-rerequire? source-path))
+      (project-requires-changed?)))
 
 
 (define/contract+provide (render-to-file-if-needed source-or-output-path #:force [force #f])
@@ -124,6 +136,7 @@
   (define template-path (or maybe-template-path (get-template-for source-path)))
   (render-for-dev-server template-path) ; because template might have its own preprocessor source
   
+  
   (define expr-to-eval 
     `(begin 
        (require (for-syntax racket/base))
@@ -161,7 +174,7 @@
         (build-path (world:current-server-extras-path) world:fallback-template)))) ; fallback template
 
 
-(define/contract (source-needs-rerequire? source-path)
+(define/contract (file-needs-rerequire? source-path)
   (complete-path? . -> . boolean?)
   (define-values (source-dir source-name _) (split-path source-path))
   ;; use dynamic-rerequire now to force render for cached-require later,
@@ -177,6 +190,8 @@
 ;; cache some modules to speed up eval.
 ;; Do it in separate module so as not to pollute this one.
 ;; todo: macrofy these lists of modules
+;; Don't, however, put the project-requires here,
+;; because they will no longer be subject to rerequire.
 (module my-module-cache racket/base
   (require web-server/templates 
            xml
@@ -200,7 +215,6 @@
            pollen/tools
            pollen/world
            pollen/project-requires)
-  (require-project-require-files)
   (define-namespace-anchor my-module-cache-ns-anchor)
   (provide my-module-cache-ns-anchor))
 
@@ -235,6 +249,5 @@
                 pollen/template
                 pollen/tools
                 pollen/world
-                pollen/project-requires 
-                ,@(get-project-require-files)))   
+                pollen/project-requires))   
     (string->bytes/utf-8 (eval expr-to-eval (current-namespace)))))
