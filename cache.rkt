@@ -4,13 +4,15 @@
 ;; The cache is a hash with paths as keys.
 ;; The cache values are also hashes, with key/value pairs for that path.
 
-(provide current-cache make-cache cached-require cache-ref)
+(provide reset-cache current-cache make-cache cached-require cache-ref)
 
 ;; Don't initialize a cache when the module is loaded. This induces reliance.
 ;; The cache only makes sense if a single one is used across a whole session (e.g., via parameterize).
 (define current-cache (make-parameter #f))
 
 (define (make-cache) (make-hash))
+
+(define (reset-cache) (hash-clear! (current-cache)))
 
 (define (->complete-path path-string)
   (path->complete-path (if (string? path-string) (string->path path-string) path-string)))

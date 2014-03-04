@@ -70,21 +70,20 @@
 
 
 (define (project-requires-changed?)
-  (define changed? (ormap file-needs-rerequire? (get-project-require-files)))
+  (define changed? (ormap (λ(x) x) (map file-needed-rerequire? (get-project-require-files)))) ; make sure all files are rerequired before test
   (when changed?
     (begin
-      (message "render: project requires have changed, resetting cache")
-      (current-cache (make-cache))
-      ;; also need to dirty up the mod-dates table so existing files are deemed invalid
-      (reset-modification-dates)))
+      (message "render: project requires have changed, resetting cache & file-modification table")
+      (reset-cache)
+      (reset-modification-dates))) ; mark existing files as obsolete
   changed?)
 
 
 (define/contract (render-needed? source-path template-path output-path)
   (complete-path? (or/c #f complete-path?) complete-path? . -> . boolean?)
   (or (not (file-exists? output-path))
-      (report (modification-date-expired? source-path template-path))
-      (and (not (null-source? source-path)) (file-needs-rerequire? source-path))
+      (modification-date-expired? source-path template-path)
+      (and (not (null-source? source-path)) (file-needed-rerequire? source-path))
       (project-requires-changed?)))
 
 
@@ -174,7 +173,7 @@
         (build-path (world:current-server-extras-path) world:fallback-template)))) ; fallback template
 
 
-(define/contract (file-needs-rerequire? source-path)
+(define/contract (file-needed-rerequire? source-path)
   (complete-path? . -> . boolean?)
   (define-values (source-dir source-name _) (split-path source-path))
   ;; use dynamic-rerequire now to force render for cached-require later,
