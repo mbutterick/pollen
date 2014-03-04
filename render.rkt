@@ -70,13 +70,14 @@
 
 
 (define (project-requires-changed?)
-  (define changed? (ormap (λ(x) x) (map file-needed-rerequire? (get-project-require-files)))) ; make sure all files are rerequired before test
-  (when changed?
+  (define rerequire-results (map file-needed-rerequire? (get-project-require-files)))
+  (define requires-changed? (ormap (λ(x) x) rerequire-results))
+  (when requires-changed?
     (begin
       (message "render: project requires have changed, resetting cache & file-modification table")
-      (reset-cache)
-      (reset-modification-dates))) ; mark existing files as obsolete
-  changed?)
+      (reset-cache) ; because stored data is obsolete
+      (reset-modification-dates))) ; because rendered files are obsolete
+  requires-changed?)
 
 
 (define/contract (render-needed? source-path template-path output-path)
@@ -84,7 +85,7 @@
   (or (not (file-exists? output-path))
       (modification-date-expired? source-path template-path)
       (and (not (null-source? source-path)) (file-needed-rerequire? source-path))
-      (project-requires-changed?)))
+      (and (world:check-project-requires-in-render?) (project-requires-changed?))))
 
 
 (define/contract+provide (render-to-file-if-needed source-or-output-path #:force [force #f])
