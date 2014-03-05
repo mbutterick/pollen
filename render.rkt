@@ -49,12 +49,13 @@
   (for-each render-to-file-if-needed xs))
 
 
-(define/contract+provide (render-for-dev-server pathish #:force [force #f])
+(define/contract+provide (render-for-dev-server so-pathish #:force [force #f])
   ((pathish?) (#:force boolean?) . ->* . void?)
-  (let ([so-path (->complete-path pathish)])  ; so-path = source or output path (could be either) 
+  (let ([so-path (->complete-path so-pathish)])  ; so-path = source or output path (could be either) 
     (cond
-      [(ormap (λ(test) (and (test so-path) (render-to-file-if-needed so-path #:force force)))
-              (list has/is-null-source? has/is-preproc-source? has/is-markup-source? has/is-scribble-source?))]
+      [(ormap (λ(test) (test so-path)) (list has/is-null-source? has/is-preproc-source? has/is-markup-source? has/is-scribble-source?)) 
+       (let-values ([(source-path output-path) (->source+output-paths so-path)])
+         (render-to-file-if-needed source-path output-path #:force force))]
       [(ptree-source? so-path) (let ([ptree (cached-require so-path world:main-pollen-export)])
                                  (for-each (λ(pnode) (render-for-dev-server pnode #:force force)) (ptree->list ptree)))]))
   (void))
@@ -89,12 +90,20 @@
       (and (world:check-project-requires-in-render?) (project-requires-changed?))))
 
 
+(define/contract+provide (render-to-file-if-needed source-path [template-path #f] [maybe-output-path #f] #:force [force #f])
+  ((complete-path?) ((or/c #f complete-path?) (or/c #f complete-path?) #:force boolean?) . ->* . void?)  
+  (define output-path (or maybe-output-path (->output-path (report source-path))))
+  (define template-path (get-template-for source-path))
+  (when (or force (render-needed? source-path template-path output-path))
+    (render-to-file source-path template-path output-path)))
+
+#|
 (define/contract+provide (render-to-file-if-needed source-or-output-path #:force [force #f])
   ((complete-path?) (#:force boolean?) . ->* . void?)  
   (define-values (source-path output-path) (->source+output-paths source-or-output-path))
   (define template-path (get-template-for source-path))
   (when (or force (render-needed? source-path template-path output-path))
-    (render-to-file source-path template-path output-path)))
+    (render-to-file source-path template-path output-path)))|#
 
 
 (define/contract+provide (render-to-file source-path [template-path #f] [maybe-output-path #f])
