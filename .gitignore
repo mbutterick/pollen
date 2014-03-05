@@ -15,5 +15,7 @@ Icon
 .Trashes
 
 # generated documentation
-scribblings/pollen/*
 doc/*
+scribblings/*.js
+scribblings/*.css
+scribblings/*.html
