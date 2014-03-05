@@ -97,14 +97,6 @@
   (when (or force (render-needed? source-path template-path output-path))
     (render-to-file source-path template-path output-path)))
 
-#|
-(define/contract+provide (render-to-file-if-needed source-or-output-path #:force [force #f])
-  ((complete-path?) (#:force boolean?) . ->* . void?)  
-  (define-values (source-path output-path) (->source+output-paths source-or-output-path))
-  (define template-path (get-template-for source-path))
-  (when (or force (render-needed? source-path template-path output-path))
-    (render-to-file source-path template-path output-path)))|#
-
 
 (define/contract+provide (render-to-file source-path [template-path #f] [maybe-output-path #f])
   ((complete-path?) ((or/c #f complete-path?) (or/c #f complete-path?)) . ->* . void?)
