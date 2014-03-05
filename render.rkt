@@ -54,7 +54,7 @@
   (let ([so-path (->complete-path pathish)])  ; so-path = source or output path (could be either) 
     (cond
       [(ormap (λ(test) (and (test so-path) (render-to-file-if-needed so-path #:force force)))
-              (list has/is-null-source? has/is-preproc-source? has/is-markup-source?))]
+              (list has/is-null-source? has/is-preproc-source? has/is-markup-source? has/is-scribble-source?))]
       [(ptree-source? so-path) (let ([ptree (cached-require so-path world:main-pollen-export)])
                                  (for-each (λ(pnode) (render-for-dev-server pnode #:force force)) (ptree->list ptree)))]))
   (void))
@@ -64,8 +64,8 @@
   (complete-path? . -> . (values complete-path? complete-path?))
   ;; file-proc returns two values, but ormap only wants one
   (define file-proc (ormap (λ(test file-proc) (and (test source-or-output-path) file-proc))
-                           (list has/is-null-source? has/is-preproc-source? has/is-markup-source?)
-                           (list ->null-source+output-paths ->preproc-source+output-paths ->markup-source+output-paths)))
+                           (list has/is-null-source? has/is-preproc-source? has/is-markup-source? has/is-scribble-source?)
+                           (list ->null-source+output-paths ->preproc-source+output-paths ->markup-source+output-paths ->scribble-source+output-paths)))
   (file-proc source-or-output-path))
 
 
@@ -107,8 +107,8 @@
   (define render-proc 
     (cond
       [(ormap (λ(test render-proc) (and (test source-path) render-proc))
-              (list has/is-null-source? has/is-preproc-source? has/is-markup-source?)
-              (list render-null-source render-preproc-source render-markup-source))]
+              (list has/is-null-source? has/is-preproc-source? has/is-markup-source? has/is-scribble-source?)
+              (list render-null-source render-preproc-source render-markup-source render-scribble-source))]
       [else (error (format "render: no rendering function found for ~a" source-path))]))
   
   (message (format "render: ~a" (file-name-from-path source-path)))
@@ -121,6 +121,23 @@
   ;; All this does is copy the source. Hence, "null".
   ;; todo: add test to avoid copying if unnecessary (good idea in case the file is large)
   (file->bytes source-path))
+
+
+(define (render-through-scribble-eval expr-to-eval)
+  (parameterize ([current-namespace (make-base-namespace)]
+                 [current-output-port (current-error-port)])
+    (eval expr-to-eval (current-namespace))))
+
+
+(define/contract (render-scribble-source source-path)
+  (complete-path? . -> . bytes?)
+  (match-define-values (source-dir _ _) (split-path source-path))
+  (time (parameterize ([current-directory (->complete-path source-dir)])
+          (render-through-scribble-eval `(begin 
+                                           (require scribble/render)
+                                           (require (file ,(->string source-path)))
+                                           (render (list doc) '(,source-path))))))
+  (file->bytes (->output-path source-path)))
 
 
 (define/contract (render-preproc-source source-path)
@@ -154,7 +171,7 @@
 
 (define/contract (templated-source? path)
   (complete-path? . -> . boolean?)
-  (not (or (null-source? path) (preproc-source? path))))
+  (and (markup-source? path)))
 
 
 (define/contract (get-template-for source-path)

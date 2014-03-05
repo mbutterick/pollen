@@ -78,7 +78,7 @@
 ;; get file extension as a string, or return #f 
 ;; (consistent with filename-extension behavior)
 (define+provide/contract (get-ext x)
-  (coerce/path? . -> . (or/c string? #f))
+  (coerce/path? . -> . (or/c #f string?))
   (let ([fe-result (filename-extension x)])
     (and fe-result (bytes->string/utf-8 fe-result))))
 
@@ -113,53 +113,61 @@
 
 (define-syntax (make-source-utility-functions stx)
   (syntax-case stx ()
-    [(_ stem file-ext)
-     (with-syntax ([stem-source? (format-id stx "~a-source?" #'stem)]
-                   [has-stem-source? (format-id stx "has-~a-source?" #'stem)]
-                   [has/is-stem-source? (format-id stx "has/is-~a-source?" #'stem)]
-                   [->stem-source-path (format-id stx "->~a-source-path" #'stem)]
-                   [->stem-source+output-paths (format-id stx "->~a-source+output-paths" #'stem)])
-       #'(begin
-           ;; does file have particular extension
-           (define+provide/contract (stem-source? x)
-             (any/c . -> . boolean?)
-             (->boolean (and (pathish? x) (has-ext? (->path x) file-ext))))
-           
-           ;; does the source-ified version of the file exist
-           (define+provide/contract (has-stem-source? x)
-             (any/c . -> . boolean?)
-             (->boolean (and (pathish? x) (file-exists? (->stem-source-path (->path x))))))
-           
-           ;; it's a file-ext source file, or a file that's the result of a file-ext source
-           (define+provide/contract (has/is-stem-source? x)
-             (any/c . -> . boolean?)
-             (->boolean (and (pathish? x) (ormap (λ(proc) (proc (->path x))) (list stem-source? has-stem-source?)))))
-           
-           ;; add the file extension if it's not there
-           (define+provide/contract (->stem-source-path x)
-             (pathish? . -> . path?)
-             (->path (if (stem-source? x) x (add-ext x file-ext))))
-           
-           ;; coerce either a source or output file to both
-           (define+provide/contract (->stem-source+output-paths path)
-             (pathish? . -> . (values path? path?))
-             (values (->complete-path (->stem-source-path path))
-                     (->complete-path (->output-path path))))))]))
+    [(_ stem)
+     (let ([stem-datum (syntax->datum #'stem)])
+       (with-syntax ([file-ext (format-id stx "world:~a-source-ext" #'stem)]
+                     [stem-source? (format-id stx "~a-source?" #'stem)]
+                     [has-stem-source? (format-id stx "has-~a-source?" #'stem)]
+                     [has/is-stem-source? (format-id stx "has/is-~a-source?" #'stem)]
+                     [->stem-source-path (format-id stx "->~a-source-path" #'stem)]
+                     [->stem-source+output-paths (format-id stx "->~a-source+output-paths" #'stem)])
+         #`(begin
+             ;; does file have particular extension
+             (define+provide/contract (stem-source? x)
+               (any/c . -> . boolean?)
+               (->boolean (and (pathish? x) (has-ext? (->path x) file-ext))))
+             
+             ;; does the source-ified version of the file exist
+             (define+provide/contract (has-stem-source? x)
+               (any/c . -> . boolean?)
+               (->boolean (and (pathish? x) (file-exists? (->stem-source-path (->path x))))))
+             
+             ;; it's a file-ext source file, or a file that's the result of a file-ext source
+             (define+provide/contract (has/is-stem-source? x)
+               (any/c . -> . boolean?)
+               (->boolean (and (pathish? x) (ormap (λ(proc) (proc (->path x))) (list stem-source? has-stem-source?)))))
+             
+             ;; add the file extension if it's not there
+             (define+provide/contract (->stem-source-path x)
+               (pathish? . -> . path?)
+               (->path (if (stem-source? x) 
+                           x 
+                           #,(if (equal? stem-datum 'scribble)
+                                 #'(add-ext (remove-all-ext x) file-ext) ; different logic for scribble sources
+                                 #'(add-ext x file-ext)))))
+             
+             ;; coerce either a source or output file to both
+             (define+provide/contract (->stem-source+output-paths path)
+               (pathish? . -> . (values path? path?))
+               (values (->complete-path (->stem-source-path path))
+                       (->complete-path (->output-path path)))))))]))
 
 
-(make-source-utility-functions preproc world:preproc-source-ext)
-(make-source-utility-functions null world:null-source-ext)
-(make-source-utility-functions ptree world:ptree-source-ext)
-(make-source-utility-functions markup world:markup-source-ext)
-(make-source-utility-functions template world:template-source-ext)
+(make-source-utility-functions preproc)
+(make-source-utility-functions null)
+(make-source-utility-functions ptree)
+(make-source-utility-functions markup)
+(make-source-utility-functions template)
+(make-source-utility-functions scribble)
 
 
-
+;; todo: move this into source-specific definitions
 (define+provide/contract (->output-path x)
   (coerce/path? . -> . coerce/path?)
-  (if (or (markup-source? x) (preproc-source? x) (null-source? x))
-      (remove-ext x)
-      x))
+  (cond
+    [(or (markup-source? x) (preproc-source? x) (null-source? x)) (remove-ext x)]
+    [(scribble-source? x) (add-ext (remove-ext x) 'html)]
+    [else x]))
 
 
 (define+provide/contract (project-files-with-ext ext)

@@ -10,6 +10,8 @@
 (define null-source-ext 'p)
 (define ptree-source-ext 'ptree)
 (define template-source-ext 'pt)
+(define scribble-source-ext 'scrbl)
+
 
 (define reader-mode-auto 'auto)
 (define reader-mode-preproc 'pre)

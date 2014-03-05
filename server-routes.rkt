@@ -163,13 +163,15 @@
     (define possible-sources 
       (if (directory-exists? fn)
           empty ;; folders don't have source files
-          (filter file-in-dir? (list (->preproc-source-path filename) (->markup-source-path filename) (->null-source-path filename)))))
+          (filter file-in-dir? (list (->preproc-source-path filename) (->markup-source-path filename) (->null-source-path filename) (->scribble-source-path filename)))))
     (define source (and (not (empty? possible-sources)) (->string (car possible-sources))))
     `(tr ,@(map make-link-cell 
                 (append (list                          
                          (cond ; main cell
                            [(directory-exists? (build-path dir filename)) ; links subdir to its dashboard
                             (cons (format "~a/~a" filename world:dashboard-name) (format "~a/" filename))]
+                           [(and source (equal? (get-ext source) "scrbl")) 
+                            (cons #f `(a ((href ,filename)) ,filename (span ((class "file-ext")) " (from " ,source ")")))]
                            [source (cons #f `(a ((href ,filename)) ,filename (span ((class "file-ext")) "." ,(get-ext source))))]
                            [else   (cons filename filename)])
                          
