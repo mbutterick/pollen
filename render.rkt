@@ -41,9 +41,9 @@
 
 (define/contract+provide (render-batch . xs)
   (() #:rest (listof pathish?) . ->* . void?)
-  ;; Why not pass #:force #t through with render?
+  ;; Why not just (map render ...)?
   ;; Because certain files will pass through multiple times (e.g., templates)
-  ;; And with #:force, they would be rendered repeatedly.
+  ;; And with render, they would be rendered repeatedly.
   ;; Using reset-modification-dates is sort of like session control.
   (reset-modification-dates) 
   (for-each render-to-file-if-needed xs))
@@ -70,8 +70,9 @@
 
 
 (define (project-requires-changed?)
-  (define rerequire-results (map file-needed-rerequire? (get-project-require-files)))
-  (define requires-changed? (ormap (λ(x) x) rerequire-results))
+  (define project-require-files (get-project-require-files))
+  (define rerequire-results (and project-require-files (map file-needed-rerequire? project-require-files)))
+  (define requires-changed? (and rerequire-results (ormap (λ(x) x) rerequire-results)))
   (when requires-changed?
     (begin
       (message "render: project requires have changed, resetting cache & file-modification table")
@@ -123,21 +124,16 @@
   (file->bytes source-path))
 
 
-(define (render-through-scribble-eval expr-to-eval)
-  (parameterize ([current-namespace (make-base-namespace)]
-                 [current-output-port (current-error-port)])
-    (eval expr-to-eval (current-namespace))))
-
-
 (define/contract (render-scribble-source source-path)
   (complete-path? . -> . bytes?)
   (match-define-values (source-dir _ _) (split-path source-path))
+  (file-needed-rerequire? source-path) ; called for its reqrequire side effect only, so dynamic-require below isn't cached
   (time (parameterize ([current-directory (->complete-path source-dir)])
-          (render-through-scribble-eval `(begin 
-                                           (require scribble/render)
-                                           (require (file ,(->string source-path)))
-                                           (render (list doc) '(,source-path))))))
-  (file->bytes (->output-path source-path)))
+          ;; BTW this next action has side effects: scribble will copy in its core files if they don't exist.
+          ((dynamic-require 'scribble/render 'render) (list (dynamic-require source-path world:main-pollen-export)) (list source-path))))
+  (define result (file->bytes (->output-path source-path)))
+  (delete-file (->output-path source-path)) ; because render promises the data, not the side effect
+  result)
 
 
 (define/contract (render-preproc-source source-path)
@@ -152,8 +148,6 @@
   (match-define-values (source-dir _ _) (split-path source-path))
   (define template-path (or maybe-template-path (get-template-for source-path)))
   (render-for-dev-server template-path) ; because template might have its own preprocessor source
-  
-  
   (define expr-to-eval 
     `(begin 
        (require (for-syntax racket/base))
@@ -174,7 +168,7 @@
   (and (markup-source? path)))
 
 
-(define/contract (get-template-for source-path)
+(define/contract+provide (get-template-for source-path)
   (complete-path? . -> . (or/c #f complete-path?))
   (match-define-values (source-dir _ _) (split-path source-path))
   (and (templated-source? source-path) ; doesn't make sense if it's not a templated source format
