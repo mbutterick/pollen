@@ -54,13 +54,9 @@ If the file extension is ``@(format ".~a" world:markdown-source-ext)'', the sour
 @defmodulelang[pollen/markdown]
 
 
+@include-section["render.scrbl"]
 
 
-
-
-@section{Rendering}
-
-@defmodule[pollen/render]
 
 
 @section{License & source code}
