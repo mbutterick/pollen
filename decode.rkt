@@ -1,6 +1,6 @@
 #lang racket/base
 (require xml txexpr sugar/define)
-(require "predicates.rkt" "decode/typography.rkt")
+(require "predicates.rkt" "decode/typography.rkt" "debug.rkt")
 
 (provide (all-from-out "decode/typography.rkt"))
 
@@ -24,14 +24,17 @@
 
 
 ;; decoder wireframe
-(define+provide/contract (decode nx
+(define+provide/contract (decode txexpr
                                  #:exclude-xexpr-tags [excluded-xexpr-tags '()]
                                  #:xexpr-tag-proc [xexpr-tag-proc (λ(x)x)]
                                  #:xexpr-attrs-proc [xexpr-attrs-proc (λ(x)x)]
                                  #:xexpr-elements-proc [xexpr-elements-proc (λ(x)x)]
                                  #:block-xexpr-proc [block-xexpr-proc (λ(x)x)]
                                  #:inline-xexpr-proc [inline-xexpr-proc (λ(x)x)]
-                                 #:string-proc [string-proc (λ(x)x)])
+                                 #:string-proc [string-proc (λ(x)x)]
+                                 #:symbol-proc [symbol-proc (λ(x)x)]
+                                 #:valid-char-proc [valid-char-proc (λ(x)x)]
+                                 #:cdata-proc [cdata-proc (λ(x)x)])
   ((xexpr/c)  
    (#:exclude-xexpr-tags list?  
                          #:xexpr-tag-proc procedure?
@@ -39,23 +42,31 @@
                          #:xexpr-elements-proc procedure?
                          #:block-xexpr-proc procedure?
                          #:inline-xexpr-proc procedure?
-                         #:string-proc procedure?) . ->* . txexpr?)
+                         #:string-proc procedure?
+                         #:symbol-proc procedure?
+                         #:valid-char-proc procedure?
+                         #:cdata-proc procedure?) . ->* . txexpr?)
   
 
-  (let loop ([x (validate-txexpr? nx)])
+  (let loop ([x txexpr])
     (cond
-      [(txexpr? x) (let-values([(tag attr elements) (txexpr->values x)]) 
+      [(txexpr? x) (let-values([(tag attrs elements) (txexpr->values x)]) 
                      (if (member tag excluded-xexpr-tags)    
-                         x ; let x pass through untouched
-                         (let ([decoded-xexpr (apply make-txexpr (map loop (list tag attr elements)))])
+                         x ; because it's excluded
+                         
+                         ;; we apply processing here rather than do recursive descent on the pieces
+                         ;; because if we send them back through loop, certain element types are ambiguous
+                         ;; e.g., ((p "foo")) tests out as both txexpr-attrs and txexpr-elements
+                         (let ([decoded-xexpr 
+                                (apply make-txexpr (list (xexpr-tag-proc tag) 
+                                                         (xexpr-attrs-proc attrs) 
+                                                         (map loop (xexpr-elements-proc elements))))])
                            ((if (block-xexpr? decoded-xexpr)
                                 block-xexpr-proc
                                 inline-xexpr-proc) decoded-xexpr))))]
-      [(txexpr-tag? x) (xexpr-tag-proc x)]
-      [(txexpr-attrs? x) (xexpr-attrs-proc x)]
-      ;; need this for operations that may depend on context in list
-      [(txexpr-elements? x) (map loop (xexpr-elements-proc x))]
       [(string? x) (string-proc x)]
-      ;; if something has made it through undecoded, that's a problem
+      [(symbol? x) (symbol-proc x)]
+      [(valid-char? x) (valid-char-proc x)]
+      [(cdata? x) (cdata-proc x)]
       [else (error "decode: can't decode" x)])))
 
