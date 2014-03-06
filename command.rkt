@@ -1,40 +1,28 @@
 #lang racket/base
-(require (for-syntax racket/base))
 
-;; Handle commands from raco
+(provide (all-defined-out))
 
-(define-for-syntax args (current-command-line-arguments))
-(define-for-syntax arg-command-name (with-handlers ([exn:fail? (λ(exn) #f)]) (vector-ref args 0)))
-
-(define-for-syntax arg-project-directory
-  (with-handlers ([exn:fail? (λ(exn) (current-directory))])
-    (path->complete-path (simplify-path (string->path (vector-ref args 1))))))
-
-(define-for-syntax (command-error error-string)
-  `(displayln (string-append "Error: ", error-string)))
-
-;; we work in syntax layer because requiring pollen/server is slow.
-(define-syntax (just-a-hook-for-the-macro stx)
-  (datum->syntax stx 
-                 (case arg-command-name
-                   [(#f "help") ' (displayln "Pollen commands:
+(define (handle-help)
+  `(displayln "Pollen commands:
 start       starts project server
 render      renders all files in project directory
 clone       copies rendered files to desktop
-[filename]  renders individual file")]
-                   [("start")
-                    (if (not (directory-exists? arg-project-directory))
-                        (command-error (format "~a is not a directory" arg-project-directory))
-                        `(begin 
-                           (require pollen/server pollen/world)
-                           (parameterize ([world:current-project-root ,arg-project-directory])
-                             (start-server))))]
-                   [else (if (regexp-match #rx"(shit|fuck)" arg-command-name)
-                             (displayln (let ([responses '("Cursing at free software? Really?" "How uncouth." "Same to you, buddy.")])
-                                          (list-ref responses (random (length responses)))))
-                             (command-error (format "unknown command ~a" arg-command-name)))])))
+[filename]  renders individual file"))
 
-(just-a-hook-for-the-macro)
+(define (handle-start directory)
+  (if (not (directory-exists? directory))
+      (error (format "~a is not a directory" directory))
+      `(begin 
+         (require pollen/server pollen/world)
+         (parameterize ([world:current-project-root ,directory])
+           (start-server)))))
+
+(define (handle-else command)
+  `(if (regexp-match #rx"(shit|fuck)" ,command)
+       (displayln (let ([responses '("Cursing at free software? Really?" "How uncouth." "Same to you, buddy.")])
+                    (list-ref responses (random (length responses)))))
+       (displayln (format "unknown command ~a" ,command))))
+
 
 
 
