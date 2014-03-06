@@ -31,7 +31,7 @@ For those panicked at the use of @racket[eval], please don't be. As the author o
 [template-path (or/c #f complete-path?) #f]
 [output-path (or/c #f complete-path?) #f]) 
 void?]
-Like @racket[render], but saves the file to @racket[_output-path], overwriting whatever is already there. If no @racket[_output-path] is provided, it's derived from @racket[_source-path] using @racket[->output-path].
+Like @racket[render], but saves the file to @racket[_output-path], overwriting whatever was already there. If no @racket[_output-path] is provided, it's derived from @racket[_source-path] using @racket[->output-path].
 
 @defproc[
 (render-to-file-if-needed
@@ -43,15 +43,15 @@ void?]
 Like @racket[render-to-file], but the render only happens if one of these conditions exist:
 @itemlist[#:style 'ordered
 
-@item{The @racket[_force-render?] flag is not @racket[#f].}
+@item{The @racket[_force-render?] flag — set with the @racket[#:force] keyword — is @racket[#t].}
 @item{No file exists at @racket[_output-path].
-@margin-note{Corollary: an easy way to force a refresh of a particular @racket[_output-path] from the desktop is to delete it.}}
+@margin-note{Corollary: an easy way to force a render of a particular @racket[_output-path] from the desktop is to delete it.}}
 
 @item{Either @racket[_source-path] or @racket[_template-path] have changed since the last trip through @racket[render].}
 
 @item{One or more of the project requires have changed.}]
 
-If none of these conditions exist, @racket[_output-path] is assumed to be current, and the render is skipped.
+If none of these conditions exist, @racket[_output-path] is deemed to be up to date, and the render is skipped.
 
 
 
