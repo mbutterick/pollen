@@ -119,7 +119,7 @@ Because it's convenient, Pollen categorizes tagged X-expressions into two catego
 void?]
 Adds a tag to @racket[project-block-tags] so that @racket[block-txexpr?] will report it as a block, and @racket[decode] will process it with @racket[_block-txexpr-proc] rather than @racket[_inline-txexpr-proc].
 
-@bold{Hey, this is important!} Pollen tries to do the right thing without being told. But this is the rare case where you have to be explicit. If you introduce a tag into your markup that you wanted treated as a block, you @bold{must} use this function to identify it, or you will get spooky behavior later on.
+@bold{Hey, this is important!} Pollen tries to do the right thing without being told. But this is the rare case where you have to be explicit. If you introduce a tag into your markup that you want treated as a block, you @bold{must} use this function to identify it, or you will get spooky behavior later on.
 
 For instance, @racket[detect-paragraphs] knows that block elements in the markup shouldn't be wrapped in a @racket[p] tag. So if you introduce a new block element called @racket[bloq] without registering it as a block, misbehavior will follow:
 
