@@ -1,6 +1,6 @@
 #lang racket/base
 (require racket/match)
-(require "../tools.rkt" "../predicates.rkt" sugar txexpr)
+(require "../tools.rkt" "block.rkt" sugar txexpr)
 
 
 (provide (contract-out 
@@ -12,7 +12,7 @@
           [paragraph-break? ((any/c) (#:pattern pregexp?) . ->* . boolean?)]
           [merge-newlines (list? . -> . list?)]
           [prep-paragraph-flow (txexpr-elements? . -> . txexpr-elements?)]
-          [wrap-paragraph ((txexpr-elements?) (#:tag symbol?) . ->* . block-xexpr?)]
+          [wrap-paragraph ((txexpr-elements?) (#:tag symbol?) . ->* . block-txexpr?)]
           [detect-paragraphs (txexpr-elements? . -> . txexpr-elements?)]))
 
 ;; This module is a library of functions to be used in building pollen decoders.
@@ -140,7 +140,7 @@
 (define (convert-linebreaks xc #:newline [newline "\n"])
   
   ;; todo: should this test be not block + not whitespace?
-  (define not-block? (λ(i) (not (block-xexpr? i))))
+  (define not-block? (λ(i) (not (block-txexpr? i))))
   (filter-not empty?
               (for/list ([i (len xc)])
                 (let ([item (get xc i)])
@@ -220,7 +220,7 @@
 (define (wrap-paragraph xc #:tag [tag 'p]) 
   
   (match xc
-    [(list (? block-xexpr? bx)) bx] ; leave a single block xexpr alone
+    [(list (? block-txexpr? bx)) bx] ; leave a single block xexpr alone
     [else (make-txexpr tag empty xc)])) ; otherwise wrap in p tag
 
 
