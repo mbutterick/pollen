@@ -5,86 +5,6 @@
 @(define my-eval (make-base-eval))
 @(my-eval `(require pollen pollen/decode pollen/decode/block xml))
 
-@section{Typography}
-@defmodule[pollen/decode/typography]
-
-An assortment of typography & layout functions, designed to be used with @racket[decode]. These aren't hard to write. So if you like these, use them. If not, make your own.
-
-@defproc[
-(smart-quotes
-[str string?])
-string?]
-Convert straight quotes in @racket[_str] to curly according to American English conventions.
-
-@examples[#:eval my-eval
-(define tricky-string 
-"\"Why,\" she could've asked, \"are we in O‘ahu watching 'Mame'?\"")
-(display tricky-string)
-(display (smart-quotes tricky-string))
-]
-
-@defproc[
-(smart-dashes
-[str string?])
-string?]
-In @racket[_str], convert three hyphens to an em dash, and two hyphens to an en dash, and remove surrounding spaces.
-
-@examples[#:eval my-eval
-(define tricky-string "I had a few --- OK, like 6--8 --- thin mints.")
-(display tricky-string)
-(display (smart-dashes tricky-string))
-]
-
-
-@defproc[
-(convert-linebreaks
-[tagged-xexpr-elements txexpr-elements?]
-[#:separator linebreak-sep string? world:linebreak-separator]
-[#:linebreak linebreak xexpr? '(br)])
-txexpr-elements?]
-Within @racket[_tagged-xexpr-elements], convert occurrences of @racket[_linebreak-sep] (@racket["\n"] by default) to @racket[_linebreak], but only if @racket[_linebreak-sep] does not occur between blocks (see @racket[block-txexpr?]). Why? Because block-level elements automatically display on a new line, so adding @racket[_linebreak] would be superfluous. In that case, @racket[_linebreak-sep] just disappears.
-
-@examples[#:eval my-eval
-(convert-linebreaks '(div "Two items:" "\n" (em "Eggs") "\n" (em "Bacon")))
-(convert-linebreaks '(div "Two items:" "\n" (div "Eggs") "\n" (div "Bacon")))
-]
-
-@defproc[
-(whitespace?
-[v any/c])
-boolean?]
-Returns @racket[#t] for any stringlike @racket[_v] that's entirely whitespace, but also the empty string, as well as lists and vectors that are made only of @racket[whitespace?] members.
-
-@examples[#:eval my-eval
-(whitespace? "\n\n   ")
-(whitespace? (string->symbol "\n\n   "))
-(whitespace? "")
-(whitespace? '("" "  " "\n\n\n" " \n"))
-]
-
-@defproc[
-(detect-paragraphs
-[elements txexpr-elements?]
-[#:tag paragraph-tag symbol? 'p]
-[#:separator paragraph-sep string? world:paragraph-separator]
-[#:linebreak-proc linebreak-proc procedure? convert-linebreaks])
-txexpr-elements?]
-Find paragraphs within @racket[_elements], as denoted by @racket[_paragraph-sep], and wrap them with @racket[_paragraph-tag], unless the @racket[_element] is already a @racket[block-txexpr?] (because in that case, the wrapping is superfluous). Thus, as a consequence, if @racket[_paragraph-sep] occurs between two blocks, it's ignored. 
-
-The @racket[_paragraph-tag] argument sets the tag used to wrap paragraphs. 
-
-The @racket[_linebreak-proc] argument allows you to use a different linebreaking procedure other than the usual @racket[convert-linebreaks].
-
-@examples[#:eval my-eval
-(detect-paragraphs '("First para" "\n\n" "Second para"))
-(detect-paragraphs '("First para" "\n\n" "Second para" "\n" "Second line"))
-(detect-paragraphs '("First para" "\n\n" (div "Second block")))
-(detect-paragraphs '((div "First block") "\n\n" (div "Second block")))
-(detect-paragraphs '("First para" "\n\n" "Second para") #:tag 'ns:p)
-(detect-paragraphs '("First para" "\n\n" "Second para" "\n" "Second line")
-#:linebreak-proc (λ(x) (convert-linebreaks x #:linebreak '(newline))))
-
-]
 
 
 @section{Decode}
@@ -108,11 +28,11 @@ The @racket[_linebreak-proc] argument allows you to use a different linebreaking
 txexpr?]
 Recursively process a @racket[_tagged-xexpr], usually the one exported from a Pollen source file as @racket['doc]. This function doesn't do much on its own. Rather, it provides the hooks upon which harder-working functions can be hung.
 
-@margin-note{This is different from the Scribble approach, where the decoding logic is fixed for every document. In Pollen, you only get the decoding you ask for, and you can customize it to any degree.}
+This is different from the Scribble approach, where the decoding logic is fixed for every document. In Pollen, you only get the decoding you ask for, and you can customize it to any degree.
 
 By default, the @racket[_tagged-xexpr] from a source file is tagged with @racket[root]. Recall from @secref{Pollen mechanics} that any tag can have a function attached to it. So the typical way to use @racket[decode] is to attach your decoding functions to it, and then define @racket[root] to invoke your @racket[decode] function. Then it will be automatically applied to every @racket['doc] during compile. 
 
-For instance, here's how @racket[decode] is attached to @racket['root] in @italic{Butterick's Practical Typography}:
+For instance, here's how @racket[decode] is attached to @racket['root] in @italic{Butterick's Practical Typography}. There's not much to it —
 
 @codeblock|{
 (define (root . items) 
@@ -122,7 +42,7 @@ For instance, here's how @racket[decode] is attached to @racket['root] in @itali
             (λ(bx) (wrap-hanging-quotes (nonbreaking-last-space bx)))
         #:string-proc (compose1 smart-quotes smart-dashes)))}|
 
-That's it. Which illustrates another important point: even though @racket[decode] presents an imposing list of arguments, you're unlikely to use all of them at once. These represent possibilities, not requirements. To that end, let's see what happens when @racket[decode] is invoked without any of its optional arguments.
+This illustrates another important point: even though @racket[decode] presents an imposing list of arguments, you're unlikely to use all of them at once. These represent possibilities, not requirements. For instance, let's see what happens when @racket[decode] is invoked without any of its optional arguments.
 
 @examples[#:eval my-eval
 (define tx '(root "I wonder" (em "why") "this works."))
@@ -219,7 +139,7 @@ The @racket[_tags-to-exclude] argument is useful if you're decoding source that'
 #:exclude-tags '(style script))
 ]
 
-@section{Blocks}
+@subsection{Blocks}
 @defmodule[pollen/decode/block]
 
 Because it's convenient, Pollen categorizes tagged X-expressions into two categories: @italic{block} and @italic{inline}. Why is it convenient? When using @racket[decode], you often want to treat the two categories differently. Not that you have to. But this is how you can.
@@ -230,7 +150,7 @@ Because it's convenient, Pollen categorizes tagged X-expressions into two catego
 void?]
 Adds a tag to @racket[project-block-tags] so that @racket[block-txexpr?] will report it as a block, and @racket[decode] will process it with @racket[_block-txexpr-proc] rather than @racket[_inline-txexpr-proc].
 
-@bold{Hey, this is important!} Pollen tries to do the right thing without being told. But this is the rare case where you have to be explicit. If you introduce a tag into your markup that you want treated as a block, you @bold{must} use this function to identify it, or you will get spooky behavior later on.
+Pollen tries to do the right thing without being told. But this is the rare case where you have to be explicit. If you introduce a tag into your markup that you want treated as a block, you @bold{must} use this function to identify it, or you will get spooky behavior later on.
 
 For instance, @racket[detect-paragraphs] knows that block elements in the markup shouldn't be wrapped in a @racket[p] tag. So if you introduce a new block element called @racket[bloq] without registering it as a block, misbehavior will follow:
 
@@ -268,3 +188,103 @@ A parameter that defines the set of tags that @racket[decode] will treat as bloc
 @code[(format "~a" (dynamic-require 'css-tools/html 'block-tags))]}
 
 
+@subsection{Typography}
+@defmodule[pollen/decode/typography]
+
+An assortment of typography & layout functions, designed to be used with @racket[decode]. These aren't hard to write. So if you like these, use them. If not, make your own.
+
+
+@defproc[
+(whitespace?
+[v any/c])
+boolean?]
+A predicate that returns @racket[#t] for any stringlike @racket[_v] that's entirely whitespace, but also the empty string, as well as lists and vectors that are made only of @racket[whitespace?] members. Following the regexp convention, @racket[whitespace?] does not return @racket[#t] for a nonbreaking space. If you prefer that behavior, use @racket[whitespace/nbsp?]. 
+
+
+@examples[#:eval my-eval
+(whitespace? "\n\n   ")
+(whitespace? (string->symbol "\n\n   "))
+(whitespace? "")
+(whitespace? '("" "  " "\n\n\n" " \n"))
+(define nonbreaking-space (format "~a" #\u00AD))
+(whitespace? nonbreaking-space)
+]
+
+@defproc[
+(whitespace/nbsp?
+[v any/c])
+boolean?]
+Like @racket[whitespace?], but also returns @racket[#t] for nonbreaking spaces.
+
+
+@examples[#:eval my-eval
+(whitespace/nbsp? "\n\n   ")
+(whitespace/nbsp? (string->symbol "\n\n   "))
+(whitespace/nbsp? "")
+(whitespace/nbsp? '("" "  " "\n\n\n" " \n"))
+(define nonbreaking-space (format "~a" #\u00AD))
+(whitespace/nbsp? nonbreaking-space)
+]
+
+
+@defproc[
+(smart-quotes
+[str string?])
+string?]
+Convert straight quotes in @racket[_str] to curly according to American English conventions.
+
+@examples[#:eval my-eval
+(define tricky-string 
+"\"Why,\" she could've asked, \"are we in O‘ahu watching 'Mame'?\"")
+(display tricky-string)
+(display (smart-quotes tricky-string))
+]
+
+@defproc[
+(smart-dashes
+[str string?])
+string?]
+In @racket[_str], convert three hyphens to an em dash, and two hyphens to an en dash, and remove surrounding spaces.
+
+@examples[#:eval my-eval
+(define tricky-string "I had a few --- OK, like 6--8 --- thin mints.")
+(display tricky-string)
+(display (smart-dashes tricky-string))
+]
+
+
+@defproc[
+(detect-linebreaks
+[tagged-xexpr-elements txexpr-elements?]
+[#:separator linebreak-sep string? world:linebreak-separator]
+[#:insert linebreak xexpr? '(br)])
+txexpr-elements?]
+Within @racket[_tagged-xexpr-elements], convert occurrences of @racket[_linebreak-sep] (@racket["\n"] by default) to @racket[_linebreak], but only if @racket[_linebreak-sep] does not occur between blocks (see @racket[block-txexpr?]). Why? Because block-level elements automatically display on a new line, so adding @racket[_linebreak] would be superfluous. In that case, @racket[_linebreak-sep] just disappears.
+
+@examples[#:eval my-eval
+(detect-linebreaks '(div "Two items:" "\n" (em "Eggs") "\n" (em "Bacon")))
+(detect-linebreaks '(div "Two items:" "\n" (div "Eggs") "\n" (div "Bacon")))
+]
+
+@defproc[
+(detect-paragraphs
+[elements txexpr-elements?]
+[#:separator paragraph-sep string? world:paragraph-separator]
+[#:tag paragraph-tag symbol? 'p]
+[#:linebreak-proc linebreak-proc (txexpr-elements? . -> . txexpr-elements?) detect-linebreaks])
+txexpr-elements?]
+Find paragraphs within @racket[_elements], as denoted by @racket[_paragraph-sep], and wrap them with @racket[_paragraph-tag], unless the @racket[_element] is already a @racket[block-txexpr?] (because in that case, the wrapping is superfluous). Thus, as a consequence, if @racket[_paragraph-sep] occurs between two blocks, it's ignored. 
+
+The @racket[_paragraph-tag] argument sets the tag used to wrap paragraphs. 
+
+The @racket[_linebreak-proc] argument allows you to use a different linebreaking procedure other than the usual @racket[detect-linebreaks].
+
+@examples[#:eval my-eval
+(detect-paragraphs '("First para" "\n\n" "Second para"))
+(detect-paragraphs '("First para" "\n\n" "Second para" "\n" "Second line"))
+(detect-paragraphs '("First para" "\n\n" (div "Second block")))
+(detect-paragraphs '((div "First block") "\n\n" (div "Second block")))
+(detect-paragraphs '("First para" "\n\n" "Second para") #:tag 'ns:p)
+(detect-paragraphs '("First para" "\n\n" "Second para" "\n" "Second line")
+#:linebreak-proc (λ(x) (detect-linebreaks x #:insert '(newline))))
+]

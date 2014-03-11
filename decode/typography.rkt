@@ -118,10 +118,10 @@
 
 
 ;; turn the right items into <br> tags
-(define+provide/contract (convert-linebreaks xc 
+(define+provide/contract (detect-linebreaks xc 
                                              #:separator [newline world:linebreak-separator]
-                                             #:linebreak [linebreak '(br)])
-  ((txexpr-elements?) (#:separator string? #:linebreak xexpr?) . ->* . txexpr-elements?)
+                                             #:insert [linebreak '(br)])
+  ((txexpr-elements?) (#:separator string? #:insert xexpr?) . ->* . txexpr-elements?)
   ;; todo: should this test be not block + not whitespace?
   (define not-block? (λ(i) (not (block-txexpr? i))))
   (filter-not empty?
@@ -149,6 +149,10 @@
     [(or (list? x) (vector? x)) (andmap whitespace? (->list x))]
     [else #f]))
 
+
+(define+provide/contract (whitespace/nbsp? x)  
+  (any/c . -> . coerce/boolean?)
+  (or (whitespace? x) (equal? (->string x) (->string #\u00AD))))
 
 ;; is x a paragraph break?
 (define (paragraph-break? x #:separator [sep world:paragraph-separator])
@@ -195,8 +199,8 @@
 ;; todo: unit tests
 (define+provide/contract (detect-paragraphs elements #:tag [tag 'p]
                                             #:separator [sep world:paragraph-separator]
-                                            #:linebreak-proc [linebreak-proc convert-linebreaks])
-  ((txexpr-elements?) (#:tag symbol? #:separator string? #:linebreak-proc procedure?) 
+                                            #:linebreak-proc [linebreak-proc detect-linebreaks])
+  ((txexpr-elements?) (#:tag symbol? #:separator string? #:linebreak-proc (txexpr-elements? . -> . txexpr-elements?)) 
    . ->* . txexpr-elements?)
   
   ;; prepare elements for paragraph testing
