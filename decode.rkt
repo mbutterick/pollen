@@ -35,12 +35,12 @@
    (#:txexpr-tag-proc (txexpr-tag? . -> . txexpr-tag?)
                          #:txexpr-attrs-proc (txexpr-attrs? . -> . txexpr-attrs?)
                          #:txexpr-elements-proc (txexpr-elements? . -> . txexpr-elements?)
-                         #:block-txexpr-proc (block-txexpr? . -> . block-txexpr?)
-                         #:inline-txexpr-proc (txexpr? . -> . txexpr?)
-                         #:string-proc (string? . -> . string?)
-                         #:symbol-proc (symbol? . -> . symbol?)
-                         #:valid-char-proc (valid-char? . -> . valid-char?)
-                         #:cdata-proc (cdata? . -> . cdata?)
+                         #:block-txexpr-proc (block-txexpr? . -> . xexpr?)
+                         #:inline-txexpr-proc (txexpr? . -> . xexpr?)
+                         #:string-proc (string? . -> . xexpr?)
+                         #:symbol-proc (symbol? . -> . xexpr?)
+                         #:valid-char-proc (valid-char? . -> . xexpr?)
+                         #:cdata-proc (cdata? . -> . xexpr?)
                          #:exclude-tags (listof symbol?)  ) . ->* . txexpr?)
   
 

@@ -1,65 +1,45 @@
 #lang racket/base
-(require racket/match)
-(require "../tools.rkt" "block.rkt" sugar txexpr)
+(require racket/match xml)
+(require "../tools.rkt" "block.rkt" "../world.rkt" sugar txexpr)
 
 
-(provide (contract-out 
-          [typogrify (string? . -> . string?)]
-          [nonbreaking-last-space ((txexpr?) (#:nbsp string? #:minimum-word-length integer?) . ->* . txexpr?)]
-          [wrap-hanging-quotes ((txexpr?) (#:single-prepend list? #:double-prepend list?) . ->* . txexpr?)]
-          [convert-linebreaks ((txexpr-elements?) (#:newline string?) . ->* . txexpr-elements?)]
-          [whitespace? (any/c . -> . boolean?)]
-          [paragraph-break? ((any/c) (#:pattern pregexp?) . ->* . boolean?)]
-          [merge-newlines (list? . -> . list?)]
-          [prep-paragraph-flow (txexpr-elements? . -> . txexpr-elements?)]
-          [wrap-paragraph ((txexpr-elements?) (#:tag symbol?) . ->* . block-txexpr?)]
-          [detect-paragraphs (txexpr-elements? . -> . txexpr-elements?)]))
+(define (make-replacer query+replacement)
+  (let ([queries (map car query+replacement)]
+        [replacements (map second query+replacement)])
+    ;; reverse because first in list should be first applied to str (and compose1 works right-to-left)
+    (apply compose1 (reverse (map (λ(query replacement) (λ(str) (regexp-replace* query str replacement))) queries replacements)))))
 
-;; This module is a library of functions to be used in building pollen decoders.
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; Typography 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-
-;; insert typographic niceties
-;; ligatures are handled in css
-(define (typogrify str)
-  ;; make set of functions for replacers
-  (define (make-replacer query replacement)
-    (λ(str) (regexp-replace* query str replacement)))
+(define+provide/contract (smart-dashes str)
+  (string? . -> . string?)
   
-  ;; just store the query strings + replacement strings
   (define dashes 
     ;; fix em dashes first, else they'll be mistaken for en dashes
-    ;; [\\s ] is whitespace + #\u00A0 is nonbreaking space
+    ;; \\s is whitespace + #\u00A0 is nonbreaking space
     '((#px"[\\s#\u00A0]*(---|—)[\\s#\u00A0]*" "—") ; em dash
       (#px"[\\s#\u00A0]*(--|–)[\\s#\u00A0]*" "–"))) ; en dash
   
-  (define smart-quotes
+  
+  ((make-replacer dashes) str))
+
+
+(define+provide/contract (smart-quotes str)
+  (string? . -> . string?)
+  
+  (define quotes
     '((#px"(?<=\\w)'(?=\\w)" "’") ; apostrophe
       (#px"(?<!\\w)'(?=\\w)" "‘") ; single_at_beginning
       (#px"(?<=\\S)'(?!\\w)" "’") ; single_at_end
       (#px"(?<!\\w)\"(?=\\w)" "“") ; double_at_beginning
       (#px"(?<=\\S)\"(?!\\w)" "”"))) ; double_at_end
   
-  
-  ;; put replacers in desired order here
-  (let* ([typogrifiers (append dashes smart-quotes)]
-         [queries (map first typogrifiers)]
-         [replacements (map second typogrifiers)])
-    (define replacers (map make-replacer queries replacements)) 
-    ;; compose goes from last to first, so reverse order
-    ((apply compose1 (reverse replacers)) str)))
+  ((make-replacer quotes) str))
+
 
 
 ;; insert nbsp between last two words
-(define (nonbreaking-last-space x #:nbsp [nbsp (->string #\u00A0)] 
-                                #:minimum-word-length [minimum-word-length 6])
+(define+provide/contract (nonbreaking-last-space x #:nbsp [nbsp (->string #\u00A0)] 
+                                                 #:minimum-word-length [minimum-word-length 6])
+  ((txexpr?) (#:nbsp string? #:minimum-word-length integer?) . ->* . txexpr?)
   
   ;; todo: parameterize this, as it will be different for each project
   (define tags-to-pay-attention-to '(p aside)) ; only apply to paragraphs
@@ -99,9 +79,10 @@
 ; wrap initial quotes for hanging punctuation
 ; todo: improve this
 ; does not handle <p>“<em>thing</em> properly
-(define (wrap-hanging-quotes nx 
-                             #:single-prepend [single-pp '(squo)]
-                             #:double-prepend  [double-pp '(dquo)])
+(define+provide/contract (wrap-hanging-quotes nx 
+                                              #:single-prepend [single-pp '(squo)]
+                                              #:double-prepend  [double-pp '(dquo)])
+  ((txexpr?) (#:single-prepend list? #:double-prepend list?) . ->* . txexpr?)
   
   (define two-or-more-char-string? (λ(i) (and (string? i) (>= (len i) 2))))
   (define-values (tag attr elements) (txexpr->values nx))
@@ -137,8 +118,10 @@
 
 
 ;; turn the right items into <br> tags
-(define (convert-linebreaks xc #:newline [newline "\n"])
-  
+(define+provide/contract (convert-linebreaks xc 
+                                             #:separator [newline world:linebreak-separator]
+                                             #:linebreak [linebreak '(br)])
+  ((txexpr-elements?) (#:separator string? #:linebreak xexpr?) . ->* . txexpr-elements?)
   ;; todo: should this test be not block + not whitespace?
   (define not-block? (λ(i) (not (block-txexpr? i))))
   (filter-not empty?
@@ -151,86 +134,85 @@
                      (match (get xc (- i 1) (+ i 2)) ; a three-element slice with x[i] in the middle
                        ;; only convert if neither adjacent tag is a block
                        ;; (because blocks automatically force a newline before & after)
-                       [(list (? not-block?) newline (? not-block?)) '(br)]
+                       [(list (? not-block?) newline (? not-block?)) linebreak]
                        [else empty])] ; otherwise delete
                     [else item])))))
 
 
 
 ;; recursive whitespace test
-(define (whitespace? x)  
+(define+provide/contract (whitespace? x)  
+  (any/c . -> . coerce/boolean?)
   (cond
     [(equal? "" x) #t] ; empty string is deemed whitespace
-    [(or (string? x) (symbol? x)) (->boolean (regexp-match #px"^\\s+$" (->string x)))]
+    [(or (string? x) (symbol? x)) (regexp-match #px"^\\s+$" (->string x))]
     [(or (list? x) (vector? x)) (andmap whitespace? (->list x))]
     [else #f]))
 
 
 ;; is x a paragraph break?
-(define (paragraph-break? x #:pattern [paragraph-pattern #px"^\n\n+$"])
-  
-  (and (string? x) (->boolean (regexp-match paragraph-pattern x))))
+(define (paragraph-break? x #:separator [sep world:paragraph-separator])
+  ; ((any/c) (#:separator pregexp?) . ->* . coerce/boolean?)
+  (define paragraph-pattern (pregexp (format "^~a+$" sep)))
+  (and (string? x) (regexp-match paragraph-pattern x)))
 
 
 
+(define (newline? x)
+  (and (string? x) (equal? world:newline x)))
+(define (not-newline? x)
+  (not (newline? x)))
+
+(define (do-merge xs [acc '()])
+  (if (empty? xs)
+      acc
+      ;; Try to peel the newlines off the front.
+      (let-values ([(leading-newlines remainder) (splitf-at xs newline?)])
+        (if (not (empty? leading-newlines)) ; if you got newlines ...
+            ;; combine them into a string and append them to the accumulator, 
+            ;; and recurse on the rest
+            (do-merge remainder (append acc (list (apply string-append leading-newlines))))
+            ;; otherwise peel off elements up to the next newline, append them to accumulator,
+            ;; and recurse on the rest
+            (do-merge (dropf remainder not-newline?) 
+                      (append acc (takef remainder not-newline?)))))))
 
 
 ;; Find adjacent newline characters in a list and merge them into one item
 ;; Scribble, by default, makes each newline a separate list item
 ;; In practice, this is worthless.
 (define (merge-newlines x)
-  
-  (define (newline? x)
-    (and (string? x) (equal? "\n" x)))
-  (define (not-newline? x)
-    (not (newline? x)))
-  
-  (define (really-merge-newlines xs [acc '()])
-    (if (empty? xs)
-        acc
-        ;; Try to peel the newlines off the front.
-        (let-values ([(leading-newlines remainder) (splitf-at xs newline?)])
-          (if (not (empty? leading-newlines)) ; if you got newlines ...
-              ;; combine them into a string and append them to the accumulator, 
-              ;; and recurse on the rest
-              (really-merge-newlines remainder (append acc (list (apply string-append leading-newlines))))
-              ;; otherwise peel off elements up to the next newline, append them to accumulator,
-              ;; and recurse on the rest
-              (really-merge-newlines (dropf remainder not-newline?) 
-                                     (append acc (takef remainder not-newline?)))))))
-  
+  (txexpr-elements? . -> . txexpr-elements?)  
   (cond
-    [(list? x) (really-merge-newlines (map merge-newlines x))]
+    [(list? x) (do-merge (map merge-newlines x))]
     [else x]))
 
-
-
-
-;; todo: add native support for list-xexpr
-;; decode triple newlines to list items
-
-
-;; prepare elements for paragraph testing
-(define (prep-paragraph-flow xc)
-  
-  (convert-linebreaks (merge-newlines (trim xc whitespace?))))
-
-
-;; apply paragraph tag
-(define (wrap-paragraph xc #:tag [tag 'p]) 
-  
-  (match xc
-    [(list (? block-txexpr? bx)) bx] ; leave a single block xexpr alone
-    [else (make-txexpr tag empty xc)])) ; otherwise wrap in p tag
 
 
 
 
 ;; detect paragraphs
 ;; todo: unit tests
-(define (detect-paragraphs elements)
+(define+provide/contract (detect-paragraphs elements #:tag [tag 'p]
+                                            #:separator [sep world:paragraph-separator]
+                                            #:linebreak-proc [linebreak-proc convert-linebreaks])
+  ((txexpr-elements?) (#:tag symbol? #:separator string? #:linebreak-proc procedure?) 
+   . ->* . txexpr-elements?)
+  
+  ;; prepare elements for paragraph testing
+  (define (prep-paragraph-flow xc)
+    (linebreak-proc (merge-newlines (trim xc whitespace?))))
+  
+  
+  (define my-paragraph-break? (λ(x) (and (paragraph-break? x #:separator sep) #t)))
+  
+  (define (wrap-paragraph xc) 
+    (match xc
+      [(list (? block-txexpr? bx)) bx] ; leave a single block xexpr alone
+      [else (make-txexpr tag empty xc)])) ; otherwise wrap in p tag
+  
   
   (let ([elements (prep-paragraph-flow elements)]) 
-    (if (ormap paragraph-break? elements) ; need this condition to prevent infinite recursion
-        (map wrap-paragraph (splitf-at* elements paragraph-break?)) ; split into ¶¶
+    (if (ormap my-paragraph-break? elements) ; need this condition to prevent infinite recursion
+        (map wrap-paragraph (splitf-at* elements my-paragraph-break?)) ; split into ¶¶
         elements)))

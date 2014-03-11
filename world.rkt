@@ -39,8 +39,9 @@
 
 (define missing-file-boilerplace "#lang pollen\n\n")
 
-(define line-break "\n")
-(define paragraph-break "\n\n")
+(define newline "\n")
+(define linebreak-separator newline)
+(define paragraph-separator "\n\n")
 
 (define output-subdir 'public)
 
