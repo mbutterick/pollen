@@ -1,6 +1,6 @@
 #lang scribble/manual
 
-@(require scribble/eval pollen/render pollen/world (for-label racket (except-in pollen #%module-begin) pollen/world pollen/render web-server/templates pollen/file-tools))
+@(require scribble/eval pollen/render pollen/world (for-label racket (except-in pollen #%module-begin) pollen/world pollen/render web-server/templates pollen/file))
 
 @(define my-eval (make-base-eval))
 @(my-eval `(require pollen))
@@ -8,6 +8,8 @@
 @section{Rendering}
 
 @defmodule[pollen/render]
+
+@italic{Rendering} is how Pollen source files get converted into output.
 
 @defproc[
 (render
@@ -62,6 +64,11 @@ If none of these conditions exist, @racket[_output-path] is deemed to be up to d
 void?]
 Render multiple @racket[_source-paths] in one go. This can be faster than @racket[(for-each render _source-paths)] if your @racket[_source-paths] rely on a common set of templates. Templates may have their own source files that need to be compiled. If you use @racket[render], the templates will be repeatedly (and needlessly) re-compiled. Whereas if you use @racket[render-batch], each template will only be compiled once.
 
+@defproc*[
+(
+[(render-ptree [ptree ptree?]) void?]
+[(render-ptree [ptree-source pathish?]) void?])]
+Using @racket[_ptree], or a ptree loaded from @racket[_ptree-source], render the files included in that ptree using @racket[render-batch].
 
 @defproc[
 (get-template-for

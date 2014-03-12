@@ -6,8 +6,8 @@
 (module+ test (require rackunit racket/path))
 
 (provide (all-defined-out))
-(require sugar/scribble sugar/coerce/values)
-(provide (all-from-out sugar/scribble sugar/coerce/values))
+(require sugar/scribble sugar/coerce/value)
+(provide (all-from-out sugar/scribble sugar/coerce/value))
 
 
 ;; todo: docstrings for this subsection

@@ -1,6 +1,6 @@
 #lang racket/base
 
-(module+ test (require rackunit "../file-tools.rkt" "../world.rkt" sugar))
+(module+ test (require rackunit "../file.rkt" "../world.rkt" sugar))
 
 (module+ test
   (check-true (sourceish? "foo.svg"))

@@ -1,6 +1,6 @@
 #lang racket/base
 (require racket/file racket/rerequire racket/path racket/match)
-(require sugar "file-tools.rkt" "cache.rkt" "world.rkt" "debug.rkt" "ptree.rkt" "project-requires.rkt")
+(require sugar "file.rkt" "cache.rkt" "world.rkt" "debug.rkt" "ptree.rkt" "project-requires.rkt")
 
 
 ;; when you want to generate everything fresh, 
@@ -49,6 +49,14 @@
   (for-each render-to-file-if-needed xs))
 
 
+(define/contract+provide (render-ptree ptree-or-path)
+  ((or/c ptree? pathish?) . -> . void?)
+  (define ptree (if (ptree? ptree-or-path)
+                    ptree-or-path
+                    (cached-require ptree-or-path world:main-pollen-export)))
+  (apply render-batch (ptree->list ptree)))
+
+
 (define/contract+provide (render-for-dev-server so-pathish #:force [force #f])
   ((pathish?) (#:force boolean?) . ->* . void?)
   (let ([so-path (->complete-path so-pathish)])  ; so-path = source or output path (could be either) 
@@ -56,8 +64,7 @@
       [(ormap (λ(test) (test so-path)) (list has/is-null-source? has/is-preproc-source? has/is-markup-source? has/is-scribble-source?)) 
        (let-values ([(source-path output-path) (->source+output-paths so-path)])
          (render-to-file-if-needed source-path output-path #:force force))]
-      [(ptree-source? so-path) (let ([ptree (cached-require so-path world:main-pollen-export)])
-                                 (for-each (λ(pnode) (render-for-dev-server pnode #:force force)) (ptree->list ptree)))]))
+      [(ptree-source? so-path) (render-ptree so-path)]))
   (void))
 
 
@@ -215,10 +222,9 @@
            racket/match
            pollen/debug
            pollen/decode
-           pollen/file-tools
+           pollen/file
            pollen/main
            pollen/lang/inner-lang-helper
-           pollen/predicates
            pollen/ptree
            pollen/cache
            sugar
@@ -252,8 +258,8 @@
                 racket/match
                 pollen/debug
                 pollen/decode
+                pollen/file
                 pollen/lang/inner-lang-helper
-                pollen/predicates
                 pollen/ptree
                 pollen/cache
                 sugar

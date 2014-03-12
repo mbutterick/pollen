@@ -1,15 +1,26 @@
 #lang scribble/manual
 
-@(require scribble/eval pollen/decode pollen/world (for-label racket (except-in pollen #%module-begin) pollen/world pollen/cache pollen/decode txexpr xml pollen/predicates pollen/decode/block))
+@(require scribble/eval pollen/decode pollen/world (for-label racket (except-in pollen #%module-begin) pollen/world pollen/cache pollen/decode txexpr xml pollen/decode/block))
 
 @(define my-eval (make-base-eval))
 @(my-eval `(require pollen pollen/decode pollen/decode/block xml))
 
 
-
 @section{Decode}
 
 @defmodule[pollen/decode]
+
+The @racket['doc] export of a Pollen markup file is a simple X-expression. @italic{Decoding} refers to any post-processing of this X-expression. The @racket[pollen/decode] module provides tools for creating decoders.
+
+The decode step can happen separately from the compilation of the file. But you can also attach a decoder to the markup file's @racket['root] node, so the decoding happens automatically when the markup is compiled, and thus automatically incorporated into @racket['doc]. (Following this approach, you could also attach multiple decoders to different tags within @racket['doc].)
+
+You can, of course, embed function calls within Pollen markup. But since markup is optimized for authors, decoding is useful for operations that can or should be moved out of the authoring layer. 
+
+One example is presentation and layout. For instance, @racket[detect-paragraphs] lets authors mark paragraphs in their source simply by using two carriage returns. 
+
+Another example is conversion of output into a particular data format. Most Pollen functions are optimized for HTML output, but it's simple to write decoders that target other formats.
+
+
 
 @defproc[
 (decode
@@ -26,11 +37,7 @@
 [#:exclude-tags tags-to-exclude (listof symbol?) null]
 )
 txexpr?]
-Recursively process a @racket[_tagged-xexpr], usually the one exported from a Pollen source file as @racket['doc]. This function doesn't do much on its own. Rather, it provides the hooks upon which harder-working functions can be hung.
-
-This is different from the Scribble approach, where the decoding logic is fixed for every document. In Pollen, you only get the decoding you ask for, and you can customize it to any degree.
-
-By default, the @racket[_tagged-xexpr] from a source file is tagged with @racket[root]. Recall from @secref{Pollen mechanics} that any tag can have a function attached to it. So the typical way to use @racket[decode] is to attach your decoding functions to it, and then define @racket[root] to invoke your @racket[decode] function. Then it will be automatically applied to every @racket['doc] during compile. 
+Recursively process a @racket[_tagged-xexpr], usually the one exported from a Pollen source file as @racket['doc]. This function doesn't do much on its own. Rather, it provides the hooks upon which harder-working functions can be hung. By default, the @racket[_tagged-xexpr] from a source file is tagged with @racket[root]. Recall from @secref{Pollen mechanics} that any tag can have a function attached to it. So the typical way to use @racket[decode] is to attach your decoding functions to it, and then define @racket[root] to invoke your @racket[decode] function. Then it will be automatically applied to every @racket['doc] during compile. 
 
 For instance, here's how @racket[decode] is attached to @racket['root] in @italic{Butterick's Practical Typography}. There's not much to it —
 

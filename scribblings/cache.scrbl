@@ -1,11 +1,11 @@
 #lang scribble/manual
 
-@(require scribble/eval pollen/cache pollen/world (for-label racket (except-in pollen #%module-begin) pollen/world pollen/cache pollen/render pollen/file-tools))
+@(require scribble/eval pollen/cache pollen/world (for-label racket (except-in pollen #%module-begin) pollen/world pollen/cache pollen/render pollen/file))
 
 @(define my-eval (make-base-eval))
 @(my-eval `(require pollen))
 
-@section{Cache}
+@title{Cache}
 
 @defmodule[pollen/cache]
 
