@@ -16,11 +16,6 @@
   (check-true (pathish? "/Users/MB/home"))
   (check-true (pathish? (->symbol "/Users/MB/home"))))
 
-
-(module+ test
-  (check-true (directory-pathish? "/Users/"))
-  (check-false (directory-pathish? "foobarzooblish")))
-
 (module+ test
   (check-true (directories-equal? "/Users/MB/foo" "/Users/MB/foo/"))
   (check-false (directories-equal? "/Users/MB/foo" "Users/MB/foo")))

@@ -1,11 +1,11 @@
 #lang racket/base
-(require racket/path racket/bool)
+(require racket/path racket/bool xml)
 (require "tools.rkt" "world.rkt" "decode.rkt" sugar txexpr "cache.rkt")
 
 
 (define+provide (pnode? x)
-  (->boolean (try (not (whitespace? (->string x)))
-                   (except [exn:fail? (λ(e) #f)]))))
+  (->boolean (and (xexpr? x) (try (not (whitespace/nbsp? (->string x)))
+                   (except [exn:fail? (λ(e) #f)])))))
 
 
 (define+provide/contract (pnode?/error x)
@@ -14,23 +14,14 @@
 
 
 (define+provide (ptree? x)
-  (->boolean (and (txexpr? x) (andmap (λ(i) (or (pnode? i) (ptree? i))) x))))
-
-
-(define+provide/contract (file->ptree p)
-  (pathish? . -> . ptree?)
-  (cached-require (->path p) world:main-pollen-export))
-
-
-(define+provide/contract (directory->ptree dir)
-  (directory-pathish? . -> . ptree?)
-  (let ([files (map remove-ext (filter (λ(x) (has-ext? x world:markup-source-ext)) (directory-list dir)))])
-    (ptree-root->ptree (cons world:ptree-root-node files))))
+  (->boolean (and (txexpr? x) 
+                  (andmap (λ(i) (or (pnode? i) (ptree? i))) x)
+                  (members-unique? (ptree->list x)))))
 
 
 ;; Try loading from ptree file, or failing that, synthesize ptree.
 (define+provide/contract (make-project-ptree project-dir)
-  (directory-pathish? . -> . ptree?)
+  (pathish? . -> . ptree?)
   (define ptree-source (build-path project-dir world:default-ptree))
   (cached-require ptree-source world:main-pollen-export))
 
@@ -127,10 +118,10 @@
 (define+provide/contract (ptree-source-decode . elements)
   (() #:rest pnodes-unique?/error . ->* . ptree?)
   (ptree-root->ptree (decode (cons world:ptree-root-node elements)
-                             #:xexpr-elements-proc (λ(xs) (filter-not whitespace? xs)))))
+                             #:txexpr-elements-proc (λ(xs) (filter-not whitespace? xs)))))
 
 
-(define current-ptree (make-parameter `(,world:ptree-root-node)))
+(define current-ptree (make-parameter #f))
 (define current-url-context (make-parameter (world:current-project-root)))
 (provide current-ptree current-url-context)
 

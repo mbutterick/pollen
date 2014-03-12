@@ -2,7 +2,7 @@
 (require xml txexpr sugar/define)
 (require "decode/block.rkt" "decode/typography.rkt" "debug.rkt")
 
-(provide (all-from-out "decode/typography.rkt"))
+(provide (all-from-out "decode/block.rkt" "decode/typography.rkt"))
 
 
 (define+provide (to-string x)

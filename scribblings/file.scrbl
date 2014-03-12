@@ -156,7 +156,7 @@ path?]
 [p pathish?]) 
 path?]
 )]
-Convert an output path @racket[_p] into the source path of the specified type that would produce this output path. Does not generate this source file nor verify that it exists.
+Convert an output path @racket[_p] into the source path of the specified type that would produce this output path. This function simply generates a path for a file — it does not ask whether the file exists.
 
 @examples[#:eval my-eval
 (define name "default.html")
@@ -174,4 +174,11 @@ Convert an output path @racket[_p] into the source path of the specified type th
 (->output-path
 [p pathish?]) 
 path?]
-Convert a source path @racket[_p] into its corresponding output path.
+Convert a source path @racket[_p] into its corresponding output path. This function simply generates a path for a file — it does not ask whether the file exists.
+
+@examples[#:eval my-eval
+(->output-path "main.css.pp")
+(->output-path "default.html.pm")
+(->output-path "index.html.p")
+(->output-path "file.scrbl")
+]

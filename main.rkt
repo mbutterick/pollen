@@ -77,7 +77,7 @@
    (define doc (apply (cond
                         [(equal? parser-mode world:reader-mode-ptree) 
                          (λ xs (decode (cons world:ptree-root-node xs)
-                                       #:xexpr-elements-proc (λ(xs) (filter (compose1 not (def/c whitespace?)) xs))))]
+                                       #:txexpr-elements-proc (λ(xs) (filter (compose1 not (def/c whitespace?)) xs))))]
                         ;; 'root is the hook for the decoder function.
                         ;; If it's not a defined identifier, it just hits #%top and becomes `(root ,@body ...)
                         [(or (equal? parser-mode world:reader-mode-markup)

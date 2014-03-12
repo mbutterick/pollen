@@ -15,6 +15,7 @@
 (check-true (ptree? '(foo)))
 (check-true (ptree? '(foo (hee))))
 (check-true (ptree? '(foo (hee (uncle "foo")))))
+(check-false (ptree? '(foo (hee hee (uncle "foo")))))
 
 
 (define test-ptree-main `(ptree-main "foo" "bar" (one (two "three"))))

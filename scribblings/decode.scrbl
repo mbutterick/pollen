@@ -44,8 +44,8 @@ For instance, here's how @racket[decode] is attached to @racket['root] in @itali
 @codeblock|{
 (define (root . items) 
     (decode (make-txexpr 'root null items)
-        #:xexpr-elements-proc detect-paragraphs
-        #:block-xexpr-proc 
+        #:txexpr-elements-proc detect-paragraphs
+        #:block-txexpr-proc 
             (λ(bx) (wrap-hanging-quotes (nonbreaking-last-space bx)))
         #:string-proc (compose1 smart-quotes smart-dashes)))}|
 
@@ -213,7 +213,7 @@ A predicate that returns @racket[#t] for any stringlike @racket[_v] that's entir
 (whitespace? (string->symbol "\n\n   "))
 (whitespace? "")
 (whitespace? '("" "  " "\n\n\n" " \n"))
-(define nonbreaking-space (format "~a" #\u00AD))
+(define nonbreaking-space (format "~a" #\u00A0))
 (whitespace? nonbreaking-space)
 ]
 
@@ -229,7 +229,7 @@ Like @racket[whitespace?], but also returns @racket[#t] for nonbreaking spaces.
 (whitespace/nbsp? (string->symbol "\n\n   "))
 (whitespace/nbsp? "")
 (whitespace/nbsp? '("" "  " "\n\n\n" " \n"))
-(define nonbreaking-space (format "~a" #\u00AD))
+(define nonbreaking-space (format "~a" #\u00A0))
 (whitespace/nbsp? nonbreaking-space)
 ]
 

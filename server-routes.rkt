@@ -5,7 +5,7 @@
 (require web-server/http/request-structs)
 (require web-server/http/response-structs)
 (require 2htdp/image)
-(require "world.rkt" "render.rkt" sugar txexpr "file.rkt" "debug.rkt" "ptree.rkt")
+(require "world.rkt" "render.rkt" sugar txexpr "file.rkt" "debug.rkt" "ptree.rkt" "cache.rkt")
 
 (module+ test (require rackunit))
 
@@ -201,7 +201,7 @@
     (append (sort-names subdirectories) (sort-names ptree-sources) (sort-names other-files)))
   
   (define project-paths (filter-not ineligible-path? (if (file-exists? dashfile)
-                                                         (map ->path (ptree->list (file->ptree dashfile)))
+                                                         (map ->path (ptree->list (cached-require (->path dashfile) world:main-pollen-export)))
                                                          (unique-sorted-output-paths (directory-list dir)))))
   
   (body-wrapper

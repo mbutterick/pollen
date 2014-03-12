@@ -13,15 +13,6 @@
        (except [exn:fail? (λ(e) #f)])))
 
 
-;; like pathish, but for directories
-;; todo: is this contract too restrictive?
-;; pathish doesn't require the path to exist,
-;; but this one does.
-(define+provide/contract (directory-pathish? x)
-  (any/c . -> . coerce/boolean?)
-  (and (pathish? x) (directory-exists? (->path x))))
-
-
 ;; compare directories by their exploded path elements,
 ;; not by equal?, which will give wrong result if no slash on the end
 (define+provide/contract (directories-equal? dirx diry)
@@ -39,7 +30,7 @@
 
 
 (define+provide/contract (visible-files dir)
-  (directory-pathish? . -> . (listof path?))
+  (pathish? . -> . (listof path?))
   (filter visible? 
           (map (λ(p) (find-relative-path dir p)) 
                (filter file-exists? 

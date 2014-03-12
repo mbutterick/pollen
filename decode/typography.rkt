@@ -152,11 +152,11 @@
 
 (define+provide/contract (whitespace/nbsp? x)  
   (any/c . -> . coerce/boolean?)
-  (or (whitespace? x) (equal? (->string x) (->string #\u00AD))))
+  (or (whitespace? x) (equal? (->string x) (->string #\u00A0))))
 
 ;; is x a paragraph break?
-(define (paragraph-break? x #:separator [sep world:paragraph-separator])
-  ; ((any/c) (#:separator pregexp?) . ->* . coerce/boolean?)
+(define+provide/contract (paragraph-break? x #:separator [sep world:paragraph-separator])
+  ((any/c) (#:separator pregexp?) . ->* . coerce/boolean?)
   (define paragraph-pattern (pregexp (format "^~a+$" sep)))
   (and (string? x) (regexp-match paragraph-pattern x)))
 
@@ -185,7 +185,7 @@
 ;; Find adjacent newline characters in a list and merge them into one item
 ;; Scribble, by default, makes each newline a separate list item
 ;; In practice, this is worthless.
-(define (merge-newlines x)
+(define+provide/contract (merge-newlines x)
   (txexpr-elements? . -> . txexpr-elements?)  
   (cond
     [(list? x) (do-merge (map merge-newlines x))]
