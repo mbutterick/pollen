@@ -6,7 +6,7 @@
 @(my-eval `(require pollen pollen/decode pollen/decode/block xml))
 
 
-@section{Decode}
+@title{Decode}
 
 @defmodule[pollen/decode]
 
@@ -146,7 +146,7 @@ The @racket[_tags-to-exclude] argument is useful if you're decoding source that'
 #:exclude-tags '(style script))
 ]
 
-@subsection{Blocks}
+@section{Blocks}
 @defmodule[pollen/decode/block]
 
 Because it's convenient, Pollen categorizes tagged X-expressions into two categories: @italic{block} and @italic{inline}. Why is it convenient? When using @racket[decode], you often want to treat the two categories differently. Not that you have to. But this is how you can.
@@ -195,7 +195,7 @@ A parameter that defines the set of tags that @racket[decode] will treat as bloc
 @code[(format "~a" (dynamic-require 'css-tools/html 'block-tags))]}
 
 
-@subsection{Typography}
+@section{Typography}
 @defmodule[pollen/decode/typography]
 
 An assortment of typography & layout functions, designed to be used with @racket[decode]. These aren't hard to write. So if you like these, use them. If not, make your own.

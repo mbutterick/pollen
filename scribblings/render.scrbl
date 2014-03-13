@@ -5,7 +5,7 @@
 @(define my-eval (make-base-eval))
 @(my-eval `(require pollen))
 
-@section{Rendering}
+@title{Rendering}
 
 @defmodule[pollen/render]
 
