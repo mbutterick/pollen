@@ -41,7 +41,7 @@
          (let* ([file-ext-pattern (pregexp "\\w+$")]
                 [here-ext (string->symbol (car (regexp-match file-ext-pattern inner-here-path)))])
            (cond
-             [(equal? here-ext world:ptree-source-ext) world:reader-mode-ptree]
+             [(equal? here-ext world:pagemap-source-ext) world:reader-mode-pagemap]
              [(equal? here-ext world:markup-source-ext) world:reader-mode-markup]
              [(equal? here-ext world:markdown-source-ext) world:reader-mode-markdown]
              [else world:reader-mode-preproc]))
@@ -75,7 +75,7 @@
    ;; set up the 'doc export
    (require pollen/decode)
    (define doc (apply (cond
-                        [(equal? parser-mode world:reader-mode-ptree) (λ xs ((dynamic-require 'pollen/ptree 'decode-ptree) xs))]
+                        [(equal? parser-mode world:reader-mode-pagemap) (λ xs ((dynamic-require 'pollen/pagemap 'decode-pagemap) xs))]
                         ;; 'root is the hook for the decoder function.
                         ;; If it's not a defined identifier, it just hits #%top and becomes `(root ,@body ...)
                         [(or (equal? parser-mode world:reader-mode-markup)

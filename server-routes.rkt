@@ -5,7 +5,7 @@
 (require web-server/http/request-structs)
 (require web-server/http/response-structs)
 (require 2htdp/image)
-(require "world.rkt" "render.rkt" sugar txexpr "file.rkt" "debug.rkt" "ptree.rkt" "cache.rkt")
+(require "world.rkt" "render.rkt" sugar txexpr "file.rkt" "debug.rkt" "pagemap.rkt" "cache.rkt")
 
 (module+ test (require rackunit))
 
@@ -177,12 +177,12 @@
                          
                          (cond ; in cell
                            [source  (cons (format "in/~a" source) "in")]
-                           [(or (ptree-source? filename) (sourceish? filename))  (cons (format "in/~a" filename) "in")]
+                           [(or (pagemap-source? filename) (sourceish? filename))  (cons (format "in/~a" filename) "in")]
                            [else empty-cell])
                          
                          (cond ; out cell 
                            [(directory-exists? (build-path dir filename)) (cons #f #f)]
-                           [(ptree-source? filename) empty-cell]
+                           [(pagemap-source? filename) empty-cell]
                            [else (cons (format "out/~a" filename) "out")]))))))
   
   (define (ineligible-path? x) (or (not (visible? x)) (member x world:reserved-paths)))  
@@ -194,14 +194,14 @@
     (define path-is-directory? (λ(f) (directory-exists? (build-path dir f))))
     (define subdirectories (filter path-is-directory? all-paths))
     (define files (filter-not path-is-directory? all-paths))
-    (define ptree-sources (filter ptree-source? files))
-    (define other-files (filter-not ptree-source? files))
+    (define pagemap-sources (filter pagemap-source? files))
+    (define other-files (filter-not pagemap-source? files))
     (define (sort-names xs) (sort xs #:key ->string string<?))
     ;; put subdirs in list ahead of files (so they appear at the top)
-    (append (sort-names subdirectories) (sort-names ptree-sources) (sort-names other-files)))
+    (append (sort-names subdirectories) (sort-names pagemap-sources) (sort-names other-files)))
   
   (define project-paths (filter-not ineligible-path? (if (file-exists? dashfile)
-                                                         (map ->path (ptree->list (cached-require (->path dashfile) world:main-pollen-export)))
+                                                         (map ->path (pagemap->list (cached-require (->path dashfile) world:main-pollen-export)))
                                                          (unique-sorted-output-paths (directory-list dir)))))
   
   (body-wrapper

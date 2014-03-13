@@ -66,9 +66,9 @@ Render multiple @racket[_source-paths] in one go. This can be faster than @racke
 
 @defproc*[
 (
-[(render-ptree [ptree ptree?]) void?]
-[(render-ptree [ptree-source pathish?]) void?])]
-Using @racket[_ptree], or a ptree loaded from @racket[_ptree-source], render the files included in that ptree using @racket[render-batch].
+[(render-pagemap [pagemap pagemap?]) void?]
+[(render-pagemap [pagemap-source pathish?]) void?])]
+Using @racket[_pagemap], or a pagemap loaded from @racket[_pagemap-source], render the files included in that pagemap using @racket[render-batch].
 
 @defproc[
 (get-template-for

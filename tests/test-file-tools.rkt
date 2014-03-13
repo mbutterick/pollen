@@ -71,9 +71,9 @@
   (check-false (preproc-source? #f)))
 
 (module+ test
-  (check-true (ptree-source? (format "foo.~a" world:ptree-source-ext)))
-  (check-false (ptree-source? (format "~a.foo" world:ptree-source-ext)))
-  (check-false (ptree-source? #f)))
+  (check-true (pagemap-source? (format "foo.~a" world:pagemap-source-ext)))
+  (check-false (pagemap-source? (format "~a.foo" world:pagemap-source-ext)))
+  (check-false (pagemap-source? #f)))
 (module+ test
   (check-true (markup-source? "foo.pm"))
   (check-false (markup-source? "foo.p"))
@@ -91,7 +91,7 @@
   (check-equal? (->preproc-source-path "foo") (->path "foo.p"))
   (check-equal? (->preproc-source-path 'foo) (->path "foo.p")))
 (module+ test
-  (check-equal? (->output-path (->path "foo.ptree")) (->path "foo.ptree"))
+  (check-equal? (->output-path (->path "foo.pmap")) (->path "foo.pmap"))
   (check-equal? (->output-path "foo.html") (->path "foo.html"))
   (check-equal? (->output-path 'foo.html.p) (->path "foo.html"))
   (check-equal? (->output-path (->path "/Users/mb/git/foo.html.p")) (->path "/Users/mb/git/foo.html"))

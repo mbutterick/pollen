@@ -8,7 +8,7 @@
 (define markup-source-ext 'pm)
 (define markdown-source-ext 'pmd)
 (define null-source-ext 'p)
-(define ptree-source-ext 'ptree)
+(define pagemap-source-ext 'pmap)
 (define template-source-ext 'pt)
 (define scribble-source-ext 'scrbl)
 
@@ -17,12 +17,12 @@
 (define reader-mode-preproc 'pre)
 (define reader-mode-markup 'markup)
 (define reader-mode-markdown 'markdown)
-(define reader-mode-ptree 'ptree)
+(define reader-mode-pagemap 'pmap)
 
-(define decodable-extensions (list markup-source-ext ptree-source-ext))
+(define decodable-extensions (list markup-source-ext pagemap-source-ext))
 
-(define default-ptree "index.ptree")
-(define ptree-root-node 'ptree-root)
+(define default-pagemap "index.pmap")
+(define pagemap-root-node 'pagemap-root)
 
 (define template-source-prefix "-")
 (define expression-delimiter #\◊)
@@ -57,7 +57,7 @@
 
 (define server-port 8088)
 
-(define dashboard-name "index.ptree")
+(define dashboard-name "index.pmap")
 (define dashboard-css "poldash.css")
 
 (define current-module-root (make-parameter #f))

@@ -29,9 +29,9 @@ clone       copies rendered files to desktop
 #|
                      [("render") `(begin
                                         ;; todo: take extensions off the comand line
-                                        (displayln "Render preproc & ptree files ...")
+                                        (displayln "Render preproc & pagemap files ...")
                                         (require "render.rkt" "file-tools.rkt" "world.rkt")
-                                        (apply render-batch (append-map project-files-with-ext (list world:preproc-source-ext world:ptree-source-ext))))]
+                                        (apply render-batch (append-map project-files-with-ext (list world:preproc-source-ext world:pagemap-source-ext))))]
                      [("clone") (let ([target-path 
                                        (if (> (len args) 1)
                                            (->path (get args 1))
@@ -46,7 +46,7 @@ clone       copies rendered files to desktop
                                                                      markup-source? 
                                                                      preproc-source? 
                                                                      template-source?
-                                                                     ptree-source?
+                                                                     pagemap-source?
                                                                      pollen-script?
                                                                      magic-directory?
                                                                      racket-file?)))

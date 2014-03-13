@@ -13,7 +13,7 @@
   
   (define-values (pollen-servlet _)
     (dispatch-rules
-     [((string-arg) ... (? ptree-source?)) route-dashboard]
+     [((string-arg) ... (? pagemap-source?)) route-dashboard]
      [((string-arg) ... "in" (string-arg)) route-in]
      [((string-arg) ... "out" (string-arg)) route-out]
      [((string-arg) ... "xexpr" (string-arg)) route-xexpr]
