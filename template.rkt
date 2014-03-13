@@ -14,9 +14,7 @@
 
 (define/contract (puttable-item? x)
   (any/c . -> . boolean?)
-  (or (txexpr? x) 
-      (has-markup-source? x) 
-      (and (pnode? x) (pnode->url x) (has-markup-source? (pnode->url x)))))
+  (or (txexpr? x) (has-markup-source? x)))
 
 (module+ test
   (check-false (puttable-item? #t))
@@ -31,8 +29,7 @@
   (cond
     ;; Using put has no effect on txexprs. It's here to make the idiom smooth.
     [(txexpr? x) x] 
-    [(has-markup-source? x) (cached-require (->markup-source-path x) world:main-pollen-export)]
-    [(has-markup-source? (pnode->url x)) (cached-require (->markup-source-path (pnode->url x)) world:main-pollen-export)]))
+    [(has-markup-source? x) (cached-require (->markup-source-path x) world:main-pollen-export)]))
 
 #|(module+ test
   (check-equal? (put '(foo "bar")) '(foo "bar"))

@@ -245,8 +245,7 @@
   (list? . -> . bytes?)
   (parameterize ([current-namespace (make-base-namespace)]
                  [current-output-port (current-error-port)]
-                 [current-ptree (make-project-ptree (world:current-project-root))]
-                 [current-url-context (world:current-project-root)])
+                 [current-ptree (make-project-ptree (world:current-project-root))])
     (for-each (λ(mod-name) (namespace-attach-module cache-ns mod-name)) 
               `(web-server/templates 
                 xml
