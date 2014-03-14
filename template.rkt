@@ -75,11 +75,6 @@
     [(_ condition body ...)
      #'(if condition (string-append* 
                       (with-handlers ([exn:fail? (λ(exn) (error (format "when/block: ~a" (exn-message exn))))])
-                        (map ->string (list body ...))))
+                        (map ->string (list body ...)))) ; todo: should this be ->html not ->string?
            "")]))
 
-
-(module+ main
-
-  
-(when/block #t (find 'topic "/Users/mb/git/bpt/introduction.html")))
