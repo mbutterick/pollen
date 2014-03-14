@@ -15,7 +15,7 @@ Convenience functions for templates. These are automatically imported into the @
 (->html
 [tx txexpr?])
 string?]
-Convert @racket[_tx] to an HTML string. Consistent with the HTML spec (and unlike @racket[xexpr->string]), text that appears within @code{script} or @code{style} blocks will not be escaped.
+Convert @racket[_tx] to an HTML string. Similar to @racket[xexpr->string], but consistent with the HTML spec, text that appears within @code{script} or @code{style} blocks will not be escaped.
 
 @examples[#:eval my-eval
 (define tx '(root (script "3 > 2") "Why is 3 > 2?"))

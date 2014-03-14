@@ -1,6 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base))
-(require racket/string xml xml/path sugar/define sugar/container)
+(require racket/string xml xml/path sugar/define sugar/container sugar/coerce/contract)
 (require "tools.rkt" txexpr "world.rkt" "cache.rkt")
 
 
@@ -8,47 +8,47 @@
 (provide (all-from-out sugar/coerce/value))
 
 
-(define+provide/contract (puttable-item? x)
-  (any/c . -> . boolean?)
-  (or (txexpr? x) (has-markup-source? x)))
+(define/contract+provide (doc x)
+  (coerce/path? . -> . txexpr?)
+  (cached-require x world:main-pollen-export))
 
 
-(define+provide/contract (query-key? x)
-  (any/c . -> . boolean?)
-  (or (string? x) (symbol? x)))
+(define/contract+provide (metas x)
+  (coerce/path? . -> . hash?)
+  (cached-require x world:meta-pollen-export))
 
 
-(define+provide/contract (put x)
-  (puttable-item? . -> . txexpr?)
-  (cond
-    ;; Using put has no effect on txexprs. It's here to make the idiom smooth.
-    [(txexpr? x) x] 
-    [(has-markup-source? x) (cached-require (->markup-source-path x) world:main-pollen-export)]))
+(define/contract+provide (find query . xs)
+  ((coerce/symbol?) #:rest (listof (or/c #f hash? txexpr? pathish?)) . ->* . (or/c #f txexpr-element?))
+  (define result (apply find* query xs))
+  (or (null? result) (car result)))
 
 
-(define+provide/contract (find query px)
-  (query-key? (or/c #f puttable-item?) . -> . (or/c #f txexpr-element?))
-  (define result (and px (or (find-in-metas px query) (find-in-doc px query))))
-  (and result (car result))) ;; return false or first element
+(define/contract+provide (find* query . pxs)
+  ((coerce/symbol?) #:rest (listof (or/c #f hash? txexpr? pathish?)) . ->* . (or/c #f txexpr-element?))
+  (define (finder x)
+    (cond
+      [(hash? x) (find-in-metas query x)]
+      [(txexpr? x) (find-in-doc query x)]
+      [(pathish? x) (find* query (doc x) (metas x))]
+      [else null]))
+  (append-map finder pxs))
 
 
-(define+provide/contract (find-in-metas px key)
-  (puttable-item? query-key? . -> . (or/c #f txexpr-elements?))
-  (and (has-markup-source? px)
-       (let ([metas (cached-require (->markup-source-path px) 'metas)]
-             [key (->string key)])
-         (and (key . in? . metas ) (->list (get metas key))))))
+(define/contract+provide (find-in-metas query hash-or-path)
+  (coerce/symbol? (or/c hash? pathish?) . -> . (or/c #f txexpr-elements?))
+  (let ([metas (or (and (hash? hash-or-path) hash-or-path) 
+                   (metas (->path hash-or-path)))])
+    (with-handlers ([exn:fail? (λ(e) null)])
+      (list (hash-ref metas query)))))
 
 
-(define+provide/contract (find-in-doc px query) 
-  (puttable-item? (or/c query-key? (listof query-key?)) 
-                  . -> . (or/c  #f txexpr-elements?))
-  (let* ([px (put px)]
-         ;; make sure query is a list of symbols (required by se-path*/list)
-         [query (map ->symbol (->list query))]
-         [results (se-path*/list query px)])
-    ;; if results exist, send back xexpr as output
-    (and (not (empty? results)) results)))
+(define/contract+provide (find-in-doc query doc-or-path) 
+  (coerce/symbol? (or/c txexpr? pathish?) . -> . (or/c  #f txexpr-elements?))
+  (let ([doc (or (and (txexpr? doc-or-path) doc-or-path) 
+                 (doc (->path doc-or-path)))])
+    (with-handlers ([exn:fail? (λ(e) null)])
+      (se-path*/list query doc))))
 
 
 ;; turns input into xexpr-elements so they can be spliced into template

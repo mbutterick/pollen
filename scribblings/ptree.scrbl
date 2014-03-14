@@ -5,7 +5,7 @@
 @(define my-eval (make-base-eval))
 @(my-eval `(require pollen pollen/pagemap txexpr))
 
-@title{pagemaps}
+@title{Pagemaps}
 
 @defmodule[pollen/pagemap]
 
