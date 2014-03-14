@@ -6,9 +6,14 @@
 (define-for-syntax args (current-command-line-arguments))
 (define-for-syntax arg-command-name (with-handlers ([exn:fail? (λ(exn) #f)]) (vector-ref args 0)))
 
+
 (define-for-syntax arg-project-directory
   (with-handlers ([exn:fail? (λ(exn) (current-directory))])
     (path->complete-path (simplify-path (string->path (vector-ref args 1))))))
+
+(define-for-syntax arg-server-port
+  (with-handlers ([exn:fail? (λ(exn) #f)])
+    (string->number (vector-ref args 2))))
 
 (define-for-syntax (command-error error-string)
   `(displayln (string-append "Error: ", error-string)))
@@ -19,7 +24,7 @@
   (datum->syntax stx 
                  (case arg-command-name
                    [(#f "help") (handle-help)]
-                   [("start") (handle-start arg-project-directory)]
+                   [("start") (handle-start arg-project-directory arg-server-port)]
                    [else (handle-else arg-command-name)])))
 
 (select-syntax-for-command)

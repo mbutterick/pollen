@@ -9,12 +9,13 @@ render      renders all files in project directory
 clone       copies rendered files to desktop
 [filename]  renders individual file"))
 
-(define (handle-start directory)
+(define (handle-start directory [port #f])
   (if (not (directory-exists? directory))
       (error (format "~a is not a directory" directory))
       `(begin 
          (require pollen/server pollen/world)
-         (parameterize ([world:current-project-root ,directory])
+         (parameterize ([world:current-project-root ,directory]
+                        ,@(if port (list `(world:current-server-port ,port)) null))
            (start-server)))))
 
 (define (handle-else command)
