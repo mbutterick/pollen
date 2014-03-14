@@ -1,5 +1,5 @@
 #lang racket/base
-(require "world.rkt" sugar/define/contract sugar/coerce/contract)
+(require "world.rkt" sugar/define sugar/coerce/contract)
 
 
 (define/contract+provide (get-project-require-files source-path) ; keep contract local to ensure coercion
@@ -8,7 +8,7 @@
   (and (andmap file-exists? possible-requires) possible-requires))
 
 
-(define+provide/contract (require+provide-project-require-files here-path)
+(define+provide/contract (require+provide-project-require-files here-path #:provide [provide #t])
   (coerce/path? . -> . list?)
   (define (put-file-in-require-form file)
     `(file ,(path->string file)))
@@ -18,6 +18,11 @@
       (let ([files-in-require-form (map put-file-in-require-form project-require-files)])
         `(begin
            (require ,@files-in-require-form)
-           ,@(list `(provide (all-from-out ,@files-in-require-form)))))
+           ,@(if provide
+                 (list `(provide (all-from-out ,@files-in-require-form)))
+                 '())))
       (void)))
 
+
+(define+provide (require-project-require-files here-path)
+  (require+provide-project-require-files here-path #:provide #f))

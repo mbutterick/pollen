@@ -159,12 +159,11 @@
   (define expr-to-eval 
     `(begin 
        (require (for-syntax racket/base))
-       (require web-server/templates pollen/cache)
-       (require pollen/lang/inner-lang-helper)
-       (require-project-require-files) 
+       (require web-server/templates pollen/cache pollen/debug)
+       ,(require-project-require-files source-path) 
        (let ([doc (cached-require ,source-path ',world:main-pollen-export)]
              [metas (cached-require ,source-path ',world:meta-pollen-export)])
-         (local-require pollen/debug pollen/pagemap pollen/template pollen/top)
+         (local-require pollen/pagemap pollen/template pollen/top)
          (include-template #:command-char ,world:template-field-delimiter ,(->string (find-relative-path source-dir template-path))))))
   
   (time (parameterize ([current-directory source-dir])
@@ -224,7 +223,6 @@
            pollen/decode
            pollen/file
            pollen/main
-           pollen/lang/inner-lang-helper
            pollen/pagemap
            pollen/cache
            sugar
@@ -258,7 +256,6 @@
                 pollen/debug
                 pollen/decode
                 pollen/file
-                pollen/lang/inner-lang-helper
                 pollen/pagemap
                 pollen/cache
                 sugar

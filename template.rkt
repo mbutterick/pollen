@@ -8,14 +8,14 @@
 (provide (all-from-out sugar/coerce/value))
 
 
-(define/contract+provide (doc x)
+(define/contract+provide (get-doc x)
   (coerce/path? . -> . txexpr?)
-  (cached-require x world:main-pollen-export))
+  (cached-require (->source-path x) world:main-pollen-export))
 
 
-(define/contract+provide (metas x)
+(define/contract+provide (get-metas x)
   (coerce/path? . -> . hash?)
-  (cached-require x world:meta-pollen-export))
+  (cached-require (->source-path x) world:meta-pollen-export))
 
 
 (define/contract+provide (find query . xs)
@@ -25,12 +25,12 @@
 
 
 (define/contract+provide (find* query . pxs)
-  ((coerce/symbol?) #:rest (listof (or/c #f hash? txexpr? pathish?)) . ->* . (or/c #f txexpr-element?))
+  ((coerce/symbol?) #:rest (listof (or/c #f hash? txexpr? pathish?)) . ->* . (or/c #f txexpr-elements?))
   (define (finder x)
     (cond
       [(hash? x) (find-in-metas query x)]
       [(txexpr? x) (find-in-doc query x)]
-      [(pathish? x) (find* query (doc x) (metas x))]
+      [(pathish? x) (find* query (get-doc x) (get-metas x))]
       [else null]))
   (append-map finder pxs))
 
@@ -38,7 +38,7 @@
 (define/contract+provide (find-in-metas query hash-or-path)
   (coerce/symbol? (or/c hash? pathish?) . -> . (or/c #f txexpr-elements?))
   (let ([metas (or (and (hash? hash-or-path) hash-or-path) 
-                   (metas (->path hash-or-path)))])
+                   (get-metas (->path hash-or-path)))])
     (with-handlers ([exn:fail? (λ(e) null)])
       (list (hash-ref metas query)))))
 
@@ -46,9 +46,9 @@
 (define/contract+provide (find-in-doc query doc-or-path) 
   (coerce/symbol? (or/c txexpr? pathish?) . -> . (or/c  #f txexpr-elements?))
   (let ([doc (or (and (txexpr? doc-or-path) doc-or-path) 
-                 (doc (->path doc-or-path)))])
+                 (get-doc (->path doc-or-path)))])
     (with-handlers ([exn:fail? (λ(e) null)])
-      (se-path*/list query doc))))
+      (se-path*/list (list query) doc))))
 
 
 ;; turns input into xexpr-elements so they can be spliced into template
@@ -77,3 +77,9 @@
                       (with-handlers ([exn:fail? (λ(exn) (error (format "when/block: ~a" (exn-message exn))))])
                         (map ->string (list body ...))))
            "")]))
+
+
+(module+ main
+
+  
+(when/block #t (find 'topic "/Users/mb/git/bpt/introduction.html")))

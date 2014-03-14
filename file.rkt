@@ -84,6 +84,15 @@
 (make-source-utility-functions scribble)
 
 
+(define/contract+provide (->source-path path)
+  (coerce/path? . -> . path?)
+  (define possible-sources 
+    (if (directory-exists? path)
+        null
+        (filter file-exists? (map (λ(proc) (proc path)) (list ->preproc-source-path ->markup-source-path ->null-source-path ->scribble-source-path)))))
+    (if (null? possible-sources) path (car possible-sources)))
+
+
 (define+provide/contract (->output-path x)
   (coerce/path? . -> . coerce/path?)
   (cond

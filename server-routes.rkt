@@ -159,12 +159,7 @@
   
   (define (make-path-row fn)
     (define filename (->string fn))
-    (define (file-in-dir? fn) (file-exists? (build-path dir fn)))
-    (define possible-sources 
-      (if (directory-exists? fn)
-          empty ;; folders don't have source files
-          (filter file-in-dir? (list (->preproc-source-path filename) (->markup-source-path filename) (->null-source-path filename) (->scribble-source-path filename)))))
-    (define source (and (not (empty? possible-sources)) (->string (car possible-sources))))
+    (define source (->string (->source-path fn)))
     `(tr ,@(map make-link-cell 
                 (append (list                          
                          (cond ; main cell
