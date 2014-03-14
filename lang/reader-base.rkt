@@ -1,17 +1,20 @@
 #lang racket/base
-(require (only-in scribble/reader make-at-reader) pollen/world)
+(require (only-in scribble/reader make-at-reader) pollen/world racket/path pollen/project-requires)
 
 (provide make-reader-with-mode (all-from-out pollen/world))
+
 
 (define read-inner (make-at-reader 
                     #:command-char world:expression-delimiter 
                     #:syntax? #t 
                     #:inside? #t))
 
+
 (define (make-custom-read custom-read-syntax-proc) 
   (λ(p)
     (syntax->datum
      (custom-read-syntax-proc (object-name p) p))))
+
 
 (define (make-custom-read-syntax reader-mode)
   (λ (path-string p)
@@ -19,8 +22,12 @@
     (datum->syntax file-contents 
                    `(module pollen-lang-module pollen 
                       (define reader-mode ',reader-mode)
+                      (define here-path ,(path->string path-string))
+                      (define here ,(path->string (path-replace-suffix (find-relative-path (world:current-project-root) path-string) "")))
+                      ,(require+provide-project-require-files path-string)
                       ,@file-contents) 
                    file-contents)))
+
 
 (define-syntax-rule (make-reader-with-mode mode)
   (begin

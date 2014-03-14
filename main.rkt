@@ -11,24 +11,13 @@
      doc-raw ; id of export
      (λ(x) x) ; post-process function
      () ; prepended exprs
-     
-     (require pollen/lang/inner-lang-helper)
-     (require-and-provide-project-require-files) ; only works if current-directory is set correctly
-     
+          
      ;; Change behavior of undefined identifiers with #%top
-     (require pollen/top)
-     (provide (all-from-out pollen/top))
+     ;; Get project values from world
+     (require pollen/top pollen/world)
+     (provide (all-from-out pollen/top pollen/world))
      
-     ;; Get project values
-     (require pollen/world)
-     (provide (all-from-out pollen/world))
-     
-     ;; Build 'inner-here-path and 'inner-here
-     (define (here-path->here here-path)
-       (path->string (path-replace-suffix (pollen-find-relative-path (world:current-project-root) here-path) "")))
-     (define inner-here-path (get-here-path))
-     (define inner-here (here-path->here inner-here-path))
-     
+     ;; for anything defined in pollen source file
      (provide (all-defined-out))
      
      body-exprs ...)
@@ -39,7 +28,7 @@
    (define parser-mode 
      (if (equal? reader-mode world:reader-mode-auto)
          (let* ([file-ext-pattern (pregexp "\\w+$")]
-                [here-ext (string->symbol (car (regexp-match file-ext-pattern inner-here-path)))])
+                [here-ext (string->symbol (car (regexp-match file-ext-pattern here-path)))])
            (cond
              [(equal? here-ext world:pagemap-source-ext) world:reader-mode-pagemap]
              [(equal? here-ext world:markup-source-ext) world:reader-mode-markup]
@@ -64,8 +53,8 @@
                         (apply (compose1 (dynamic-require 'markdown 'parse-markdown) string-append) doc-raw)
                         doc-raw)])
        `(placeholder-root 
-         ,@(cons (meta 'here: inner-here) 
-                 (cons (meta 'here-path: inner-here-path) 
+         ,@(cons (meta 'here: here) 
+                 (cons (meta 'here-path: here-path) 
                        ;; cdr strips initial linebreak, but make sure doc-raw isn't blank
                        (if (and (list? doc-raw) (> 0 (length doc-raw))) (cdr doc-raw) doc-raw)))))) 
    
@@ -87,7 +76,7 @@
    
    (provide metas doc
             ;; hide the exports that were only for internal use.
-            (except-out (all-from-out 'inner) inner-here inner-here-path doc-raw #%top))
+            (except-out (all-from-out 'inner) doc-raw #%top))
    
    ;; for output in DrRacket
    (module+ main

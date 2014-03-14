@@ -35,7 +35,7 @@
 (define main-pollen-export 'doc) ; don't forget to change fallback template too
 (define meta-pollen-export 'metas)
 
-(define extras-dir (string->path "pollen-require"))
+(define pollen-require "pollen-require.rkt")
 
 (define missing-file-boilerplace "#lang pollen\n\n")
 
@@ -50,7 +50,7 @@
 (define command-file "polcom")
 
 (define reserved-paths
-  (map string->path (list command-file (path->string extras-dir) "poldash.css" "compiled")))
+  (map string->path (list command-file "poldash.css" "compiled")))
 
 
 (define current-project-root (make-parameter (current-directory)))

@@ -77,8 +77,8 @@
   (file-proc source-or-output-path))
 
 
-(define (project-requires-changed?)
-  (define project-require-files (get-project-require-files))
+(define (project-requires-changed? source-path)
+  (define project-require-files (get-project-require-files source-path))
   (define rerequire-results (and project-require-files (map file-needed-rerequire? project-require-files)))
   (define requires-changed? (and rerequire-results (ormap (λ(x) x) rerequire-results)))
   (when requires-changed?
@@ -94,7 +94,7 @@
   (or (not (file-exists? output-path))
       (modification-date-expired? source-path template-path)
       (and (not (null-source? source-path)) (file-needed-rerequire? source-path))
-      (and (world:check-project-requires-in-render?) (project-requires-changed?))))
+      (and (world:check-project-requires-in-render?) (project-requires-changed? source-path))))
 
 
 (define/contract+provide (render-to-file-if-needed source-path [template-path #f] [maybe-output-path #f] #:force [force #f])
