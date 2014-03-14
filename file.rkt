@@ -84,6 +84,7 @@
 (make-source-utility-functions scribble)
 
 
+;; todo: use has-source? for this
 (define/contract+provide (->source-path path)
   (coerce/path? . -> . path?)
   (define possible-sources 
