@@ -43,6 +43,7 @@
      (let ([stem-datum (syntax->datum #'stem)])
        (with-syntax ([file-ext (format-id stx "world:~a-source-ext" #'stem)]
                      [stem-source? (format-id stx "~a-source?" #'stem)]
+                     [get-stem-source (format-id stx "get-~a-source" #'stem)]
                      [has-stem-source? (format-id stx "has-~a-source?" #'stem)]
                      [has/is-stem-source? (format-id stx "has/is-~a-source?" #'stem)]
                      [->stem-source-path (format-id stx "->~a-source-path" #'stem)]
@@ -52,9 +53,14 @@
              (define+provide (stem-source? x)
                (->boolean (and (pathish? x) (has-ext? (->path x) file-ext))))
              
+             (define+provide (get-stem-source x)
+               (and (pathish? x) 
+                    (let ([source-path (->stem-source-path (->path x))])
+                      (and source-path (file-exists? source-path) source-path))))
+             
              ;; does the source-ified version of the file exist
              (define+provide (has-stem-source? x)
-               (->boolean (and (pathish? x) (file-exists? (->stem-source-path (->path x))))))
+               (->boolean (get-stem-source x)))
              
              ;; it's a file-ext source file, or a file that's the result of a file-ext source
              (define+provide (has/is-stem-source? x)
@@ -62,12 +68,15 @@
              
              ;; add the file extension if it's not there
              (define+provide/contract (->stem-source-path x)
-               (pathish? . -> . path?)
-               (->path (if (stem-source? x) 
-                           x 
-                           #,(if (equal? stem-datum 'scribble)
-                                 #'(add-ext (remove-all-ext x) file-ext) ; different logic for scribble sources
-                                 #'(add-ext x file-ext)))))
+               (pathish? . -> . (or/c #f path?))
+               (define result (if (stem-source? x) 
+                                  x 
+                                  #,(if (equal? stem-datum 'scribble)
+                                        #'(if (x . has-ext? . 'html) ; different logic for scribble sources
+                                              (add-ext (remove-all-ext x) file-ext)
+                                              #f)
+                                        #'(add-ext x file-ext))))
+               (and result (->path result)))
              
              ;; coerce either a source or output file to both
              (define+provide/contract (->stem-source+output-paths path)
@@ -84,15 +93,9 @@
 (make-source-utility-functions scribble)
 
 
-;; todo: use has-source? for this
 (define/contract+provide (->source-path path)
-  (coerce/path? . -> . path?)
-  (define possible-sources 
-    (if (directory-exists? path)
-        null
-        (filter file-exists? (map (λ(proc) (proc path)) (list ->preproc-source-path ->markup-source-path ->null-source-path ->scribble-source-path)))))
-    (if (null? possible-sources) path (car possible-sources)))
-
+  (coerce/path? . -> . (or/c #f path?))
+  (ormap (λ(proc) (proc path)) (list get-markup-source get-preproc-source get-null-source get-scribble-source)))
 
 (define+provide/contract (->output-path x)
   (coerce/path? . -> . coerce/path?)

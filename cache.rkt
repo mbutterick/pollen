@@ -34,7 +34,7 @@
   (when (not (current-cache)) (error "cached-require: No cache set up."))
   
   (define path 
-    (with-handlers ([exn:fail? (λ(exn) (displayln (format "cached-require: ~a is not a valid path" path-string)))])
+    (with-handlers ([exn:fail? (λ(exn) (error (format "cached-require: ~a is not a valid path" path-string)))])
       (->complete-path path-string)))  
   
   (when (or (not (cache-has-key? path))

@@ -138,11 +138,11 @@
 
 
 ;; dashboard route
-(define (dashboard dashfile)
-  (define dir (get-enclosing-dir dashfile))
+(define (dashboard dashboard-pmap)
+  (define dashboard-dir (get-enclosing-dir dashboard-pmap))
   (define (in-project-root?)
-    (directories-equal? dir (world:current-project-root)))
-  (define parent-dir (and (not (in-project-root?)) (get-enclosing-dir dir)))
+    (directories-equal? dashboard-dir (world:current-project-root)))
+  (define parent-dir (and (not (in-project-root?)) (get-enclosing-dir dashboard-dir)))
   (define empty-cell (cons #f #f))
   (define (make-link-cell href+text)
     (match-define (cons href text) href+text) 
@@ -157,13 +157,14 @@
           `(tr (th ((colspan "3")) (a ((href ,url-to-parent-dashboard)) ,(format "up to ~a" url-to-parent))))) 
         `(tr (th ((colspan "3")(class "root")) "Pollen root"))))
   
-  (define (make-path-row fn)
-    (define filename (->string fn))
-    (define source (->string (->source-path fn)))
+  (define (make-path-row filename-path)
+    (define filename (->string filename-path))
+    (define possible-source (->source-path (build-path dashboard-dir filename-path)))
+    (define source (and possible-source (->string possible-source)))
     `(tr ,@(map make-link-cell 
                 (append (list                          
                          (cond ; main cell
-                           [(directory-exists? (build-path dir filename)) ; links subdir to its dashboard
+                           [(directory-exists? (build-path dashboard-dir filename)) ; links subdir to its dashboard
                             (cons (format "~a/~a" filename world:dashboard-name) (format "~a/" filename))]
                            [(and source (equal? (get-ext source) "scrbl")) 
                             (cons #f `(a ((href ,filename)) ,filename (span ((class "file-ext")) " (from " ,source ")")))]
@@ -176,7 +177,7 @@
                            [else empty-cell])
                          
                          (cond ; out cell 
-                           [(directory-exists? (build-path dir filename)) (cons #f #f)]
+                           [(directory-exists? (build-path dashboard-dir filename)) (cons #f #f)]
                            [(pagemap-source? filename) empty-cell]
                            [else (cons (format "out/~a" filename) "out")]))))))
   
@@ -186,7 +187,7 @@
     (define output-paths (map ->output-path xs))
     (define (unique-members xs) (set->list (list->set xs)))
     (define all-paths (unique-members output-paths))
-    (define path-is-directory? (λ(f) (directory-exists? (build-path dir f))))
+    (define path-is-directory? (λ(f) (directory-exists? (build-path dashboard-dir f))))
     (define subdirectories (filter path-is-directory? all-paths))
     (define files (filter-not path-is-directory? all-paths))
     (define pagemap-sources (filter pagemap-source? files))
@@ -195,9 +196,11 @@
     ;; put subdirs in list ahead of files (so they appear at the top)
     (append (sort-names subdirectories) (sort-names pagemap-sources) (sort-names other-files)))
   
-  (define project-paths (filter-not ineligible-path? (if (file-exists? dashfile)
-                                                         (map ->path (pagemap->list (cached-require (->path dashfile) world:main-pollen-export)))
-                                                         (unique-sorted-output-paths (directory-list dir)))))
+  (define project-paths 
+    (filter-not ineligible-path? 
+                (if (file-exists? dashboard-pmap)
+                    (map ->path (pagemap->list (cached-require (->path dashboard-pmap) world:main-pollen-export)))
+                    (unique-sorted-output-paths (directory-list dashboard-dir)))))
   
   (body-wrapper
    `(table 

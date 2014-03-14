@@ -9,30 +9,37 @@
 
 
 (define/contract+provide (get-doc x)
-  (coerce/path? . -> . txexpr?)
-  (cached-require (->source-path x) world:main-pollen-export))
+  (coerce/path? . -> . (or/c #f txexpr? string?))
+  (define source-path (->source-path x))
+  (if source-path
+      (cached-require source-path world:main-pollen-export)
+      (error (format "get-doc: no source found for '~a' in directory ~a" x (current-directory)))))
 
 
 (define/contract+provide (get-metas x)
   (coerce/path? . -> . hash?)
-  (cached-require (->source-path x) world:meta-pollen-export))
+  (define source-path (->source-path x))
+  (if source-path
+      (cached-require source-path world:meta-pollen-export)
+      (error (format "get-doc: no source found for '~a' in directory ~a" x (current-directory)))))
 
 
-(define/contract+provide (find query . xs)
-  ((coerce/symbol?) #:rest (listof (or/c #f hash? txexpr? pathish?)) . ->* . (or/c #f txexpr-element?))
-  (define result (apply find* query xs))
-  (or (null? result) (car result)))
+(define/contract+provide (from-node query node)
+  (coerce/symbol? coerce/symbol? . -> . (or/c #f txexpr-element?))
+  (define node-path (build-path (world:current-project-root) (->string node)))
+  (define result (append (find-in-metas query node-path) (find-in-doc query node-path)))
+  (if (null? result) #f (car result)))
 
 
-(define/contract+provide (find* query . pxs)
-  ((coerce/symbol?) #:rest (listof (or/c #f hash? txexpr? pathish?)) . ->* . (or/c #f txexpr-elements?))
+(define/contract+provide (find* query . nodes)
+  ((coerce/symbol?) #:rest (listof symbol?) . ->* . (or/c #f txexpr-elements?))
   (define (finder x)
     (cond
       [(hash? x) (find-in-metas query x)]
       [(txexpr? x) (find-in-doc query x)]
       [(pathish? x) (find* query (get-doc x) (get-metas x))]
       [else null]))
-  (append-map finder pxs))
+  (append-map finder nodes))
 
 
 (define/contract+provide (find-in-metas query hash-or-path)
@@ -65,8 +72,8 @@
 
 
 (define+provide/contract (->html x)
-  (txexpr? . -> . string?)
-  (txexpr->html x))
+  (xexpr? . -> . string?)  
+  (xexpr->html x))
 
 
 (provide when/block)
@@ -74,7 +81,11 @@
   (syntax-case stx ()
     [(_ condition body ...)
      #'(if condition (string-append* 
-                      (with-handlers ([exn:fail? (λ(exn) (error (format "when/block: ~a" (exn-message exn))))])
-                        (map ->string (list body ...)))) ; todo: should this be ->html not ->string?
+                      (with-handlers ([exn:fail? (λ(exn) (error (format "within when/block, ~a" (exn-message exn))))])
+                        (map ->string (list body ...)))) 
            "")]))
 
+
+(module+ main
+  (parameterize ([current-directory (string->path "/Users/MB/git/bpt/down/")])
+    (get-doc "introduction.html")))

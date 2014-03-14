@@ -9,7 +9,7 @@
 
 
 (define+provide/contract (require+provide-project-require-files here-path #:provide [provide #t])
-  (coerce/path? . -> . list?)
+  (coerce/path? . -> . (or/c list? void?))
   (define (put-file-in-require-form file)
     `(file ,(path->string file)))
   (define project-require-files (get-project-require-files here-path))
@@ -21,7 +21,7 @@
            ,@(if provide
                  (list `(provide (all-from-out ,@files-in-require-form)))
                  '())))
-      (void)))
+      '(begin)))
 
 
 (define+provide (require-project-require-files here-path)

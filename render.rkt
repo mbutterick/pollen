@@ -166,7 +166,7 @@
          (local-require pollen/pagemap pollen/template pollen/top)
          (include-template #:command-char ,world:template-field-delimiter ,(->string (find-relative-path source-dir template-path))))))
   
-  (time (parameterize ([current-directory source-dir])
+  (time (parameterize ([current-directory source-dir]) ; because include-template wants to work relative to source location
           (render-through-eval expr-to-eval))))
 
 
