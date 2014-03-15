@@ -22,7 +22,7 @@
   (message (format "Welcome to Pollen ~a" world:pollen-version) (format "(Racket ~a)" (version)))
   (message (format "Project root is ~a" (world:current-project-root)))
   
-  (define server-name (format "http://localhost:~a" world:server-port))
+  (define server-name (format "http://localhost:~a" (world:current-server-port)))
   (message (format "Project server is ~a" server-name) "(Ctrl-C to exit)")
   (message (format "Project dashboard is ~a/~a" server-name world:dashboard-name))
   
@@ -36,7 +36,7 @@
                  [error-print-width 1000]
                  [current-cache (make-cache)])
     (serve/servlet pollen-servlet
-                   #:port world:server-port
+                   #:port (world:current-server-port)
                    #:listen-ip #f
                    #:servlet-regexp #rx"" ; respond to top level
                    #:command-line? #t

@@ -53,10 +53,9 @@
                         (apply (compose1 (dynamic-require 'markdown 'parse-markdown) string-append) doc-raw)
                         doc-raw)])
        `(placeholder-root 
-         ,@(cons (meta 'here: here) 
-                 (cons (meta 'here-path: here-path) 
-                       ;; cdr strips initial linebreak, but make sure doc-raw isn't blank
-                       (if (and (list? doc-raw) (> 0 (length doc-raw))) (cdr doc-raw) doc-raw)))))) 
+         ,@(cons (meta 'here-path: here-path) 
+                 ;; cdr strips initial linebreak, but make sure doc-raw isn't blank
+                       (if (and (list? doc-raw) (> 0 (length doc-raw))) (cdr doc-raw) doc-raw))))) 
    
    (define-values (doc-without-metas metas) (split-metas-to-hash doc-txexpr))
    

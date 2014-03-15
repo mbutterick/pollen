@@ -1,6 +1,6 @@
 #lang scribble/manual
 
-@(require scribble/eval pollen/cache pollen/world (for-label racket (except-in pollen #%module-begin) pollen/world pollen/pagemap txexpr pollen/decode))
+@(require scribble/eval pollen/cache pollen/world (for-label racket (except-in pollen #%module-begin) pollen/world pollen/pagemap txexpr pollen/decode pollen/file))
 
 @(define my-eval (make-base-eval))
 @(my-eval `(require pollen pollen/pagemap txexpr))
@@ -10,6 +10,8 @@
 @defmodule[pollen/pagemap]
 
 A @italic{pagemap} is a hierarchical list of Pollen output files. A pagemap source file has the extension @code[(format ".~a" world:pagemap-source-ext)]. A pagemap provides a convenient way of separating the structure of the pages from the page sources, and navigating around this structure.
+
+Pagemaps are made of @italic{nodes}. Usually these nodes will be names of output files in your project. (If you think it would've been more logical to call them ``pages,'' perhaps. When I think of a web page, I think of a file on a disk. Whereas nodes may — and often do — refer to files that don't yet exist.)
 
 Books and other long documents are usually organized in a structured way — at minimum they have a sequence of pages, but more often they have sections with subsequences within. Individual Pollen source files don't know anything about how they're connected to other files. In theory, you could maintain this information within each source file. This would be a poor use of human energy. Let the pagemap figure it out.
 
@@ -85,26 +87,26 @@ Convert @racket[_v] to a node.
 
 @defparam[current-pagemap pagemap pagemap?
           #:value #f]{
-A parameter that defines the default pagemap used by pagemap navigation functions (e.g., @racket[parent], @racket[chidren], et al.) if another is not explicitly specified. Initialized to @racket[#f].}
+A parameter that defines the default pagemap used by pagemap navigation functions (e.g., @racket[parent-node], @racket[chidren], et al.) if another is not explicitly specified. Initialized to @racket[#f].}
 
 
 @defproc[
-(parent
+(parent-node
 [p (or/c #f nodeish?)]
 [pagemap pagemap? (current-pagemap)])
 (or/c #f node?)]
-Find the parent node of @racket[_p] within @racket[_pagemap]. Return @racket[#f] if there isn't one.
+Find the parent-node node of @racket[_p] within @racket[_pagemap]. Return @racket[#f] if there isn't one.
 
 @examples[#:eval my-eval
 (current-pagemap '(root (mama.html son.html daughter.html) uncle.html))
-(parent 'son.html)
-(parent "mama.html")
-(parent (parent 'son.html))
-(parent (parent (parent 'son.html)))
+(parent-node 'son.html)
+(parent-node "mama.html")
+(parent-node (parent-node 'son.html))
+(parent-node (parent-node (parent-node 'son.html)))
 ]
 
 @defproc[
-(children
+(child-nodes
 [p (or/c #f nodeish?)]
 [pagemap pagemap? (current-pagemap)])
 (or/c #f node?)]
@@ -112,15 +114,15 @@ Find the child nodes of @racket[_p] within @racket[_pagemap]. Return @racket[#f]
 
 @examples[#:eval my-eval
 (current-pagemap '(root (mama.html son.html daughter.html) uncle.html))
-(children 'mama.html)
-(children 'uncle.html)
-(children 'root)
-(map children (children 'root))
+(child-nodes 'mama.html)
+(child-nodes 'uncle.html)
+(child-nodes 'root)
+(map child-nodes (child-nodes 'root))
 ]
 
 
 @defproc[
-(siblings
+(sibling-nodes
 [p (or/c #f nodeish?)]
 [pagemap pagemap? (current-pagemap)])
 (or/c #f node?)]
@@ -128,61 +130,84 @@ Find the sibling nodes of @racket[_p] within @racket[_pagemap]. The list will in
 
 @examples[#:eval my-eval
 (current-pagemap '(root (mama.html son.html daughter.html) uncle.html))
-(siblings 'son.html)
-(siblings 'daughter.html)
-(siblings 'mama.html)
+(sibling-nodes 'son.html)
+(sibling-nodes 'daughter.html)
+(sibling-nodes 'mama.html)
 ]
 
 
 @deftogether[(
 
 @defproc[
-(previous
+(previous-node
 [p (or/c #f nodeish?)]
 [pagemap pagemap? (current-pagemap)])
 (or/c #f node?)]
 
 @defproc[
-(previous*
+(previous-nodes
 [p (or/c #f nodeish?)]
 [pagemap pagemap? (current-pagemap)])
 (or/c #f (listof node?))]
 )]
-Return the node immediately before @racket[_p]. For @racket[previous*], return all the nodes before @racket[_p], in sequence. In both cases, return @racket[#f] if there aren't any nodes. The root node is ignored.
+Return the node immediately before @racket[_p]. For @racket[previous-nodes], return all the nodes before @racket[_p], in sequence. In both cases, return @racket[#f] if there aren't any nodes. The root node is ignored.
 
 @examples[#:eval my-eval
 (current-pagemap '(root (mama.html son.html daughter.html) uncle.html))
-(previous 'daughter.html)
-(previous 'son.html)
-(previous (previous 'daughter.html))
-(previous 'mama.html)
-(previous* 'daughter.html)
-(previous* 'uncle.html)
+(previous-node 'daughter.html)
+(previous-node 'son.html)
+(previous-node (previous-node 'daughter.html))
+(previous-node 'mama.html)
+(previous-nodes 'daughter.html)
+(previous-nodes 'uncle.html)
 ]
 
 @deftogether[(
 
 @defproc[
-(next
+(next-node
 [p (or/c #f nodeish?)]
 [pagemap pagemap? (current-pagemap)])
 (or/c #f node?)]
 
 @defproc[
-(next*
+(next-nodes
 [p (or/c #f nodeish?)]
 [pagemap pagemap? (current-pagemap)])
 (or/c #f (listof node?))]
 )]
-Return the node immediately after @racket[_p]. For @racket[next*], return all the nodes after @racket[_p], in sequence. In both cases, return @racket[#f] if there aren't any nodes. The root node is ignored.
+Return the node immediately after @racket[_p]. For @racket[next-nodes], return all the nodes after @racket[_p], in sequence. In both cases, return @racket[#f] if there aren't any nodes. The root node is ignored.
 
 @examples[#:eval my-eval
 (current-pagemap '(root (mama.html son.html daughter.html) uncle.html))
-(next 'son.html)
-(next 'daughter.html)
-(next (next 'son.html))
-(next 'uncle.html)
-(next* 'mama.html)
-(next* 'daughter.html)
+(next-node 'son.html)
+(next-node 'daughter.html)
+(next-node (next-node 'son.html))
+(next-node 'uncle.html)
+(next-nodes 'mama.html)
+(next-nodes 'daughter.html)
 ]
 
+@section{Utilities}
+
+@defproc[
+(pagemap->list
+[pagemap pagemap?])
+list?
+]
+Convert @racket[_pagemap] to a simple list, preserving order.
+
+@defproc[
+(node-in-pagemap?
+[node node?]
+[pagemap pagemap? (current-pagemap)])
+boolean?
+]
+Report whether @racket[_node] is in @racket[_pagemap].
+
+@defproc[
+(path->node
+[p pathish?])
+node?
+]
+Convert path @racket[_p] to a node — meaning, make it relative to @racket[world:current-project-root], run it through @racket[->output-path], and convert it to a symbol. Does not tell you whether the resultant node actually exists in the current pagemap (for that, use @racket[node-in-pagemap?]).

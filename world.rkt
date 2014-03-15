@@ -55,7 +55,7 @@
 
 (define current-project-root (make-parameter (current-directory)))
 
-(define server-port 8088)
+(define current-server-port (make-parameter 8088))
 
 (define dashboard-name "index.pmap")
 (define dashboard-css "poldash.css")

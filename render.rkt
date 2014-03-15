@@ -164,6 +164,7 @@
        (let ([doc (cached-require ,source-path ',world:main-pollen-export)]
              [metas (cached-require ,source-path ',world:meta-pollen-export)])
          (local-require pollen/pagemap pollen/template pollen/top)
+         (define here (metas->here metas))
          (include-template #:command-char ,world:template-field-delimiter ,(->string (find-relative-path source-dir template-path))))))
   
   (time (parameterize ([current-directory source-dir]) ; because include-template wants to work relative to source location

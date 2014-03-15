@@ -1,4 +1,5 @@
 #lang racket/base
+(require racket/path)
 (require "tools.rkt" "world.rkt" "decode.rkt" sugar txexpr "cache.rkt")
 
 
@@ -49,27 +50,27 @@
   (cached-require pagemap-source world:main-pollen-export))
 
 
-(define+provide/contract (parent p [pagemap (current-pagemap)])
+(define+provide/contract (parent-node p [pagemap (current-pagemap)])
   (((or/c #f nodeish?)) (pagemap?) . ->* . (or/c #f node?)) 
   (and pagemap p
        (let ([node (->node p)])
          (if (member node (map (λ(x) (if (list? x) (car x) x)) (cdr pagemap)))
              (car pagemap)
-             (ormap (λ(x) (parent node x)) (filter list? pagemap))))))
+             (ormap (λ(x) (parent-node node x)) (filter list? pagemap))))))
 
 
-(define+provide/contract (children p [pagemap (current-pagemap)])
+(define+provide/contract (child-nodes p [pagemap (current-pagemap)])
   (((or/c #f nodeish?)) (pagemap?) . ->* . (or/c #f (listof node?)))  
   (and pagemap p 
        (let ([node (->node p)])
          (if (equal? node (car pagemap))
              (map (λ(x) (if (list? x) (car x) x)) (cdr pagemap))
-             (ormap (λ(x) (children node x)) (filter list? pagemap))))))
+             (ormap (λ(x) (child-nodes node x)) (filter list? pagemap))))))
 
 
-(define+provide/contract (siblings p [pagemap (current-pagemap)])
+(define+provide/contract (sibling-nodes p [pagemap (current-pagemap)])
   (((or/c #f nodeish?)) (pagemap?) . ->* . (or/c #f (listof node?)))  
-  (children (parent p pagemap) pagemap))
+  (child-nodes (parent-node p pagemap) pagemap))
 
 
 ;; flatten tree to sequence
@@ -79,7 +80,7 @@
   (cdr (flatten pagemap))) 
 
 
-(define (adjacents side p [pagemap (current-pagemap)])
+(define (adjacent-nodes side p [pagemap (current-pagemap)])
   ; ((symbol? (or/c #f nodeish?)) (pagemap?) . ->* . (or/c #f (listof node?)))
   (and pagemap p
        (let* ([node (->node p)]
@@ -88,25 +89,33 @@
          (and (not (empty? result)) result))))
 
 
-(define+provide/contract (previous* node [pagemap (current-pagemap)]) 
+(define+provide/contract (previous-nodes node [pagemap (current-pagemap)]) 
   (((or/c #f nodeish?)) (pagemap?) . ->* . (or/c #f (listof node?)))
-  (adjacents 'left node pagemap))
+  (adjacent-nodes 'left node pagemap))
 
 
-(define+provide/contract (next* node [pagemap (current-pagemap)]) 
+(define+provide/contract (next-nodes node [pagemap (current-pagemap)]) 
   (((or/c #f nodeish?)) (pagemap?) . ->* . (or/c #f (listof node?)))
-  (adjacents 'right node pagemap))
+  (adjacent-nodes 'right node pagemap))
 
 
-(define+provide/contract (previous node [pagemap (current-pagemap)])
+(define+provide/contract (previous-node node [pagemap (current-pagemap)])
   (((or/c #f nodeish?)) (pagemap?) . ->* . (or/c #f node?))
-  (let ([result (previous* node pagemap)])
+  (let ([result (previous-nodes node pagemap)])
     (and result (last result))))
 
 
-(define+provide/contract (next node [pagemap (current-pagemap)])
+(define+provide/contract (next-node node [pagemap (current-pagemap)])
   (((or/c #f nodeish?)) (pagemap?) . ->* . (or/c #f node?))
-  (let ([result (next* node pagemap)])
+  (let ([result (next-nodes node pagemap)])
     (and result (first result))))
 
 
+(define/contract+provide (path->node path)
+  (coerce/path? . -> . coerce/symbol?)
+  (->output-path (find-relative-path (world:current-project-root) (->complete-path path))))
+
+
+(define+provide/contract (node-in-pagemap? node [pagemap (current-pagemap)])
+  (((or/c #f nodeish?)) (pagemap?) . ->* . boolean?)
+  (->boolean (and node (member node (pagemap->list pagemap)))))

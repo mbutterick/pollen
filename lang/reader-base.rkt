@@ -23,7 +23,6 @@
                    `(module pollen-lang-module pollen 
                       (define reader-mode ',reader-mode)
                       (define here-path ,(path->string path-string))
-                      (define here ,(path->string (path-replace-suffix (find-relative-path (world:current-project-root) path-string) "")))
                       ,(require+provide-project-require-files path-string)
                       ,@file-contents) 
                    file-contents)))
