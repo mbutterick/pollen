@@ -10,21 +10,48 @@
 
 (define/contract+provide (metas->here metas)
   (hash? . -> . pagenode?)
-  (path->pagenode ('here-path . from-metas . metas)))
+  (path->pagenode (select-from-metas 'here-path metas)))
 
 
-(define/contract (get-doc pagenode-or-path)
-  ((or/c pagenode? pathish?) . -> . (or/c txexpr? string?))
-  (define source-path (->source-path (cond
-                                       [(pagenode? pagenode-or-path) (pagenode->path pagenode-or-path)]
-                                       [else pagenode-or-path])))
-  (if source-path
-      (cached-require source-path world:main-pollen-export)
-      (error (format "get-doc: no source found for '~a' in directory ~a" pagenode-or-path (current-directory)))))
+(define (pagenode->path pagenode)
+  (build-path (world:current-project-root) (symbol->string pagenode)))
 
 
-(define/contract (get-metas pagenode-or-path)
-  ((or/c pagenode? pathish?) . -> . hash?)
+(define+provide/contract (select key value-source)
+  (coerce/symbol? (or/c hash? txexpr? pagenode? pathish?) . -> . (or/c #f txexpr-element?))
+  (define metas-result (and (not (txexpr? value-source)) (select-from-metas key value-source)))
+  (or metas-result
+      (let ([doc-result (select-from-doc key value-source)])
+        (and doc-result (car doc-result)))))
+
+
+(define+provide/contract (select* key value-source)
+  (coerce/symbol? (or/c hash? txexpr?) . -> . (or/c #f (listof txexpr-element?)))
+  (define metas-result (and (not (txexpr? value-source)) (select-from-metas key value-source)))
+  (define doc-result (select-from-doc key value-source))
+  (define result (append (or (and metas-result (list metas-result)) null) (or doc-result null)))
+  (and (not (null? result)) result))
+
+
+(define+provide/contract (select-from-metas key metas-source)
+  (coerce/symbol? (or/c hash? pagenode? pathish?) . -> . (or/c #f txexpr-element?))
+  (define metas (cond
+                  [(hash? metas-source) metas-source]
+                  [else (get-metas metas-source)]))
+  (and (hash-has-key? metas key) (hash-ref metas key)))
+
+
+(define+provide/contract (select-from-doc key doc-source)
+  (coerce/symbol? (or/c txexpr? pagenode? pathish?) . -> . (or/c #f (listof txexpr-element?)))
+  (define doc (cond
+                [(txexpr? doc-source) doc-source]
+                [else (get-doc doc-source)]))
+  (define result (se-path*/list (list key) doc))
+  (and (not (null? result)) result))
+
+
+(define (get-metas pagenode-or-path)
+;  ((or/c pagenode? pathish?) . -> . hash?)
   (define source-path (->source-path (cond
                                        [(pagenode? pagenode-or-path) (pagenode->path pagenode-or-path)]
                                        [else pagenode-or-path])))
@@ -33,37 +60,16 @@
       (error (format "get-metas: no source found for '~a' in directory ~a" pagenode-or-path (current-directory)))))
 
 
-(define (pagenode->path pagenode)
-  (build-path (world:current-project-root) (symbol->string pagenode)))
+(define (get-doc pagenode-or-path)
+;  ((or/c pagenode? pathish?) . -> . (or/c txexpr? string?))
+  (define source-path (->source-path (cond
+                                       [(pagenode? pagenode-or-path) (pagenode->path pagenode-or-path)]
+                                       [else pagenode-or-path])))
+  (if source-path
+      (cached-require source-path world:main-pollen-export)
+      (error (format "get-doc: no source found for '~a' in directory ~a" pagenode-or-path (current-directory)))))
 
 
-(define+provide/contract (from query pagenode)
-  (coerce/symbol? coerce/symbol? . -> . (or/c #f txexpr-element?))
-  (define result (from* query pagenode))
-  (if (null? result) #f (car result)))
-
-
-(define+provide/contract (from* query pagenode)
-  (coerce/symbol? coerce/symbol? . -> . (or/c #f (listof txexpr-element?)))
-  (define meta-result (from-metas query pagenode))
-  (define doc-result (from-doc query pagenode))
-  (define combined-result (append (if meta-result (list meta-result) null) 
-          (or doc-result null)))
-  (if (null? combined-result) #f combined-result))
-
-
-(define/contract+provide (from-metas query meta-source)
-  (coerce/symbol? (or/c pagenode? hash?) . -> . (or/c #f txexpr-element?))
-  (let ([metas (or (and (pagenode? meta-source) (get-metas meta-source)) meta-source)])
-    (with-handlers ([exn:fail? (λ(e) #f)])
-      (hash-ref metas query))))
-
-
-(define/contract+provide (from-doc query doc-source) 
-  (coerce/symbol? (or/c pagenode? txexpr?) . -> . (or/c #f txexpr-elements?))
-  (let ([doc (or (and (pagenode? doc-source) (get-doc doc-source)) doc-source)])
-    (with-handlers ([exn:fail? (λ(e) #f)])
-      (se-path*/list (list query) doc))))
 
 
 (define+provide/contract (->html x)
