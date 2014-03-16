@@ -1,6 +1,6 @@
 #lang racket/base
 (require racket/file racket/rerequire racket/path racket/match)
-(require sugar "file.rkt" "cache.rkt" "world.rkt" "debug.rkt" "pagemap.rkt" "project-requires.rkt")
+(require sugar "file.rkt" "cache.rkt" "world.rkt" "debug.rkt" "pagetree.rkt" "project-requires.rkt")
 
 
 ;; when you want to generate everything fresh, 
@@ -49,12 +49,12 @@
   (for-each render-to-file-if-needed xs))
 
 
-(define/contract+provide (render-pagemap pagemap-or-path)
-  ((or/c pagemap? pathish?) . -> . void?)
-  (define pagemap (if (pagemap? pagemap-or-path)
-                    pagemap-or-path
-                    (cached-require pagemap-or-path world:main-pollen-export)))
-  (apply render-batch (pagemap->list pagemap)))
+(define/contract+provide (render-pagetree pagetree-or-path)
+  ((or/c pagetree? pathish?) . -> . void?)
+  (define pagetree (if (pagetree? pagetree-or-path)
+                    pagetree-or-path
+                    (cached-require pagetree-or-path world:main-pollen-export)))
+  (apply render-batch (pagetree->list pagetree)))
 
 
 (define/contract+provide (render-for-dev-server so-pathish #:force [force #f])
@@ -64,7 +64,7 @@
       [(ormap (λ(test) (test so-path)) (list has/is-null-source? has/is-preproc-source? has/is-markup-source? has/is-scribble-source?)) 
        (let-values ([(source-path output-path) (->source+output-paths so-path)])
          (render-to-file-if-needed source-path output-path #:force force))]
-      [(pagemap-source? so-path) (render-pagemap so-path)]))
+      [(pagetree-source? so-path) (render-pagetree so-path)]))
   (void))
 
 
@@ -163,7 +163,7 @@
        ,(require-project-require-files source-path) 
        (let ([doc (cached-require ,source-path ',world:main-pollen-export)]
              [metas (cached-require ,source-path ',world:meta-pollen-export)])
-         (local-require pollen/pagemap pollen/template pollen/top)
+         (local-require pollen/pagetree pollen/template pollen/top)
          (define here (metas->here metas))
          (include-template #:command-char ,world:template-field-delimiter ,(->string (find-relative-path source-dir template-path))))))
   
@@ -224,7 +224,7 @@
            pollen/decode
            pollen/file
            pollen/main
-           pollen/pagemap
+           pollen/pagetree
            pollen/cache
            sugar
            txexpr
@@ -244,7 +244,7 @@
   (list? . -> . bytes?)
   (parameterize ([current-namespace (make-base-namespace)]
                  [current-output-port (current-error-port)]
-                 [current-pagemap (make-project-pagemap (world:current-project-root))])
+                 [current-pagetree (make-project-pagetree (world:current-project-root))])
     (for-each (λ(mod-name) (namespace-attach-module cache-ns mod-name)) 
               `(web-server/templates 
                 xml
@@ -257,7 +257,7 @@
                 pollen/debug
                 pollen/decode
                 pollen/file
-                pollen/pagemap
+                pollen/pagetree
                 pollen/cache
                 sugar
                 txexpr

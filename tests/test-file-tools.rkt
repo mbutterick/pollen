@@ -71,9 +71,9 @@
   (check-false (preproc-source? #f)))
 
 (module+ test
-  (check-true (pagemap-source? (format "foo.~a" world:pagemap-source-ext)))
-  (check-false (pagemap-source? (format "~a.foo" world:pagemap-source-ext)))
-  (check-false (pagemap-source? #f)))
+  (check-true (pagetree-source? (format "foo.~a" world:pagetree-source-ext)))
+  (check-false (pagetree-source? (format "~a.foo" world:pagetree-source-ext)))
+  (check-false (pagetree-source? #f)))
 (module+ test
   (check-true (markup-source? "foo.pm"))
   (check-false (markup-source? "foo.p"))

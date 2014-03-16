@@ -5,7 +5,7 @@
 (require web-server/http/request-structs)
 (require web-server/http/response-structs)
 (require 2htdp/image)
-(require "world.rkt" "render.rkt" sugar txexpr "file.rkt" "debug.rkt" "pagemap.rkt" "cache.rkt")
+(require "world.rkt" "render.rkt" sugar txexpr "file.rkt" "debug.rkt" "pagetree.rkt" "cache.rkt")
 
 (module+ test (require rackunit))
 
@@ -173,12 +173,12 @@
                          
                          (cond ; in cell
                            [source  (cons (format "in/~a" source) "in")]
-                           [(or (pagemap-source? filename) (sourceish? filename))  (cons (format "in/~a" filename) "in")]
+                           [(or (pagetree-source? filename) (sourceish? filename))  (cons (format "in/~a" filename) "in")]
                            [else empty-cell])
                          
                          (cond ; out cell 
                            [(directory-exists? (build-path dashboard-dir filename)) (cons #f #f)]
-                           [(pagemap-source? filename) empty-cell]
+                           [(pagetree-source? filename) empty-cell]
                            [else (cons (format "out/~a" filename) "out")]))))))
   
   (define (ineligible-path? x) (or (not (visible? x)) (member x world:reserved-paths)))  
@@ -190,16 +190,16 @@
     (define path-is-directory? (λ(f) (directory-exists? (build-path dashboard-dir f))))
     (define subdirectories (filter path-is-directory? all-paths))
     (define files (filter-not path-is-directory? all-paths))
-    (define pagemap-sources (filter pagemap-source? files))
-    (define other-files (filter-not pagemap-source? files))
+    (define pagetree-sources (filter pagetree-source? files))
+    (define other-files (filter-not pagetree-source? files))
     (define (sort-names xs) (sort xs #:key ->string string<?))
     ;; put subdirs in list ahead of files (so they appear at the top)
-    (append (sort-names subdirectories) (sort-names pagemap-sources) (sort-names other-files)))
+    (append (sort-names subdirectories) (sort-names pagetree-sources) (sort-names other-files)))
   
   (define project-paths 
     (filter-not ineligible-path? 
                 (if (file-exists? dashboard-pmap)
-                    (map ->path (pagemap->list (cached-require (->path dashboard-pmap) world:main-pollen-export)))
+                    (map ->path (pagetree->list (cached-require (->path dashboard-pmap) world:main-pollen-export)))
                     (unique-sorted-output-paths (directory-list dashboard-dir)))))
   
   (body-wrapper

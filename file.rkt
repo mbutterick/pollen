@@ -21,7 +21,7 @@
 
 
 
-;; helper function for pagemap
+;; helper function for pagetree
 ;; make paths absolute to test whether files exist,
 ;; then convert back to relative
 (define+provide/contract (visible? path)
@@ -87,7 +87,7 @@
 
 (make-source-utility-functions preproc)
 (make-source-utility-functions null)
-(make-source-utility-functions pagemap)
+(make-source-utility-functions pagetree)
 (make-source-utility-functions markup)
 (make-source-utility-functions template)
 (make-source-utility-functions scribble)
