@@ -29,7 +29,6 @@
                                  #:symbol-proc [symbol-proc (λ(x)x)]
                                  #:valid-char-proc [valid-char-proc (λ(x)x)]
                                  #:cdata-proc [cdata-proc (λ(x)x)]
-                                 
                                  #:exclude-tags [excluded-tags '()])
   ((xexpr/c)  
    (#:txexpr-tag-proc (txexpr-tag? . -> . txexpr-tag?)
@@ -49,7 +48,6 @@
       [(txexpr? x) (let-values([(tag attrs elements) (txexpr->values x)]) 
                      (if (member tag excluded-tags)    
                          x ; because it's excluded
-                         
                          ;; we apply processing here rather than do recursive descent on the pieces
                          ;; because if we send them back through loop, certain element types are ambiguous
                          ;; e.g., ((p "foo")) tests out as both txexpr-attrs and txexpr-elements
