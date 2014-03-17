@@ -22,7 +22,7 @@
     (datum->syntax file-contents 
                    `(module pollen-lang-module pollen 
                       (define reader-mode ',reader-mode)
-                      (define here-path ,(if (symbol? path-string) (symbol->string path-string) (path->string path-string)))
+                      (define reader-here-path ,(if (symbol? path-string) (symbol->string path-string) (path->string path-string)))
                       ,(require+provide-project-require-files path-string)
                       ,@file-contents) 
                    file-contents)))
