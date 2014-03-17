@@ -25,6 +25,7 @@
    (require 'inner)
    
    ;; set the parser mode based on reader mode
+   ;; todo: this won't work with inline submodules
    (define parser-mode 
      (if (equal? reader-mode world:reader-mode-auto)
          (let* ([file-ext-pattern (pregexp "\\w+$")]
@@ -47,6 +48,10 @@
      (define meta-element->assoc (λ(x) (let ([key (car (caadr x))][value (cadr (caadr x))]) (cons key value))))
      (define metas (make-hash (map meta-element->assoc meta-elements)))
      (values doc-without-metas metas))
+   
+   ;; if reader-here-path is undefined, it will become a proc courtesy of #%top
+   ;; therefore that's how we can detect if it's undefined
+   (define here-path (if (procedure? reader-here-path) "anonymous-module" reader-here-path))
    
    (define doc-txexpr 
      (let ([doc-raw (if (equal? parser-mode world:reader-mode-markdown)
