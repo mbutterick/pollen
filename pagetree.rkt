@@ -1,6 +1,6 @@
 #lang racket/base
-(require racket/path)
-(require "tools.rkt" "world.rkt" "decode.rkt" sugar txexpr "cache.rkt")
+(require racket/path racket/list)
+(require "file.rkt" "world.rkt" "decode.rkt" sugar txexpr "cache.rkt")
 
 
 (define+provide current-pagetree (make-parameter #f))

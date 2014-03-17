@@ -1,6 +1,6 @@
 #lang racket/base
-(require racket/match xml)
-(require "../tools.rkt" "block.rkt" "../world.rkt" sugar txexpr)
+(require racket/list racket/match xml)
+(require "block.rkt" "../world.rkt" sugar txexpr)
 
 
 (define (make-replacer query+replacement)

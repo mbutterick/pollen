@@ -229,7 +229,6 @@
            sugar
            txexpr
            pollen/template
-           pollen/tools
            pollen/world
            pollen/project-requires)
   (define-namespace-anchor my-module-cache-ns-anchor)
@@ -262,7 +261,6 @@
                 sugar
                 txexpr
                 pollen/template
-                pollen/tools
                 pollen/world
                 pollen/project-requires))   
     (string->bytes/utf-8 (eval expr-to-eval (current-namespace)))))
