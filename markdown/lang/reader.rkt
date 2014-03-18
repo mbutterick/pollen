@@ -1,4 +1,4 @@
 #lang racket/base
 (require pollen/lang/reader-base)
 
-(make-reader-with-mode world:reader-mode-markdown)
+(make-reader-with-mode world:mode-markdown)

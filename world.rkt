@@ -13,11 +13,11 @@
 (define scribble-source-ext 'scrbl)
 
 
-(define reader-mode-auto 'auto)
-(define reader-mode-preproc 'pre)
-(define reader-mode-markup 'markup)
-(define reader-mode-markdown 'markdown)
-(define reader-mode-pagetree 'ptree)
+(define mode-auto 'auto)
+(define mode-preproc 'pre)
+(define mode-markup 'markup)
+(define mode-markdown 'markdown)
+(define mode-pagetree 'ptree)
 
 (define decodable-extensions (list markup-source-ext pagetree-source-ext))
 
