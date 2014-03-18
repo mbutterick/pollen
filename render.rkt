@@ -52,8 +52,8 @@
 (define/contract+provide (render-pagetree pagetree-or-path)
   ((or/c pagetree? pathish?) . -> . void?)
   (define pagetree (if (pagetree? pagetree-or-path)
-                    pagetree-or-path
-                    (cached-require pagetree-or-path world:main-pollen-export)))
+                       pagetree-or-path
+                       (cached-require pagetree-or-path world:main-pollen-export)))
   (apply render-batch (pagetree->list pagetree)))
 
 
@@ -220,17 +220,19 @@
            racket/contract 
            racket/list
            racket/match
+           racket/syntax
+           pollen/cache
            pollen/debug
            pollen/decode
            pollen/file
            pollen/main
+           pollen/lang/reader-base
            pollen/pagetree
-           pollen/cache
-           sugar
-           txexpr
            pollen/template
            pollen/world
-           pollen/project-requires)
+           pollen/project-requires
+           sugar
+           txexpr)
   (define-namespace-anchor my-module-cache-ns-anchor)
   (provide my-module-cache-ns-anchor))
 
@@ -253,14 +255,17 @@
                 racket/contract 
                 racket/list
                 racket/match
+                racket/syntax
                 pollen/debug
-                pollen/decode
-                pollen/file
-                pollen/pagetree
                 pollen/cache
-                sugar
-                txexpr
+                pollen/decode
+                pollen/file           
+                pollen/main
+                pollen/lang/reader-base
+                pollen/pagetree
+                pollen/project-requires
                 pollen/template
                 pollen/world
-                pollen/project-requires))   
+                sugar
+                txexpr))   
     (string->bytes/utf-8 (eval expr-to-eval (current-namespace)))))

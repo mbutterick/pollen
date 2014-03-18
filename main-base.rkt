@@ -1,7 +1,7 @@
 #lang racket/base
-(require (for-syntax racket/base racket/syntax) "world.rkt")
+(require (for-syntax racket/base racket/syntax) pollen/world)
 
-(provide (all-defined-out) (all-from-out "world.rkt"))
+(provide (all-defined-out) (all-from-out pollen/world))
 
 (define-syntax (make-new-module-begin stx)
   (syntax-case stx ()

@@ -1,6 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base))
-(require "main-base.rkt")
+(require pollen/main-base)
 
 (provide (except-out (all-from-out racket/base) #%module-begin)
          (rename-out [new-module-begin #%module-begin]))
