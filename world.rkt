@@ -12,7 +12,6 @@
 (define template-source-ext 'pt)
 (define scribble-source-ext 'scrbl)
 
-
 (define mode-auto 'auto)
 (define mode-preproc 'pre)
 (define mode-markup 'markup)
@@ -24,7 +23,6 @@
 (define default-pagetree "index.ptree")
 (define pagetree-root-node 'pagetree-root)
 
-(define template-source-prefix "-")
 (define expression-delimiter #\◊)
 (define template-field-delimiter expression-delimiter)
 
@@ -37,27 +35,18 @@
 
 (define pollen-require "pollen-require.rkt")
 
-(define missing-file-boilerplace "#lang pollen\n\n")
-
 (define newline "\n")
 (define linebreak-separator newline)
 (define paragraph-separator "\n\n")
 
-(define output-subdir 'public)
-
-(define racket-path "/usr/bin/racket")
-
-(define command-file "polcom")
-
-(define reserved-paths
-  (map string->path (list command-file "poldash.css" "compiled")))
+(define paths-excluded-from-dashboard
+  (map string->path (list "poldash.css" "compiled")))
 
 
 (define current-project-root (make-parameter (current-directory)))
 
 (define current-server-port (make-parameter 8088))
 
-(define dashboard-name "index.ptree")
 (define dashboard-css "poldash.css")
 
 (define current-module-root (make-parameter #f))

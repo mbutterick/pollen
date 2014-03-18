@@ -37,7 +37,7 @@
   (define client (request-client-ip req))
   (define localhost-client "::1")
   (define url-string (url->string (request-uri req)))
-  (message "request:" (string-replace url-string world:dashboard-name " dashboard")
+  (message "request:" (string-replace url-string world:default-pagetree " dashboard")
            (if (not (equal? client localhost-client)) (format "from ~a" client) "")))
 
 ;; pass string args to route, then
@@ -69,9 +69,6 @@
   ((complete-path?) (#:render boolean?) . ->* . string?) 
   (when wants-render (render-for-dev-server path))
   (file->string path))
-
-(module+ test
-  (check-equal? (slurp (build-path (current-directory) "tests/server-routes/bar.html") #:render #f) "<html><body><p>bar</p></body></html>"))
 
 
 ;; add a wrapper to txexpr that displays it as monospaced text
@@ -152,8 +149,8 @@
                                   text)))))
   (define (make-parent-row) 
     (if parent-dir
-        (let* ([url-to-parent-dashboard (format "/~a" (find-relative-path (world:current-project-root) (build-path parent-dir world:dashboard-name)))]
-               [url-to-parent (string-replace url-to-parent-dashboard world:dashboard-name "")])
+        (let* ([url-to-parent-dashboard (format "/~a" (find-relative-path (world:current-project-root) (build-path parent-dir world:default-pagetree)))]
+               [url-to-parent (string-replace url-to-parent-dashboard world:default-pagetree "")])
           `(tr (th ((colspan "3")) (a ((href ,url-to-parent-dashboard)) ,(format "up to ~a" url-to-parent))))) 
         `(tr (th ((colspan "3")(class "root")) "Pollen root"))))
   
@@ -165,7 +162,7 @@
                 (append (list                          
                          (cond ; main cell
                            [(directory-exists? (build-path dashboard-dir filename)) ; links subdir to its dashboard
-                            (cons (format "~a/~a" filename world:dashboard-name) (format "~a/" filename))]
+                            (cons (format "~a/~a" filename world:default-pagetree) (format "~a/" filename))]
                            [(and source (equal? (get-ext source) "scrbl")) 
                             (cons #f `(a ((href ,filename)) ,filename (span ((class "file-ext")) " (from " ,(path->string (find-relative-path dashboard-dir source)) ")")))]
                            [source (cons #f `(a ((href ,filename)) ,filename (span ((class "file-ext")) "." ,(get-ext source))))]
@@ -181,7 +178,7 @@
                            [(pagetree-source? filename) empty-cell]
                            [else (cons (format "out/~a" filename) "out")]))))))
   
-  (define (ineligible-path? x) (or (not (visible? x)) (member x world:reserved-paths)))  
+  (define (ineligible-path? x) (or (not (visible? x)) (member x world:paths-excluded-from-dashboard)))  
   
   (define (unique-sorted-output-paths xs)
     (define output-paths (map ->output-path xs))

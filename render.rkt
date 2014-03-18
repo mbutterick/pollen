@@ -186,8 +186,8 @@
                        (list                     
                         (parameterize ([current-directory (world:current-project-root)])
                           (let ([source-metas (cached-require source-path 'metas)])
-                            (and (world:template-meta-key . in? . source-metas)
-                                 (build-path source-dir (get source-metas world:template-meta-key))))) ; path based on metas
+                            (and ((->symbol world:template-meta-key) . in? . source-metas)
+                                 (build-path source-dir (get source-metas (->string world:template-meta-key)))))) ; path based on metas
                         (build-path (world:current-project-root) 
                                     (add-ext (add-ext world:default-template-prefix (get-ext (->output-path source-path))) world:template-source-ext))))) ; path to default template
         (build-path (world:current-server-extras-path) world:fallback-template)))) ; fallback template

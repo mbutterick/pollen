@@ -24,7 +24,7 @@
   
   (define server-name (format "http://localhost:~a" (world:current-server-port)))
   (message (format "Project server is ~a" server-name) "(Ctrl-C to exit)")
-  (message (format "Project dashboard is ~a/~a" server-name world:dashboard-name))
+  (message (format "Project dashboard is ~a/~a" server-name world:default-pagetree))
   
   (message "Ready to rock")
   

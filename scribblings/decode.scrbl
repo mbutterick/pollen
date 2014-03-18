@@ -10,15 +10,15 @@
 
 @defmodule[pollen/decode]
 
-The @racket['doc] export of a Pollen markup file is a simple X-expression. @italic{Decoding} refers to any post-processing of this X-expression. The @racket[pollen/decode] module provides tools for creating decoders.
+The @racket[doc] export of a Pollen markup file is a simple X-expression. @italic{Decoding} refers to any post-processing of this X-expression. The @racket[pollen/decode] module provides tools for creating decoders.
 
-The decode step can happen separately from the compilation of the file. But you can also attach a decoder to the markup file's @racket['root] node, so the decoding happens automatically when the markup is compiled, and thus automatically incorporated into @racket['doc]. (Following this approach, you could also attach multiple decoders to different tags within @racket['doc].)
+The decode step can happen separately from the compilation of the file. But you can also attach a decoder to the markup file's @racket[root] node, so the decoding happens automatically when the markup is compiled, and thus automatically incorporated into @racket[doc]. (Following this approach, you could also attach multiple decoders to different tags within @racket[doc].)
 
 You can, of course, embed function calls within Pollen markup. But since markup is optimized for authors, decoding is useful for operations that can or should be moved out of the authoring layer. 
 
-One example is presentation and layout. For instance, @racket[detect-paragraphs] lets authors mark paragraphs in their source simply by using two carriage returns. 
+One example is presentation and layout. For instance, @racket[detect-paragraphs] is a decoder function that lets authors mark paragraphs in their source simply by using two carriage returns. 
 
-Another example is conversion of output into a particular data format. Most Pollen functions are optimized for HTML output, but it's simple to write decoders that target other formats.
+Another example is conversion of output into a particular data format. Most Pollen functions are optimized for HTML output, but one could write a decoder that targets another format.
 
 
 
