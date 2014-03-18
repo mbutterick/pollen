@@ -1,5 +1,5 @@
 #lang racket/base
-(require pollen/decode pollen/predicates)
+(require pollen/decode)
 (module+ test (require rackunit))
 
 (module+ test
