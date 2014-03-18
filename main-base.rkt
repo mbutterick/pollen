@@ -15,7 +15,7 @@
                [(_ body-exprs (... ...))
                 (syntax-protect 
                  #'(#%module-begin
-                    (module inner pollen/lang/doclang-raw
+                    (module inner pollen/doclang-raw
                       ;; doclang_raw is a version of scribble/doclang with the decoder disabled
                       ;; first three lines are positional arguments for doclang-raw
                       doc-raw ; id of export

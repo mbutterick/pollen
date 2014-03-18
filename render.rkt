@@ -226,7 +226,7 @@
            pollen/decode
            pollen/file
            pollen/main
-           pollen/lang/reader-base
+           pollen/reader-base
            pollen/pagetree
            pollen/template
            pollen/world
@@ -261,7 +261,7 @@
                 pollen/decode
                 pollen/file           
                 pollen/main
-                pollen/lang/reader-base
+                pollen/reader-base
                 pollen/pagetree
                 pollen/project-requires
                 pollen/template
