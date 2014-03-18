@@ -7,11 +7,11 @@
   (syntax-case stx ()
     [(_ mode-arg)
      (with-syntax ([new-module-begin (format-id stx "new-module-begin")])
-       #`(define-syntax (new-module-begin stx-arg)
+       #'(define-syntax (new-module-begin stx-arg)
            (syntax-case stx-arg ()
              [(_ body-exprs (... ...))
               (syntax-protect 
-               #`(#%module-begin
+               #'(#%module-begin
                   (module inner pollen/lang/doclang-raw
                     ;; doclang_raw is a version of scribble/doclang with the decoder disabled
                     ;; first three lines are positional arguments for doclang-raw
