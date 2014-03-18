@@ -3,7 +3,7 @@
 
 (provide (all-defined-out) (all-from-out pollen/world))
 
-(define-syntax (define+provide-new-module-begin stx)
+(define-syntax (define+provide-module-begin-in-mode stx)
   (syntax-case stx ()
     [(_ mode-arg)
      (with-syntax ([new-module-begin (format-id stx "new-module-begin")])

@@ -1,4 +1,3 @@
 #lang racket/base
 (require pollen/lang/reader-base)
-
-(make-reader-with-mode world:mode-pagetree)
+(define+provide-reader-in-mode world:mode-pagetree)

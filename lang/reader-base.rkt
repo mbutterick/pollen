@@ -1,7 +1,7 @@
 #lang racket/base
 (require (only-in scribble/reader make-at-reader) pollen/world racket/path pollen/project-requires)
 
-(provide make-reader-with-mode (all-from-out pollen/world))
+(provide define+provide-reader-in-mode (all-from-out pollen/world))
 
 
 (define read-inner (make-at-reader 
@@ -28,7 +28,7 @@
                    file-contents)))
 
 
-(define-syntax-rule (make-reader-with-mode mode)
+(define-syntax-rule (define+provide-reader-in-mode mode)
   (begin
     (define reader-mode mode)
     (define custom-read-syntax (make-custom-read-syntax reader-mode))

@@ -1,3 +1,3 @@
 #lang racket/base
 (require pollen/main-base)
-(define+provide-new-module-begin world:mode-preproc)
+(define+provide-module-begin-in-mode world:mode-preproc)
