@@ -1,9 +1,9 @@
 #lang scribble/manual
 
-@(require scribble/eval pollen/decode pollen/world (for-label racket (except-in pollen #%module-begin) pollen/world pollen/cache pollen/decode txexpr xml pollen/decode/block))
+@(require scribble/eval pollen/decode pollen/world (for-label racket (except-in pollen #%module-begin) pollen/world pollen/cache pollen/decode txexpr xml))
 
 @(define my-eval (make-base-eval))
-@(my-eval `(require pollen pollen/decode pollen/decode/block xml))
+@(my-eval `(require pollen pollen/decode xml racket/list txexpr))
 
 
 @title{Decode}
@@ -37,9 +37,13 @@ Another example is conversion of output into a particular data format. Most Poll
 [#:exclude-tags tags-to-exclude (listof symbol?) null]
 )
 txexpr?]
-Recursively process a @racket[_tagged-xexpr], usually the one exported from a Pollen source file as @racket['doc]. This function doesn't do much on its own. Rather, it provides the hooks upon which harder-working functions can be hung. By default, the @racket[_tagged-xexpr] from a source file is tagged with @racket[root]. Recall from @secref{Pollen mechanics} that any tag can have a function attached to it. So the typical way to use @racket[decode] is to attach your decoding functions to it, and then define @racket[root] to invoke your @racket[decode] function. Then it will be automatically applied to every @racket['doc] during compile. 
+Recursively process a @racket[_tagged-xexpr], usually the one exported from a Pollen source file as @racket[doc]. 
 
-For instance, here's how @racket[decode] is attached to @racket['root] in @italic{Butterick's Practical Typography}. There's not much to it —
+This function doesn't do much on its own. Rather, it provides the hooks upon which harder-working functions can be hung. 
+
+Recall from @secref{Pollen mechanics} that any tag can have a function attached to it. By default, the @racket[_tagged-xexpr] from a source file is tagged with @racket[root]. So the typical way to use @racket[decode] is to attach your decoding functions to it, and then define @racket[root] to invoke your @racket[decode] function. Then it will be automatically applied to every @racket[doc] during compile. 
+
+For instance, here's how @racket[decode] is attached to @racket[root] in @italic{Butterick's Practical Typography}. There's not much to it —
 
 @codeblock|{
 (define (root . items) 
@@ -58,17 +62,21 @@ This illustrates another important point: even though @racket[decode] presents a
 
 Right — nothing. That's because the default value for the decoding arguments is the identity function, @racket[(λ(x)x)]. So all the input gets passed through intact unless another action is specified.
 
+The @racket[_*-proc] arguments of @racket[decode] take procedures that are applied to specific categories of elements within @racket[_txexpr].
+
 The @racket[_txexpr-tag-proc] argument is a procedure that handles X-expression tags.
 
 @examples[#:eval my-eval
 (define tx '(p "I'm from a strange" (strong "namespace")))
+(code:comment @#,t{Tags are symbols, so a tag-proc should return a symbol})
 (decode tx #:txexpr-tag-proc (λ(t) (string->symbol (format "ns:~a" t))))
 ]
 
-The @racket[_txexpr-attrs-proc] argument is a procedure that handles lists of X-expression attributes. (The @racket[txexpr] module, included at no extra charge with Pollen, includes useful helper functions for dealing with attribute lists.)
+The @racket[_txexpr-attrs-proc] argument is a procedure that handles lists of X-expression attributes. (The @racketmodname[txexpr] module, included at no extra charge with Pollen, includes useful helper functions for dealing with these attribute lists.)
 
 @examples[#:eval my-eval
 (define tx '(p [[id "first"]] "If I only had a brain."))
+(code:comment @#,t{Attrs is a list, so cons is OK for simple cases})
 (decode tx #:txexpr-attrs-proc (λ(attrs) (cons '[class "PhD"] attrs )))
 ]
 
@@ -77,7 +85,9 @@ Note that @racket[_txexpr-attrs-proc] will change the attributes of every tagged
 @examples[#:eval my-eval
 (define tx '(div (p [[id "first"]] "If I only had a brain.") 
 (p "Me too.")))
+(code:comment @#,t{This will insert the new attribute everywhere})
 (decode tx #:txexpr-attrs-proc (λ(attrs) (cons '[class "PhD"] attrs )))
+(code:comment @#,t{This will add the new attribute only to non-null attribute lists})
 (decode tx #:txexpr-attrs-proc 
 (λ(attrs) (if (null? attrs) attrs (cons '[class "PhD"] attrs ))))
 ]
@@ -86,18 +96,25 @@ Note that @racket[_txexpr-attrs-proc] will change the attributes of every tagged
 The @racket[_txexpr-elements-proc] argument is a procedure that operates on the list of elements that represents the content of each tagged X-expression. Note that each element of an X-expression is subject to two passes through the decoder: once now, as a member of the list of elements, and also later, through its type-specific decoder (i.e., @racket[_string-proc], @racket[_symbol-proc], and so on).
 
 @examples[#:eval my-eval
-(define tx '(div "Double" "\n" "your" "\n" "pleasure")) 
-(decode tx #:txexpr-elements-proc (λ(es) (map (λ(e)(format "~a~a" e e)) es)))
-(decode tx #:txexpr-elements-proc (λ(es) (map (λ(e)(format "~a~a" e e)) es))
+(define tx '(div "Double" "\n" "toil" amp "trouble")) 
+(code:comment @#,t{Every element gets doubled ...})
+(decode tx #:txexpr-elements-proc (λ(es) (append-map (λ(e) `(,e ,e)) es)))
+(code:comment @#,t{... but only strings get capitalized})
+(decode tx #:txexpr-elements-proc (λ(es) (append-map (λ(e) `(,e ,e)) es))
 #:string-proc (λ(s) (string-upcase s)))
 ]
 
-So why do you need @racket[_txexpr-elements-proc]? Because some types of element decoding depend on context, thus it's necessary to handle the elements as a group. For instance, paragraph detection. The behavior is not merely a @racket[map] across each element:
+So why do you need @racket[_txexpr-elements-proc]? Because some types of element decoding depend on context, thus it's necessary to handle the elements as a group. For instance, the doubling function above, though useless, requires handling the element list as a whole, because elements are being added.
+
+A more useful example: paragraph detection. The behavior is not merely a @racket[map] across each element:
 
 @examples[#:eval my-eval
 (define (paras tx) (decode tx #:txexpr-elements-proc detect-paragraphs))
+(code:comment @#,t{Context matters. Trailing whitespace is ignored ...})
 (paras '(body "The first paragraph." "\n\n")) 
+(code:comment @#,t{... but whitespace between strings is converted to a break.})
 (paras '(body "The first paragraph." "\n\n" "And another.")) 
+(code:comment @#,t{A combination of both types})
 (paras '(body "The first paragraph." "\n\n" "And another." "\n\n")) 
 ]
 
@@ -106,22 +123,29 @@ The @racket[_block-txexpr-proc] argument and the @racket[_inline-txexpr-proc] ar
 
 @examples[#:eval my-eval
 (define tx '(div "Please" (em "mind the gap") (h1 "Tuesdays only"))) 
-(define add-ns (λ(tx) (cons (string->symbol (format "ns:~a" (car tx))) 
-(cdr tx))))
+(define add-ns (λ(tx) (make-txexpr 
+    (string->symbol (format "ns:~a" (get-tag tx))) 
+    (get-attrs tx) 
+    (get-elements tx))))
+(code:comment @#,t{div and h1 are block elements, so this will only affect them})
 (decode tx #:block-txexpr-proc add-ns)
+(code:comment @#,t{em is an inline element, so this will only affect it})
 (decode tx #:inline-txexpr-proc add-ns)
+(code:comment @#,t{this will affect all elements})
 (decode tx #:block-txexpr-proc add-ns #:inline-txexpr-proc add-ns)
 ]
 
 The @racket[_string-proc], @racket[_symbol-proc], @racket[_valid-char-proc], and @racket[_cdata-proc] arguments are procedures that operate on X-expressions that are strings, symbols, valid-chars, and CDATA, respectively. Deliberately, the output contracts for these procedures accept any kind of X-expression (meaning, the procedure can change the X-expression type).
 
 @examples[#:eval my-eval
+(code:comment @#,t{A div with string, entity, character, and cdata elements})
 (define tx `(div "Moe" amp 62 ,(cdata #f #f "3 > 2;")))
 (define rulify (λ(x) '(hr)))
-(decode tx #:string-proc rulify)
-(decode tx #:symbol-proc rulify)
-(decode tx #:valid-char-proc rulify)
-(decode tx #:cdata-proc rulify)
+(code:comment @#,t{The rulify function is selectively applied to each})
+(print (decode tx #:string-proc rulify))
+(print (decode tx #:symbol-proc rulify))
+(print (decode tx #:valid-char-proc rulify))
+(print (decode tx #:cdata-proc rulify))
 ] 
 
 
@@ -147,9 +171,15 @@ The @racket[_tags-to-exclude] argument is useful if you're decoding source that'
 ]
 
 @section{Blocks}
-@defmodule[pollen/decode/block]
 
 Because it's convenient, Pollen categorizes tagged X-expressions into two categories: @italic{block} and @italic{inline}. Why is it convenient? When using @racket[decode], you often want to treat the two categories differently. Not that you have to. But this is how you can.
+
+@defparam[project-block-tags block-tags (listof txexpr-tag?)
+          #:value html-block-tags]{
+A parameter that defines the set of tags that @racket[decode] will treat as blocks. This parameter is initialized with the HTML block tags, namely:
+
+@code[(format "~a" (dynamic-require 'css-tools/html 'block-tags))]}
+
 
 @defproc[
 (register-block-tag
@@ -163,7 +193,8 @@ For instance, @racket[detect-paragraphs] knows that block elements in the markup
 
 @examples[#:eval my-eval
 (define (paras tx) (decode tx #:txexpr-elements-proc detect-paragraphs))
-(paras '(body "This wants to be a paragraph." "\n\n" (bloq "But not this."))) 
+(paras '(body "I want to be a paragraph." "\n\n" (bloq "But not me."))) 
+(code:comment @#,t{Wrong: bloq should not be wrapped})
 ]
 
 But once you register @racket[bloq] as a block, order is restored:
@@ -171,14 +202,15 @@ But once you register @racket[bloq] as a block, order is restored:
 @examples[#:eval my-eval
 (define (paras tx) (decode tx #:txexpr-elements-proc detect-paragraphs))
 (register-block-tag 'bloq)
-(paras '(body "This wants to be a paragraph." "\n\n" (bloq "But not this."))) 
+(paras '(body "I want to be a paragraph." "\n\n" (bloq "But not me."))) 
+(code:comment @#,t{Right: bloq is treated as a block})
 ]
 
 If you find the idea of registering block tags unbearable, good news. The @racket[project-block-tags] include the standard HTML block tags by default. So if you just want to use things like @racket[div] and @racket[p] and @racket[h1–h6], you'll get the right behavior for free.
 
 @examples[#:eval my-eval
 (define (paras tx) (decode tx #:txexpr-elements-proc detect-paragraphs))
-(paras '(body "This wants to be a paragraph." "\n\n" (div "But not this."))) 
+(paras '(body "I want to be a paragraph." "\n\n" (div "But not me."))) 
 ]
 
 
@@ -188,15 +220,9 @@ If you find the idea of registering block tags unbearable, good news. The @racke
 boolean?]
 Predicate that tests whether @racket[_v] is a tagged X-expression, and if so, whether the tag is among the @racket[project-block-tags]. If not, it is treated as inline. To adjust how this test works, use @racket[register-block-tag].
 
-@defparam[project-block-tags block-tags (listof txexpr-tag?)
-          #:value html-block-tags]{
-A parameter that defines the set of tags that @racket[decode] will treat as blocks. This parameter is initialized with the HTML block tags, namely:
-
-@code[(format "~a" (dynamic-require 'css-tools/html 'block-tags))]}
 
 
 @section{Typography}
-@defmodule[pollen/decode/typography]
 
 An assortment of typography & layout functions, designed to be used with @racket[decode]. These aren't hard to write. So if you like these, use them. If not, make your own.
 
@@ -205,7 +231,7 @@ An assortment of typography & layout functions, designed to be used with @racket
 (whitespace?
 [v any/c])
 boolean?]
-A predicate that returns @racket[#t] for any stringlike @racket[_v] that's entirely whitespace, but also the empty string, as well as lists and vectors that are made only of @racket[whitespace?] members. Following the regexp convention, @racket[whitespace?] does not return @racket[#t] for a nonbreaking space. If you prefer that behavior, use @racket[whitespace/nbsp?]. 
+A predicate that returns @racket[#t] for any stringlike @racket[_v] that's entirely whitespace, but also the empty string, as well as lists and vectors that are made only of @racket[whitespace?] members. Following the @racket[regexp-match] convention, @racket[whitespace?] does not return @racket[#t] for a nonbreaking space. If you prefer that behavior, use @racket[whitespace/nbsp?]. 
 
 
 @examples[#:eval my-eval
@@ -257,6 +283,7 @@ In @racket[_str], convert three hyphens to an em dash, and two hyphens to an en 
 (define tricky-string "I had a few --- OK, like 6--8 --- thin mints.")
 (display tricky-string)
 (display (smart-dashes tricky-string))
+(code:comment @#,t{Monospaced font not great for showing dashes, but you get the idea})
 ]
 
 

@@ -52,7 +52,7 @@ boolean?]
 boolean?]
 
 @defproc[
-(ptree-source?
+(pagetree-source?
 [v any/c]) 
 boolean?]
 )]
@@ -64,7 +64,7 @@ Test whether @racket[_v] is a path representing a source file of the specified t
 (template-source? "main.html.pt")
 (null-source? "index.html.p")
 (scribble-source? "file.scrbl")
-(ptree-source? "index.ptree")
+(pagetree-source? "index.ptree")
 ]
 
 

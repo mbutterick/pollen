@@ -19,15 +19,16 @@ Books and other long documents are usually organized in a structured way — at
 (pagetree?
 [possible-pagetree any/c])
 boolean?]
-Test whether @racket[_possible-pagetree] is a valid pagetree. It must be a @racket[txexpr?] where all elements are @racket[pagenode?] and unique within @racket[_possible-pagetree] (not counting the root node).
+Test whether @racket[_possible-pagetree] is a valid pagetree. It must be a @racket[txexpr?] where all elements are @racket[pagenode?], and each is unique within @racket[_possible-pagetree] (not counting the root node).
 
 @examples[#:eval my-eval
 (pagetree? '(root index.html))
-(pagetree? '(root index.html index.html))
-(pagetree? '(root index.html "index.html"))
+(pagetree? '(root duplicate.html duplicate.html))
+(pagetree? '(root index.html "string.html"))
 (define nested-ptree '(root 1.html 2.html (3.html 3a.html 3b.html)))
 (pagetree? nested-ptree)
 (pagetree? `(root index.html ,nested-ptree (subsection.html more.html)))
+(code:comment @#,t{Nesting a subtree twice creates duplication})
 (pagetree? `(root index.html ,nested-ptree (subsection.html ,nested-ptree)))
 ]
 
@@ -53,7 +54,9 @@ Test whether @racket[_possible-pagenode] is a valid pagenode. A pagenode can be 
 @margin-note{Pagenodes are symbols (rather than strings) so that pagetrees will be valid tagged X-expressions, which is a more convenient format for validation & processing.}
 
 @examples[#:eval my-eval
+(code:comment @#,t{Three symbols, the third one annoying but valid})
 (map pagenode? '(symbol index.html |   silly   |))
+(code:comment @#,t{A number, a string, a txexpr, and a whitespace symbol})
 (map pagenode? '(9.999 "index.html" (p "Hello") |    |))
 ]
 
@@ -195,7 +198,7 @@ Return the pagenode immediately after @racket[_p]. For @racket[next*], return al
 [pagetree pagetree?])
 list?
 ]
-Convert @racket[_pagetree] to a simple list, preserving order.
+Convert @racket[_pagetree] to a simple list. Equivalent to a pre-order depth-first traversal of @racket[_pagetree].
 
 @defproc[
 (in-pagetree?
@@ -210,4 +213,4 @@ Report whether @racket[_pagenode] is in @racket[_pagetree].
 [p pathish?])
 pagenode?
 ]
-Convert path @racket[_p] to a pagenode — meaning, make it relative to @racket[world:current-project-root], run it through @racket[->output-path], and convert it to a symbol. Does not tell you whether the resultant pagenode actually exists in the current pagetree (for that, use @racket[pagenode-in-pagetree?]).
+Convert path @racket[_p] to a pagenode — meaning, make it relative to @racket[world:current-project-root], run it through @racket[->output-path], and convert it to a symbol. Does not tell you whether the resultant pagenode actually exists in the current pagetree (for that, use @racket[in-pagetree?]).

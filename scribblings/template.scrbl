@@ -25,7 +25,7 @@ Convert @racket[_xexpr] to an HTML string. Similar to @racket[xexpr->string], bu
 (->html tx)
 ]
 
-Be careful not to pass existing HTML strings into this function, because the @code{<} and @code{>} symbols will be escaped. Fine if that's what you want, but you probably don't.
+Be careful not to pass existing HTML strings into this function, because the angle brackets will be escaped. Fine if that's what you want, but you probably don't.
 
 @examples[#:eval my-eval
 (define tx '(p "You did" (em "what?")))
@@ -61,10 +61,16 @@ Find matches for @racket[_key] in @racket[_value-source], first by looking in it
 Look up the value of @racket[_key] in @racket[_meta-source]. The @racket[_meta-source] argument can be either a set of metas (i.e., a @racket[hash]) or a @racket[pagenode?], from which metas are pulled. If no value exists for @racket[_key], you get @racket[#f].
 
 @examples[#:eval my-eval
-(define my-metas (hash 'template "sub.xml.pt" 'target "print"))
-(select-from-metas 'template  my-metas)
-('target . select-from-metas . my-metas)
-(select-from-metas 'nonexistent-key my-metas)
+(module ice-cream pollen/markup
+'(div (question "Flavor?")
+  (answer "Chocolate chip") (answer "Maple walnut"))
+  '(meta ((template "sub.xml.pt")))
+  '(meta ((target "print"))))
+(code:comment @#,t{Import doc & metas from 'ice-cream submodule})
+(require 'ice-cream)
+(select-from-metas 'template  metas)
+('target . select-from-metas . metas)
+(select-from-metas 'nonexistent-key metas)
 ]
 
 
@@ -77,11 +83,16 @@ Look up the value of @racket[_key] in @racket[_meta-source]. The @racket[_meta-s
 Look up the value of @racket[_key] in @racket[_doc-source]. The @racket[_doc-source] argument can be either be a @code{doc} (i.e., a @racket[txexpr]) or a @racket[pagenode?], from which doc is pulled. If no value exists for @racket[_key], you get @racket[#f].
 
 @examples[#:eval my-eval
-(define my-doc '(body (question "Gelato?") 
-(answer "Nocciola") (answer "Pistachio")))
-(select-from-doc 'question  my-doc)
-('answer . select-from-doc . my-doc)
-(select-from-doc 'nonexistent-key my-doc)
+(module gelato pollen/markup
+'(div (question "Flavor?")
+  (answer "Nocciola") (answer "Pistachio"))
+  '(meta ((template "sub.xml.pt")))
+  '(meta ((target "print"))))
+(code:comment @#,t{Import doc & metas from 'gelato submodule})
+(require 'gelato)
+(select-from-doc 'question  doc)
+('answer . select-from-doc . doc)
+(select-from-doc 'nonexistent-key doc)
 ]
 
 
