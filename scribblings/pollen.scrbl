@@ -16,7 +16,16 @@ Pollen is a publishing system that helps authors create beautiful and functional
 
 I used Pollen to create my book @link["http://practicaltypography.com"]{Butterick's Practical Typography}. Sure, go take a look. Is it better than the last digital book you encountered? Yes it is. Would you like your book to look like that? If so, keep reading.
 
-Pollen is built around two ideas. First, that digital books should be the best books we've ever had. (So far, they're not even close.) Second, that if digital books are software, an author shouldn't think of their book as merely data. The book is a program.
+At the core of Pollen is an argument:
+@itemlist[#:style 'unordered
+
+@item{First, that digital books should be the best books we've ever had. So far, they're not even close.}
+
+@item{Second, that because digital books are software, an author shouldn't think of a book as merely data. @bold{The book is a program.}}
+
+@item{Third, that the way we make digital books better than their predecessors is by exploiting this programmability.}]
+
+How? Pollen.
 
 Not that you need to be a programmer to use Pollen. On the contrary, the Pollen language is markup-based, so you can write & edit text naturally. But when you want to automate repetitive tasks, add cross-references, or pull in data from other sources, you can access a full programming language from within the text.
 
