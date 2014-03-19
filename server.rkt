@@ -1,5 +1,7 @@
-#lang web-server
-(require web-server/servlet-env 
+#lang web-server/base
+
+(require racket/list racket/contract
+         web-server/servlet-env 
          web-server/dispatch)
 (require "server-routes.rkt" 
          "debug.rkt" 
@@ -28,12 +30,10 @@
   
   (message "Ready to rock")
   
-  (world:current-module-root (apply build-path (drop-right (explode-path (current-contract-region)) 1)))
-  (world:current-server-extras-path (build-path (world:current-module-root) "server-extras"))
+  (define module-root (apply build-path (drop-right (explode-path (current-contract-region)) 1)))
+  (world:current-server-extras-path (build-path module-root world:server-extras-dir))
   
-  (parameterize ([world:current-module-root (world:current-module-root)]
-                 [world:current-server-extras-path (world:current-server-extras-path)]
-                 [error-print-width 1000]
+  (parameterize ([error-print-width 1000]
                  [current-cache (make-cache)])
     (serve/servlet pollen-servlet
                    #:port (world:current-server-port)

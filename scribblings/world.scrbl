@@ -26,9 +26,8 @@ File implicitly required into every Pollen source file from its directory.
           #:value #t]{
 A parameter that determines whether the @racket[world:pollen-require] file is checked for changes on every pass through @racket[render]. (Can be faster to turn this off if you don't need it.) Initialized to @racket[#t].}
 
-@defparam[world:current-module-root dir path?
-          #:value #f]{
-A parameter that reports the path to the Pollen module. Initialized to @racket[#f], but set to a proper value when @racketmodname[pollen/server] runs.}
+@defthing[world:server-extras-dir dir string? #:value "server-extras"]
+Name of directory where server support files live.
 
 @defparam[world:current-server-extras-path dir path?
           #:value #f]{

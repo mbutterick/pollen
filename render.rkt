@@ -232,7 +232,8 @@
            pollen/world
            pollen/project-requires
            sugar
-           txexpr)
+           txexpr
+           hyphenate)
   (define-namespace-anchor my-module-cache-ns-anchor)
   (provide my-module-cache-ns-anchor))
 
@@ -267,5 +268,6 @@
                 pollen/template
                 pollen/world
                 sugar
-                txexpr))   
+                txexpr
+                hyphenate))   
     (string->bytes/utf-8 (eval expr-to-eval (current-namespace)))))

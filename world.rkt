@@ -49,7 +49,7 @@
 
 (define dashboard-css "poldash.css")
 
-(define current-module-root (make-parameter #f))
+(define server-extras-dir "server-extras")
 (define current-server-extras-path (make-parameter #f))
 
 (define check-project-requires-in-render? (make-parameter #t))
