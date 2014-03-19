@@ -135,8 +135,8 @@
 
 
 ;; dashboard route
-(define (dashboard dashboard-pmap)
-  (define dashboard-dir (get-enclosing-dir dashboard-pmap))
+(define (dashboard dashboard-ptree)
+  (define dashboard-dir (get-enclosing-dir dashboard-ptree))
   (define (in-project-root?)
     (directories-equal? dashboard-dir (world:current-project-root)))
   (define parent-dir (and (not (in-project-root?)) (get-enclosing-dir dashboard-dir)))
@@ -147,12 +147,16 @@
                               (if href 
                                   `(a ((href ,href)) ,text)
                                   text)))))
-  (define (make-parent-row) 
-    (if parent-dir
-        (let* ([url-to-parent-dashboard (format "/~a" (find-relative-path (world:current-project-root) (build-path parent-dir world:default-pagetree)))]
-               [url-to-parent (string-replace url-to-parent-dashboard world:default-pagetree "")])
-          `(tr (th ((colspan "3")) (a ((href ,url-to-parent-dashboard)) ,(format "up to ~a" url-to-parent))))) 
-        `(tr (th ((colspan "3")(class "root")) "Pollen root"))))
+  
+  (define (make-parent-row)
+    (define dirs (cons "Project root"
+                       (if (not (equal? (world:current-project-root) dashboard-dir))
+                           (explode-path (find-relative-path (world:current-project-root) dashboard-dir))
+                           null)))
+    (define dirlinks (cons "/" (map (λ(ps) (format "/~a/" (apply build-path ps)))  
+                                   (for/list ([i (length (cdr dirs))])
+                                     (take (cdr dirs) (add1 i))))))
+    `(tr (th ((colspan "3")) ,@(add-between (map (λ(dir dirlink) `(a ((href ,(format "~a~a" dirlink world:default-pagetree))) ,(->string dir))) dirs dirlinks) "/"))))
   
   (define (make-path-row filename-path)
     (define filename (->string filename-path))
@@ -195,8 +199,8 @@
   
   (define project-paths 
     (filter-not ineligible-path? 
-                (if (file-exists? dashboard-pmap)
-                    (map ->path (pagetree->list (cached-require (->path dashboard-pmap) world:main-pollen-export)))
+                (if (file-exists? dashboard-ptree)
+                    (map ->path (pagetree->list (cached-require (->path dashboard-ptree) world:main-pollen-export)))
                     (unique-sorted-output-paths (directory-list dashboard-dir)))))
   
   (body-wrapper

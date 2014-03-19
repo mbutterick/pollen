@@ -35,18 +35,12 @@ th, tr > td:first-child {
     text-align: left; 
 }
 
-th.root {
+th {
     background: white;
     font-weight: normal;
     padding: 0.4em;   
 }
 
-th a {
-    background: #e6e6e6;
-    display: block;
-    font-weight: normal;
-    padding: 0.4em;   
-}
 
 
 tr, tr + tr {
@@ -69,6 +63,19 @@ a {
     display: block;
     padding: 0.4em;   
 }
+
+th a {
+    font-weight: normal;
+    display: inline;
+    color: black;
+    padding-left: 0;
+}
+
+th a:hover {
+    background: inherit;
+    color: #6a6;
+}
+
 
 .file-ext {
     color: #bbb;
