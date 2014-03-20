@@ -21,7 +21,7 @@
 (define (cache-has-key? path)
   (hash-has-key? (current-cache) path))
 
-(define (cache path)
+(define (cache path)  
   (dynamic-rerequire path)
   (hash-set! (current-cache) path (make-hash))
   (define cache-hash (cache-ref path))
@@ -36,6 +36,8 @@
   (define path 
     (with-handlers ([exn:fail? (λ(exn) (error (format "cached-require: ~a is not a valid path" path-string)))])
       (->complete-path path-string)))  
+  
+  (when (not (file-exists? path)) (error (format "cached-require: ~a does not exist" (path->string path))))
   
   (when (or (not (cache-has-key? path))
             (> (file-or-directory-modify-seconds path) (hash-ref (cache-ref path) 'mod-time)))
