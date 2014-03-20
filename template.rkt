@@ -10,7 +10,7 @@
 
 (define/contract+provide (metas->here metas)
   (hash? . -> . pagenode?)
-  (path->pagenode (report (select-from-metas 'here-path metas))))
+  (path->pagenode (select-from-metas 'here-path metas)))
 
 
 (define (pagenode->path pagenode)
