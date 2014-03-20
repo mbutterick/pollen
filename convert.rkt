@@ -1,21 +1,9 @@
 #lang racket/base
-(require sugar txexpr racket/list racket/string pollen/world xml html racket/file racket/match)
+(require sugar txexpr racket/list racket/string pollen/world xml html racket/file racket/match css-tools/html)
 
 (define (attrs->pollen attrs)
   (string-join (flatten (map (λ(pair) (list (format "'~a:" (car pair)) (format "\"~a\"" (cadr pair)))) attrs)) " "))
 
-
-(define (decode-entity x)
-  (define entity-to-string (hash
-                            'ldquo "“"
-                            'rdquo "”"
-                            'lsquo "‘"
-                            'rsquo "’"
-                            'copy "©"
-                            'nbsp " "
-                            'mdash "—"
-                            'ndash "–"))
-  (hash-ref entity-to-string x))
 
 (define/contract+provide (xexpr->pollen x #:p-breaks [p-breaks #f])
   ((xexpr?) (#:p-breaks boolean?) . ->* . string?)
@@ -27,7 +15,7 @@
                           (map ->string  `(,world:expression-delimiter ,(get-tag x) 
                                                                        ,@(if (not (null? (get-attrs x))) `("[" ,(attrs->pollen (get-attrs x)) "]") null) 
                                                                        ,@(if (not (null? (get-elements x))) `("{" ,@(map loop (get-elements x)) "}" ) null))))]
-      [(symbol? x) (decode-entity x)]
+      [(symbol? x) (loop (entity->integer x))]
       [(number? x) (format "~a" (integer->char x))]
       [else x])))
 
@@ -54,4 +42,5 @@
   ; (xexpr->pollen '(p ((class "foo")) "You are puppy"))
   ; (xexpr->pollen '(p ((class "foo")) "You are" "\n\n" "puppy"))
   ; (xexpr->pollen '(p ((class "foo")) "You are " (em "so") " puppy"))
-  (display (html->pollen #:p-breaks #t (file->string "index.html"))))
+;  (display (html->pollen #:p-breaks #t (file->string "index.html"))))
+  )
