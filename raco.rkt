@@ -7,7 +7,7 @@
 (define-for-syntax arg-command-name (with-handlers ([exn:fail? (λ(exn) #f)]) (vector-ref args 0)))
 
 
-(define-for-syntax arg-project-directory
+(define-for-syntax first-arg-or-current-dir
   (with-handlers ([exn:fail? (λ(exn) (current-directory))])
     (path->complete-path (simplify-path (string->path (vector-ref args 1))))))
 
@@ -24,8 +24,8 @@
   (datum->syntax stx 
                  (case arg-command-name
                    [(#f "help") (handle-help)]
-                   [("start") (handle-start arg-project-directory arg-server-port)]
-                   [("render") (handle-render (vector-ref args 1))]
+                   [("start") (handle-start first-arg-or-current-dir arg-server-port)]
+                   [("render") (handle-render first-arg-or-current-dir)]
                    [else (handle-else arg-command-name)])))
 
 (select-syntax-for-command)

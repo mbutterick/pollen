@@ -48,7 +48,7 @@
   (reset-modification-dates) 
   (for-each (λ(x) ((if (pagetree-source? x)
                        render-pagetree
-                       render-to-file-if-needed) x)) xs))
+                       render-from-source-or-output-path) x)) xs))
 
 
 (define/contract+provide (render-pagetree pagetree-or-path)

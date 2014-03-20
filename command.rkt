@@ -19,8 +19,8 @@ clone       copies rendered files to desktop
                                                       (displayln (format "Rendering ~a" dir-or-path))                                                      
                                                       (list dir-or-path))
                                                     (begin
-                                                      (displayln (format "Rendering preproc & pagetree files in directory ~a" dir-or-path)
-                                                      (apply append (map (λ(proc) (filter proc (directory-list dir-or-path))) (list preproc-source? pagetree-source?)))))))))))
+                                                      (displayln (format "Rendering preproc & pagetree files in directory ~a" dir-or-path))
+                                                      (apply append (map (λ(proc) (filter proc (directory-list dir-or-path))) (list preproc-source? pagetree-source?))))))))))
 
 
 (define (handle-start directory [port #f])
@@ -45,7 +45,7 @@ clone       copies rendered files to desktop
                      [("render") `(begin
                                         ;; todo: take extensions off the comand line
                                         (displayln "Render preproc & pagetree files ...")
-                                        (require "render.rkt" "file-tools.rkt" "world.rkt")
+                                        (require "render.rkt" "file.rkt" "world.rkt")
                                         (apply render-batch (append-map project-files-with-ext (list world:preproc-source-ext world:pagetree-source-ext))))]
                      [("clone") (let ([target-path 
                                        (if (> (len args) 1)
