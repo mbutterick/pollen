@@ -46,7 +46,9 @@
   ;; And with render, they would be rendered repeatedly.
   ;; Using reset-modification-dates is sort of like session control.
   (reset-modification-dates) 
-  (for-each render-to-file-if-needed xs))
+  (for-each (λ(x) ((if (pagetree-source? x)
+                       render-pagetree
+                       render-to-file-if-needed) x)) xs))
 
 
 (define/contract+provide (render-pagetree pagetree-or-path)
@@ -54,10 +56,11 @@
   (define pagetree (if (pagetree? pagetree-or-path)
                        pagetree-or-path
                        (cached-require pagetree-or-path world:main-pollen-export)))
-  (apply render-batch (pagetree->list pagetree)))
+  (parameterize ([current-directory (world:current-project-root)])
+    (for-each render-from-source-or-output-path (map ->complete-path (pagetree->list pagetree)))))
 
 
-(define/contract+provide (render-for-dev-server so-pathish #:force [force #f])
+(define/contract+provide (render-from-source-or-output-path so-pathish #:force [force #f])
   ((pathish?) (#:force boolean?) . ->* . void?)
   (let ([so-path (->complete-path so-pathish)])  ; so-path = source or output path (could be either) 
     (cond
@@ -155,7 +158,7 @@
   ((complete-path?) ((or/c #f complete-path?)) . ->* . bytes?)
   (match-define-values (source-dir _ _) (split-path source-path))
   (define template-path (or maybe-template-path (get-template-for source-path)))
-  (render-for-dev-server template-path) ; because template might have its own preprocessor source
+  (render-from-source-or-output-path template-path) ; because template might have its own preprocessor source
   (define expr-to-eval 
     `(begin 
        (require (for-syntax racket/base))

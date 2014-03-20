@@ -9,6 +9,20 @@ render      renders all files in project directory
 clone       copies rendered files to desktop
 [filename]  renders individual file"))
 
+(define (handle-render dir-or-path [port #f])  
+  `(begin 
+     (require pollen/render pollen/world pollen/file sugar)
+     (parameterize ([current-directory (world:current-project-root)])
+       (define dir-or-path ,dir-or-path)
+       (apply render-batch (map ->complete-path (if (not (directory-exists? dir-or-path))
+                                                    (begin
+                                                      (displayln (format "Rendering ~a" dir-or-path))                                                      
+                                                      (list dir-or-path))
+                                                    (begin
+                                                      (displayln (format "Rendering preproc & pagetree files in directory ~a" dir-or-path)
+                                                      (apply append (map (λ(proc) (filter proc (directory-list dir-or-path))) (list preproc-source? pagetree-source?)))))))))))
+
+
 (define (handle-start directory [port #f])
   (if (not (directory-exists? directory))
       (error (format "~a is not a directory" directory))

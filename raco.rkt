@@ -25,6 +25,7 @@
                  (case arg-command-name
                    [(#f "help") (handle-help)]
                    [("start") (handle-start arg-project-directory arg-server-port)]
+                   [("render") (handle-render (vector-ref args 1))]
                    [else (handle-else arg-command-name)])))
 
 (select-syntax-for-command)
