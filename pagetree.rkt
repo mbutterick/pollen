@@ -32,6 +32,7 @@
 (define+provide (validate-pagetree x)
   (let ([pagenodes (pagetree->list x)])
     (and
+     (txexpr? x)
      (andmap (λ(p) (or (pagenode? p) (error (format "validate-pagetree: \"~a\" is not a valid pagenode" p)))) pagenodes)
      (try (members-unique?/error pagenodes)
           (except [exn:fail? (λ(e) (error (format "validate-pagetree: ~a" (exn-message e))))]))
