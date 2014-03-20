@@ -1,14 +1,15 @@
 #lang racket/base
-
+(require pollen/world)
 (provide (all-defined-out))
 
 (define (handle-help)
-  `(displayln "Pollen commands:
-help            show this message
-start  [dir]    starts project server in dir (default is current dir)
-render [dir]    render project in dir (default is current dir)
-render path     render file
-clone           copy project to desktop without source files"))
+  `(displayln (format "Pollen commands:
+help                  show this message
+start  [dir] [port]   starts project server in dir (default is current dir) 
+                          (default port is ~a)
+render [dir]          render project in dir (default is current dir)
+render path           render file
+clone                 copy project to desktop without source files" ,(world:current-server-port))))
 
 (define (handle-render dir-or-path [port #f])  
   `(begin 
