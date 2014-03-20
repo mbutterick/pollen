@@ -44,12 +44,29 @@
        (except [exn:fail? (λ(e) #f)])))
 
 
+(define+provide/contract (directory->pagetree dir)
+  (coerce/path? . -> . pagetree?)
+  
+  (define (unique-sorted-output-paths xs)
+    (define output-paths (map ->output-path xs))
+    (define all-paths (filter visible? (remove-duplicates output-paths)))
+    (define path-is-directory? (λ(f) (directory-exists? (build-path dir f))))
+    (define-values (subdirectories files) (partition path-is-directory? all-paths))
+    (define-values (pagetree-sources other-files) (partition pagetree-source? files))
+    (define (sort-names xs) (sort xs #:key ->string string<?))
+    ;; put subdirs in list ahead of files (so they appear at the top)
+    (append (sort-names subdirectories) (sort-names pagetree-sources) (sort-names other-files)))
+  
+  (if (directory-exists? dir )
+      (decode-pagetree (map ->symbol (unique-sorted-output-paths (directory-list dir))))
+      (error (format "directory->pagetree: directory ~a doesn't exist" dir)))) 
+
 ;; Try loading from pagetree file, or failing that, synthesize pagetree.
 (define+provide/contract (make-project-pagetree project-dir)
   (pathish? . -> . pagetree?)
-  (define pagetree-source (build-path project-dir world:default-pagetree))
-  (cached-require pagetree-source world:main-pollen-export))
-
+  (with-handlers ([exn:fail? (λ(exn) (directory->pagetree project-dir))])
+    (define pagetree-source (build-path project-dir world:default-pagetree))
+    (cached-require pagetree-source world:main-pollen-export)))
 
 (define+provide/contract (parent pnish [pt (current-pagetree)])
   (((or/c #f pagenodeish?)) (pagetree?) . ->* . (or/c #f pagenode?)) 

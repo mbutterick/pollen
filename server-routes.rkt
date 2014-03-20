@@ -154,8 +154,8 @@
                            (explode-path (find-relative-path (world:current-project-root) dashboard-dir))
                            null)))
     (define dirlinks (cons "/" (map (λ(ps) (format "/~a/" (apply build-path ps)))  
-                                   (for/list ([i (length (cdr dirs))])
-                                     (take (cdr dirs) (add1 i))))))
+                                    (for/list ([i (length (cdr dirs))])
+                                      (take (cdr dirs) (add1 i))))))
     `(tr (th ((colspan "3")) ,@(add-between (map (λ(dir dirlink) `(a ((href ,(format "~a~a" dirlink world:default-pagetree))) ,(->string dir))) dirs dirlinks) "/"))))
   
   (define (make-path-row filename-path)
@@ -182,26 +182,13 @@
                            [(pagetree-source? filename) empty-cell]
                            [else (cons (format "out/~a" filename) "out")]))))))
   
-  (define (ineligible-path? x) (or (not (visible? x)) (member x world:paths-excluded-from-dashboard)))  
-  
-  (define (unique-sorted-output-paths xs)
-    (define output-paths (map ->output-path xs))
-    (define (unique-members xs) (set->list (list->set xs)))
-    (define all-paths (unique-members output-paths))
-    (define path-is-directory? (λ(f) (directory-exists? (build-path dashboard-dir f))))
-    (define subdirectories (filter path-is-directory? all-paths))
-    (define files (filter-not path-is-directory? all-paths))
-    (define pagetree-sources (filter pagetree-source? files))
-    (define other-files (filter-not pagetree-source? files))
-    (define (sort-names xs) (sort xs #:key ->string string<?))
-    ;; put subdirs in list ahead of files (so they appear at the top)
-    (append (sort-names subdirectories) (sort-names pagetree-sources) (sort-names other-files)))
+  (define (ineligible-path? x) (member x world:paths-excluded-from-dashboard))  
   
   (define project-paths 
-    (filter-not ineligible-path? 
-                (if (file-exists? dashboard-ptree)
-                    (map ->path (pagetree->list (cached-require (->path dashboard-ptree) world:main-pollen-export)))
-                    (unique-sorted-output-paths (directory-list dashboard-dir)))))
+    (filter-not ineligible-path? (map ->path (pagetree->list 
+                                              (if (file-exists? dashboard-ptree)
+                                                  (cached-require (->path dashboard-ptree) world:main-pollen-export)
+                                                  (directory->pagetree dashboard-dir))))))
   
   (body-wrapper
    `(table 

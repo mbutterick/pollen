@@ -1,7 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base))
 (require racket/string xml xml/path sugar/define sugar/container sugar/coerce/contract)
-(require "file.rkt" txexpr "world.rkt" "cache.rkt" "pagetree.rkt")
+(require "file.rkt" txexpr "world.rkt" "cache.rkt" "pagetree.rkt" "debug.rkt")
 
 
 (require sugar/coerce/value)
@@ -10,7 +10,7 @@
 
 (define/contract+provide (metas->here metas)
   (hash? . -> . pagenode?)
-  (path->pagenode (select-from-metas 'here-path metas)))
+  (path->pagenode (report (select-from-metas 'here-path metas))))
 
 
 (define (pagenode->path pagenode)
