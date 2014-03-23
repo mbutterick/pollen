@@ -4,7 +4,8 @@
          scribble/html-properties
          scribble/manual
          (prefix-in racket: scribble/racket)
-         (prefix-in scribble: scribble/reader))
+         (prefix-in scribble: scribble/reader)
+         (prefix-in pollen: (submod pollen reader)))
 
 (define-syntax bounce-for-label
   (syntax-rules (all-except)
@@ -26,7 +27,7 @@
                   scribble/eval
                   scribble/bnf)
 
-(provide scribble-examples litchar/lines doc-render-examples)
+(provide scribble-examples pollen-examples litchar/lines doc-render-examples)
 
 (define (as-flow e)
   (if (block? e) e (make-paragraph plain (list e))))
@@ -70,6 +71,37 @@
                p (syntax-e p)
                (list (syntax-source p) (syntax-line p) base (add1 base) 1)
                p)]))
+
+(define (pollen-examples . lines)
+  (define reads-as (make-paragraph plain (list spacer "reads as" spacer)))
+  (let* ([lines (apply string-append lines)]
+         [p (open-input-string lines)])
+    (port-count-lines! p)
+    (let loop ([r '()] [newlines? #f])
+      (regexp-match? #px#"^[[:space:]]*" p)
+      (let* ([p1  (file-position p)]
+             [stx (pollen:read-syntax #f p)]
+             [p2  (file-position p)])
+        (if (not (eof-object? stx))
+          (let ([str (substring lines p1 p2)])
+            (loop (cons (list str stx) r)
+                  (or newlines? (regexp-match? #rx#"\n" str))))
+          (let* ([r (reverse r)]
+                 [r (if newlines?
+                      (cdr (apply append (map (lambda (x) (list #f x)) r)))
+                      r)])
+            (make-table
+             plain
+             (map (lambda (x)
+                    (let ([@expr (if x (litchar/lines (car x)) "")]
+                          [sexpr (if x
+                                   (racket:to-paragraph
+                                    ((norm-spacing 0) (cadr x)))
+                                   "")]
+                          [reads-as (if x reads-as "")])
+                      (map as-flow (list spacer @expr reads-as sexpr))))
+                  r))))))))
+
 
 (define (scribble-examples . lines)
   (define reads-as (make-paragraph plain (list spacer "reads as" spacer)))

@@ -1,11 +1,11 @@
 #lang racket/base
-(require (only-in scribble/reader make-at-reader) pollen/world racket/path pollen/project-requires)
+(require (only-in scribble/reader make-at-reader) pollen/world racket/path pollen/project)
 
 (provide define+provide-reader-in-mode (all-from-out pollen/world))
 
 
 (define read-inner (make-at-reader 
-                    #:command-char world:expression-delimiter 
+                    #:command-char world:command-marker 
                     #:syntax? #t 
                     #:inside? #t))
 

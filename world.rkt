@@ -23,8 +23,8 @@
 (define default-pagetree "index.ptree")
 (define pagetree-root-node 'pagetree-root)
 
-(define expression-delimiter #\◊)
-(define template-field-delimiter expression-delimiter)
+(define command-marker #\◊)
+(define template-field-delimiter command-marker)
 
 (define default-template-prefix "main")
 (define fallback-template "fallback.html.pt")

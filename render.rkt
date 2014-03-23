@@ -1,6 +1,6 @@
 #lang racket/base
 (require racket/file racket/rerequire racket/path racket/match)
-(require sugar "file.rkt" "cache.rkt" "world.rkt" "debug.rkt" "pagetree.rkt" "project-requires.rkt")
+(require sugar "file.rkt" "cache.rkt" "world.rkt" "debug.rkt" "pagetree.rkt" "project.rkt")
 
 
 ;; when you want to generate everything fresh, 
@@ -233,7 +233,7 @@
            pollen/pagetree
            pollen/template
            pollen/world
-           pollen/project-requires
+           pollen/project
            sugar
            txexpr
            hyphenate)
@@ -267,7 +267,7 @@
                 pollen/main
                 pollen/reader-base
                 pollen/pagetree
-                pollen/project-requires
+                pollen/project
                 pollen/template
                 pollen/world
                 sugar

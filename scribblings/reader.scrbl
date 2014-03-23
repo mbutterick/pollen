@@ -10,74 +10,241 @@
 @(define (at-exp-racket)
    @racket[#, @hash-lang[] #, @racketmodname[at-exp] #, @racketidfont{racket}])
 
-@title[#:tag "reader"]{Pollen ◊ command notation}
+@title[#:tag "reader"]{Pollen ◊ commands}
 
 @italic{Pollen is a dialect of Scribble, so I've adapted this section from Matthew Flatt and Eli Barzilay's excellent documentation for Scribble. If you think this section is good, it's because of them. If you don't, it's because of me.}
 
-Pollen's command notation is designed to be a convenient system for embedding Pollen commands within free-form text.
-
 @section{The golden rule}
 
-Pollen uses a special character — the @italic{lozenge}, which looks like this: ◊ — as its command character. Meaning, when you put the ◊ in front of a word or expression, it will it be interpreted as a Pollen command.
-
-
-
-Typically, ◊ notation is enabled through
-@racketmodname[scribble/base] or similar languages, but you can also
-add ◊ notation to an S-expression-based language using the
-@racketmodname[at-exp] meta-language. For example,
-
-@verbatim[#:indent 2]|{
-  #lang at-exp racket
-  (define v '@op{str})
-}|
-
-is equivalent to 
-
-@racketmod[
-racket
-(define v '(op "str"))
-]
-
-Using @at-exp-racket[] is probably the easiest way to try the examples
-in this chapter.
-
+Pollen uses a special character — the @italic{lozenge}, which looks like this: ◊ — to mark commands  within a Pollen source file. So when you put a ◊ in your source, whatever comes next will be treated as a command. If you don't, it will just be interpreted as plain text.
 
 
 @section{About that lozenge}
 
-I picked the lozenge glyph as the delimiter — meaning this thing: ◊ — because a) it appears in almost every font, b) it's barely used in ordinary typesetting, and c) its shape and color allow it to stand out easily in code without being distracting. 
+I chose the lozenge as the command marker because a) it appears in almost every font, b) it's barely used in ordinary typesetting, c) it's not used in any programming language that I know of, and d) its shape and color allow it to stand out easily in code without being distracting. 
 
-Scribble itself uses the @"@" sign as a delimiter. Not a bad choice if all you do is Racket. But as you use Pollen to work on other kinds of text-based files that commonly contain @"@" signs — you know, like things with email addresses — a small headache starts to form. That's why I changed it.
+@margin-note{Scribble itself uses the @"@" sign as a delimiter. It's not a bad choice if you only work with Racket files. But as you use Pollen to work on other kinds of text-based files that commonly contain @"@" signs — HTML pages especially — it gets cumbersome. So I changed it.}
 
-Still, if you don't want to use the lozenge as your delimiter, you can use something else. Set Pollen's @racket[world:expression-delimiter] value to whatever character you want. But don't knock the lozenge till you try it.
+Still, if you don't want to use the lozenge as your command marker, you can use something else. Set Pollen's @racket[world:command-marker] value to whatever character you want. 
+
+But don't knock the lozenge till you try it. Here's how you type it:
+
+[todo: instructions]
 
 @;--------------------------------------------------------------------
-@section{The Pollen Syntax at a Glance}
+@section{The two command forms}
 
-To review @secref["how-to:reader"], the concrete syntax of @deftech{◊-forms}
-is roughly
-
-@racketblock[
- @#,BNF-seq[@litchar["@"]
-            @nonterm{cmd}
-            @litchar{[} @kleenestar{@nonterm{datum}} @litchar{]}
-            @litchar["{"] @kleenestar{@nonterm{text-body}} @litchar["}"]]
-]
-
-where all three parts after @litchar["@"] are optional, but at least
-one should be present.  (Spaces are not allowed between the
-three parts.)  Roughly, a form matching the above grammar is read as
+Every Pollen command is built using one of two basic forms: either @italic{native form} or @italic{Racket form}. Both forms start with a lozenge (@litchar["◊"]):
 
 @racketblock[
-  (@#,nonterm{cmd} @#,kleenestar{@nonterm{datum}} @#,kleenestar{@nonterm{parsed-body}})
+ @#,BNF-seq[@litchar["◊"] @nonterm{command name} @litchar{[} @nonterm{Racket arguments ...} @litchar{]} @litchar["{"] @nonterm{text argument} @litchar["}"]]
+@#,BNF-seq[@litchar["◊"]
+            @litchar{(} @nonterm{Racket expression} @litchar{)}]
 ]
 
-where @nonterm{parsed-body} is the translation of each
-@nonterm{text-body} in the input.  Thus, the initial @nonterm{cmd}
-determines the Racket code that the input is translated into.  The
-common case is when @nonterm{cmd} is a Racket identifier, which reads
-as a plain Racket form, with datum arguments and/or string arguments.
+@bold{Native-form commands}
+
+A native-form command has the three possible parts after the @litchar["◊"]:
+
+@itemlist[
+@item{The @italic{command name} appears immediately after the @litchar["◊"]. Typically it's a short word.} 
+@item{The @italic{Racket arguments} appear between square brackets. Pollen is an interface to the Racket programming language. These arguments are interpreted according to Racket conventions. So if you like programming, you'll end up using these frequently. If you don't, you won't.}
+@item{The @italic{text argument} appears between braces (aka curly brackets). You can put any free-form text here.}
+]
+
+These parts are combined according to three rules: 
+
+@itemlist[
+@item{Each part is optional.}
+@item{You cannot have spaces between the three parts.}
+@item{They must appear in the order shown.}
+]
+
+Here are a few examples of correct native-form commands:
+
+@verbatim[#:indent 2]|{
+  #lang pollen
+  ◊variable-name
+  ◊tag{Text inside the tag.}
+  ◊tag['attr: "value"]{Text inside the tag}
+  ◊get-customer-id["Brennan Huff"]
+}|
+
+And here are some incorrect ones:
+
+@verbatim[#:indent 2]|{
+  #lang pollen
+  ◊tag {Text inside the tag.} ; space between first and second parts
+  ◊tag[Text inside the tag] ; text argument needs to be within braces
+  ◊tag{Text inside the tag}['attr: "value"] ; wrong order 
+}|
+
+The next section describes each of these parts in detail.
+
+@bold{Racket-form commands}
+
+If you're familiar with Racket expressions, you can use the Racket-form commands to embed them within Pollen source files. It's simple: any Racket expression can become a Pollen expression by adding @litchar["◊"] to the front. So in Racket, this code:
+
+@verbatim[#:indent 2]|{
+  #lang racket
+  (define song "Revolution")
+  (format "~a #~a" song (* 3 3))
+}|
+
+Can be converted to Pollen like so: 
+
+@verbatim[#:indent 2]|{
+  #lang pollen
+  ◊(define song "Revolution")
+  ◊(format "~a #~a" song (* 3 3))
+}|
+
+And in DrRacket, they produce the same output:
+
+@nested[#:style 'inset]{@racketresult["Revolution #9"]}
+
+Beyond that, there's not much to say about Racket form — any valid expression you can write in Racket will also be a valid Racket-form Pollen command.
+
+@bold{The relationship of native form and Racket form}
+
+Even if you don't plan to write a lot of Racket expressions, you should be aware that under the hood, Pollen is converting all native-form commands into Racket-form commands. So a native-form command that looks like this:
+
+@racketblock[
+  ◊headline[#:size 'enormous]{Man Bites Dog!}
+]
+
+Is actually being turned into a Racket-form command like this:
+
+@racketblock[
+  (headline #:size 'enormous "Man Bites Dog!")
+]
+
+Thus a native-form command is just an alternate way of writing a Racket-form command. (More broadly, all of Pollen is just an alternate way of using Racket.)
+
+The corollary is that you can always write Pollen commands using whichever form is more convenient or readable. For instance, the earlier example, written in the Racket form:
+
+@verbatim[#:indent 2]|{
+  #lang pollen
+  ◊(define song "Revolution")
+  ◊(format "~a #~a" song (* 3 3))
+}|
+
+Can be rewritten using native form:
+
+@verbatim[#:indent 2]|{
+  #lang pollen
+  ◊define[song]{Revolution}
+  ◊format["~a #~a" song (* 3 3)]
+}|
+
+And it will work the same way.
+
+
+@;--------------------------------------------------------------------
+@subsection{The command name}
+
+In Pollen, you'll typically use the command name for one of four purposes:
+
+@itemlist[
+@item{To invoke a tag function.}
+@item{To invoke another function.}
+@item{To insert the value of a variable.}
+@item{To insert a comment.}
+]
+
+
+Besides being a Racket identifier, the @nonterm{cmd} part of an
+@tech{◊-form} can have Racket punctuation prefixes, which will end up
+wrapping the @italic{whole} expression.
+
+@scribble-examples|==={
+  @`',@foo{blah}
+  @#`#'#,@foo{blah}
+}===|
+
+When writing Racket code, this means that @litchar|{@`',@foo{blah}}|
+is exactly the same as @litchar|{`@',@foo{blah}}| and
+@litchar|{`',@@foo{blah}}|, but unlike the latter two, the first
+construct can appear in body texts with the same meaning, whereas the
+other two would not work (see below).
+
+After the optional punctuation prefix, the @nonterm{cmd} itself is not
+limited to identifiers; it can be @italic{any} Racket expression.
+
+@scribble-examples|==={
+  @(lambda (x) x){blah}
+  @`(unquote foo){blah}
+}===|
+
+In addition, the command can be omitted altogether, which will omit it
+from the translation, resulting in an S-expression that usually
+contains, say, just strings:
+
+@scribble-examples|==={
+  @{foo bar
+    baz}
+  @'{foo bar
+     baz}
+}===|
+
+If the command part begins with a @litchar{;} (with no newline between
+the @litchar["@"] and the @litchar{;}), then the construct is a
+comment.  There are two comment forms, one for arbitrary-text and
+possibly nested comments, and another one for line comments:
+
+@racketblock[
+@#,BNF-seq[@litchar["@;{"] @kleenestar{@nonterm{any}} @litchar["}"]]
+
+@#,BNF-seq[@litchar["@;"] @kleenestar{@nonterm{anything-else-without-newline}}]
+]
+
+In the first form, the commented body must still parse correctly; see
+the description of the body syntax below.  In the second form, all
+text from the @litchar["@;"] to the end of the line @italic{and} all
+following spaces (or tabs) are part of the comment (similar to
+@litchar{%} comments in TeX).
+
+@scribble-examples|==={
+  @foo{bar @; comment
+       baz@;
+       blah}
+}===|
+
+Tip: if you use an editor in some Scheme mode without support for
+@tech{◊-forms}, balanced comments can be confusing, since the open brace
+looks commented out, and the closing one isn't.  In such cases it is
+useful to ``comment'' out the closing brace too:
+
+@verbatim[#:indent 2]|==={
+  @;{
+    ...
+  ;}
+}===|
+
+so the editor does not treat the file as having unbalanced
+parentheses.
+
+If only the @nonterm{cmd} part of an @tech{◊-form} is specified, then the
+result is the command part only, without an extra set of parenthesis.
+This makes it suitable for Racket escapes in body texts.  (More on this
+below, in the description of the body part.)
+
+@scribble-examples|==={
+  @foo{x @y z}
+  @foo{x @(* y 2) z}
+  @{@foo bar}
+}===|
+
+Finally, note that there are currently no special rules for using
+@litchar["@"] in the command itself, which can lead to things like:
+
+@scribble-examples|==={
+  @@foo{bar}{baz}
+}===|
+
+
+
+
 
 Here is one example:
 
@@ -275,97 +442,6 @@ or bound locally (with @racket[let], for example).
     @text{@it{Note}: @bf{This is @ul{not} a pipe}.}))
 ]
 
-@;--------------------------------------------------------------------
-@section{The Command Part}
-
-Besides being a Racket identifier, the @nonterm{cmd} part of an
-@tech{◊-form} can have Racket punctuation prefixes, which will end up
-wrapping the @italic{whole} expression.
-
-@scribble-examples|==={
-  @`',@foo{blah}
-  @#`#'#,@foo{blah}
-}===|
-
-When writing Racket code, this means that @litchar|{@`',@foo{blah}}|
-is exactly the same as @litchar|{`@',@foo{blah}}| and
-@litchar|{`',@@foo{blah}}|, but unlike the latter two, the first
-construct can appear in body texts with the same meaning, whereas the
-other two would not work (see below).
-
-After the optional punctuation prefix, the @nonterm{cmd} itself is not
-limited to identifiers; it can be @italic{any} Racket expression.
-
-@scribble-examples|==={
-  @(lambda (x) x){blah}
-  @`(unquote foo){blah}
-}===|
-
-In addition, the command can be omitted altogether, which will omit it
-from the translation, resulting in an S-expression that usually
-contains, say, just strings:
-
-@scribble-examples|==={
-  @{foo bar
-    baz}
-  @'{foo bar
-     baz}
-}===|
-
-If the command part begins with a @litchar{;} (with no newline between
-the @litchar["@"] and the @litchar{;}), then the construct is a
-comment.  There are two comment forms, one for arbitrary-text and
-possibly nested comments, and another one for line comments:
-
-@racketblock[
-@#,BNF-seq[@litchar["@;{"] @kleenestar{@nonterm{any}} @litchar["}"]]
-
-@#,BNF-seq[@litchar["@;"] @kleenestar{@nonterm{anything-else-without-newline}}]
-]
-
-In the first form, the commented body must still parse correctly; see
-the description of the body syntax below.  In the second form, all
-text from the @litchar["@;"] to the end of the line @italic{and} all
-following spaces (or tabs) are part of the comment (similar to
-@litchar{%} comments in TeX).
-
-@scribble-examples|==={
-  @foo{bar @; comment
-       baz@;
-       blah}
-}===|
-
-Tip: if you use an editor in some Scheme mode without support for
-@tech{◊-forms}, balanced comments can be confusing, since the open brace
-looks commented out, and the closing one isn't.  In such cases it is
-useful to ``comment'' out the closing brace too:
-
-@verbatim[#:indent 2]|==={
-  @;{
-    ...
-  ;}
-}===|
-
-so the editor does not treat the file as having unbalanced
-parentheses.
-
-If only the @nonterm{cmd} part of an @tech{◊-form} is specified, then the
-result is the command part only, without an extra set of parenthesis.
-This makes it suitable for Racket escapes in body texts.  (More on this
-below, in the description of the body part.)
-
-@scribble-examples|==={
-  @foo{x @y z}
-  @foo{x @(* y 2) z}
-  @{@foo bar}
-}===|
-
-Finally, note that there are currently no special rules for using
-@litchar["@"] in the command itself, which can lead to things like:
-
-@scribble-examples|==={
-  @@foo{bar}{baz}
-}===|
 
 @;--------------------------------------------------------------------
 @section{The Datum Part}
