@@ -107,7 +107,7 @@ Beyond that, there's not much to say about Racket form — any valid expression
 
 @bold{The relationship of native form and Racket form}
 
-Even if you don't plan to write a lot of Racket expressions, you should be aware that under the hood, Pollen is converting all native-form commands into Racket-form commands. So a native-form command that looks like this:
+Even if you don't plan to write a lot of Racket-form commands, you should be aware that under the hood, Pollen is converting all commands in native form to Racket form. So a native-form command that looks like this:
 
 @racketblock[
   ◊headline[#:size 'enormous]{Man Bites Dog!}
