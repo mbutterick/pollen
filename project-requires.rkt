@@ -4,7 +4,7 @@
 
 (define/contract+provide (get-project-require-files source-path) ; keep contract local to ensure coercion
   (coerce/path? . -> . (or/c #f (listof path?)))
-  (define possible-requires (list (simplify-path (build-path source-path 'up world:pollen-require))))
+  (define possible-requires (list (simplify-path (build-path source-path 'up world:project-require))))
   (and (andmap file-exists? possible-requires) possible-requires))
 
 

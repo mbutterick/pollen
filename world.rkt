@@ -33,7 +33,7 @@
 (define main-pollen-export 'doc) ; don't forget to change fallback template too
 (define meta-pollen-export 'metas)
 
-(define pollen-require "pollen-require.rkt")
+(define project-require "project-require.rkt")
 
 (define newline "\n")
 (define linebreak-separator newline)

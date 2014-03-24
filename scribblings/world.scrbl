@@ -19,12 +19,12 @@ All identifiers are exported with the prefix @racket[world:], and are so documen
 )]
 The two exports from a compiled Pollen source file.
 
-@(defthing world:pollen-require string? #:value "pollen-require.rkt")
+@(defthing world:project-require string? #:value "project-require.rkt")
 File implicitly required into every Pollen source file from its directory.
 
 @defparam[world:check-project-requires-in-render? check? boolean?
           #:value #t]{
-A parameter that determines whether the @racket[world:pollen-require] file is checked for changes on every pass through @racket[render]. (Can be faster to turn this off if you don't need it.) Initialized to @racket[#t].}
+A parameter that determines whether the @racket[world:project-require] file is checked for changes on every pass through @racket[render]. (Can be faster to turn this off if you don't need it.) Initialized to @racket[#t].}
 
 @defthing[world:server-extras-dir dir string? #:value "server-extras"]
 Name of directory where server support files live.
