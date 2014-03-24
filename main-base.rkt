@@ -57,18 +57,32 @@
                     
                     
                     ;; Split out the metas.   
-                    (require txexpr)   
-                    (define (split-metas-to-hash tx) ; helper function
-                      ;; return tx without metas, and meta hash
-                      (define is-meta-element? (λ(x) (and (txexpr? x) (equal? 'meta (car x)))))
-                      (define-values (doc-without-metas meta-elements) 
-                        (splitf-txexpr tx is-meta-element?))
-                      (define meta-element->assoc (λ(x) (let ([key (car (caadr x))][value (cadr (caadr x))]) (cons key value))))
+                    (define (split-metas-to-hash x)
+                      (define (meta-key x) (car (caadr x)))
+                      (define (meta-value x) (cadr (caadr x)))
+                      (define is-meta-element? (λ(x) (and (list? x) ; possible txexpr
+                                                          (= (length x) 2) ; = tag + attribute
+                                                          (equal? 'meta (car x)) ; tag is 'meta
+                                                          (symbol? (meta-key x)) ; attribute key is symbol
+                                                          (string? (meta-value x))))) ; attribute value is string
+                      (define (splitter x)
+                        (define meta-acc null)
+                        (define (split-metas x)
+                          (cond
+                            [(list? x) (define-values (new-metas rest) (values (filter is-meta-element? x) (filter (compose1 not is-meta-element?) x)))
+                                       (set! meta-acc `(,@new-metas ,@meta-acc))
+                                       (map split-metas rest)]
+                            [else x]))
+                        (define result (split-metas x))
+                        (values result meta-acc))
+                      
+                      (define-values (doc-without-metas meta-elements) (splitter x))
+                      (define meta-element->assoc (λ(x) (let ([key (meta-key x)][value (meta-value x)]) (cons key value))))
                       (define metas (make-hash (map meta-element->assoc meta-elements)))
-                      (values doc-without-metas metas))
+                      (values doc-without-metas metas)) 
                     
                     
-                    (define doc-txexpr 
+                    (define doc-with-metas
                       (let ([doc-raw (if (equal? parser-mode world:mode-markdown)
                                          (apply (compose1 (dynamic-require 'markdown 'parse-markdown) string-append) doc-raw)
                                          doc-raw)])
@@ -77,8 +91,7 @@
                                   ;; cdr strips initial linebreak, but make sure doc-raw isn't blank
                                   (if (and (list? doc-raw) (> 0 (length doc-raw))) (cdr doc-raw) doc-raw))))) 
                     
-                    (define-values (doc-without-metas metas) (split-metas-to-hash doc-txexpr))
-                    
+                    (define-values (doc-without-metas metas) (split-metas-to-hash doc-with-metas))
                     
                     ;; set up the 'doc export
                     (require pollen/decode)
@@ -89,7 +102,7 @@
                                          [(or (equal? parser-mode world:mode-markup)
                                               (equal? parser-mode world:mode-markdown)) root]
                                          ;; for preprocessor output, just make a string.
-                                         [else (λ xs (apply string-append (map to-string xs)))])
+                                         [else (λ xs (apply string-append (map to-string xs)))]) ; default mode is preprocish
                                        (cdr doc-without-metas))) ;; cdr strips placeholder-root tag
                     
                     
