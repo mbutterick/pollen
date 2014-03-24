@@ -6,35 +6,16 @@
 ;; To suppress this behavior, use def/c to wrap any name.
 ;; If that name isn't already defined, you'll get the usual syntax error.
 
-(require (for-syntax racket/base))
+(require (for-syntax racket/base) pollen/tag)
 
 (provide (except-out (all-defined-out) top~)
          (rename-out (top~ #%top)))
 
 ;; Allow tag attributes to be specified as follows:
 ;; @foo['shape: "square" 'color: "red"]{hello}
-(define-syntax-rule (top~ . id)
-  (λ x 
-    (define reversed-pieces ; list of attribute pairs, and last element holds a list of everything else, then reversed
-      (reverse (let chomp ([x x])
-        (define result+regexp (and ((length x) . >= . 2) 
-                                   (symbol? (car x)) 
-                                   ;; accept strings only
-                                   ;; numbers are difficult because they don't parse as cleanly.
-                                   ;; string will read as a string even if there's no space to the left.
-                                   (or (string? (cadr x))) 
-                                   ;; Looking for symbol ending with a colon
-                                   (regexp-match #rx"^(.*?):$" (symbol->string (car x)))))
-        (if result+regexp
-            ; reuse result value. cadr is first group in match. 
-            (cons (list (string->symbol (cadr result+regexp))(cadr x)) (chomp (cddr x)))
-            (list x)))))
-    
-    (define-values (body attrs) (if (equal? null reversed-pieces)
-                                    (values null null)
-                                    (values (car reversed-pieces) (cdr reversed-pieces))))
-    
-    `(id ,@(if (equal? attrs null) null (list (reverse attrs))) ,@body)))
+(define-syntax (top~ stx)
+  (syntax-case stx ()
+    [(_ . id) #'(make-tag-function 'id)]))
 
 
 (define-syntax (def/c stx)
