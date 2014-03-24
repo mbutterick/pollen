@@ -32,7 +32,7 @@ But don't knock the lozenge till you try it. Here's how you type it:
 [todo: instructions]
 
 @;--------------------------------------------------------------------
-@section{The two command forms}
+@section{The two command forms: native form & Racket form}
 
 Every Pollen command is built using one of two basic forms: either @italic{native form} or @italic{Racket form}. Both forms start with a lozenge (@litchar["◊"]):
 
@@ -49,16 +49,16 @@ A native-form command has the three possible parts after the @litchar["◊"]:
 @itemlist[
 @item{The @italic{command name} appears immediately after the @litchar["◊"]. Typically it's a short word.} 
 @item{The @italic{Racket arguments} appear between square brackets. Pollen is an interface to the Racket programming language. These arguments are interpreted according to Racket conventions. So if you like programming, you'll end up using these frequently. If you don't, you won't.}
-@item{The @italic{text argument} appears between braces (aka curly brackets). You can put any free-form text here.}
+@item{The @italic{text argument} appears between braces (aka curly brackets). You can put any text here.}
 ]
 
-These parts are combined according to three rules: 
+Each of the three parts is optional. You can also nest commands within each other. But:
 
 @itemlist[
-@item{Each part is optional.}
-@item{You cannot have spaces between the three parts.}
-@item{They must appear in the order shown.}
+@item{You can never have spaces between the three parts.}
+@item{Whatever parts you use must always appear in the order above.}
 ]
+
 
 Here are a few examples of correct native-form commands:
 
@@ -68,6 +68,7 @@ Here are a few examples of correct native-form commands:
   ◊tag{Text inside the tag.}
   ◊tag['attr: "value"]{Text inside the tag}
   ◊get-customer-id["Brennan Huff"]
+  ◊tag{His ID is ◊get-customer-id["Brennan Huff"].}
 }|
 
 And here are some incorrect ones:
@@ -151,6 +152,113 @@ In Pollen, you'll typically use the command name for one of four purposes:
 @item{To insert the value of a variable.}
 @item{To insert a comment.}
 ]
+
+@;--------------------------------------------------------------------
+@subsubsection{Invoking tag functions}
+
+By default, Pollen treats every command name as a @italic{tag function}. As the name implies, a tag function creates a tagged X-expression with the command name as the tag, and the text argument as the content.
+
+Example:
+◊strong{Fancy Sauce, $1} becomes '(strong "Fancy Sauce, $1")
+
+To make markup easy, Pollen doesn't restrict you to a certain set of tags, or make you define your tag functions ahead of time. Just type it, and you can start using it as a tag.
+
+Example:
+◊utterlyridiculoustagname{Oh really?} becomes '(utterlyridiculoustagname "Oh really?")
+
+The one restriction is that you can't invent names for tag functions that are already being used for other commands. For instance, @racket[map] is a command permanently reserved by Racket. It's also a rarely-used HTML tag. But gosh, you really want to use it. Problem is, if you invoke it directly, Pollen will think you mean the other @racket[map]: 
+
+Example:
+◊map{Fancy Sauce, $1} becomes '(map "Fancy Sauce, $1") ; error
+
+What to do? Read on.
+
+@;--------------------------------------------------------------------
+@subsubsection{Invoking other functions}
+
+Though every command name starts out as a tag function, it doesn't necessarily end there. You have two options for invoking other functions.
+
+First, you can use the @racket[define] command to create your own function for a command name. After that, when you use the command name, you'll get the new behavior.
+
+Example:
+◊strong{Fancy Sauce, $1} becomes '(strong "Fancy Sauce, $1")
+◊(define (strong . elements) etc....)
+◊strong{Fancy Sauce, $1} becomes new thing
+
+You can attach any behavior to a command name. As your project evolves, you can also redefine the behavior of a command name. In that way, Pollen markup becomes a set of hooks upon which you can attach more elaborate processing.
+
+Second, you aren't limited to your own commands. Any function from Racket or any of its libraries can be invoked directly by using it as a command name:
+
+[example]
+
+Combining these two ideas, you can also invoke Racket functions indirectly, by attaching them to your custom command names:
+
+[example]
+
+
+
+As mentioned above, some command names already have behavior associated with them. But you can use a custom function to work around this. For instance, suppose we want to use @code{map} as a tag even though Racket is using it for its own function called @racket[map]. 
+
+First, we invent a command name that doesn't conflict. Let's call it @code{my-map}. As you learned above, Pollen will treat a new command name as a tag function by default:
+
+Example:
+◊my-map{How I would love this to be a map.}
+
+But @code{my-map} is not the tag we want. So instead, we attach a function to @code{my-map} that creates the tag we want:
+
+Example:
+
+◊(define (my-map . elements) `(map ,elements))
+◊my-map{How I would love this to be a map.}
+
+And now we can use @code{map} as a tag by invoking @code{my-map}.
+
+
+@;--------------------------------------------------------------------
+@subsubsection{Inserting the value of a variable}
+
+A Pollen command name usually refers to a function, but it can also refer to a @italic{variable}, which is a simple data value. Once you define the variable, you can insert it into your source by using the ◊ notation without any other arguments:
+
+[Example 
+◊(define foo "bar")
+◊p{The value of foo is ◊foo}
+
+Be careful — if you include arguments, even blank ones, Pollen will treat the command name as a function. This won't work, because a variable is not a function:
+
+[Example 
+◊(define foo "bar")
+◊p{The value of foo is ◊foo[]}
+
+The reason we can simply drop ◊foo into the text argument of another Pollen command is that @code{foo} holds a text value (i.e., a string). Keep in mind that not every variable holds a string value, and if it doesn't, you'll have to convert it to a string if you want to use it within other text.
+
+[Example 
+◊(define zam 42)
+◊p{The value of zam is ◊zam} ;; error
+◊p{The value of zam is ◊number->string[◊zam]} ; works
+
+One exception to know about. In the examples above, there's a word space between the variable and the other text. But suppose you need to insert a variable into text so that there's no space in between. The simple ◊ notation above won't work, because it won't be clear where the variable name ends and the text begins. 
+
+For instance, this example fails because Pollen looks for a variable called @code{fooic} (which doesn't exist) rather than @code{foo} (which does):
+
+@racketblock[
+◊(define foo "bar")
+Hyper◊fooic chamber
+> ERROR
+]
+
+In this situation, you can surround the variable name with vertical bars to explicitly indicate where the name ends. The bars are not treated as part of the name, nor are they included in the result.
+
+@racketblock[
+◊(define foo "bar")
+Hyper◊|foo|ic chamber
+> Hyperbaric chamber
+]
+
+
+
+
+@subsubsection{lalala}
+
 
 
 Besides being a Racket identifier, the @nonterm{cmd} part of an
