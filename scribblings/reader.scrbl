@@ -94,7 +94,7 @@ If you're familiar with Racket expressions, you can use the Racket-form commands
 Can be converted to Pollen like so: 
 
 @codeblock|{
-  #lang pollen/pre
+  #lang pollen
   ◊(define song "Revolution")
   ◊(format "~a #~a" song (* 3 3))
 }|
@@ -124,7 +124,7 @@ Thus a native-form command is just an alternate way of writing a Racket-form com
 The corollary is that you can always write Pollen commands using whichever form is more convenient or readable. For instance, the earlier example, written in the Racket form:
 
 @codeblock|{
-  #lang pollen/pre
+  #lang pollen
   ◊(define song "Revolution")
   ◊(format "~a #~a" song (* 3 3))
 }|
@@ -132,7 +132,7 @@ The corollary is that you can always write Pollen commands using whichever form 
 Can be rewritten using native form:
 
 @codeblock|{
-  #lang pollen/pre
+  #lang pollen
   ◊define[song]{Revolution}
   ◊format["~a #~a" song (* 3 3)]
 }|
@@ -158,16 +158,16 @@ In Pollen, you'll typically use the command name for one of four purposes:
 By default, Pollen treats every command name as a @italic{tag function}. As the name implies, a tag function creates a tagged X-expression with the command name as the tag, and the text argument as the content.
 
 @codeblock|{
-  #lang pollen/pre
+  #lang pollen
   ◊strong{Fancy Sauce, $1} 
   > '(strong "Fancy Sauce, $1")
 }|
 
-To make markup easy, Pollen doesn't restrict you to a certain set of tags, or make you define your tag functions ahead of time. Just type it, and you can start using it as a tag.
+To streamline markup, Pollen doesn't restrict you to a certain set of tags, nor does it make you define your tag functions ahead of time. Just type a tag, and you can start using it.
 
 
 @codeblock|{
-  #lang pollen/pre
+  #lang pollen
   ◊utterlyridiculoustagname{Oh really?}
   > '(utterlyridiculoustagname "Oh really?")
 }|
@@ -178,7 +178,7 @@ The one restriction is that you can't invent names for tag functions that are al
 
 
 @codeblock|{
-  #lang pollen/pre
+  #lang pollen
   ◊map{Fancy Sauce, $1} 
   > map: arity mismatch;
  the expected number of arguments does not match the given number
@@ -249,6 +249,9 @@ The value of foo is ◊foo
 
 Be careful — if you include arguments, even blank ones, Pollen will treat the command name as a function. This won't work, because a variable is not a function:
 
+@margin-note{To understand what happens here, recall the relationship between Pollen's command forms. The native-form command @code{◊foo[]} becomes the Racket-form command @code{(foo)}, which after variable substitution becomes @code{("bar")}. If you try to evaluate @code{("bar")} in DrRacket, you'll get the same error.}
+
+
 @codeblock|{
 #lang pollen
 ◊(define foo "bar")
@@ -258,6 +261,7 @@ The value of foo is ◊foo[]
   given: "bar"
   arguments...: [none]
 }|
+
 
 The reason we can simply drop @code{◊foo} into the text argument of another Pollen command is that the variable @code{foo} holds a text value (i.e., a string). When appropriate, Pollen will convert a variable to text in a sensible way. For instance, numbers are automatically converted:
 
@@ -283,6 +287,8 @@ One exception to know about. In the examples above, there's a word space between
 
 For instance, this example fails because Pollen looks for a variable called @code{fooic} (which doesn't exist) rather than @code{foo} (which does):
 
+@margin-note{The ``procedure'' in the error message refers to @code{fooic}, which by default is treated as a tag function.}
+
 @codeblock|{
 #lang pollen
 ◊(define foo "bar")
@@ -290,7 +296,6 @@ Hyper◊fooic chamber
 > Pollen parser: can't convert #<procedure> to string
 }|
 
-(The ``procedure'' in the error message refers to @code{fooic}, which by default is treated as a tag function.)
 
 In this situation, you can surround the variable name with vertical bars to explicitly indicate where the name ends. The bars are not treated as part of the name, nor are they included in the result.
 
