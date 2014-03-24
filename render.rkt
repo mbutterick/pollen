@@ -231,6 +231,7 @@
            pollen/main
            pollen/reader-base
            pollen/pagetree
+           pollen/tag
            pollen/template
            pollen/world
            pollen/project
@@ -268,6 +269,7 @@
                 pollen/reader-base
                 pollen/pagetree
                 pollen/project
+                pollen/tag
                 pollen/template
                 pollen/world
                 sugar
