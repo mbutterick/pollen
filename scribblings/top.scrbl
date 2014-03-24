@@ -1,6 +1,6 @@
 #lang scribble/manual
 
-@(require scribble/eval pollen/cache pollen/world (for-label racket (except-in pollen #%module-begin) pollen/world))
+@(require scribble/eval pollen/cache pollen/world (for-label racket (except-in pollen #%module-begin) pollen/world pollen/tag))
 
 @(define my-eval (make-base-eval))
 @(my-eval `(require pollen pollen/world))
@@ -9,7 +9,7 @@
 
 @defmodule[pollen/top]
 
-You'll probably never invoke this module directly. But it's implicitly imported into every Pollen markup file. And if you don't know what it does, you might end up surprised by some of the behavior  you get.
+You'll probably never invoke this module directly. But it's implicitly imported into every Pollen markup file. And if you don't know what it does, you might end up surprised by some of the behavior you get.
 
 @defform[(#%top . id)]{
 
@@ -25,7 +25,7 @@ In standard Racket, @racket[#%top] is the function of last resort, called when @
 
 In the Pollen markup environment, however, this behavior is annoying. Because when you're writing X-expressions, you don't necessarily want to define all your tags ahead of time. 
 
-So Pollen redefines @racket[#%top]. For convenience, Pollen's version of @racket[#%top] assumes that an undefined tag should just refer to an X-expression beginning with that tag.
+So Pollen redefines @racket[#%top]. For convenience, Pollen's version of @racket[#%top] assumes that an undefined tag should just refer to an X-expression beginning with that tag (and uses @racket[make-tag-function] to provide this behavior):
 
 @examples[
 (code:comment @#,t{Again, let's call em without defining it, but using pollen/top})
@@ -63,18 +63,6 @@ This isn't a bug. It's just a natural consequence of how Pollen's @racket[#%top]
 ]
 
 So the undefined-function bug goes unreported. Again, that's not a bug in Pollen — there's just no way for it to tell the difference between an identifier that's deliberately undefined and one that's inadvertently undefined. If you want to guarantee that you're invoking a defined identifier, use @racket[def/c].}
-
-Pollen's version of @racket[#%top] has one other convenience — it will automatically interpret symbol + string pairs at the front of your expression as X-expression attributes, if the symbols are followed by a colon. If you leave out the colon, the symbols will be interpreted as part of the content of the tag.
-
-@examples[
-(require pollen/top)
-(em 'id: "greeting" 'class: "large" "Bonjour")
-(code:comment @#,t{Don't forget the colons})
-(em 'id "greeting" 'class "large" "Bonjour")
-(code:comment @#,t{Don't forget to provide a value for each attribute})
-(em 'id: 'class: "large" "Bonjour")
-]
-
 
 
 @defform[(def/c id)]{Invoke @racket[_id] if it's a defined identifier, otherwise raise an error. This form reverses the behavior of @racket[#%top] (in other words, it restores default Racket behavior). 

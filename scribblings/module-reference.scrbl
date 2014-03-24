@@ -10,5 +10,6 @@
 @include-section["pagetree.scrbl"]
 @include-section["render.scrbl"]
 @include-section["template.scrbl"]
+@include-section["tag.scrbl"]
 @include-section["top.scrbl"]
 @include-section["world.scrbl"]

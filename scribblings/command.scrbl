@@ -2,7 +2,7 @@
 @(require scribble/bnf scribble/eval "utils.rkt"
           (for-syntax racket/base)
           (for-label (only-in scribble/reader
-                              use-at-readtable) pollen/world))
+                              use-at-readtable) pollen/world pollen/tag))
 
 @(define read-eval (make-base-eval))
 @(interaction-eval #:eval read-eval (require (for-syntax racket/base)))
@@ -12,29 +12,35 @@
 
 @title[#:tag "reader"]{Pollen ◊ commands}
 
-@italic{Pollen is a dialect of Scribble, so I've adapted this section from Matthew Flatt and Eli Barzilay's excellent documentation for Scribble. If you think this section is good, it's because of them. If you don't, it's because of me.}
+@italic{Parts of this section were adapted from Matthew Flatt and Eli Barzilay's excellent documentation for Racket's text-processing language, called Scribble◊.}
 
 @section{The golden rule}
 
 Pollen uses a special character — the @italic{lozenge}, which looks like this: ◊ — to mark commands  within a Pollen source file. So when you put a ◊ in your source, whatever comes next will be treated as a command. If you don't, it will just be interpreted as plain text.
 
 
-@section{About that lozenge}
+@section{The lozenge glyph (◊)}
 
 I chose the lozenge as the command marker because a) it appears in almost every font, b) it's barely used in ordinary typesetting, c) it's not used in any programming language that I know of, and d) its shape and color allow it to stand out easily in code without being distracting. 
 
-@margin-note{Scribble itself uses the @"@" sign as a delimiter. It's not a bad choice if you only work with Racket files. But as you use Pollen to work on other kinds of text-based files that commonly contain @"@" signs — HTML pages especially — it gets cumbersome. So I changed it.}
+Here's how you type it:
+
+@bold{Mac}: option + shift + V
+@(linebreak)
+@bold{Windows}:
+@(linebreak)
+@bold{Ubuntu}:
 
 Still, if you don't want to use the lozenge as your command marker, you can use something else. Set Pollen's @racket[world:command-marker] value to whatever character you want. 
 
-But don't knock the lozenge till you try it. Here's how you type it:
+@margin-note{Scribble uses the @"@" sign as a delimiter. It's not a bad choice if you only work with Racket files. But as you use Pollen to work on other kinds of text-based files that commonly contain @"@" signs — HTML pages especially — it gets cumbersome. So I changed it.}
 
-[todo: instructions]
+But don't knock the lozenge till you try it. 
 
 @;--------------------------------------------------------------------
-@section{The two command forms: native form & Racket form}
+@section{The two command modes: text mode & Racket mode}
 
-Every Pollen command is built using one of two basic forms: either @italic{native form} or @italic{Racket form}. Both forms start with a lozenge (@litchar["◊"]):
+Pollen commands can be entered in one of two modes: @italic{text mode} or @italic{Racket mode}. Both modes start with a lozenge (@litchar["◊"]):
 
 @racketblock[
  @#,BNF-seq[@litchar["◊"] @nonterm{command name} @litchar{[} @nonterm{Racket arguments ...} @litchar{]} @litchar["{"] @nonterm{text argument} @litchar["}"]]
@@ -42,14 +48,14 @@ Every Pollen command is built using one of two basic forms: either @italic{nativ
             @litchar{(} @nonterm{Racket expression} @litchar{)}]
 ]
 
-@bold{Native-form commands}
+@bold{Text-mode commands}
 
-A native-form command has the three possible parts after the @litchar["◊"]:
+A text-mode command has the three possible parts after the @litchar["◊"]:
 
 @itemlist[
 @item{The @italic{command name} appears immediately after the @litchar["◊"]. Typically it's a short word.} 
-@item{The @italic{Racket arguments} appear between square brackets. Pollen is partly an interface to the Racket programming language. These arguments are interpreted according to Racket conventions. So if you like programming, you'll end up using these frequently. If you don't, you won't.}
-@item{The @italic{text argument} appears between braces (aka curly brackets). You can put any text here.}
+@item{The @italic{Racket arguments} appear between square brackets. Pollen is partly an interface to the Racket programming language. These arguments have to be entered using Racket conventions — e.g., a @tt{string of text} needs to be put in quotes as a @code{"string of text"}. If you like programming, you'll end up using these frequently. If you don't, you won't.}
+@item{The @italic{text argument} appears between braces (aka curly brackets). You can put any ordinary text here. Unlike with the Racket arguments, you don't put quotes around the text.}
 ]
 
 Each of the three parts is optional. You can also nest commands within each other. However:
@@ -59,7 +65,7 @@ Each of the three parts is optional. You can also nest commands within each othe
 @item{Whatever parts you use must always appear in the order above.}
 ]
 
-Here are a few examples of correct native-form commands:
+Here are a few examples of correct text-mode commands:
 
 @codeblock|{
   #lang pollen
@@ -81,9 +87,9 @@ And some incorrect examples:
 
 The next section describes each of these parts in detail.
 
-@bold{Racket-form commands}
+@bold{Racket-mode commands}
 
-If you're familiar with Racket expressions, you can use the Racket-form commands to embed them within Pollen source files. It's simple: any Racket expression can become a Pollen expression by adding @litchar["◊"] to the front. So in Racket, this code:
+If you're familiar with Racket expressions, you can use the Racket-mode commands to embed them within Pollen source files. It's simple: any Racket expression can become a Pollen command by adding @litchar["◊"] to the front. So in Racket, this code:
 
 @codeblock|{
   #lang racket
@@ -103,25 +109,25 @@ And in DrRacket, they produce the same output:
 
 @nested[#:style 'inset]{@racketresult["Revolution #9"]}
 
-Beyond that, there's not much to say about Racket form — any valid expression you can write in Racket will also be a valid Racket-form Pollen command.
+Beyond that, there's not much to say about Racket mode — any valid expression you can write in Racket will also be a valid Racket-mode Pollen command.
 
-@bold{The relationship of native form and Racket form}
+@bold{The relationship of text mode and Racket mode}
 
-Even if you don't plan to write a lot of Racket-form commands, you should be aware that under the hood, Pollen is converting all commands in native form to Racket form. So a native-form command that looks like this:
+Even if you don't plan to write a lot of Racket-mode commands, you should be aware that under the hood, Pollen is converting all commands in text mode to Racket mode. So a text-mode command that looks like this:
 
 @racketblock[
   ◊headline[#:size 'enormous]{Man Bites Dog!}
 ]
 
-Is actually being turned into a Racket-form command like this:
+Is actually being turned into a Racket-mode command like this:
 
 @racketblock[
   (headline #:size 'enormous "Man Bites Dog!")
 ]
 
-Thus a native-form command is just an alternate way of writing a Racket-form command. (More broadly, all of Pollen is just an alternate way of using Racket.)
+Thus a text-mode command is just an alternate way of writing a Racket-mode command. (More broadly, all of Pollen is just an alternate way of using Racket.)
 
-The corollary is that you can always write Pollen commands using whichever form is more convenient or readable. For instance, the earlier example, written in the Racket form:
+The corollary is that you can always write Pollen commands using whichever mode is more convenient or readable. For instance, the earlier example, written in the Racket mode:
 
 @codeblock|{
   #lang pollen
@@ -129,7 +135,7 @@ The corollary is that you can always write Pollen commands using whichever form 
   ◊(format "~a #~a" song (* 3 3))
 }|
 
-Can be rewritten using native form:
+Can be rewritten using text mode:
 
 @codeblock|{
   #lang pollen
@@ -160,8 +166,9 @@ By default, Pollen treats every command name as a @italic{tag function}. As the 
 @codeblock|{
   #lang pollen
   ◊strong{Fancy Sauce, $1} 
-  > '(strong "Fancy Sauce, $1")
 }|
+
+@racketoutput{@literal{'(strong "Fancy Sauce, $1")}}
 
 To streamline markup, Pollen doesn't restrict you to a certain set of tags, nor does it make you define your tag functions ahead of time. Just type a tag, and you can start using it.
 
@@ -169,40 +176,84 @@ To streamline markup, Pollen doesn't restrict you to a certain set of tags, nor 
 @codeblock|{
   #lang pollen
   ◊utterlyridiculoustagname{Oh really?}
-  > '(utterlyridiculoustagname "Oh really?")
 }|
+@racketoutput{@literal{'(utterlyridiculoustagname "Oh really?")}}
 
 
 
-The one restriction is that you can't invent names for tag functions that are already being used for other commands. For instance, @racket[map] is a command permanently reserved by Racket. It's also a rarely-used HTML tag. But gosh, you really want to use it. Problem is, if you invoke it directly, Pollen will think you mean the other @racket[map]: 
+The one restriction is that you can't invent names for tag functions that are already being used for other commands. For instance, @tt{map} is a name permanently reserved by the Racket function @racket[map]. It's also a rarely-used HTML tag. But gosh, you really want to use it. Problem is, if you invoke it directly, Pollen will think you mean the other @racket[map]: 
 
 
 @codeblock|{
   #lang pollen
   ◊map{Fancy Sauce, $1} 
-  > map: arity mismatch;
- the expected number of arguments does not match the given number
-  given: 1
-  arguments...:
-   "Fancy Sauce, $1"}
 }|
+
+@racketerror{map: arity mismatch;@(linebreak)
+the expected number of arguments does not match the given number@(linebreak)
+  given: 1@(linebreak)
+  arguments...:@(linebreak)
+    "Fancy Sauce, $1"}
+   
 What to do? Read on.
 
 @;--------------------------------------------------------------------
 @subsubsection{Invoking other functions}
 
-Though every command name starts out as a tag function, it doesn't necessarily end there. You have two options for invoking other functions.
+Though every command name starts out as a tag function, it doesn't necessarily end there. You have two options for invoking other functions: defining your own , or invoking others from Racket.
 
-First, you can use the @racket[define] command to create your own function for a command name. After that, when you use the command name, you'll get the new behavior.
+@bold{Defining your own functions}
 
-Example:
-◊strong{Fancy Sauce, $1} becomes '(strong "Fancy Sauce, $1")
-◊(define (strong . elements) etc....)
-◊strong{Fancy Sauce, $1} becomes new thing
+Use the @racket[define] command to create your own function for a command name. After that, when you use the command name, you'll get the new behavior. For instance, recall this example showing the default tag-function behavior:
 
-You can attach any behavior to a command name. As your project evolves, you can also redefine the behavior of a command name. In that way, Pollen markup becomes a set of hooks upon which you can attach more elaborate processing.
+@codeblock|{
+  #lang pollen
+  ◊strong{Fancy Sauce, $1} 
+}|
 
-Second, you aren't limited to your own commands. Any function from Racket or any of its libraries can be invoked directly by using it as a command name:
+@racketoutput{@literal{'(strong "Fancy Sauce, $1")}}
+
+We can define @tt{strong} to do something else, like add to the text:
+
+@codeblock|{
+  #lang pollen
+  ◊(define (strong text) `(strong ,(format "Hey! Listen up! ~a" text)))
+  ◊strong{Fancy Sauce, $1} 
+}|
+
+@racketoutput{@literal{'(strong "Hey! Listen up! Fancy Sauce, $1")}}
+
+The replacement function has to accept any arguments that might get passed along, but it doesn't have to do anything with them. For instance, this function definition won't work because @tt{strong} is going to get a text argument that it's not defined to handle:
+
+@codeblock|{
+  #lang pollen
+  ◊(define (strong) '(fib "1 1 2 3 5 8 13 ..."))
+  ◊strong{Fancy Sauce, $1} 
+}|
+
+@racketerror{strong: arity mismatch;@(linebreak)
+the expected number of arguments does not match the given number@(linebreak)
+  expected: 0@(linebreak)
+  given: 1@(linebreak)
+  arguments...:@(linebreak)
+    "Fancy Sauce, $1"}
+
+Whereas in this version, @tt{strong} accepts an argument called @tt{text}, but then ignores it:
+
+@codeblock|{
+  #lang pollen
+  ◊(define (strong text) '(fib "1 1 2 3 5 8 13 ..."))
+  ◊strong{Fancy Sauce, $1} 
+}|
+
+@racketoutput{@literal{'(fib "1 1 2 3 5 8 13 ...")}}
+
+
+You can attach any behavior to a command name. As your project evolves, you can also update the behavior of a command name. In that way, Pollen commands become a set of hooks to which you can attach more elaborate processing.
+
+@bold{Using Racket functions}
+
+You aren't limited to your own commands. Any function from Racket or any of its libraries can be invoked directly by using it as a command name:
 
 [example]
 
@@ -212,27 +263,31 @@ Combining these two ideas, you can also invoke Racket functions indirectly, by a
 
 
 
-As mentioned above, some command names already have behavior associated with them. But you can use a custom function to work around this. For instance, suppose we want to use @code{map} as a tag even though Racket is using it for its own function called @racket[map]. 
+As mentioned above, some command names already have behavior associated with them. But you can use a custom function to work around this. For instance, suppose we want to use @tt{map} as a tag even though Racket is using it for its own function called @racket[map]. 
 
 First, we invent a command name that doesn't conflict. Let's call it @code{my-map}. As you learned above, Pollen will treat a new command name as a tag function by default:
 
 @codeblock|{
 #lang pollen
 ◊my-map{How I would love this to be a map.}
-> '(my-map "How I would love this to be a map.")
 }|
 
-But @code{my-map} is not the tag we want. So instead, we attach a function to @code{my-map} that creates the tag we want:
+@racketoutput{@literal{'(my-map "How I would love this to be a map.")}}
+
+
+But @code{my-map} is not the tag we want. We need to define @code{my-map} to be a tag function for @tt{map}, which we can do with the Pollen helper @racket[make-tag-function]:
 
 
 @codeblock|{
 #lang pollen
-◊(define (my-map . elements) `(map ,@elements))
+◊(require pollen/tag)
+◊(define my-map (make-tag-function 'map))
 ◊my-map{How I would love this to be a map.}
-> '(map "How I would love this to be a map.")
 }|
 
-And now we can use @code{map} as a tag by invoking @code{my-map}.
+@racketoutput{@literal{'(map "How I would love this to be a map.")}}
+
+Now we can use @tt{map} as a tag by invoking @tt{my-map} instead.
 
 
 @;--------------------------------------------------------------------
@@ -249,7 +304,7 @@ The value of foo is ◊foo
 
 Be careful — if you include arguments, even blank ones, Pollen will treat the command name as a function. This won't work, because a variable is not a function:
 
-@margin-note{To understand what happens here, recall the relationship between Pollen's command forms. The native-form command @code{◊foo[]} becomes the Racket-form command @code{(foo)}, which after variable substitution becomes @code{("bar")}. If you try to evaluate @code{("bar")} in DrRacket, you'll get the same error.}
+@margin-note{To understand what happens here, recall the relationship between Pollen's command modes. The text-mode command @code{◊foo[]} becomes the Racket-mode command @code{(foo)}, which after variable substitution becomes @code{("bar")}. If you try to evaluate @code{("bar")} in DrRacket, you'll get the same error.}
 
 
 @codeblock|{
