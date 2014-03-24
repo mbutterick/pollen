@@ -48,21 +48,20 @@ A native-form command has the three possible parts after the @litchar["◊"]:
 
 @itemlist[
 @item{The @italic{command name} appears immediately after the @litchar["◊"]. Typically it's a short word.} 
-@item{The @italic{Racket arguments} appear between square brackets. Pollen is an interface to the Racket programming language. These arguments are interpreted according to Racket conventions. So if you like programming, you'll end up using these frequently. If you don't, you won't.}
+@item{The @italic{Racket arguments} appear between square brackets. Pollen is partly an interface to the Racket programming language. These arguments are interpreted according to Racket conventions. So if you like programming, you'll end up using these frequently. If you don't, you won't.}
 @item{The @italic{text argument} appears between braces (aka curly brackets). You can put any text here.}
 ]
 
-Each of the three parts is optional. You can also nest commands within each other. But:
+Each of the three parts is optional. You can also nest commands within each other. However:
 
 @itemlist[
 @item{You can never have spaces between the three parts.}
 @item{Whatever parts you use must always appear in the order above.}
 ]
 
-
 Here are a few examples of correct native-form commands:
 
-@verbatim[#:indent 2]|{
+@codeblock|{
   #lang pollen
   ◊variable-name
   ◊tag{Text inside the tag.}
@@ -71,9 +70,9 @@ Here are a few examples of correct native-form commands:
   ◊tag{His ID is ◊get-customer-id["Brennan Huff"].}
 }|
 
-And here are some incorrect ones:
+And some incorrect examples:
 
-@verbatim[#:indent 2]|{
+@codeblock|{
   #lang pollen
   ◊tag {Text inside the tag.} ; space between first and second parts
   ◊tag[Text inside the tag] ; text argument needs to be within braces
@@ -86,7 +85,7 @@ The next section describes each of these parts in detail.
 
 If you're familiar with Racket expressions, you can use the Racket-form commands to embed them within Pollen source files. It's simple: any Racket expression can become a Pollen expression by adding @litchar["◊"] to the front. So in Racket, this code:
 
-@verbatim[#:indent 2]|{
+@codeblock|{
   #lang racket
   (define song "Revolution")
   (format "~a #~a" song (* 3 3))
@@ -94,8 +93,8 @@ If you're familiar with Racket expressions, you can use the Racket-form commands
 
 Can be converted to Pollen like so: 
 
-@verbatim[#:indent 2]|{
-  #lang pollen
+@codeblock|{
+  #lang pollen/pre
   ◊(define song "Revolution")
   ◊(format "~a #~a" song (* 3 3))
 }|
@@ -124,16 +123,16 @@ Thus a native-form command is just an alternate way of writing a Racket-form com
 
 The corollary is that you can always write Pollen commands using whichever form is more convenient or readable. For instance, the earlier example, written in the Racket form:
 
-@verbatim[#:indent 2]|{
-  #lang pollen
+@codeblock|{
+  #lang pollen/pre
   ◊(define song "Revolution")
   ◊(format "~a #~a" song (* 3 3))
 }|
 
 Can be rewritten using native form:
 
-@verbatim[#:indent 2]|{
-  #lang pollen
+@codeblock|{
+  #lang pollen/pre
   ◊define[song]{Revolution}
   ◊format["~a #~a" song (* 3 3)]
 }|
@@ -158,19 +157,35 @@ In Pollen, you'll typically use the command name for one of four purposes:
 
 By default, Pollen treats every command name as a @italic{tag function}. As the name implies, a tag function creates a tagged X-expression with the command name as the tag, and the text argument as the content.
 
-Example:
-◊strong{Fancy Sauce, $1} becomes '(strong "Fancy Sauce, $1")
+@codeblock|{
+  #lang pollen/pre
+  ◊strong{Fancy Sauce, $1} 
+  > '(strong "Fancy Sauce, $1")
+}|
 
 To make markup easy, Pollen doesn't restrict you to a certain set of tags, or make you define your tag functions ahead of time. Just type it, and you can start using it as a tag.
 
-Example:
-◊utterlyridiculoustagname{Oh really?} becomes '(utterlyridiculoustagname "Oh really?")
+
+@codeblock|{
+  #lang pollen/pre
+  ◊utterlyridiculoustagname{Oh really?}
+  > '(utterlyridiculoustagname "Oh really?")
+}|
+
+
 
 The one restriction is that you can't invent names for tag functions that are already being used for other commands. For instance, @racket[map] is a command permanently reserved by Racket. It's also a rarely-used HTML tag. But gosh, you really want to use it. Problem is, if you invoke it directly, Pollen will think you mean the other @racket[map]: 
 
-Example:
-◊map{Fancy Sauce, $1} becomes '(map "Fancy Sauce, $1") ; error
 
+@codeblock|{
+  #lang pollen/pre
+  ◊map{Fancy Sauce, $1} 
+  > map: arity mismatch;
+ the expected number of arguments does not match the given number
+  given: 1
+  arguments...:
+   "Fancy Sauce, $1"}
+}|
 What to do? Read on.
 
 @;--------------------------------------------------------------------
@@ -201,15 +216,21 @@ As mentioned above, some command names already have behavior associated with the
 
 First, we invent a command name that doesn't conflict. Let's call it @code{my-map}. As you learned above, Pollen will treat a new command name as a tag function by default:
 
-Example:
+@codeblock|{
+#lang pollen
 ◊my-map{How I would love this to be a map.}
+> '(my-map "How I would love this to be a map.")
+}|
 
 But @code{my-map} is not the tag we want. So instead, we attach a function to @code{my-map} that creates the tag we want:
 
-Example:
 
-◊(define (my-map . elements) `(map ,elements))
+@codeblock|{
+#lang pollen
+◊(define (my-map . elements) `(map ,@elements))
 ◊my-map{How I would love this to be a map.}
+> '(map "How I would love this to be a map.")
+}|
 
 And now we can use @code{map} as a tag by invoking @code{my-map}.
 
@@ -219,41 +240,66 @@ And now we can use @code{map} as a tag by invoking @code{my-map}.
 
 A Pollen command name usually refers to a function, but it can also refer to a @italic{variable}, which is a simple data value. Once you define the variable, you can insert it into your source by using the ◊ notation without any other arguments:
 
-[Example 
+@codeblock|{
+#lang pollen
 ◊(define foo "bar")
-◊p{The value of foo is ◊foo}
+The value of foo is ◊foo
+> The value of foo is bar
+}|
 
 Be careful — if you include arguments, even blank ones, Pollen will treat the command name as a function. This won't work, because a variable is not a function:
 
-[Example 
+@codeblock|{
+#lang pollen
 ◊(define foo "bar")
-◊p{The value of foo is ◊foo[]}
+The value of foo is ◊foo[]
+> application: not a procedure;
+ expected a procedure that can be applied to arguments
+  given: "bar"
+  arguments...: [none]
+}|
 
-The reason we can simply drop ◊foo into the text argument of another Pollen command is that @code{foo} holds a text value (i.e., a string). Keep in mind that not every variable holds a string value, and if it doesn't, you'll have to convert it to a string if you want to use it within other text.
+The reason we can simply drop @code{◊foo} into the text argument of another Pollen command is that the variable @code{foo} holds a text value (i.e., a string). When appropriate, Pollen will convert a variable to text in a sensible way. For instance, numbers are automatically converted:
 
-[Example 
+@codeblock|{
+#lang pollen
 ◊(define zam 42)
-◊p{The value of zam is ◊zam} ;; error
-◊p{The value of zam is ◊number->string[◊zam]} ; works
+The value of zam is ◊zam
+> The value of zam is 42
+}|
+
+But if @code{zam} is a @racket[list], the conversion will fail:
+
+@codeblock|{
+#lang pollen
+◊(define zam (list 2 4 6))
+The value of zam is ◊zam
+> Pollen parser: can't convert '(2 4 6) to string
+}|
+
+
 
 One exception to know about. In the examples above, there's a word space between the variable and the other text. But suppose you need to insert a variable into text so that there's no space in between. The simple ◊ notation above won't work, because it won't be clear where the variable name ends and the text begins. 
 
 For instance, this example fails because Pollen looks for a variable called @code{fooic} (which doesn't exist) rather than @code{foo} (which does):
 
-@racketblock[
+@codeblock|{
+#lang pollen
 ◊(define foo "bar")
 Hyper◊fooic chamber
-> ERROR
-]
+> Pollen parser: can't convert #<procedure> to string
+}|
+
+(The ``procedure'' in the error message refers to @code{fooic}, which by default is treated as a tag function.)
 
 In this situation, you can surround the variable name with vertical bars to explicitly indicate where the name ends. The bars are not treated as part of the name, nor are they included in the result.
 
-@racketblock[
+@codeblock|{
+#lang pollen
 ◊(define foo "bar")
 Hyper◊|foo|ic chamber
 > Hyperbaric chamber
-]
-
+}|
 
 
 
