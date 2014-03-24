@@ -66,8 +66,8 @@ Pagetree that Pollen dashboard loads by default in each directory.
 Name of the root node in a decoded pagetree. It's ignored by the code, so its only role is to clue you in that you're looking at something that came out of the pagetree decoder.
 
 
-@defthing[world:expression-delimiter char? #:value #\◊]
-The magic character that delimits Pollen expressions.
+@defthing[world:command-marker char? #:value #\◊]
+The magic character that indicates a Pollen command, function, or variable.
 
 @defthing[world:default-template-prefix string? #:value "main"]
 Prefix of the default template.

@@ -14,6 +14,7 @@
           [(number? x) (number->string x)]
           [(path? x) (path->string x)]
           [(char? x) (format "~a" x)]
+          [(txexpr? x) (format "~v" x)] ; todo: good or bad idea? will print expressions in preproc mode
           [else (error)])))) ; put this last so other xexprish things don't get caught
 
 
