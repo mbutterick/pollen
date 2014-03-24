@@ -299,7 +299,7 @@ For instance, suppose we want to use @tt{map} as a tag even though Racket is usi
 @racketoutput{@literal{'(my-map "How I would love this to be a map.")}}
 
 
-But @code{my-map} is not the tag we want. We need to define @code{my-map} to be a tag function for @tt{map}, which we can do with the Pollen helper @racket[make-tag-function]. That function lives in @racketmodname[pollen/tag], so we @racket[require] that too:
+But @code{my-map} is not the tag we want. We need to define @code{my-map} to be a tag function for @tt{map}. We can do this with the Pollen helper @racket[make-tag-function]. That function lives in @racketmodname[pollen/tag], so we @racket[require] that too:
 
 
 @codeblock|{
@@ -424,6 +424,7 @@ The value of edge is ◊|edge| pixels}
 
 
 @subsubsection{Inserting a comment}
+
 
 
 @subsubsection{lalala}
