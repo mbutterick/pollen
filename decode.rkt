@@ -14,7 +14,9 @@
           [(number? x) (number->string x)]
           [(path? x) (path->string x)]
           [(char? x) (format "~a" x)]
-          [else (format "~v" x)])))) 
+          ;; todo: guard against weird shit like lists of procedures
+          [(or (list? x) (hash? x) (vector? x)) (format "~v" x)] ; ok to convert datatypes
+          [else (error)])))) ; but things like procedures should throw an error
 
 
 ;; decoder wireframe

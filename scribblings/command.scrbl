@@ -107,7 +107,8 @@ Can be converted to Pollen like so:
 
 And in DrRacket, they produce the same output:
 
-@nested[#:style 'inset]{@racketresult["Revolution #9"]}
+@nested[#:style 'inset]{@racketoutput{Revolution #9}}
+
 
 Beyond that, there's not much to say about Racket mode — any valid expression you can write in Racket will also be a valid Racket-mode Pollen command.
 
@@ -253,19 +254,42 @@ You can attach any behavior to a command name. As your project evolves, you can 
 
 @bold{Using Racket functions}
 
-You aren't limited to your own commands. Any function from Racket or any of its libraries can be invoked directly by using it as a command name:
+You aren't limited to functions you define. Any function from Racket, or any Racket library, can be invoked directly by using it as a command name. Here's the function @racket[range], which creates a list of numbers:
 
-[example]
+@codeblock|{
+#lang pollen
+◊range[1 20]
+}|
 
-Combining these two ideas, you can also invoke Racket functions indirectly, by attaching them to your custom command names:
+@racketoutput{@literal{'(range 1 20)}}
 
-[example]
+Hold on — that's not what we want. Where's the list of numbers? The problem here is that we didn't explicitly import the @racketmodname[racket/list] library, which contains the definition for @racket[range]. (If you need to find out what library contains a certain function, the Racket documentation will tell you.) Without @racketmodname[racket/list], Pollen just thinks we're trying to use @tt{range} as a tag function (and if we had been, then @racketoutput{@literal{'(range 1 20)}} would've been the right result). 
+
+We fix this by using the @racket[require] command to bring in the @racketmodname[racket/list] library, which contains the @racket[range]  we want:
+
+@codeblock|{
+#lang pollen
+◊(require racket/list)
+◊range[1 20]
+}|
+
+@racketoutput{@literal{'(1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19)}}
+
+Of course, you can also invoke Racket functions indirectly, by attaching them to functions you define for command names:
+
+@codeblock|{
+#lang pollen
+◊(require racket/list)
+◊(define (rick start finish) (range start finish))
+◊rick[1 20]
+}|
+
+@racketoutput{@literal{'(1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19)}}
 
 
+Let's return to the problem that surfaced in the last section — the fact that some command names can't be used as tag functions because they're already being used for other things. You can work around this by defining your own tag function with a non-conflicting name. 
 
-As mentioned above, some command names already have behavior associated with them. But you can use a custom function to work around this. For instance, suppose we want to use @tt{map} as a tag even though Racket is using it for its own function called @racket[map]. 
-
-First, we invent a command name that doesn't conflict. Let's call it @code{my-map}. As you learned above, Pollen will treat a new command name as a tag function by default:
+For instance, suppose we want to use @tt{map} as a tag even though Racket is using it for its own function called @racket[map]. First, we invent a command name that doesn't conflict. Let's call it @code{my-map}. As you learned above, Pollen will treat a new command name as a tag function by default:
 
 @codeblock|{
 #lang pollen
@@ -275,7 +299,7 @@ First, we invent a command name that doesn't conflict. Let's call it @code{my-ma
 @racketoutput{@literal{'(my-map "How I would love this to be a map.")}}
 
 
-But @code{my-map} is not the tag we want. We need to define @code{my-map} to be a tag function for @tt{map}, which we can do with the Pollen helper @racket[make-tag-function]:
+But @code{my-map} is not the tag we want. We need to define @code{my-map} to be a tag function for @tt{map}, which we can do with the Pollen helper @racket[make-tag-function]. That function lives in @racketmodname[pollen/tag], so we @racket[require] that too:
 
 
 @codeblock|{
@@ -287,80 +311,119 @@ But @code{my-map} is not the tag we want. We need to define @code{my-map} to be 
 
 @racketoutput{@literal{'(map "How I would love this to be a map.")}}
 
-Now we can use @tt{map} as a tag by invoking @tt{my-map} instead.
-
+Problem solved.
 
 @;--------------------------------------------------------------------
 @subsubsection{Inserting the value of a variable}
 
-A Pollen command name usually refers to a function, but it can also refer to a @italic{variable}, which is a simple data value. Once you define the variable, you can insert it into your source by using the ◊ notation without any other arguments:
+A Pollen command name usually refers to a function, but it can also refer to a @italic{variable}, which is a data value. Once you define the variable, you can insert it into your source by using the ◊ notation without any other arguments:
 
 @codeblock|{
 #lang pollen
 ◊(define foo "bar")
 The value of foo is ◊foo
-> The value of foo is bar
 }|
+
+@racketoutput{@literal{The value of foo is bar}}
+
 
 Be careful — if you include arguments, even blank ones, Pollen will treat the command name as a function. This won't work, because a variable is not a function:
 
-@margin-note{To understand what happens here, recall the relationship between Pollen's command modes. The text-mode command @code{◊foo[]} becomes the Racket-mode command @code{(foo)}, which after variable substitution becomes @code{("bar")}. If you try to evaluate @code{("bar")} in DrRacket, you'll get the same error.}
+@margin-note{To understand what happens here, recall the relationship between Pollen's command modes. The text-mode command @code{◊foo[]} becomes the Racket-mode command @code{(foo)}, which after variable substitution becomes @code{("bar")}. If you try to evaluate @code{("bar")} — e.g., in DrRacket — you'll get the same error.}
 
 
 @codeblock|{
 #lang pollen
 ◊(define foo "bar")
 The value of foo is ◊foo[]
-> application: not a procedure;
- expected a procedure that can be applied to arguments
-  given: "bar"
-  arguments...: [none]
 }|
 
 
-The reason we can simply drop @code{◊foo} into the text argument of another Pollen command is that the variable @code{foo} holds a text value (i.e., a string). When appropriate, Pollen will convert a variable to text in a sensible way. For instance, numbers are automatically converted:
+@racketerror{application: not a procedure;@(linebreak)
+expected a procedure that can be applied to arguments@(linebreak)
+  given: "bar"@(linebreak)
+  arguments...: [none]}
+
+
+The reason we can simply drop @code{◊foo} into the text argument of another Pollen command is that the variable @code{foo} holds a string (i.e., a text value). When appropriate, Pollen will convert a variable to a string in a sensible way. For instance, numbers are easily converted:
 
 @codeblock|{
 #lang pollen
 ◊(define zam 42)
 The value of zam is ◊zam
-> The value of zam is 42
 }|
 
-But if @code{zam} is a @racket[list], the conversion will fail:
+@racketoutput{@literal{The value of zam is 42}}
+
+If the variable holds a container datatype (like a @racket[list], @racket[hash], or @racket[vector]), Pollen will produce the Racket text representation of the item. Here, @tt{zam} is a @racket[list] of integers:
 
 @codeblock|{
 #lang pollen
-◊(define zam (list 2 4 6))
+◊(define zam (list 1 2 3))
 The value of zam is ◊zam
-> Pollen parser: can't convert '(2 4 6) to string
 }|
 
+@racketoutput{@literal{The value of zam is '(1 2 3)}}
 
-
-One exception to know about. In the examples above, there's a word space between the variable and the other text. But suppose you need to insert a variable into text so that there's no space in between. The simple ◊ notation above won't work, because it won't be clear where the variable name ends and the text begins. 
-
-For instance, this example fails because Pollen looks for a variable called @code{fooic} (which doesn't exist) rather than @code{foo} (which does):
-
-@margin-note{The ``procedure'' in the error message refers to @code{fooic}, which by default is treated as a tag function.}
+This feature is included for your convenience as an author. But in general, your readers won't want to see the Racket representation of a container. So in these cases, you should convert to a string manually in some sensible way. Here, the integers in the list are converted to strings, which are then combined using @racket[string-join] from the @racketmodname[racket/string] library:
 
 @codeblock|{
 #lang pollen
-◊(define foo "bar")
-Hyper◊fooic chamber
-> Pollen parser: can't convert #<procedure> to string
+◊(require racket/string)
+◊(define zam (list 1 2 3))
+The value of zam is ◊string-join[(map number->string zam)]{ and }
 }|
 
+@racketoutput{@literal{The value of zam is 1 and 2 and 3}}
 
-In this situation, you can surround the variable name with vertical bars to explicitly indicate where the name ends. The bars are not treated as part of the name, nor are they included in the result.
+Pollen will still produce an error if you try to convert an esoteric value to a string. Here, @tt{zam} is the addition function (@racket[+]):
 
 @codeblock|{
 #lang pollen
-◊(define foo "bar")
-Hyper◊|foo|ic chamber
-> Hyperbaric chamber
+◊(define zam +)
+The value of zam is ◊zam
 }|
 
+@racketerror{Pollen decoder: can't convert #<procedure:+> to string}
+
+
+One special case to know about. In the examples above, there's a word space between the variable and the other text. But suppose you need to insert a variable into text so that there's no space in between. The simple ◊ notation won't work, because it won't be clear where the variable name ends and the text begins. 
+
+For instance, suppose we want to use a  variable @tt{edge} next to the string @tt{px}:
+
+@codeblock|{
+#lang pollen
+◊(define edge 100)
+p { margin-left: ◊edgepx; }
+}|
+
+@racketerror{Pollen decoder: can't convert #<procedure:...t/pollen/tag.rkt:6:2> to string}
+
+The example fails because Pollen reads the whole string after the @litchar{◊} as the single variable name @tt{edgepx}. Since @tt{edgepx} isn't defined, it's treated as a tag function, and since Pollen can't convert a function to a string, we get an error.
+
+In these situations, surround the variable name with vertical bars @litchar{◊|}like so@litchar{|} to explicitly indicate where the variable name ends. The bars are not treated as part of the name, nor are they included in the result. Once we do that, we get what we intended:
+
+@codeblock|{
+#lang pollen
+◊(define edge 100)
+p { margin-left: ◊|edge|px; }
+}|
+
+@racketoutput{p { margin-left: 100px; }}
+
+If you use this notation when you don't need to, nothing bad will happen. The vertical bars are always ignored.
+
+@codeblock|{
+#lang pollen
+◊(define edge 100)
+The value of edge is ◊|edge| pixels}
+}|
+
+@racketoutput{The value of edge is 100 pixels}
+
+
+
+@subsubsection{Inserting a comment}
 
 
 @subsubsection{lalala}

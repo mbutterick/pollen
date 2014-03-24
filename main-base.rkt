@@ -70,7 +70,7 @@
                         (define (split-metas x)
                           (cond
                             [(list? x) (define-values (new-metas rest) (values (filter is-meta-element? x) (filter (compose1 not is-meta-element?) x)))
-                                       (set! meta-acc `(,@new-metas ,@meta-acc))
+                                       (set! meta-acc (append new-metas meta-acc))
                                        (map split-metas rest)]
                             [else x]))
                         (define result (split-metas x))
