@@ -7,15 +7,14 @@
 (define+provide (to-string x)
   (if (string? x)
       x ; fast exit for strings
-      (with-handlers  ([exn:fail? (λ(exn) (error (format "Pollen parser: can't convert ~v to ~a" x 'string)))])
+      (with-handlers  ([exn:fail? (λ(exn) (error (format "Pollen decoder: can't convert ~v to ~a" x 'string)))])
         (cond
           [(equal? '() x) ""]
           [(symbol? x) (symbol->string x)]
           [(number? x) (number->string x)]
           [(path? x) (path->string x)]
           [(char? x) (format "~a" x)]
-          [(txexpr? x) (format "~v" x)] ; todo: good or bad idea? will print expressions in preproc mode
-          [else (error)])))) ; put this last so other xexprish things don't get caught
+          [else (format "~v" x)])))) 
 
 
 ;; decoder wireframe
