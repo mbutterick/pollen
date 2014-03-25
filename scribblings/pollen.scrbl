@@ -25,13 +25,13 @@ At the core of Pollen is an argument:
 
 @item{Third, that the way we make digital books better than their predecessors is by exploiting this programmability.}]
 
-How? Pollen.
+That's what Pollen is for.
 
 Not that you need to be a programmer to use Pollen. On the contrary, the Pollen language is markup-based, so you can write & edit text naturally. But when you want to automate repetitive tasks, add cross-references, or pull in data from other sources, you can access a full programming language from within the text.
 
 That language is Racket. I chose Racket because while the idea for Pollen had been with me for several years, it simply wasn't possible to build it with other languages. So if it's unfamiliar to you, don't panic. It was unfamiliar to me. Once you see what you can do with Pollen & Racket, you may be persuaded. I was.
 
-Or, if you can find a better digital book-publishing tool, use that. Personally, I'm never going back to the way I used to work.
+Or, if you can find a better digital publishing tool, use that. Personally, I'm never going back to the way I used to work.
 
 @local-table-of-contents[]
 
@@ -51,7 +51,7 @@ After that, you can update the package from the command line:
 @include-section["why-pollen.scrbl"]
 
 
-@section{Pollen source formats}
+@section{Source formats}
 
 @defmodulelang[pollen]
 
@@ -69,6 +69,9 @@ If the file extension is ``@(format ".~a" world:markdown-source-ext)'', the sour
 @defmodulelang[pollen/pre]
 
 @defmodulelang[pollen/markdown]
+
+@include-section["command.scrbl"]
+
 
 @include-section["module-reference.scrbl"]
 
