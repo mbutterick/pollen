@@ -4,23 +4,99 @@
 
 
 
-@section{You had me at Hello World}
+@section{Creating a source file}
 
-Launch DrRacket. Open a new document.
+Assuming you've installed Racket & Pollen, launch DrRacket. 
 
-Change the top line to #lang pollen. This will be the first line of any source file where you want to invoke the Pollen language.
+Open a new document. Change the top line to:
 
-Type @code{Hello World} underneath.
+@racketmod[pollen]
 
-Run the file by clicking the Run button, or typing cmd-R.
+The first line of every Pollen source file will start with @tt{#lang pollen}.
 
-The result window will show @code{Hello World}.
 
-Congratulations, you've made your first Pollen document.
+@section{Running a source file}
 
-If you like, change the text and run the file again. The new text will appear in the result window.
+Add a second line to your source file so it reads:
 
-Pollen is a programming language that operates in text mode by default. Meaning, all plain text in the source file is considered valid input, and gets passed through intact.
+@racketmod[pollen
+Hello world]
+
+Click the @onscreen{Run} button. In the interactions window, you'll see the result:
+
+@nested[#:style 'code-inset]{@racketvalfont{Hello world}}
+
+Not bad. I think Pollen just won the @link["http://en.wikipedia.org/wiki/List_of_Hello_world_program_examples"]{Hello World Competition}.
+
+You can work with Pollen source files in any text editor. The key advantage of DrRacket is that you can run them too, and see if they work the way you expect.
+
+Try editing your source file:
+
+@racketmod[pollen
+Goodbye Stranger
+Breakfast in America
+Take the Long Way Home]
+
+You don't have to use Supertramp song titles. Any text will do. When you click @onscreen{Run} again, you'll see whatever you typed:
+
+@nested[#:style 'code-inset]{@racketvalfont{Goodbye Stranger}@(linebreak)@racketvalfont{Breakfast in America}@(linebreak)@racketvalfont{Take the Long Way Home}}
+
+We won't do it a third time. You get the point — any plain text is valid within a Pollen source file, and gets printed as is. You never have to perform the incantations of typical programming languages:
+
+@verbatim{
+print "Hello world"
+document.write('Hello world');
+printf("Hello world");
+}
+
+In Pollen, what you write is what you get.
+
+
+@section{Naming, saving, and rendering a source file}
+
+Save this file with the name @tt{hello.txt.pp} in any convenient directory. The desktop is fine.
+
+Open a terminal window and issue two commands:
+
+@verbatim{
+> cd [directory containing your file]
+> raco pollen render hello.txt.pp}
+
+After a moment, a new file will appear called @tt{hello.txt}. Let's see what's in it:
+
+@verbatim{
+> cat hello.txt
+Goodbye Stranger
+Breakfast in America
+Take the Long Way Home
+}
+
+You've just learned three things:
+
+@itemlist[
+
+@item{Pollen commands in the terminal begin with @tt{raco pollen}, followed by a specific command (in this case @tt{render}) and sometimes an argument (in this case @tt{hello.txt.pp}).}
+
+@item{The @tt{render} command takes the result from your source file — meaning, the result you previewed in DrRacket in the previous step — and saves it to an output file.}
+
+@item{The name of the output file is the same as the source file, minus the Pollen source extension. So @tt{hello.txt.pp} becomes @tt{hello.txt}.}
+]
+
+Try editing the text in the @tt{hello.txt.pp} source file and running @tt{raco pollen render hello.txt.pp} again. The old @tt{hello.txt} will be replaced with a new one showing your changes. And so you've learned a fourth thing:
+
+@itemlist[
+@item{Pollen works by rendering output files from source files. Output files can be overwritten. Therefore, you should only make edits to your source files.}
+]
+
+
+@section{Using the development server}
+
+You've just learned two ways to see the output of a Pollen source file — first, you ran it in DrRacket. Then, you rendered it to an output file. 
+
+Now here's a third: the Pollen development server.
+
+
+
 
 @section{The plot thickens}
 
