@@ -31,7 +31,7 @@ Not that you need to be a programmer to use Pollen. On the contrary, the Pollen 
 
 That language is Racket. I chose Racket because while the idea for Pollen had been with me for several years, it simply wasn't possible to build it with other languages. So if it's unfamiliar to you, don't panic. It was unfamiliar to me. Once you see what you can do with Pollen & Racket, you may be persuaded. I was.
 
-Or, if you can find a better digital publishing tool, use that. Personally, I'm never going back to the way I used to work.
+Or, if you can find a better digital-publishing tool, use that. But I'm never going back to the way I used to work.
 
 @local-table-of-contents[]
 

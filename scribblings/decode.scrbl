@@ -170,7 +170,7 @@ The @racket[_tags-to-exclude] argument is useful if you're decoding source that'
 #:exclude-tags '(style script))
 ]
 
-@section{Blocks}
+@section{Block}
 
 Because it's convenient, Pollen categorizes tagged X-expressions into two categories: @italic{block} and @italic{inline}. Why is it convenient? When using @racket[decode], you often want to treat the two categories differently. Not that you have to. But this is how you can.
 

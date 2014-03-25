@@ -5,7 +5,7 @@
 @(define my-eval (make-base-eval))
 @(my-eval `(require pollen pollen/pagetree txexpr))
 
-@title{Pagetrees}
+@title{Pagetree}
 
 @defmodule[pollen/pagetree]
 

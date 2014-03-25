@@ -5,7 +5,7 @@
 @(define my-eval (make-base-eval))
 @(my-eval `(require pollen pollen/file))
 
-@title{Files}
+@title{File}
 
 @defmodule[pollen/file]
 
