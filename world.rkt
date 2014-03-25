@@ -45,7 +45,7 @@
 
 (define current-project-root (make-parameter (current-directory)))
 
-(define current-server-port (make-parameter 8088))
+(define current-server-port (make-parameter 8080))
 
 (define dashboard-css "poldash.css")
 
