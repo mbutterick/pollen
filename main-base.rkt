@@ -89,7 +89,7 @@
                         `(placeholder-root 
                           ,@(cons (meta 'here-path: here-path) 
                                   ;; cdr strips initial linebreak, but make sure doc-raw isn't blank
-                                  (if (and (list? doc-raw) (> 0 (length doc-raw))) (cdr doc-raw) doc-raw))))) 
+                                  (if (and (list? doc-raw) (> (length doc-raw) 0)) (cdr doc-raw) doc-raw))))) 
                     
                     (define-values (doc-without-metas metas) (split-metas-to-hash doc-with-metas))
                     
