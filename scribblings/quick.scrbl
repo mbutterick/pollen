@@ -28,7 +28,7 @@ Click the @onscreen{Run} button. In the interactions window, you'll see the resu
 
 Not bad. I think Pollen just won the @link["http://en.wikipedia.org/wiki/List_of_Hello_world_program_examples"]{Hello World Competition}.
 
-You can work with Pollen source files in any text editor. The key advantage of DrRacket is that you can run them too, and see if they work the way you expect.
+You can work with Pollen source files in any text editor. The key advantage of DrRacket is that you can preview the results by running the file.
 
 Try editing your source file:
 
@@ -77,7 +77,7 @@ You've just learned three things:
 
 @item{Pollen commands in the terminal begin with @tt{raco pollen}, followed by a specific command (in this case @tt{render}) and sometimes an argument (in this case @tt{hello.txt.pp}).}
 
-@item{The @tt{render} command takes the result from your source file — meaning, the result you previewed in DrRacket in the previous step — and saves it to an output file.}
+@item{The @tt{render} command takes the ouput from your source file — meaning, the result you previewed in DrRacket in the previous step — and saves it to another file.}
 
 @item{The name of the output file is the same as the source file, minus the Pollen source extension. So @tt{hello.txt.pp} becomes @tt{hello.txt}.}
 ]
@@ -89,12 +89,62 @@ Try editing the text in the @tt{hello.txt.pp} source file and running @tt{raco p
 ]
 
 
-@section{Using the development server}
+@section{The project server}
 
 You've just learned two ways to see the output of a Pollen source file — first, you ran it in DrRacket. Then, you rendered it to an output file. 
 
-Now here's a third: the Pollen development server.
+Now here's a third: the Pollen project server. Here's how you start it. Return to your terminal window and issue two commands:
 
+@verbatim{
+> cd [directory containing your hello.txt.pp file]
+> raco pollen start}
+
+After a moment, you'll see the startup message:
+
+@verbatim{
+Welcome to Pollen 0.001 (Racket 6.0.0.5)
+Project root is /path/to/your/directory
+Project server is http://localhost:8080 (Ctrl-C to exit)
+Project dashboard is http://localhost:8080/index.ptree
+Ready to rock}
+
+Open a web browser and point it at @tt{http://localhost:8080/index.ptree}. The top of the window will say @tt{Project root}. Below that will be a listing of the files in the directory. 
+
+Among them will be @tt{hello.txt}, with a greyed-out @tt{.pp} extension. Click on it, and you'll be taken to @tt{http://localhost:8080/hello.txt}, where you'll see:
+
+@verbatim{
+Goodbye Stranger
+Breakfast in America
+Take the Long Way Home
+}
+
+That's the boring part. Here's the good part. Leave the project server running. Open your source file again in DrRacket and edit it as follows:
+
+@racketmod[pollen
+Mean Street
+Panama
+Hear About It Later]
+
+Go back to your web browser and reload @tt{http://localhost:8080/hello.txt}. Now you'll see this:
+
+@verbatim{
+Mean Street
+Panama
+Hear About It Later}
+
+The Pollen project server dyamically regenerates output files as you need them, including any time the underlying source file changes. If you like, try making some more changes to your @tt{hello.txt.pp} source file, and reloading the browser to see the updates.
+
+
+@section{Intermission}
+
+That's it for input & output. Now let's circle back and see what Pollen source files can do, other than printing plain text.
+
+For the rest of this tutorial, I recommend keeping two windows on screen: a browser window with your project server, and the DrRacket editing window.
+
+@section{Preprocessor files}
+
+
+@section{Markup files}
 
 
 

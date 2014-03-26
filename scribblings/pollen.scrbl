@@ -46,6 +46,9 @@ Install Pollen from the command line:
 After that, you can update the package from the command line:
 @verbatim{raco pkg update pollen}
 
+@include-section["acknowledgments.scrbl"]
+
+
 @include-section["quick.scrbl"]
 
 @include-section["why-pollen.scrbl"]
