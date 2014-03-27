@@ -2,7 +2,7 @@
 
 @title{Quick start}
 
-
+@(define (link-tt url) (link url (tt url)))
 
 @section{Creating a source file}
 
@@ -108,9 +108,9 @@ Project server is http://localhost:8080 (Ctrl-C to exit)
 Project dashboard is http://localhost:8080/index.ptree
 Ready to rock}
 
-Open a web browser and point it at @tt{http://localhost:8080/index.ptree}. The top of the window will say @tt{Project root}. Below that will be a listing of the files in the directory. 
+Open a web browser and point it at @link-tt{http://localhost:8080/index.ptree}. The top of the window will say @tt{Project root}. Below that will be a listing of the files in the directory. 
 
-Among them will be @tt{hello.txt}, with a greyed-out @tt{.pp} extension. Click on it, and you'll be taken to @tt{http://localhost:8080/hello.txt}, where you'll see:
+Among them will be @tt{hello.txt}, with a greyed-out @tt{.pp} extension. Click on it, and you'll be taken to @link-tt{http://localhost:8080/hello.txt}, where you'll see:
 
 @verbatim{
 Goodbye Stranger
@@ -120,75 +120,184 @@ Take the Long Way Home
 
 That's the boring part. Here's the good part. Leave the project server running. Open your source file again in DrRacket and edit it as follows:
 
-@racketmod[pollen
+@racketmod[#:file "hello.txt.pp" pollen
 Mean Street
 Panama
 Hear About It Later]
 
-Go back to your web browser and reload @tt{http://localhost:8080/hello.txt}. Now you'll see this:
+Go back to your web browser and reload @link-tt{http://localhost:8080/hello.txt}. Now you'll see this:
 
 @verbatim{
 Mean Street
 Panama
 Hear About It Later}
 
-The Pollen project server dyamically regenerates output files as you need them, including any time the underlying source file changes. If you like, try making some more changes to your @tt{hello.txt.pp} source file, and reloading the browser to see the updates.
+Notice what happened — the Pollen project server dynamically regenerated the output file (@tt{hello.txt}) from the source file (@tt{hello.txt.pp}) after you edited the source. If you like, try making some more changes to @tt{hello.txt.pp}, and reloading the browser to see the updates in @tt{hello.txt}.
 
 
 @section{Intermission}
 
-That's it for input & output. Now let's circle back and see what Pollen source files can do, other than printing plain text.
+That covers input & output. Now let's circle back and look at what else you can do with Pollen (beyond the epic achievement of displaying plain text in a web browser).
 
-For the rest of this tutorial, I recommend keeping two windows on screen: a browser window with your project server, and the DrRacket editing window.
+For the rest of this tutorial, I recommend keeping two windows on screen: a web-browser window pointed at your project server (the main URL is @link-tt{http://localhost:8080/index.ptree}) and the DrRacket editing window.
 
-@section{Preprocessor files}
+@section{Pollen as a preprocessor}
+
+A @italic{preprocessor} is a tool for making systematic, automated changes to a source file before the main processing happens. A preprocessor can also be used to add programming logic to files that otherwise don't support it.
+
+For instance, HTML. In DrRacket, create a new file called @tt{margin.html.pp} in your project directory:
+
+@racketmod[#:file "margin.html.pp" pollen
+<body style="margin: 5em; border:1px solid black">
+5em is the inset.
+</body>]
+
+The ``@tt{.pp}'' file extension — which you saw before, with @tt{hello.txt.pp} — stands for ``Pollen preprocessor.'' You can use the Pollen preprocessor with any text-based file by inserting @tt{#lang pollen} as the first line, and adding the @tt{.pp} file extension.
+
+But for now, go to your @link["http://localhost:8080/index.ptree"]{project dashboard} and click on @link["http://localhost:8080/margin.html"]{@tt{margin.html}}. You should see a black box containing the text ``5em is the inset.''
+
+Let's suppose you want to change the inset to 30%. Without a preprocessor, you'd have to search & replace each value. But with a preprocessor, you can move the inset value into a variable, and update it from that one location. So first, introduce a variable called @tt{my-inset} by using the @racket[define] command:
+
+@racketmod[#:file "margin.html.pp" pollen
+◊define[my-inset]{30%}
+<body style="margin: 10em; border:1px solid black">
+10em is the inset.
+</body>
+]
+
+The ◊ character is called a @italic{lozenge}. In Pollen, the lozenge is a special character that marks anything Pollen should interpret as a command (rather than plain text). The whole command @tt{◊define[my-inset]{30%}} means ``create a variable called @tt{my-inset} and give it the value @tt{30%}.''
+
+Then put the variable into the HTML like so, this time using the ◊ character with the variable name in the two places the value appears:
+
+@racketmod[#:file "margin.html.pp" pollen
+◊define[my-inset]{30%}
+<body style="margin: ◊my-inset; border:1px solid black">
+◊my-inset is the inset.
+</body>
+]
+
+Now reload @link["http://localhost:8080/margin.html"]{@tt{margin.html}}. You'll see that the size of the margin has changed (because of the change to the @tt{style} attribute) and so has the text of the HTML. If you like, try editing @tt{my-inset} with different values and reloading the page. You can also try using @racket[define] to create another variable (for instance, to change the color of the box border).
+
+Still, this is the tiniest tip of the iceberg. The Pollen preprocessor gives you access to everything in the Racket programming language — including math functions, text manipulation, and so on.
+
+@section{Markdown mode}
+
+When used as a preprocessor, Pollen's rule is that what you write is what you get. But if you're targeting HTML, who wants to type out all those @tt{<tedious>tags</tedious>}? You can make Pollen do the heavy lifting by using it as a source decoder.
+
+For instance, Markdown mode. Markdown is a simplified @link["https://daringfireball.net/projects/markdown/"]{notation system} for HTML. You can use Pollen's Markdown decoder by inserting @tt{#lang pollen} as the first line, and adding the @tt{.pmd} file extension.
+
+Try it. In DrRacket, create a file with the following lines and save it as @tt{story.html.pmd}:
+
+@racketmod[#:file "story.html.pmd" pollen
+
+Pollen + Markdown
+-----------------
+
++ You **wanted** it — you #,(racketfont "_got_") it.
+
++ [search for Racket](https://google.com/search?q=racket)
+]
+
+As before, go to the @link["http://localhost:8080/index.ptree"]{dashboard} for the project server. This time, click the link for @link["http://localhost:8080/story.html"]{@tt{story.html}}. You'll see something like this:
+
+@nested[#:style 'code-inset]{
+@bold{@larger{Pollen + Markdown}}
+
+@nested[#:style 'inset]{@itemlist[
+
+@item{You @bold{wanted} it — you @italic{got} it.}
+
+@item{@link["https://google.com/search?q=racket"]{search for Racket}}
+]}}
+
+As usual, you're welcome to edit @tt{story.html.pmd} and then refresh the web browser to see the changes.
+
+In Markdown mode, you can still embed Pollen commands within the source as you did in preprocessor mode. Just keep in mind that your commands need to produce valid Markdown (as opposed to raw HTML). For instance, use @tt{define} to create a variable called @tt{metal}, and insert it into the Markdown:
+
+@racketmod[#:file "story.html.pmd" pollen
+◊define[metal]{Plutonium}
+ 
+Pollen + ◊metal
+--------
+ 
++ You **wanted** ◊metal — you #,(racketfont "_got_") it.
+ 
++ [search for ◊metal](https://google.com/search?q=◊metal)
+]
+
+Refresh @tt{story.html} in the browser:
+
+@nested[#:style 'code-inset]{
+@bold{@larger{Pollen + Plutonium}}
+
+@nested[#:style 'inset]{@itemlist[
+
+@item{You @bold{wanted} Plutonium — you @italic{got} it.}
+
+@item{@link["https://google.com/search?q=Plutonium"]{search for Plutonium}}
+]}}
+
+Pollen is handling two tasks here: interpreting the commands in the source, and then converting the Markdown to HTML. But what if you wanted to use Pollen as a preprocessor that outputs a Markdown file? No problem — just change the source name from @tt{story.html.pmd} to @tt{story.md.pp}. Changing the extension from @tt{.pmd} to @tt{.pp} switches Pollen from Markdown mode back to preprocessor mode. And changing the base name from @tt{story.html} to @tt{story.md} updates the name of the output file.
 
 
-@section{Markup files}
+@section{Markup mode}
+
+If all you need to do is produce basic HTML, Markdown is great. But if you need to do semantic markup or other kinds of custom markup, it's not flexible enough. 
+
+In that case, you can use Pollen markup mode. To use Pollen markup, insert @tt{#lang pollen} as the first line of your source file, and add a @tt{.pm} file extension.
+
+Compared to Markdown mode, Pollen markup mode is wide open. Markdown mode gives you a limited set of formatting tools (i.e., the ones supported by Markdown). But in markup mode, you can use any tags you want. Markdown mode decodes the source in a fixed way (i.e., with the Markdown decoder). But markup mode lets you build any decoder you want.
+
+Let's convert our Markdown example into Pollen markup. Marking up content is simple: insert the lozenge character (@tt{◊}) followed by the name of the tag (@tt{◊tag}), followed by the content of the tag in curly braces (@tt{◊tag{content}}). In DrRacket, create a new file called @tt{markup.html.pm} as follows:
 
 
 
-@section{The plot thickens}
+@racketmod[#:file "markup.html.pm" pollen
 
-Start a new Pollen document. Remember to change the top line.
+◊headline{Pollen markup}
 
-Underneath, type @code{Hello ◊(+ 1 2) Worlds}. The character before the left parenthesis is called a lozenge. Type it by [doing such and such].
+◊items{
 
-Ask yourself: what are you likely to get when you run the file?
+◊item{You ◊strong{wanted} it — you ◊em{got} it.} 
 
-OK, now run the file.
+◊item{◊link["https://google.com/search?q=racket"]{search for Racket}}
 
-The result will be @code{Hello 3 Worlds}. Hopefully, that's what you expected. 
+}]
 
-Feel free to change the numbers inside the parenthesized expression and run the file again. The printed sum will change. You can also change the @code{+} sign to a @code{*} sign and make really big numbers. If you want to see your first stupid Pollen trick, type @code{Hello ◊(/ 38 57) of a World} and watch what happens.
+Go to the @link["http://localhost:8080/index.ptree"]{project dashboard} and click on @link["http://localhost:8080/markup.html"]{@tt{markup.html}}. You'll see something like this:
 
-Erase everything but the top line.
+@nested[#:style 'code-inset]{
+Pollen markup You @bold{wanted} it — you @italic{got} it. https://google.com/search?q=racketsearch for Racket}
 
-Type this: @code{
-◊(define name "Roxy")
+That's not right. What happened?
 
-Hello ◊name}. 
+We marked up the source using a combination of standard HTML tags (@tt{strong}, @tt{em}) and nonstandard ones (@tt{headline}, @tt{items}, @tt{item}, @tt{link}). This is valid Pollen markup. (In fact, if you look at @link["http://localhost:8080/out/markup.html"]{the HTML source}, you'll see that they didn't disappear.) But since we're targeting HTML, we'll convert our custom tags into valid HTML tags.
 
-What do you suppose you'll get this time?
+For that, we'll make a special file called @tt{project-require.rkt}. This is a file in the standard Racket language that provides helper functions to decode the source. The definitions won't make sense yet. But this is the quick start, so all you need to do is copy, paste, and save:
 
-Run the file. You'll see @code{Hello Roxy}.
+@racketmod[#:file "project-require.rkt" racket/base
+(require pollen/tag)
+(provide (all-defined-out))
+(define headline (make-tag-function 'h2))
+(define items (make-tag-function 'ul))
+(define item (make-tag-function 'li 'p))
+(define (link url text) `(a [[href ,url]] ,text))
+]
 
-The lozenge character (◊) tells Pollen to interpret what follows as code rather than plain text. This character is therefore the gateway to all the programming functions available in Pollen. In the first case, it denoted a math expression. In the second case, it denoted the definition of a variable, and then the variable itself.
+Return to the @link["http://localhost:8080/index.ptree"]{project dashboard} and click on @link["http://localhost:8080/markup.html"]{@tt{markup.html}}. Now you'll get the right result:
 
+@nested[#:style 'code-inset]{
+@bold{@larger{Pollen markup}}
 
-@section{Making an HTML page with Pollen}
+@nested[#:style 'inset]{@itemlist[
 
-By default, Pollen operates in preprocessor mode. That means it evaluates all the expressions in your document, renders each as text, and then outputs the whole document as a text file. 
+@item{You @bold{wanted} it — you @italic{got} it.}
 
-In this tutorial, you're going to make an HTML file. But you can use Pollen as a preprocessor for any kind of text file.
+@item{@link["https://google.com/search?q=racket"]{search for Racket}}
+]}}
 
-@margin-note{That means Pollen can act as a preprocessor for CSS, JavaScript, XML — and even source files for other programming languages.}
+Markup mode takes a little more effort to set up. But it also allows you more flexibility. If you want to do semantic markup, or convert your source into multiple output formats, or handle complex page layouts — it's the way to go. 
 
+@section{Templates}
 
-@subsection{Making an HTML page with Pollen in decoder mode}
-
-@subsection{Using the Pollen dashboard}
-
-
-
-
+One last stop in the quick tour. The HTML pages we made in Markdown mode and markup mode looked pretty dull. Let's fix that.

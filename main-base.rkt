@@ -81,7 +81,6 @@
                       (define metas (make-hash (map meta-element->assoc meta-elements)))
                       (values doc-without-metas metas)) 
                     
-                    
                     (define doc-with-metas
                       (let ([doc-raw (if (equal? parser-mode world:mode-markdown)
                                          (apply (compose1 (dynamic-require 'markdown 'parse-markdown) string-append) doc-raw)
@@ -89,10 +88,10 @@
                         `(placeholder-root 
                           ,@(cons (meta 'here-path: here-path) 
                                   ;; cdr strips initial linebreak, but make sure doc-raw isn't blank
-                                  (if (and (list? doc-raw) (> (length doc-raw) 0)) (cdr doc-raw) doc-raw))))) 
-                    
+                                  (if (and (list? doc-raw) (> (length doc-raw) 0) (equal? (car doc-raw) "\n")) (cdr doc-raw) doc-raw))))) 
+                                       
                     (define-values (doc-without-metas metas) (split-metas-to-hash doc-with-metas))
-                    
+
                     ;; set up the 'doc export
                     (require pollen/decode)
                     (define doc (apply (cond

@@ -6,4 +6,7 @@ One curious aspect of free software is that you can appropriate the benefits of 
 
 But the best tools do more than get the job done. They create an incentive to undertake jobs you wouldn't have attempted before. Racket encouraged me to become a better programmer so I could create Pollen. Likewise, I hope that Pollen encourages you to make things you couldn't before.
 
+Thank you to Greg Hendershott for his Markdown parser.
+
+
 MB

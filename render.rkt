@@ -64,7 +64,7 @@
   ((pathish?) (#:force boolean?) . ->* . void?)
   (let ([so-path (->complete-path so-pathish)])  ; so-path = source or output path (could be either) 
     (cond
-      [(ormap (λ(test) (test so-path)) (list has/is-null-source? has/is-preproc-source? has/is-markup-source? has/is-scribble-source?)) 
+      [(ormap (λ(test) (test so-path)) (list has/is-null-source? has/is-preproc-source? has/is-markup-source? has/is-scribble-source? has/is-markdown-source?)) 
        (let-values ([(source-path output-path) (->source+output-paths so-path)])
          (render-to-file-if-needed source-path output-path #:force force))]
       [(pagetree-source? so-path) (render-pagetree so-path)]))
@@ -75,8 +75,8 @@
   (complete-path? . -> . (values complete-path? complete-path?))
   ;; file-proc returns two values, but ormap only wants one
   (define file-proc (ormap (λ(test file-proc) (and (test source-or-output-path) file-proc))
-                           (list has/is-null-source? has/is-preproc-source? has/is-markup-source? has/is-scribble-source?)
-                           (list ->null-source+output-paths ->preproc-source+output-paths ->markup-source+output-paths ->scribble-source+output-paths)))
+                           (list has/is-null-source? has/is-preproc-source? has/is-markup-source? has/is-scribble-source? has/is-markdown-source?)
+                           (list ->null-source+output-paths ->preproc-source+output-paths ->markup-source+output-paths ->scribble-source+output-paths ->markdown-source+output-paths)))
   (file-proc source-or-output-path))
 
 
@@ -119,8 +119,8 @@
   (define render-proc 
     (cond
       [(ormap (λ(test render-proc) (and (test source-path) render-proc))
-              (list has/is-null-source? has/is-preproc-source? has/is-markup-source? has/is-scribble-source?)
-              (list render-null-source render-preproc-source render-markup-source render-scribble-source))]
+              (list has/is-null-source? has/is-preproc-source? has/is-markup-source? has/is-scribble-source? has/is-markdown-source?)
+              (list render-null-source render-preproc-source render-markup-or-markdown-source render-scribble-source render-markup-or-markdown-source))] 
       [else (error (format "render: no rendering function found for ~a" source-path))]))
   
   (message (format "render: ~a" (file-name-from-path source-path)))
@@ -154,7 +154,7 @@
           (render-through-eval `(begin (require pollen/cache)(cached-require ,source-path ',world:main-pollen-export))))))
 
 
-(define/contract (render-markup-source source-path [maybe-template-path #f]) 
+(define/contract (render-markup-or-markdown-source source-path [maybe-template-path #f]) 
   ((complete-path?) ((or/c #f complete-path?)) . ->* . bytes?)
   (match-define-values (source-dir _ _) (split-path source-path))
   (define template-path (or maybe-template-path (get-template-for source-path)))
@@ -176,7 +176,7 @@
 
 (define/contract (templated-source? path)
   (complete-path? . -> . boolean?)
-  (and (markup-source? path)))
+  (or (markup-source? path) (markdown-source? path)))
 
 
 (define/contract+provide (get-template-for source-path)
