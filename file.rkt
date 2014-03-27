@@ -121,5 +121,16 @@
 
 (define+provide (magic-directory? path)
   (and (directory-exists? path) 
-       (or (ends-with? (path->string path) "compiled")
-           )))
+       (or (ends-with? (path->string path) "compiled"))))
+
+(define+provide (pollen-related-file? file)
+  (ormap (λ(proc) (proc file)) (list
+                                preproc-source? 
+                                markup-source?
+                                markdown-source?
+                                template-source?
+                                pagetree-source?
+                                scribble-source?
+                                null-source?
+                                racket-source?
+                                magic-directory?)))

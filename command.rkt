@@ -11,15 +11,15 @@ render [dir]          render project in dir (default is current dir)
 render path           render file
 clone                 copy project to desktop without source files" ,(world:current-server-port))))
 
-(define (handle-render dir-or-path [port #f])  
+(define (handle-render dir-or-path rest-args)  
   `(begin 
      (require pollen/render pollen/world pollen/file sugar)
      (parameterize ([current-directory (world:current-project-root)])
        (define dir-or-path ,dir-or-path)
        (apply render-batch (map ->complete-path (if (not (directory-exists? dir-or-path))
                                                     (begin
-                                                      (displayln (format "Rendering ~a" dir-or-path))                                                      
-                                                      (list dir-or-path))
+                                                      (displayln (format "Rendering ~a" dir-or-path)) 
+                                                      (cons dir-or-path ',rest-args))
                                                     (begin
                                                       (displayln (format "Rendering preproc & pagetree files in directory ~a" dir-or-path))
                                                       (apply append (map (λ(proc) (filter proc (directory-list dir-or-path))) (list preproc-source? pagetree-source?))))))))))
@@ -35,39 +35,25 @@ clone                 copy project to desktop without source files" ,(world:curr
            (start-server)))))
 
 
-(define (handle-clone directory target)
-  (define target-path (or (and target (path->complete-path (string->path target)))
-                          (build-path (find-system-path 'desk-dir) (string->path "clone"))))
+(define (handle-clone directory rest-args)
+  (define target-path (or 
+                       (and rest-args (not (null? rest-args)) (path->complete-path (string->path (car rest-args))))
+                       (build-path (find-system-path 'desk-dir) (string->path world:clone-directory-name))))
   
   `(begin
-     (displayln "Clone & prune ...")
+     (displayln "Cloning ...")
      (require racket/file pollen/file)
-     
-     (define (pollen-related-file? file)
-       (ormap (λ(proc) (proc file)) (list
-                                     preproc-source? 
-                                     markup-source?
-                                     markdown-source?
-                                     template-source?
-                                     pagetree-source?
-                                     scribble-source?
-                                     null-source?
-                                     racket-source?
-                                     magic-directory?)))
      (define (delete-it path)
-       (when (directory-exists? path)
-         (delete-directory/files path))
-       (when (file-exists? path)
-         (delete-file path)))
-     
-     (let ([source-dir ,directory]
-           [target-dir ,target-path])
-       (when (directory-exists? target-dir)
-         (delete-directory/files target-dir))
-       (copy-directory/files source-dir target-dir)
-       (map delete-it (find-files pollen-related-file? target-dir))
-       (displayln (format "Completed to ~a" ,target-path))
-       )))
+       (cond
+         [(directory-exists? path) (delete-directory/files path)]
+         [(file-exists? path) (delete-file path)]))
+     (define source-dir ,directory)
+     (when (not (directory-exists? source-dir)) (error (format "clone error: source directory ~a does not exist" source-dir)))
+     (define target-dir ,target-path)
+     (when (directory-exists? target-dir) (delete-directory/files target-dir))
+     (copy-directory/files source-dir target-dir)
+     (for-each delete-it (find-files pollen-related-file? target-dir))
+     (displayln (format "Completed to ~a" ,target-path))))
 
 (define (handle-else command)
   `(if (regexp-match #rx"(shit|fuck)" ,command)
@@ -76,42 +62,3 @@ clone                 copy project to desktop without source files" ,(world:curr
        (displayln (format "unknown command ~a" ,command))))
 
 
-
-
-#|
-   
-                     [("clone") (let ([target-path 
-                                       (if (> (len args) 1)
-                                           (->path (get args 1))
-                                           (build-path (find-system-path 'desk-dir) (->path "clone")))])
-                                  `(begin
-                                     (displayln "Clone & prune ...")
-                                     (require racket/file)
-                                     (require "tools.rkt")
-                                     
-                                     (define (pollen-related-file? file)
-                                       (ormap (λ(proc) (proc file)) (list
-                                                                     markup-source? 
-                                                                     preproc-source? 
-                                                                     template-source?
-                                                                     pagetree-source?
-                                                                     pollen-script?
-                                                                     magic-directory?
-                                                                     racket-file?)))
-                                     
-                                     (define (delete-it path)
-                                       (when (directory-exists? path)
-                                         (delete-directory/files path))
-                                       (when (file-exists? path)
-                                         (delete-file path)))
-                                     
-                                     (let ([source-dir (current-directory)]
-                                           [target-dir ,target-path])
-                                       (when (directory-exists? target-dir)
-                                         (delete-directory/files target-dir))
-                                       (copy-directory/files source-dir target-dir)
-                                       (map delete-it (find-files pollen-related-file? target-dir))
-                                       (displayln (format "Completed to ~a" ,target-path))
-                                       )))]
-
-|#

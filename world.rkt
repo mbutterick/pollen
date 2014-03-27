@@ -53,3 +53,5 @@
 (define current-server-extras-path (make-parameter #f))
 
 (define check-project-requires-in-render? (make-parameter #t))
+
+(define clone-directory-name "clone")

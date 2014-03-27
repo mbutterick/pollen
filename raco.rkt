@@ -11,7 +11,11 @@
   (with-handlers ([exn:fail? (λ(exn) (current-directory))])
     (path->complete-path (simplify-path (string->path (vector-ref args 1))))))
 
-(define-for-syntax second-arg
+(define-for-syntax rest-args
+  (with-handlers ([exn:fail? (λ(exn) #f)])
+    (cddr (vector->list (current-command-line-arguments)))))
+
+(define-for-syntax port-arg
   (with-handlers ([exn:fail? (λ(exn) #f)])
     (string->number (vector-ref args 2))))
 
@@ -24,9 +28,9 @@
   (datum->syntax stx 
                  (case arg-command-name
                    [(#f "help") (handle-help)]
-                   [("start") (handle-start first-arg-or-current-dir second-arg)]
-                   [("render") (handle-render first-arg-or-current-dir)]
-                   [("clone") (handle-clone first-arg-or-current-dir second-arg)]
+                   [("start") (handle-start first-arg-or-current-dir port-arg)]
+                   [("render") (handle-render first-arg-or-current-dir rest-args)]
+                   [("clone") (handle-clone first-arg-or-current-dir rest-args)]
                    [else (handle-else arg-command-name)])))
 
 (select-syntax-for-command)
