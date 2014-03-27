@@ -225,7 +225,7 @@ Pollen + ◊metal
 + [search for ◊metal](https://google.com/search?q=◊metal)
 ]
 
-Refresh @tt{downtown.html} in the browser:
+Refresh @link["http://localhost:8080/downtown.html"]{@tt{downtown.html}} in the browser:
 
 @nested[#:style 'code-inset]{
 @bold{@larger{Pollen + Plutonium}}
@@ -300,6 +300,18 @@ Markup mode takes a little more effort to set up. But it also allows you more fl
 
 @section{Templates}
 
-The final stop in the quick tour. The HTML pages we made in Markdown mode and markup mode looked pretty dull. Let's fix that.
+The final stop in the quick tour. The HTML pages we just made looked pretty dull. Let's fix that.
 
-Pollen 
+Pollen source files in Markdown or markup mode (i.e., @tt{.pmd} or @tt{.pm} files) are always rendered with a template. Pollen tries to find a template in the project directory whose name is @tt{main.[output extension].pt}. So for @tt{uptown.html.pm}, the output extension is @tt{.html}, and Pollen will look for @tt{main.html.pt} (the @tt{.pt}, as you probably guessed, stands for Pollen template).
+
+So let's make @tt{main.html.pt}. Go back to DrRacket and enter this:
+
+@racketmod[#:file "main.html.pt" pollen
+<html><head><meta charset="UTF-8"/></head>
+<body style="margin: 30%; border:1px solid black; 
+font-size: 150%; font-family: sans-serif; background:yellow">
+◊(->html doc)</body>
+</html>
+]
+
+OK, enough of the contrived examples. Let's make some magic.
