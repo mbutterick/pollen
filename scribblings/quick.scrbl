@@ -186,9 +186,9 @@ When used as a preprocessor, Pollen's rule is that what you write is what you ge
 
 For instance, Markdown mode. Markdown is a simplified @link["https://daringfireball.net/projects/markdown/"]{notation system} for HTML. You can use Pollen's Markdown decoder by inserting @tt{#lang pollen} as the first line, and adding the @tt{.pmd} file extension.
 
-Try it. In DrRacket, create a file with the following lines and save it as @tt{story.html.pmd}:
+Try it. In DrRacket, create a file with the following lines and save it as @tt{downtown.html.pmd}:
 
-@racketmod[#:file "story.html.pmd" pollen
+@racketmod[#:file "downtown.html.pmd" pollen
 
 Pollen + Markdown
 -----------------
@@ -198,7 +198,7 @@ Pollen + Markdown
 + [search for Racket](https://google.com/search?q=racket)
 ]
 
-As before, go to the @link["http://localhost:8080/index.ptree"]{dashboard} for the project server. This time, click the link for @link["http://localhost:8080/story.html"]{@tt{story.html}}. You'll see something like this:
+As before, go to the @link["http://localhost:8080/index.ptree"]{dashboard} for the project server. This time, click the link for @link["http://localhost:8080/downtown.html"]{@tt{downtown.html}}. You'll see something like this:
 
 @nested[#:style 'code-inset]{
 @bold{@larger{Pollen + Markdown}}
@@ -210,11 +210,11 @@ As before, go to the @link["http://localhost:8080/index.ptree"]{dashboard} for t
 @item{@link["https://google.com/search?q=racket"]{search for Racket}}
 ]}}
 
-As usual, you're welcome to edit @tt{story.html.pmd} and then refresh the web browser to see the changes.
+As usual, you're welcome to edit @tt{downtown.html.pmd} and then refresh the web browser to see the changes.
 
 In Markdown mode, you can still embed Pollen commands within the source as you did in preprocessor mode. Just keep in mind that your commands need to produce valid Markdown (as opposed to raw HTML). For instance, use @tt{define} to create a variable called @tt{metal}, and insert it into the Markdown:
 
-@racketmod[#:file "story.html.pmd" pollen
+@racketmod[#:file "downtown.html.pmd" pollen
 ◊define[metal]{Plutonium}
  
 Pollen + ◊metal
@@ -225,7 +225,7 @@ Pollen + ◊metal
 + [search for ◊metal](https://google.com/search?q=◊metal)
 ]
 
-Refresh @tt{story.html} in the browser:
+Refresh @tt{downtown.html} in the browser:
 
 @nested[#:style 'code-inset]{
 @bold{@larger{Pollen + Plutonium}}
@@ -237,7 +237,7 @@ Refresh @tt{story.html} in the browser:
 @item{@link["https://google.com/search?q=Plutonium"]{search for Plutonium}}
 ]}}
 
-Pollen is handling two tasks here: interpreting the commands in the source, and then converting the Markdown to HTML. But what if you wanted to use Pollen as a preprocessor that outputs a Markdown file? No problem — just change the source name from @tt{story.html.pmd} to @tt{story.md.pp}. Changing the extension from @tt{.pmd} to @tt{.pp} switches Pollen from Markdown mode back to preprocessor mode. And changing the base name from @tt{story.html} to @tt{story.md} updates the name of the output file.
+Pollen is handling two tasks here: interpreting the commands in the source, and then converting the Markdown to HTML. But what if you wanted to use Pollen as a preprocessor that outputs a Markdown file? No problem — just change the source name from @tt{downtown.html.pmd} to @tt{downtown.md.pp}. Changing the extension from @tt{.pmd} to @tt{.pp} switches Pollen from Markdown mode back to preprocessor mode. And changing the base name from @tt{downtown.html} to @tt{downtown.md} updates the name of the output file.
 
 
 @section{Markup mode}
@@ -248,11 +248,11 @@ In that case, you can use Pollen markup mode. To use Pollen markup, insert @tt{#
 
 Compared to Markdown mode, Pollen markup mode is wide open. Markdown mode gives you a limited set of formatting tools (i.e., the ones supported by Markdown). But in markup mode, you can use any tags you want. Markdown mode decodes the source in a fixed way (i.e., with the Markdown decoder). But markup mode lets you build any decoder you want.
 
-Let's convert our Markdown example into Pollen markup. Marking up content is simple: insert the lozenge character (@tt{◊}) followed by the name of the tag (@tt{◊tag}), followed by the content of the tag in curly braces (@tt{◊tag{content}}). In DrRacket, create a new file called @tt{markup.html.pm} as follows:
+Let's convert our Markdown example into Pollen markup. Marking up content is simple: insert the lozenge character (@tt{◊}) followed by the name of the tag (@tt{◊tag}), followed by the content of the tag in curly braces (@tt{◊tag{content}}). In DrRacket, create a new file called @tt{uptown.html.pm} as follows:
 
 
 
-@racketmod[#:file "markup.html.pm" pollen
+@racketmod[#:file "uptown.html.pm" pollen
 
 ◊headline{Pollen markup}
 
@@ -264,14 +264,14 @@ Let's convert our Markdown example into Pollen markup. Marking up content is sim
 
 }]
 
-Go to the @link["http://localhost:8080/index.ptree"]{project dashboard} and click on @link["http://localhost:8080/markup.html"]{@tt{markup.html}}. You'll see something like this:
+Go to the @link["http://localhost:8080/index.ptree"]{project dashboard} and click on @link["http://localhost:8080/uptown.html"]{@tt{uptown.html}}. You'll see something like this:
 
 @nested[#:style 'code-inset]{
 Pollen markup You @bold{wanted} it — you @italic{got} it. https://google.com/search?q=racketsearch for Racket}
 
 That's not right. What happened?
 
-We marked up the source using a combination of standard HTML tags (@tt{strong}, @tt{em}) and nonstandard ones (@tt{headline}, @tt{items}, @tt{item}, @tt{link}). This is valid Pollen markup. (In fact, if you look at @link["http://localhost:8080/out/markup.html"]{the HTML source}, you'll see that they didn't disappear.) But since we're targeting HTML, we'll convert our custom tags into valid HTML tags.
+We marked up the source using a combination of standard HTML tags (@tt{strong}, @tt{em}) and nonstandard ones (@tt{headline}, @tt{items}, @tt{item}, @tt{link}). This is valid Pollen markup. (In fact, if you look at @link["http://localhost:8080/out/markup.html"]{the generated source}, you'll see that they didn't disappear.) But since we're targeting HTML, we need to convert our custom tags into valid HTML tags.
 
 For that, we'll make a special file called @tt{project-require.rkt}. This is a file in the standard Racket language that provides helper functions to decode the source. The definitions won't make sense yet. But this is the quick start, so all you need to do is copy, paste, and save:
 
@@ -284,7 +284,7 @@ For that, we'll make a special file called @tt{project-require.rkt}. This is a f
 (define (link url text) `(a [[href ,url]] ,text))
 ]
 
-Return to the @link["http://localhost:8080/index.ptree"]{project dashboard} and click on @link["http://localhost:8080/markup.html"]{@tt{markup.html}}. Now you'll get the right result:
+Return to the @link["http://localhost:8080/index.ptree"]{project dashboard} and click on @link["http://localhost:8080/uptown.html"]{@tt{uptown.html}}. Now you'll get the right result:
 
 @nested[#:style 'code-inset]{
 @bold{@larger{Pollen markup}}
@@ -300,4 +300,6 @@ Markup mode takes a little more effort to set up. But it also allows you more fl
 
 @section{Templates}
 
-One last stop in the quick tour. The HTML pages we made in Markdown mode and markup mode looked pretty dull. Let's fix that.
+The final stop in the quick tour. The HTML pages we made in Markdown mode and markup mode looked pretty dull. Let's fix that.
+
+Pollen 
