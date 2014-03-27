@@ -53,6 +53,11 @@ td {
     text-align: center; 
 }
 
+td.no-files {
+    padding: 0.4em;   
+}
+
+
 a:hover {
     background: #eee;
 }

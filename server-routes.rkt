@@ -149,10 +149,10 @@
                                   text)))))
   
   (define (make-parent-row)
-    (define dirs (cons "Project root"
-                       (if (not (equal? (world:current-project-root) dashboard-dir))
-                           (explode-path (find-relative-path (world:current-project-root) dashboard-dir))
-                           null)))
+    (define title (string-append "Project root" (if (equal? (world:current-project-root) dashboard-dir) (format " = ~a" dashboard-dir) "")))
+    (define dirs (cons title (if (not (equal? (world:current-project-root) dashboard-dir))
+                                 (explode-path (find-relative-path (world:current-project-root) dashboard-dir))
+                                 null)))
     (define dirlinks (cons "/" (map (λ(ps) (format "/~a/" (apply build-path ps)))  
                                     (for/list ([i (length (cdr dirs))])
                                       (take (cdr dirs) (add1 i))))))
@@ -193,7 +193,9 @@
   (body-wrapper
    `(table 
      ,@(cons (make-parent-row) 
-             (map make-path-row project-paths)))))
+             (if (not (null? project-paths))
+                 (map make-path-row project-paths)
+                 (list '(tr (td ((class "no-files")) "No files yet in this directory") (td) (td))))))))
 
 (define route-dashboard (route-wrapper dashboard))
 
