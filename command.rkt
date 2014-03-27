@@ -34,6 +34,41 @@ clone                 copy project to desktop without source files" ,(world:curr
                         ,@(if port (list `(world:current-server-port ,port)) null))
            (start-server)))))
 
+
+(define (handle-clone directory target)
+  (define target-path (or (and target (path->complete-path (string->path target)))
+                          (build-path (find-system-path 'desk-dir) (string->path "clone"))))
+  
+  `(begin
+     (displayln "Clone & prune ...")
+     (require racket/file pollen/file)
+     
+     (define (pollen-related-file? file)
+       (ormap (λ(proc) (proc file)) (list
+                                     preproc-source? 
+                                     markup-source?
+                                     markdown-source?
+                                     template-source?
+                                     pagetree-source?
+                                     scribble-source?
+                                     null-source?
+                                     racket-source?
+                                     magic-directory?)))
+     (define (delete-it path)
+       (when (directory-exists? path)
+         (delete-directory/files path))
+       (when (file-exists? path)
+         (delete-file path)))
+     
+     (let ([source-dir ,directory]
+           [target-dir ,target-path])
+       (when (directory-exists? target-dir)
+         (delete-directory/files target-dir))
+       (copy-directory/files source-dir target-dir)
+       (map delete-it (find-files pollen-related-file? target-dir))
+       (displayln (format "Completed to ~a" ,target-path))
+       )))
+
 (define (handle-else command)
   `(if (regexp-match #rx"(shit|fuck)" ,command)
        (displayln (let ([responses '("Cursing at free software? Really?" "How uncouth." "Same to you, buddy.")])
