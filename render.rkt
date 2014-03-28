@@ -64,7 +64,7 @@
   ((pathish?) (#:force boolean?) . ->* . void?)
   (let ([so-path (->complete-path so-pathish)])  ; so-path = source or output path (could be either) 
     (cond
-      [(ormap (λ(test) (test so-path)) (list has/is-null-source? has/is-preproc-source? has/is-markup-source? has/is-scribble-source? has/is-markdown-source?)) 
+      [(ormap (λ(test) (test so-path)) (list has/is-null-source? has/is-preproc-source? has/is-markup-source? has/is-scribble-source? has/is-markdown-source? has/is-template-source?)) 
        (let-values ([(source-path output-path) (->source+output-paths so-path)])
          (render-to-file-if-needed source-path output-path #:force force))]
       [(pagetree-source? so-path) (render-pagetree so-path)]))
@@ -75,8 +75,8 @@
   (complete-path? . -> . (values complete-path? complete-path?))
   ;; file-proc returns two values, but ormap only wants one
   (define file-proc (ormap (λ(test file-proc) (and (test source-or-output-path) file-proc))
-                           (list has/is-null-source? has/is-preproc-source? has/is-markup-source? has/is-scribble-source? has/is-markdown-source?)
-                           (list ->null-source+output-paths ->preproc-source+output-paths ->markup-source+output-paths ->scribble-source+output-paths ->markdown-source+output-paths)))
+                           (list has/is-null-source? has/is-preproc-source? has/is-markup-source? has/is-scribble-source? has/is-markdown-source? has/is-template-source?)
+                           (list ->null-source+output-paths ->preproc-source+output-paths ->markup-source+output-paths ->scribble-source+output-paths ->markdown-source+output-paths ->template-source+output-paths)))
   (file-proc source-or-output-path))
 
 
@@ -119,8 +119,8 @@
   (define render-proc 
     (cond
       [(ormap (λ(test render-proc) (and (test source-path) render-proc))
-              (list has/is-null-source? has/is-preproc-source? has/is-markup-source? has/is-scribble-source? has/is-markdown-source?)
-              (list render-null-source render-preproc-source render-markup-or-markdown-source render-scribble-source render-markup-or-markdown-source))] 
+              (list has/is-null-source? has/is-preproc-source? has/is-markup-source? has/is-scribble-source? has/is-markdown-source? has/is-template-source?)
+              (list render-null-source render-preproc-source render-markup-or-markdown-source render-scribble-source render-markup-or-markdown-source render-preproc-source))] 
       [else (error (format "render: no rendering function found for ~a" source-path))]))
   
   (message (format "render: ~a" (file-name-from-path source-path)))
@@ -168,7 +168,7 @@
              [metas (cached-require ,source-path ',world:meta-pollen-export)])
          (local-require pollen/pagetree pollen/template pollen/top)
          (define here (metas->here metas))
-         (include-template #:command-char ,world:template-field-delimiter ,(->string (find-relative-path source-dir template-path))))))
+         (include-template #:command-char ,world:command-marker ,(->string (find-relative-path source-dir template-path))))))
   
   (time (parameterize ([current-directory source-dir]) ; because include-template wants to work relative to source location
           (render-through-eval expr-to-eval))))
@@ -183,8 +183,8 @@
   (complete-path? . -> . (or/c #f complete-path?))
   (match-define-values (source-dir _ _) (split-path source-path))
   (and (templated-source? source-path) ; doesn't make sense if it's not a templated source format
-       (or ; Build the possible paths and use the first one that either exists, or has a preproc source that exists.
-        (ormap (λ(p) (if (ormap file-exists? (list p (->preproc-source-path p))) p #f)) 
+       (or ; Build the possible paths and use the first one that either exists, or has existing source (template, preproc, or null)
+        (ormap (λ(p) (if (ormap file-exists? (list p (->template-source-path p) (->preproc-source-path p) (->null-source-path p))) p #f)) 
                (filter (λ(x) (->boolean x)) ; if any of the possibilities below are invalid, they return #f 
                        (list                     
                         (parameterize ([current-directory (world:current-project-root)])
@@ -192,7 +192,7 @@
                             (and ((->symbol world:template-meta-key) . in? . source-metas)
                                  (build-path source-dir (get source-metas (->string world:template-meta-key)))))) ; path based on metas
                         (build-path (world:current-project-root) 
-                                    (add-ext (add-ext world:default-template-prefix (get-ext (->output-path source-path))) world:template-source-ext))))) ; path to default template
+                                    (add-ext world:default-template-prefix (get-ext (->output-path source-path))))))) ; path to default template
         (build-path (world:current-server-extras-path) world:fallback-template)))) ; fallback template
 
 

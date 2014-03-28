@@ -102,7 +102,7 @@
 (define+provide/contract (->output-path x)
   (coerce/path? . -> . coerce/path?)
   (cond
-    [(or (markup-source? x) (preproc-source? x) (null-source? x) (markdown-source? x)) (remove-ext x)]
+    [(or (markup-source? x) (preproc-source? x) (null-source? x) (markdown-source? x) (template-source? x)) (remove-ext x)]
     [(scribble-source? x) (add-ext (remove-ext x) 'html)]
     [else x]))
 

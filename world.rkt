@@ -17,6 +17,7 @@
 (define mode-markup 'markup)
 (define mode-markdown 'markdown)
 (define mode-pagetree 'ptree)
+(define mode-template 'template)
 
 (define decodable-extensions (list markup-source-ext pagetree-source-ext))
 
@@ -24,7 +25,7 @@
 (define pagetree-root-node 'pagetree-root)
 
 (define command-marker #\◊)
-(define template-field-delimiter command-marker)
+(define template-command-marker #\∂)
 
 (define default-template-prefix "main")
 (define fallback-template "fallback.html.pt")
