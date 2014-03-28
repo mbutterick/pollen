@@ -111,6 +111,6 @@
                     
                     ;; for output in DrRacket
                     (module+ main
-                      (if (equal? parser-mode world:mode-preproc)
+                      (if (or (equal? parser-mode world:mode-preproc) (equal? parser-mode world:mode-template))
                           (display doc)
                           (print doc)))))]))))]))
