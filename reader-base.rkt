@@ -12,12 +12,12 @@
 (define (make-custom-read-syntax reader-mode)
   (λ (path-string p)
     (define read-inner (make-at-reader 
-                    #:command-char (if (or (equal? reader-mode world:mode-template) 
-                                                   (regexp-match (pregexp (format "\\.~a$" world:template-source-ext)) path-string))
-                                       world:template-command-marker
-                                       world:command-marker)
-                    #:syntax? #t 
-                    #:inside? #t))
+                        #:command-char (if (or (equal? reader-mode world:mode-template) 
+                                               (and (string? path-string) (regexp-match (pregexp (format "\\.~a$" world:template-source-ext)) path-string)))
+                                           world:template-command-marker
+                                           world:command-marker)
+                        #:syntax? #t 
+                        #:inside? #t))
     (define file-contents (read-inner path-string p))
     (datum->syntax file-contents 
                    `(module pollen-lang-module pollen 
