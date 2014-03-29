@@ -319,7 +319,7 @@ This file is ◊here
 </div></body></html>
 }}
 
-This is a simple HTML file that should look familiar, except for the two template variables. The first, @tt{here}, contains the name of the current source file. As before, the lozenge character marks it as a Pollen command rather than text, and you write it as @tt{◊here}. The other command, @tt{◊->html{◊doc}}, takes the content from the source file, which is contained in a variable called @tt{doc}, and converts it to HTML with a Pollen function called @tt{->html}.
+This is a simple HTML file that should look familiar, except for the two template variables. The first, @tt{here}, contains the name of the current source file. As before, the lozenge character marks it as a Pollen command rather than text, so you write it as @tt{◊here}. The other command, @tt{◊->html{◊doc}}, takes the content from the source file, which is contained in a variable called @tt{doc}, and converts it to HTML with a Pollen function called @tt{->html}.
 
 Go back to your web browser and reload @link["http://localhost:8080/uptown.html"]{@tt{uptown.html}}. (Or @link["http://localhost:8080/downtown.html"]{@tt{downtown.html}} — both will work.) The page will be rendered with the new @tt{template.html}. As before, you can edit the template or the source and the project server will dynamically update the output file. 
 
@@ -350,9 +350,9 @@ Now you've seen the key features of Pollen. What do you think?
 @item{@italic{``Sounds a lot like LaTeX. Why not use that?''} Also a good idea. LaTeX gets a lot of things right. But it wasn't designed for web publishing.}
 
 
-@item{@italic{``Eh, there are plenty of adequate options. Why should I learn a system written in Racket, which I've never used?''} A salient objection. It's also the question I asked myself before I committed to Racket. But publishing systems that are author- or designer-friendly tend to be programmer-hostile, and vice versa. Racket is the only language I found that could handle every mode with ease.}
+@item{@italic{``Eh, there are plenty of adequate options. Why should I learn a system written in Racket, which I've never used?''} A salient objection. It's also the question I asked myself before I committed to Racket. But publishing systems that are author- or designer-friendly tend to be programmer-hostile, and vice versa. Racket is the only language I found that could meet my requirements.}
 
 
 ]
 
-Don't take my word for it. The rest of this documentation will show you the cool, useful, and sophisticated things you can do with Pollen. If there's another tool that still suits you better, great. But I didn't make Pollen because I'm a programmer. I'm a writer who wants to make electronic books that are better than the ones we have now.  And for that, I needed a better tool.
+But don't take my word for it. The rest of this documentation will show you the cool, useful, and sophisticated things you can do with Pollen. If there's another tool that suits you better, great. Keep in mind that I didn't make Pollen because I'm a programmer. I'm a writer who wants to make electronic books that are better than the ones we have now.  And for that, I needed a better tool.
