@@ -321,7 +321,7 @@ This file is ◊here
 
 This is a simple HTML file that should look familiar, except for the two template variables. The first, @tt{here}, contains the name of the current source file. As before, the lozenge character marks it as a Pollen command rather than text, and you write it as @tt{◊here}. The other command, @tt{◊->html{◊doc}}, takes the content from the source file, which is contained in a variable called @tt{doc}, and converts it to HTML with a Pollen function called @tt{->html}.
 
-Go back to your web browser and reload @link["http://localhost:8080/uptown.html"]{@tt{uptown.html}}. The page will be rendered with the new @tt{template.html}. As before, you can edit the template or the source and the project server will dynamically regenerate the output file.
+Go back to your web browser and reload @link["http://localhost:8080/uptown.html"]{@tt{uptown.html}}. (Or @link["http://localhost:8080/downtown.html"]{@tt{downtown.html}} — both will work.) The page will be rendered with the new @tt{template.html}. As before, you can edit the template or the source and the project server will dynamically update the output file. 
 
 @section{PS for Scribble users}
 
