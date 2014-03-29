@@ -4,6 +4,7 @@
 
 @(define (link-tt url) (link url (tt url)))
 
+
 @section{Creating a source file}
 
 Assuming you've installed Racket & Pollen, launch DrRacket. 
@@ -300,18 +301,58 @@ Markup mode takes a little more effort to set up. But it also allows you more fl
 
 @section{Templates}
 
-The final stop in the quick tour. The HTML pages we just made looked pretty dull. Let's fix that.
+The HTML pages we just made looked pretty dull. For the last stop on the quick tour, let's fix that.
 
-Pollen source files in Markdown or markup mode (i.e., @tt{.pmd} or @tt{.pm} files) are always rendered with a template. Pollen tries to find a template in the project directory whose name is @tt{main.[output extension].pt}. So for @tt{uptown.html.pm}, the output extension is @tt{.html}, and Pollen will look for @tt{main.html.pt} (the @tt{.pt}, as you probably guessed, stands for Pollen template).
+Pollen source files that are written in Markdown or markup mode (i.e., @tt{.pmd} or @tt{.pm} files) are rendered with a @italic{template}. A template is not a standalone Pollen source file. It's a file of the output type — e.g., CSS, HTML, XML — where you put the stuff that needs to be consistent between output files. The template also contains @italic{template variables} that mark where values from the Pollen source file should be inserted.
 
-So let's make @tt{main.html.pt}. Go back to DrRacket and enter this:
+When it needs a template, Pollen first looks for a file in the project directory named @tt{template.[output extension of source]}. For @tt{uptown.html.pm}, the output extension will be @tt{.html}, thus Pollen will look for @tt{template.html}.
 
-@racketmod[#:file "main.html.pt" pollen
-<html><head><meta charset="UTF-8"/></head>
-<body style="margin: 30%; border:1px solid black; 
-font-size: 150%; font-family: sans-serif; background:yellow">
-◊(->html doc)</body>
-</html>
+So let's create @tt{template.html}. Make a new file that with the following lines and save it to the same directory as @tt{uptown.html.pm}:
+
+@filebox["template.html"]{@verbatim{<html><head><meta charset="UTF-8"/></head>
+<body style="background: #f6f6f6">
+<div style="background: white; margin: 3em; 
+border:10px double gray; padding: 3em; font-size: 130%;">
+This file is ◊here 
+<hr />
+◊->html{◊doc}
+</div></body></html>
+}}
+
+This is a simple HTML file that should look familiar, except for the two template variables. The first, @tt{here}, contains the name of the current source file. As before, the lozenge character marks it as a Pollen command rather than text, and you write it as @tt{◊here}. The other command, @tt{◊->html{◊doc}}, takes the content from the source file, which is contained in a variable called @tt{doc}, and converts it to HTML with a Pollen function called @tt{->html}.
+
+Go back to your web browser and reload @link["http://localhost:8080/uptown.html"]{@tt{uptown.html}}. The page will be rendered with the new @tt{template.html}. As before, you can edit the template or the source and the project server will dynamically regenerate the output file.
+
+@section{PS for Scribble users}
+
+Pollen can also be used as a dynamic preview server for Scribble files. From your terminal, do the following:
+
+@verbatim{
+> cd [directory containing your Scribble files]
+> raco pollen start}
+
+On the @link["http://localhost:8080/index.ptree"]{project dashboard}, you'll see your @tt{[filename].scrbl} files listed as @tt{[filename].html}. This may not represent the ultimate structure of your Scribble project — you may end up combining multiple Scribble source files into one HTML file, or making multiple HTML files from one Scribble source — but it's handy for checking your work as you go.
+
+
+
+@section{The end of the beginning}
+
+Now you've seen the key features of Pollen. What do you think?
+
+@itemlist[
+
+@item{@italic{``So it's like WordPress, but harder to use?''} I was a happy WordPress user for several years. If you need a blog, it's great. But the farther you get from blogs, the more it becomes like teaching an elephant to pirouette. And for those who like to solve problems with programming, PHP is, um, limited.}
+
+@item{@italic{``What about pairing a Python template system and Python web server?''} Good idea. I even tried it. But Python template systems don't offer you Python — they offer you pidgin dialects that ain't very Pythonic. Also, Python's handing of markup-based data structures is cumbersome.}
+
+@item{@italic{``Haven't you heard of Jekyll?''} Yes. If everything you need to write is expressible in Markdown, it's great. If you need more than that, you're stuck.}
+
+@item{@italic{``Sounds a lot like LaTeX. Why not use that?''} Also a good idea. LaTeX gets a lot of things right. But it wasn't designed for web publishing.}
+
+
+@item{@italic{``Eh, there are plenty of adequate options. Why should I learn a system written in Racket, which I've never used?''} A salient objection. It's also the question I asked myself before I committed to Racket. But publishing systems that are author- or designer-friendly tend to be programmer-hostile, and vice versa. Racket is the only language I found that could handle every mode with ease.}
+
+
 ]
 
-OK, enough of the contrived examples. Let's make some magic.
+Don't take my word for it. The rest of this documentation will show you the cool, useful, and sophisticated things you can do with Pollen. If there's another tool that still suits you better, great. But I didn't make Pollen because I'm a programmer. I'm a writer who wants to make electronic books that are better than the ones we have now.  And for that, I needed a better tool.

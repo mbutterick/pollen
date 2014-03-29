@@ -27,8 +27,8 @@
 (define command-marker #\◊)
 (define template-command-marker #\∂)
 
-(define default-template-prefix "main")
-(define fallback-template "fallback.html.pt")
+(define default-template-prefix "template")
+(define fallback-template "fallback.html")
 (define template-meta-key "template")
 
 (define main-pollen-export 'doc) ; don't forget to change fallback template too

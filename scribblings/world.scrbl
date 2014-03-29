@@ -69,7 +69,7 @@ Name of the root node in a decoded pagetree. It's ignored by the code, so its on
 @defthing[world:command-marker char? #:value #\◊]
 The magic character that indicates a Pollen command, function, or variable.
 
-@defthing[world:default-template-prefix string? #:value "main"]
+@defthing[world:default-template-prefix string? #:value "template"]
 Prefix of the default template.
 
 @defthing[world:fallback-template string? #:value "fallback.html.pt"]
