@@ -1,5 +1,5 @@
 #lang info
 (define collection "pollen")
-(define scribblings '(("scribblings/pollen.scrbl" ())))
-(define deps '("txexpr" "sugar" "markdown"))
+(define deps '("base" "txexpr" "sugar" "markdown"))
+(define scribblings '(("scribblings/pollen.scrbl" (multi-page))))
 (define raco-commands '(("pollen" pollen/raco "issue Pollen command" #f)))
