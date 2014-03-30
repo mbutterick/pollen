@@ -1,0 +1,97 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    padding: 1em;
+    font-family: "Source Code Pro";
+}
+
+div#pollen-logo {
+    display: none;
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    width: 76;
+    height: 76;
+    background-size: 100%;
+}
+
+table {
+    border-collapse:collapse;
+    width: 100%;
+    max-width: 700px;
+}
+
+
+tr > td:first-child {
+    width: 0%;
+}
+
+th, tr > td:first-child {
+    font-family: "Source Code Pro";
+    background: #f6f6f6;
+    text-align: left; 
+}
+
+th {
+    background: white;
+    font-weight: normal;
+    padding: 0.4em;   
+}
+
+
+
+tr, tr + tr {
+    border-top: 1px solid #ccc;
+}
+
+td {
+    font-size: 16px;
+    line-height: 1.35;
+    text-align: center; 
+}
+
+td.no-files {
+    padding: 0.4em;   
+}
+
+
+a:hover {
+    background: #eee;
+}
+
+a {
+    text-decoration: none;
+    color: #6a6;
+    display: block;
+    padding: 0.4em;   
+}
+
+th a {
+    font-weight: normal;
+    display: inline;
+    color: black;
+    padding-left: 0;
+}
+
+th a:hover {
+    background: inherit;
+    color: #6a6;
+}
+
+
+.file-ext {
+    color: #bbb;
+}
+
+a:active {
+    text-decoration: underline;
+}
+
+tt {
+    font-family: "Source Code Pro";
+    font-size: 100%;
+    white-space: pre-wrap;
+}

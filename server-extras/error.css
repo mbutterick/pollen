@@ -1,0 +1,37 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: "Source Code Pro";
+    padding: 1em;
+}
+
+div.title, p {
+        padding: 0.4em;
+}
+
+div.title {
+        border-top: 1px solid #ccc;
+        border-bottom: 1px solid #ccc;
+}
+
+
+
+pre {
+    background: #ffe;
+    padding: 0.8em;
+    line-height: 1.5;
+    font-size: 80%;
+    font-family: "Source Code Pro";
+    white-space: pre-wrap;       
+    overflow: auto;
+    max-height: 240px;
+}
+
+.error {
+    font-weight: bolder;
+    color: red;
+    font-size: large;
+}

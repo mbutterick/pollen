@@ -1,44 +1,58 @@
-#lang racket
+#lang racket/base
 
-(define POLLEN_PREPROC_EXT 'pp)
-(define POLLEN_SOURCE_EXT 'p)
-(define POLLEN_MAP_EXT 'pmap)
-(define TEMPLATE_FILE_PREFIX #\-)
-(define POLLEN_EXPRESSION_DELIMITER #\◊)
-(define TEMPLATE_FIELD_DELIMITER POLLEN_EXPRESSION_DELIMITER)
+(provide (prefix-out world: (all-defined-out)))
 
-(define DEFAULT_TEMPLATE "-main.html")
-(define TEMPLATE_META_KEY 'template)
+(define pollen-version "0.001")
 
-(define DEFAULT_MAP "main.pmap")
+(define preproc-source-ext 'pp)
+(define markup-source-ext 'pm)
+(define markdown-source-ext 'pmd)
+(define null-source-ext 'p)
+(define pagetree-source-ext 'ptree)
+(define template-source-ext 'pt)
+(define scribble-source-ext 'scrbl)
 
-(define MAIN_POLLEN_EXPORT 'body)
-;(define META_POLLEN_TAG 'metas)
-;(define META_POLLEN_EXPORT 'metas)
+(define mode-auto 'auto)
+(define mode-preproc 'pre)
+(define mode-markup 'markup)
+(define mode-markdown 'markdown)
+(define mode-pagetree 'ptree)
+(define mode-template 'template)
 
-(define EXTRAS_DIR (string->path "requires"))
+(define decodable-extensions (list markup-source-ext pagetree-source-ext))
 
-(define MISSING_FILE_BOILERPLATE "#lang planet mb/pollen\n\n")
+(define default-pagetree "index.ptree")
+(define pagetree-root-node 'pagetree-root)
 
-(define LINE_BREAK "\n")
-(define PARAGRAPH_BREAK "\n\n")
+(define command-marker #\◊)
+(define template-command-marker #\∂)
 
-(define OUTPUT_SUBDIR 'public)
+(define default-template-prefix "template")
+(define fallback-template "fallback.html")
+(define template-meta-key "template")
 
-(define RACKET_PATH "/Users/MB/git/racket/racket/bin/racket")
+(define main-pollen-export 'doc) ; don't forget to change fallback template too
+(define meta-pollen-export 'metas)
 
-(define POLLEN_ROOT 'main)
+(define project-require "project-require.rkt")
 
-; todo: this doesn't work as hoped
-;(define-syntax POLLEN_ROOT_TAG
-;  (λ(stx) (datum->syntax stx 'main)))
+(define newline "\n")
+(define linebreak-separator newline)
+(define paragraph-separator "\n\n")
 
-; get the starting directory, which is the parent of 'run-file
-(define START_DIR
-  (let-values ([(dir ignored also-ignored)
-                (split-path (find-system-path 'run-file))])
-    (if (equal? dir 'relative)
-        (string->path ".")
-        dir)))
+(define paths-excluded-from-dashboard
+  (map string->path (list "poldash.css" "compiled")))
 
-(provide (all-defined-out))
+
+(define current-project-root (make-parameter (current-directory)))
+
+(define current-server-port (make-parameter 8080))
+
+(define dashboard-css "poldash.css")
+
+(define server-extras-dir "server-extras")
+(define current-server-extras-path (make-parameter #f))
+
+(define check-project-requires-in-render? (make-parameter #t))
+
+(define clone-directory-name "clone")

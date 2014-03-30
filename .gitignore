@@ -1,9 +1,5 @@
 # for Racket
-**/compiled/
-doc/*
-
-*.dep
-*.zo
+compiled/
 
 # for Mac OS X
 .DS_Store
@@ -17,3 +13,10 @@ Icon
 # Files that might appear on external disk
 .Spotlight-V100
 .Trashes
+
+# generated documentation
+pollen/doc/*
+pollen/scribblings/*.js
+pollen/scribblings/*.css
+pollen/scribblings/*.html
+pollen/scribblings/pollen/*
