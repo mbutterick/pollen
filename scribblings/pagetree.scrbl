@@ -213,4 +213,4 @@ Report whether @racket[_pagenode] is in @racket[_pagetree].
 [p pathish?])
 pagenode?
 ]
-Convert path @racket[_p] to a pagenode — meaning, make it relative to @racket[world:current-project-root], run it through @racket[->output-path], and convert it to a symbol. Does not tell you whether the resultant pagenode actually exists in the current pagetree (for that, use @racket[in-pagetree?]).
+Convert path @racket[_p] to a pagenode — meaning, make it relative to @racket[current-project-root], run it through @racket[->output-path], and convert it to a symbol. Does not tell you whether the resultant pagenode actually exists in the current pagetree (for that, use @racket[in-pagetree?]).

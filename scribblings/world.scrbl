@@ -31,7 +31,7 @@ Name of directory where server support files live.
 
 @defparam[world:current-server-extras-path dir path?
           #:value #f]{
-A parameter that reports the path to the directory of support files for the development server. Initialized to @racket[#f], but set to a proper value when @racketmodname[pollen/server] runs.}
+A parameter that reports the path to the directory of support files for the project server. Initialized to @racket[#f], but set to a proper value when the server runs.}
 
 
 @deftogether[(

@@ -33,17 +33,17 @@
                                  #:exclude-tags [excluded-tags '()])
   ((xexpr/c)  
    (#:txexpr-tag-proc (txexpr-tag? . -> . txexpr-tag?)
-                         #:txexpr-attrs-proc (txexpr-attrs? . -> . txexpr-attrs?)
-                         #:txexpr-elements-proc (txexpr-elements? . -> . txexpr-elements?)
-                         #:block-txexpr-proc (block-txexpr? . -> . xexpr?)
-                         #:inline-txexpr-proc (txexpr? . -> . xexpr?)
-                         #:string-proc (string? . -> . xexpr?)
-                         #:symbol-proc (symbol? . -> . xexpr?)
-                         #:valid-char-proc (valid-char? . -> . xexpr?)
-                         #:cdata-proc (cdata? . -> . xexpr?)
-                         #:exclude-tags (listof symbol?)  ) . ->* . txexpr?)
+                      #:txexpr-attrs-proc (txexpr-attrs? . -> . txexpr-attrs?)
+                      #:txexpr-elements-proc (txexpr-elements? . -> . txexpr-elements?)
+                      #:block-txexpr-proc (block-txexpr? . -> . xexpr?)
+                      #:inline-txexpr-proc (txexpr? . -> . xexpr?)
+                      #:string-proc (string? . -> . xexpr?)
+                      #:symbol-proc (symbol? . -> . xexpr?)
+                      #:valid-char-proc (valid-char? . -> . xexpr?)
+                      #:cdata-proc (cdata? . -> . xexpr?)
+                      #:exclude-tags (listof symbol?)  ) . ->* . txexpr?)
   
-
+  
   (let loop ([x txexpr])
     (cond
       [(txexpr? x) (let-values([(tag attrs elements) (txexpr->values x)]) 
@@ -132,8 +132,9 @@
 
 ;; insert nbsp between last two words
 (define+provide/contract (nonbreaking-last-space x #:nbsp [nbsp (->string #\u00A0)] 
-                                                 #:minimum-word-length [minimum-word-length 6])
-  ((txexpr?) (#:nbsp string? #:minimum-word-length integer?) . ->* . txexpr?)
+                                                 #:minimum-word-length [minimum-word-length 6]
+                                                 #:last-word-proc [last-word-proc (λ(x) x)])
+  ((txexpr?) (#:nbsp string? #:minimum-word-length integer? #:last-word-proc procedure?) . ->* . txexpr?)
   
   ;; todo: parameterize this, as it will be different for each project
   (define tags-to-pay-attention-to '(p aside)) ; only apply to paragraphs
@@ -149,7 +150,8 @@
                                   ; first char of other-chars will be the space, so use cdr
                                   (string-append (list->string (reverse (cdr other-chars))) (->string nbsp))
                                   (list->string (reverse other-chars))))
-          `(,front-chars (span [[pollen "no-hyphens"]] ,(list->string (reverse last-word-chars)))))
+          (define last-word (list->string (reverse last-word-chars)))
+          `(,front-chars ,(last-word-proc last-word))) ; don't concatenate last word bc last-word-proc might be a txexpr wrapper
         (list str)))
   
   (define (find-last-word-space x) ; recursively traverse xexpr
@@ -213,8 +215,8 @@
 
 ;; turn the right items into <br> tags
 (define+provide/contract (detect-linebreaks xc 
-                                             #:separator [newline world:linebreak-separator]
-                                             #:insert [linebreak '(br)])
+                                            #:separator [newline world:linebreak-separator]
+                                            #:insert [linebreak '(br)])
   ((txexpr-elements?) (#:separator string? #:insert xexpr?) . ->* . txexpr-elements?)
   ;; todo: should this test be not block + not whitespace?
   (define not-block? (λ(i) (not (block-txexpr? i))))
@@ -295,7 +297,7 @@
                                             #:separator [sep world:paragraph-separator]
                                             #:linebreak-proc [linebreak-proc detect-linebreaks])
   ((txexpr-elements?) (#:tag symbol? #:separator string? #:linebreak-proc (txexpr-elements? . -> . txexpr-elements?)) 
-   . ->* . txexpr-elements?)
+                      . ->* . txexpr-elements?)
   
   ;; prepare elements for paragraph testing
   (define (prep-paragraph-flow xc)

@@ -56,22 +56,22 @@ After that, you can update the package from the command line:
 
 @section{Source formats}
 
-@defmodulelang[pollen]
+[pollen]
 
 This puts Pollen into automatic mode, where the source file is interpreted according to the file extension. 
 
-If the file extension is ``@(format ".~a" world:markup-source-ext)'', the source is interpreted as @racket[pollen/markup].
+If the file extension is ``@(format ".~a" world:markup-source-ext)'', the source is interpreted as [pollen/markup].
 
-If the file extension is ``@(format ".~a" world:preproc-source-ext)'', the source is interpreted as @racket[pollen/pre] (``pre'' stands for ``preprocessor'').
+If the file extension is ``@(format ".~a" world:preproc-source-ext)'', the source is interpreted as [pollen/pre] (``pre'' stands for ``preprocessor'').
 
-If the file extension is ``@(format ".~a" world:markdown-source-ext)'', the source is interpreted as @racket[pollen/markdown].
+If the file extension is ``@(format ".~a" world:markdown-source-ext)'', the source is interpreted as [pollen/markdown].
 
-@defmodulelang[pollen/markup]
+[pollen/markup]
 
 
-@defmodulelang[pollen/pre]
+[pollen/pre]
 
-@defmodulelang[pollen/markdown]
+[pollen/markdown]
 
 @include-section["command.scrbl"]
 

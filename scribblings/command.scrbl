@@ -572,7 +572,7 @@ I agree.}
 
 @racketoutput{@literal{'(div "Roomy!" "\n" "\n" "I agree.")}}
 
-For the long version, please see @secref{Spaces, Newlines, and Indentation}.
+For the long version, please see [future link: Spaces, Newlines, and Indentation].
 
 
 Third, within a multiline text argument, newline characters become individual strings that are not merged with adjacent text. So what you end up with is a list of strings, not a single string. That's why in the last example, we got this:

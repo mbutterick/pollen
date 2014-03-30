@@ -18,9 +18,9 @@
 bytes?]
 Renders @racket[_source-path]. The rendering behavior depends on the type of source file:
 
-A @racketmodname[pollen/pre] file is rendered without a template.
+A [pollen/pre] file is rendered without a template.
 
-A @racketmodname[pollen/markup] or @racketmodname[pollen/markdown] file is rendered with a template. If no template is provided with @racket[_template-path], Pollen finds one using @racket[get-template-for].
+A [pollen/markup] or [pollen/markdown] file is rendered with a template. If no template is provided with @racket[_template-path], Pollen finds one using @racket[get-template-for].
 
 Be aware that rendering with a template uses @racket[include-template] within @racket[eval]. For complex pages, it can be slow the first time. Caching is used to make subsequent requests faster.
 
