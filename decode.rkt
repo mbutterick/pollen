@@ -1,5 +1,5 @@
 #lang racket/base
-(require xml txexpr sugar racket/match racket/list (prefix-in html: css-tools/html))
+(require xml txexpr sugar racket/match racket/list (prefix-in html: pollen/html))
 (require "debug.rkt" "world.rkt")
 
 

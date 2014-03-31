@@ -172,7 +172,7 @@ Because it's convenient, Pollen categorizes tagged X-expressions into two catego
           #:value html-block-tags]{
 A parameter that defines the set of tags that @racket[decode] will treat as blocks. This parameter is initialized with the HTML block tags, namely:
 
-@code[(format "~a" (dynamic-require 'css-tools/html 'block-tags))]}
+@code[(format "~a" (dynamic-require 'pollen/html 'block-tags))]}
 
 
 @defproc[
