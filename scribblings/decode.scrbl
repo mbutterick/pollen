@@ -1,6 +1,6 @@
 #lang scribble/manual
 
-@(require scribble/eval pollen/decode pollen/world (for-label racket (except-in pollen #%module-begin) pollen/world pollen/cache pollen/decode txexpr xml))
+@(require scribble/eval pollen/decode pollen/world (prefix-in html: pollen/html) (for-label racket (except-in pollen #%module-begin) pollen/world pollen/cache pollen/decode txexpr xml pollen/html))
 
 @(define my-eval (make-base-eval))
 @(my-eval `(require pollen pollen/decode xml racket/list txexpr))
@@ -169,10 +169,10 @@ The @racket[_tags-to-exclude] argument is useful if you're decoding source that'
 Because it's convenient, Pollen categorizes tagged X-expressions into two categories: @italic{block} and @italic{inline}. Why is it convenient? When using @racket[decode], you often want to treat the two categories differently. Not that you have to. But this is how you can.
 
 @defparam[project-block-tags block-tags (listof txexpr-tag?)
-          #:value html-block-tags]{
+          #:value block-tags]{
 A parameter that defines the set of tags that @racket[decode] will treat as blocks. This parameter is initialized with the HTML block tags, namely:
 
-@code[(format "~a" (dynamic-require 'pollen/html 'block-tags))]}
+@code[(format "~a" html:block-tags)]}
 
 
 @defproc[
