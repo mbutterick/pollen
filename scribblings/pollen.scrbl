@@ -12,6 +12,9 @@
 
 @author[(author+email "Matthew Butterick" "mb@mbtype.com")]
 
+@defmodulelang[pollen]
+
+
 Pollen is a publishing system that helps authors create beautiful and functional web-based books. Pollen includes tools for writing, designing, programming, testing, and publishing.
 
 I used Pollen to create my book @link["http://practicaltypography.com"]{Butterick's Practical Typography}. Sure, go take a look. Is it better than the last digital book you encountered? Yes it is. Would you like your book to look like that? If so, keep reading.
