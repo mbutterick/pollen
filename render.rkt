@@ -209,68 +209,57 @@
   (> (len (get-output-string port-for-catching-file-info)) 0))
 
 
-;; cache some modules to speed up eval.
-;; Do it in separate module so as not to pollute this one.
-;; todo: macrofy these lists of modules
-;; Don't, however, put the project-requires here,
-;; because they will no longer be subject to rerequire.
-(module my-module-cache racket/base
-  (require web-server/templates 
-           xml
-           racket/port 
-           racket/file 
-           racket/rerequire 
-           racket/contract 
-           racket/list
-           racket/match
-           racket/syntax
-           pollen/cache
-           pollen/debug
-           pollen/decode
-           pollen/file
-           pollen/main
-           pollen/reader-base
-           pollen/pagetree
-           pollen/tag
-           pollen/template
-           pollen/world
-           pollen/project
-           sugar
-           txexpr)
-  (define-namespace-anchor my-module-cache-ns-anchor)
-  (provide my-module-cache-ns-anchor))
+;; set up namespace for module caching
+(module caching-module racket/base
+  (define-namespace-anchor caching-module-nsa)
+  (provide caching-module-nsa))
+(require 'caching-module)
+
+;; (car (current-eval-namespace-cache)) = namespace containing cached modules
+;; (cdr (current-eval-namespace-cache)) = list of cached modules
+(define current-eval-namespace-cache (make-parameter (cons (namespace-anchor->namespace caching-module-nsa) '())))
+
+(define/contract+provide (add-module-to-current-eval-cache module-name)
+  (symbol? . -> . void?)
+  (define cache-ns (car (current-eval-namespace-cache)))
+  (define cached-modules (cdr (current-eval-namespace-cache)))
+  (when (not (member module-name cached-modules))
+    (eval `(require ,module-name) cache-ns)
+    (current-eval-namespace-cache (cons cache-ns (cons module-name cached-modules)))))
+
+(define initial-modules-to-cache '(web-server/templates 
+                           xml
+                           racket/port 
+                           racket/file 
+                           racket/rerequire 
+                           racket/contract 
+                           racket/list
+                           racket/match
+                           racket/syntax
+                           pollen/cache
+                           pollen/debug
+                           pollen/decode
+                           pollen/file
+                           pollen/main
+                           pollen/reader-base
+                           pollen/pagetree
+                           pollen/tag
+                           pollen/template
+                           pollen/world
+                           pollen/project
+                           sugar
+                           txexpr))
 
 
-(require 'my-module-cache)
-(define cache-ns (namespace-anchor->namespace my-module-cache-ns-anchor))
+(for-each add-module-to-current-eval-cache initial-modules-to-cache)
 
 
 (define/contract (render-through-eval expr-to-eval)
   (list? . -> . bytes?)
+  (define cache-ns (car (current-eval-namespace-cache)))
+  (define cached-modules (cdr (current-eval-namespace-cache)))
   (parameterize ([current-namespace (make-base-namespace)]
                  [current-output-port (current-error-port)]
                  [current-pagetree (make-project-pagetree (world:current-project-root))])
-    (for-each (λ(mod-name) (namespace-attach-module cache-ns mod-name)) 
-              `(web-server/templates 
-                xml
-                racket/port 
-                racket/file 
-                racket/rerequire 
-                racket/contract 
-                racket/list
-                racket/match
-                racket/syntax
-                pollen/debug
-                pollen/cache
-                pollen/decode
-                pollen/file           
-                pollen/main
-                pollen/reader-base
-                pollen/pagetree
-                pollen/project
-                pollen/tag
-                pollen/template
-                pollen/world
-                sugar
-                txexpr))   
+    (for-each (λ(mod-name) (namespace-attach-module cache-ns mod-name)) cached-modules)   
     (string->bytes/utf-8 (eval expr-to-eval (current-namespace)))))
