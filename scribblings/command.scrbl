@@ -2,7 +2,7 @@
 @(require scribble/bnf scribble/eval "utils.rkt"
           (for-syntax racket/base)
           (for-label (only-in scribble/reader
-                              use-at-readtable) pollen/world pollen/tag))
+                              use-at-readtable)))
 
 @(define read-eval (make-base-eval))
 @(interaction-eval #:eval read-eval (require (for-syntax racket/base)))
@@ -297,7 +297,7 @@ For instance, suppose we want to use @tt{map} as a tag even though Racket is usi
 @racketoutput{@literal{'(my-map "How I would love this to be a map.")}}
 
 
-But @code{my-map} is not the tag we want. We need to define @code{my-map} to be a tag function for @tt{map}. We can do this with the Pollen helper @racket[make-tag-function]. That function lives in @racketmodname[pollen/tag], so we @racket[require] that too:
+But @code{my-map} is not the tag we want. We need to define @code{my-map} to be a tag function for @tt{map}. We can do this with the Pollen helper @racket[make-tag-function]. That function lives in @racket[pollen/tag], so we @racket[require] that too:
 
 
 @codeblock|{

@@ -78,7 +78,6 @@ If the file extension is ``@(format ".~a" world:markdown-source-ext)'', the sour
 
 @include-section["command.scrbl"]
 
-
 @include-section["module-reference.scrbl"]
 
 
