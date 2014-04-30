@@ -27,6 +27,7 @@
 (define-syntax (select-syntax-for-command stx)
   (datum->syntax stx 
                  (case arg-command-name
+                   [("test" "xyzzy") (handle-test)]
                    [(#f "help") (handle-help)]
                    [("start") (handle-start first-arg-or-current-dir port-arg)]
                    [("render") (handle-render first-arg-or-current-dir rest-args)]

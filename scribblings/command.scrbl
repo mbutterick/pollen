@@ -628,6 +628,4 @@ The answer is to use a @italic{rest argument} in the function, which takes the `
 
 @section{Further reading}
 
-The Pollen language is a variant of Racket's own text-processing language, called Scribble. So many things that are true about Scribble are also true about Pollen. For the sake of clarity & brevity, I've omitted them from this summary. But if you want the full story:
-
-[insert]
+The Pollen language is a variant of Racket's own text-processing language, called Scribble. So many things that are true about Scribble are also true about Pollen. For the sake of clarity & brevity, I've omitted them from this summary. But if you want the full story, see @secref["reader" #:doc '(lib "scribblings/scribble/scribble.scrbl")] in the Scribble documentation.

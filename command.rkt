@@ -2,6 +2,9 @@
 (require pollen/world)
 (provide (all-defined-out))
 
+(define (handle-test)
+  `(displayln "raco pollen is installed correctly"))
+
 (define (handle-help)
   `(displayln (format "Pollen commands:
 help                  show this message

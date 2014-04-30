@@ -40,50 +40,18 @@ Or, if you can find a better digital-publishing tool, use that. But I'm never go
 
 @include-section["acknowledgments.scrbl"]
 
-
-@section{Installation}
-
-Install Racket, which includes DrRacket.
-
-Install Pollen from the command line:
-@verbatim{raco pkg install pollen}
-
-After that, you can update the package from the command line:
-@verbatim{raco pkg update pollen}
-
-
+@include-section["installation.scrbl"]
 
 @include-section["quick.scrbl"]
 
+@include-section["raco.scrbl"]
 
-
-@section{Source formats}
-
-[pollen]
-
-This puts Pollen into automatic mode, where the source file is interpreted according to the file extension. 
-
-If the file extension is ``@(format ".~a" world:markup-source-ext)'', the source is interpreted as [pollen/markup].
-
-If the file extension is ``@(format ".~a" world:preproc-source-ext)'', the source is interpreted as [pollen/pre] (``pre'' stands for ``preprocessor'').
-
-If the file extension is ``@(format ".~a" world:markdown-source-ext)'', the source is interpreted as [pollen/markdown].
-
-[pollen/markup]
-
-
-[pollen/pre]
-
-[pollen/markdown]
+@include-section["formats.scrbl"]
 
 @include-section["command.scrbl"]
 
+@;include-section["server.scrbl"]
+
 @include-section["module-reference.scrbl"]
 
-
-@section{License & source code}
-
-This module is licensed under the LGPL.
-
-Source repository at @link["http://github.com/mbutterick/pollen"]{http://github.com/mbutterick/pollen}. Suggestions & corrections welcome.
-
+@include-section["license.scrbl"]
