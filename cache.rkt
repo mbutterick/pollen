@@ -44,6 +44,3 @@
     (cache path))
   
   (hash-ref (cache-ref path) key))
-
-
-

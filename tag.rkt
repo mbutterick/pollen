@@ -27,5 +27,3 @@
       `(,id ,@(if (equal? attrs null) null (list (reverse attrs))) ,@body)))
   
   (apply compose1 (map make-one-tag ids)))
-
-

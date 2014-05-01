@@ -4,4 +4,5 @@
 
 (module reader racket/base
   (require pollen/reader-base)
-  (define+provide-reader-in-mode world:mode-auto)) ; because default mode in file is auto
+  ;; because default mode in file is auto
+  (define+provide-reader-in-mode world:mode-auto)) 

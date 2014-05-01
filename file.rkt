@@ -111,6 +111,7 @@
   (coerce/symbol? . -> . (listof complete-path?))
   (map ->complete-path (filter (λ(i) (has-ext? i ext)) (directory-list (world:current-project-root)))))
 
+
 (define+provide (racket-source? x)
   (->boolean (and (pathish? x) (has-ext? (->path x) 'rkt))))
 
@@ -119,9 +120,11 @@
 (define (unsaved-source? path-string)
   ((substring (->string path-string) 0 7) . equal? . "unsaved"))
 
+
 (define+provide (magic-directory? path)
   (and (directory-exists? path) 
        (or (ends-with? (path->string path) "compiled"))))
+
 
 (define+provide (pollen-related-file? file)
   (ormap (λ(proc) (proc file)) (list
