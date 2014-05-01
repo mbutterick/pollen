@@ -27,7 +27,7 @@ Click the @onscreen{Run} button. In the interactions window, you'll see the resu
 
 @nested[#:style 'code-inset]{@racketvalfont{Hello world}}
 
-Not bad. I think Pollen just won the @link["http://en.wikipedia.org/wiki/List_of_Hello_world_program_examples"]{Hello World Competition}.
+Not bad. I think Pollen just won the @link["http://en.wikipedia.org/wiki/List_of_Hello_world_program_examples"]{Hello World Tournament}.
 
 You can work with Pollen source files in any text editor. The key advantage of DrRacket is that you can preview the results by running the file.
 

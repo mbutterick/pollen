@@ -44,6 +44,10 @@ Or, if you can find a better digital-publishing tool, use that. But I'm never go
 
 @include-section["quick.scrbl"]
 
+@include-section["story.scrbl"]
+
+@;include-section["essentials.scrbl"]
+
 @include-section["raco.scrbl"]
 
 @include-section["formats.scrbl"]
@@ -55,3 +59,5 @@ Or, if you can find a better digital-publishing tool, use that. But I'm never go
 @include-section["module-reference.scrbl"]
 
 @include-section["license.scrbl"]
+
+@index-section[]
