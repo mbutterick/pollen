@@ -259,4 +259,3 @@
 (define-syntax-rule (doc-render-examples e ...)
   (nested "Renders like:\n"
           (nested #:style 'inset (nested #:style 'inset e ...))))
-
