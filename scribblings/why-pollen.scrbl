@@ -52,4 +52,3 @@ A CSS preprocessor automates the generation of CSS data. These preprocessors do 
 @subsection{Why not a dynamic templating system, like Bottle?}
 
 
-
