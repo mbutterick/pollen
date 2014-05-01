@@ -25,13 +25,13 @@ For ease of use, the behavior of the Pollen language departs from the standard R
 
 @subsection{Command syntax using ◊}
 
-Commands must start with the special lozenge character @litchar{◊}. Other material is interpreted as plain text. See @secref["◊ command overview"] for more.
+Commands must start with the special lozenge character @litchar{◊}. Other material is interpreted as plain text. See @secref["reader"] for more.
 
 @bold{How is this different from Racket?} In Racket, everything is a command, and plain text must be quoted.
 
 @subsection{Any command is valid}
 
-There are no undefined commands in Pollen. If a command has not already been defined, it's treated as a tag function. See @secref["◊ command overview"] for more.
+There are no undefined commands in Pollen. If a command has not already been defined, it's treated as a tag function. See @secref["reader"] for more.
 
 @bold{How is this different from Racket?} In Racket, if you try to treat an identifier as a function before defining it with @racket[define], you'll get an error.
 
