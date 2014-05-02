@@ -11,7 +11,7 @@
 
 @section{Source formats}
 
-@defmodulelang*[(pollen/pre pollen/markdown pollen/markup pollen/pagetree)]
+@defmodulelang*[(pollen/pre pollen/markdown pollen/markup pollen/ptree)]
 
 
 The Pollen language is divided into variants, or @italic{dialects}, that are tailored to suit each of the core source formats.

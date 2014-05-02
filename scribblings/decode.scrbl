@@ -1,6 +1,6 @@
 #lang scribble/manual
 
-@(require scribble/eval pollen/decode pollen/world (prefix-in html: pollen/html) (for-label racket (except-in pollen #%module-begin) pollen/world pollen/cache pollen/decode txexpr xml pollen/html))
+@(require scribble/eval pollen/decode pollen/world (prefix-in html: pollen/html) txexpr (for-label racket (except-in pollen #%module-begin) pollen/world pollen/cache pollen/decode txexpr xml pollen/html))
 
 @(define my-eval (make-base-eval))
 @(my-eval `(require pollen pollen/decode xml racket/list txexpr))

@@ -13,6 +13,13 @@ A set of global values and parameters that are used throughout the Pollen system
 
 All identifiers are exported with the prefix @racket[world:], and are so documented below. 
 
+
+@defthing[world:default-port integer? #:value 8080]
+@defparam[world:current-server-port port integer?
+          #:value world:default-port]{
+A parameter that sets the HTTP port for the project server. Initialized to @racket[world:default-port], which defaults to 8080.}
+
+
 @deftogether[(
 @defthing[world:main-pollen-export symbol? #:value 'doc]
 @defthing[world:meta-pollen-export symbol? #:value 'metas]
