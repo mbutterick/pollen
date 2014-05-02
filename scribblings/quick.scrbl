@@ -1,6 +1,6 @@
 #lang scribble/manual
 
-@title{Quick start}
+@title[#:tag "quick-tour"]{Quick tour}
 
 @(define (link-tt url) (link url (tt url)))
 
@@ -274,7 +274,7 @@ That's not right. What happened?
 
 We marked up the source using a combination of standard HTML tags (@tt{strong}, @tt{em}) and nonstandard ones (@tt{headline}, @tt{items}, @tt{item}, @tt{link}). This is valid Pollen markup. (In fact, if you look at @link["http://localhost:8080/out/markup.html"]{the generated source}, you'll see that they didn't disappear.) But since we're targeting HTML, we need to convert our custom tags into valid HTML tags.
 
-For that, we'll make a special file called @tt{project-require.rkt}. This is a file in the standard Racket language that provides helper functions to decode the source. The definitions won't make sense yet. But this is the quick start, so all you need to do is copy, paste, and save:
+For that, we'll make a special file called @tt{project-require.rkt}. This is a file in the standard Racket language that provides helper functions to decode the source. The definitions won't make sense yet. But this is the quick tour, so all you need to do is copy, paste, and save:
 
 @racketmod[#:file "project-require.rkt" racket/base
 (require pollen/tag)

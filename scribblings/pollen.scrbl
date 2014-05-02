@@ -38,7 +38,6 @@ Or, if you can find a better digital-publishing tool, use that. But I'm never go
 
 @local-table-of-contents[]
 
-@include-section["acknowledgments.scrbl"]
 
 @include-section["installation.scrbl"]
 
@@ -46,7 +45,7 @@ Or, if you can find a better digital-publishing tool, use that. But I'm never go
 
 @include-section["story.scrbl"]
 
-@;include-section["essentials.scrbl"]
+@include-section["system.scrbl"]
 
 @include-section["raco.scrbl"]
 
@@ -57,6 +56,8 @@ Or, if you can find a better digital-publishing tool, use that. But I'm never go
 @;include-section["server.scrbl"]
 
 @include-section["module-reference.scrbl"]
+
+@include-section["acknowledgments.scrbl"]
 
 @include-section["license.scrbl"]
 

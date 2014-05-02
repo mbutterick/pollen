@@ -2,7 +2,7 @@
 
 
 
-@title{The story of Pollen}
+@title{Backstory}
 
 I created Pollen to overcome limitations & frustrations I repeatedly encountered with existing web-publishing tools. 
 
@@ -44,6 +44,8 @@ Why not? All these tools promised a great leap forward in solving the web-develo
 
 @item{@bold{Mandatory separation of code, presentation, and content.} This principle has often been @link["http://alistapart.com/article/separationdilemma/"]{held out} as an ideal in web development. But it's also counterintuitive, because an HTML page naturally contains all three. If you want to separate them, your tools should let you. But if you don't, your tools shouldn't make you.}
 
+@item{@bold{Compromised template languages.} Seems like every programming language has at least 10 templating systems for HTML, all of which require you to learn a new ``template language'' that offers the worst of both worlds: fewer features and different syntax than the underlying language.}
+
 @item{@bold{Steep learning curves.} Web programmers have often chided designers for not knowing @link["http://elliotjaystocks.com/blog/web-designers-who-cant-code/"]{how to code}. But programming-based web-development tools have often had a high initial learning curve that requires you to throw out your existing workflow. Programmers built these tools — no surprise that programmers have been more comfortable with them.}
 
 ]
@@ -55,7 +57,7 @@ I've tried a lot of these tools over the years. Some I liked. Some I didn't. Inv
 
 In 2008, I launched a website called @link["http://typographyforlawyers.com"]{@italic{Typography for Lawyers}}. Initially, I'd conceived of it as a book. Then I thought ``no one's going to publish that.'' So it became a website, that I aimed to make as book-like as possible. But hand-editing wasn't going to be enough. 
 
-So I used @link["http://wordpress.org"]{WordPress}. The major chore became scraping out all the crap that typically lives in blog templates. Largely because of this, people liked the site, because it didn't look like the usual blog. Even WordPress developer Matt Mullenweg @link["http://ma.tt/2010/04/typography-for-lawyers/"]{called it} ``a cool use of WordPress for a mini-book.''
+So I used @link["http://wordpress.org"]{WordPress}. The major chore became scraping out all the crap that typically lives in blog templates. Largely because of this, people @link["http://ma.tt/2010/04/typography-for-lawyers/"]{liked the site}, because it was simpler & cleaner than the usual WordPress website.
 
 Eventually, a publisher offered to release it as a paperback. Later came the inevitable request to make it into a Kindle book. As a fan of typography, I hate the Kindle. The layout controls are coarse, and so is the reading experience. But I didn't run and hide. Basically a Kindle book is a little website made with 1995-era HTML. So I coded up some tools in Perl to convert my book to Kindle format while preserving the formatting and images as well as possible.
 
@@ -77,9 +79,22 @@ It worked. So well, in fact, that I started thinking about whether I could reimp
 
 So I did. And here we are.
 
-@section{Why Pollen?}
+@section{What is Pollen?}
 
-Pollen is a web-development environment built on top of Scribble and Racket. So far I've optimized Pollen for digital books, because that's mainly what I use it for. But it's good for smaller projects too.
+Pollen is a publishing system built on top of Scribble and Racket. So far I've optimized Pollen for digital books, because that's mainly what I use it for. But it can be used for small projects too.
+
+As a publishing system, Pollen includes:
+
+@itemlist[
+
+@item{@bold{A programming language.} The Pollen language is a variant of Scribble, with specific ``dialects'' tailored to different kinds of source files. You don't need to use the programming features to do useful work, but they're available when you need them.}
+
+@item{@bold{A set of tools & libraries.} Pollen targets HTML output. So it includes a variety of tools that cure common HTML annoyances, including a CSS preprocessor.}
+
+@item{@bold{A development environment.} Pollen works with the DrRacket IDE. It also includes a project web server so you can dynamically preview and revise your publication.}
+
+
+]
 
 Pollen addresses the deficiencies I experienced with other tools:
 
@@ -89,7 +104,10 @@ Pollen addresses the deficiencies I experienced with other tools:
 
 @item{@bold{Flexible blending of code, presentation, and content.} Pollen is a text-based language. So a Pollen source file might have no code at all. But as a dialect of Scribble & Racket, if you want to mix code with content, you can.}
 
+@item{@bold{No template language.} It's not necessary, because you can use the whole Racket language, and all the usual Racket syntax, in every Pollen file.}
+
 @item{@bold{Shallow learning curve.} You don't need to do a lot of setup and configuration to start doing useful work with Pollen. Programmers and non-programmers can easily collaborate. Yes, I concede that if you plan to get serious, you'll need to learn some Racket. I don't think you'll regret it.}
+
 
 ]
 
