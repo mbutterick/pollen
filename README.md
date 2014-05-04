@@ -11,4 +11,4 @@ And update like so:
 
     raco pkg update pollen
 
-Scribble docs are installed with the package. Or you can [read the docs here](http://mbutterick.github.io/pollen/doc/).
+Docs are installed with the package. You can also [read the docs here](http://mbutterick.github.io/pollen/doc/).
