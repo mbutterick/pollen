@@ -88,8 +88,7 @@ Convert @racket[_v] to a pagenode.
 @section{Navigation}
 
 
-@defparam[current-pagetree pagetree pagetree?
-          #:value #f]{
+@defparam[current-pagetree pagetree pagetree?]{
 A parameter that defines the default pagetree used by pagetree navigation functions (e.g., @racket[parent-pagenode], @racket[chidren], et al.) if another is not explicitly specified. Initialized to @racket[#f].}
 
 

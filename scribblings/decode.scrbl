@@ -168,8 +168,7 @@ The @racket[_tags-to-exclude] argument is useful if you're decoding source that'
 
 Because it's convenient, Pollen categorizes tagged X-expressions into two categories: @italic{block} and @italic{inline}. Why is it convenient? When using @racket[decode], you often want to treat the two categories differently. Not that you have to. But this is how you can.
 
-@defparam[project-block-tags block-tags (listof txexpr-tag?)
-          #:value (listof symbol?)]{
+@defparam[project-block-tags block-tags (listof txexpr-tag?)]{
 A parameter that defines the set of tags that @racket[decode] will treat as blocks. This parameter is initialized with the HTML block tags, namely:
 
 @code[(format "~a" html:block-tags)]}
