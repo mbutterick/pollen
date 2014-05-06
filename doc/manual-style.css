@@ -517,13 +517,10 @@ table.tocsublist {
 
 .toptoclink {
     font-weight: bold;
-    font-size: 110%
-}
-
-/* hack to add space around .toptoclink because markup is all td */
-.toptoclink:after {
-    content: " ";
-    font-size: 3rem;
+    font-size: 110%;
+    margin-bottom: 0.5rem;
+    margin-top: 1.5rem;
+    display: inline-block;
 }
 
 .toclink {
