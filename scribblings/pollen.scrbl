@@ -47,6 +47,8 @@ Or, if you can find a better digital-publishing tool, use that. But I'm never go
 
 @include-section["big-picture.scrbl"]
 
+@include-section["poem.scrbl"]
+
 @include-section["raco.scrbl"]
 
 @include-section["formats.scrbl"]

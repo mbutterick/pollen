@@ -6,7 +6,7 @@
 @(my-eval `(require pollen pollen/file))
 
 
-@title{Using @exec{raco pollen}}
+@title[#:tag "raco-pollen"]{Using @exec{raco pollen}}
 
 
 Racket provides centralized command-line options through @racket[raco] (short for @code{racket command}, see @other-doc['(lib "scribblings/raco/raco.scrbl")]). 
@@ -29,6 +29,8 @@ But if you get:
 @verbatim{raco: Unrecognized command: pollen}
 
 You'll need to fix the problem before proceeding, most likely by reinstalling Pollen (see @racket[Installation]).
+
+@margin-note{Pro tip: I have an alias in my @racketfont{.bash_profile} like so: @racketfont{alias polcom=@literal{'}raco pollen@literal{'}}}
 
 @section{@racket[raco pollen]}
 

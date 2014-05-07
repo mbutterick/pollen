@@ -1,0 +1,12 @@
+<html>
+<head>
+<meta charset="UTF-8" />
+<link rel="stylesheet" type="text/css" href="styles.css" />
+</head>
+<body>
+<root><div class="figure"><img src="space.jpg" alt="" /><p class="caption"></p></div><h1 id="introduction">Introduction</h1><p>This tutorial provides a brief introduction to the Racket programming language by using one of its picture-drawing libraries. Even if you don’t intend to use Racket for your artistic endeavours, the picture library supports interesting and enlightening examples. After all, a picture is worth five hundred "hello world"s.</p><p>Along the same lines, we assume that you will run the examples using <a href="http://racket-lang.org/">DrRacket</a>. Using DrRacket is the fastest way to get a sense of what the language and system feels like, even if you eventually use Racket with Emacs, vi, or some other editor.</p><h2 id="ready">Ready&hellip;</h2><p><a href="http://racket-lang.org/">Download Racket</a>, install, and then start DrRacket.</p><h2 id="set">Set&hellip;</h2><blockquote><p>See <a href="file:///Users/MB/git/racket/racket/doc/drracket/interface-essentials.html">the DrRacket documentation</a> for a brief overview of the DrRacket IDE.</p></blockquote><p>To draw pictures, we must first load some picture functions, which are part of a library for creating slide presentations. Copy the following into the <em>definitions area</em>, which is the top text area that you see in DrRacket:</p><pre><code>#lang slideshow</code></pre><p>Then click the Run button. You’ll see the text caret move to the bottom text area, which is the <em>interactions area</em>.</p><p>If you’ve used DrRacket before, you might need to reset DrRacket to use the language declared in the source via the <strong>Language|Choose Language&hellip;</strong> menu item before clicking <strong>Run</strong>.</p><h2 id="go">Go!</h2><p>When you type an expression after the &gt; in the interactions window and hit Enter, DrRacket evaluates the expression and prints its result. An expression can be just a value, such as the number 5 or the string &ldquo;art gallery&rdquo;:</p><pre><code>&gt; 5
+5
+&gt; "art gallery"
+"art gallery"</code></pre><p>An expression can also be a function call. To call a function, put an open parenthesis before the function name, then expressions for the function arguments, and then a close parenthesis.</p></root>
+</body>
+</html>

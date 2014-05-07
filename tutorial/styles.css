@@ -1,0 +1,48 @@
+
+body {
+    margin: 0 auto 0 auto;
+    padding: 0;
+}
+
+
+h1 {
+    font-size: 40px;
+    font-family: "Alegreya Sans";   
+    font-weight: 700;
+    color: white; 
+    margin-top: -5rem;
+    margin-left: 15%;
+    margin-right: 15%;
+}
+
+
+h2 {
+    font-size: 22px;
+    font-family: "Alegreya Sans";   
+    font-weight: 700; 
+    margin-left: 15%;
+    margin-right: 15%;
+}
+
+
+p {
+    color: #333;
+    font-size: 22px;
+    line-height: 1.4;
+    font-family: "Alegreya";
+    margin-left: 15%;
+    margin-right: 15%;
+}
+
+pre {
+    margin-left: 15%;
+    margin-right: 15%;
+}
+
+code {
+    font-family: "Source Code Pro";
+}
+
+img {
+    width: 100%;
+}

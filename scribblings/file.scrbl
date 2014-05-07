@@ -5,7 +5,7 @@
 @(define my-eval (make-base-eval))
 @(my-eval `(require pollen pollen/file))
 
-@title{File}
+@title[#:tag "file-types"]{File}
 
 @defmodule[pollen/file]
 
