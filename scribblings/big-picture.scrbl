@@ -1,6 +1,6 @@
 #lang scribble/manual
 
-@title{System overview}
+@title{The big picture}
 
 A summary of the key components & concepts of the Pollen publishing system and how they fit together. If you've completed the @secref["quick-tour"], this will lend some context to what you saw. The next tutorials will make more sense if you read this first.
 
