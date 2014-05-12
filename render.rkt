@@ -168,7 +168,7 @@
              [metas (cached-require ,source-path ',world:meta-pollen-export)])
          (local-require pollen/pagetree pollen/template pollen/top)
          (define here (metas->here metas))
-         (include-template #:command-char ,world:command-marker ,(->string (find-relative-path source-dir template-path))))))
+         (include-template #:command-char ,world:command-marker (file ,(->string (find-relative-path source-dir template-path)))))))
   
   (time (parameterize ([current-directory source-dir]) ; because include-template wants to work relative to source location
           (render-through-eval expr-to-eval))))
