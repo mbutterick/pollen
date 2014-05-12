@@ -4,7 +4,7 @@
 }
 
 body {
-    font-family: "Source Code Pro";
+    font-family: "Source Code Pro", "Menlo", "Consolas", monospace;
     padding: 1em;
 }
 
@@ -24,7 +24,7 @@ pre {
     padding: 0.8em;
     line-height: 1.5;
     font-size: 80%;
-    font-family: "Source Code Pro";
+    font-family: "Source Code Pro", "Menlo", "Consolas", monospace;
     white-space: pre-wrap;       
     overflow: auto;
     max-height: 240px;

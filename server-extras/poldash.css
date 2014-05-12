@@ -5,7 +5,7 @@
 
 body {
     padding: 1em;
-    font-family: "Source Code Pro";
+    font-family: "Source Code Pro", "Menlo", "Consolas", monospace;
 }
 
 div#pollen-logo {
@@ -30,7 +30,7 @@ tr > td:first-child {
 }
 
 th, tr > td:first-child {
-    font-family: "Source Code Pro";
+    font-family: "Source Code Pro", "Menlo", "Consolas", monospace;
     background: #f6f6f6;
     text-align: left; 
 }
@@ -92,7 +92,7 @@ a:active {
 
 
 tt {
-    font-family: "Source Code Pro";
+    font-family: "Source Code Pro", "Menlo", "Consolas", monospace;
     font-size: 100%;
     white-space: pre-wrap;
 }
