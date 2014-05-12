@@ -212,8 +212,8 @@
   (define base (world:current-project-root))
   (define file (url->path (request-uri req)))
   (if (eq? (system-path-convention-type) 'windows)
-      (build-path base file)
-      (reroot-path file base)))
+      (build-path base file) ; because url->path returns a relative path for 'windows
+      (reroot-path file base))) ; and a complete path for 'unix
 
 ;; default route
 (define (route-default req)  
