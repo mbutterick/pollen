@@ -161,7 +161,7 @@
   (define (make-path-row filename-path)
     (define filename (->string filename-path))
     (define possible-source (->source-path (build-path dashboard-dir filename-path)))
-    (define source (and possible-source (->string possible-source)))
+    (define source (and possible-source (->string (find-relative-path dashboard-dir possible-source))))
     `(tr ,@(map make-link-cell 
                 (append (list                          
                          (cond ; main cell
@@ -209,7 +209,11 @@
 
 (define/contract (req->path req)
   (request? . -> . path?)
-  (reroot-path (url->path (request-uri req)) (world:current-project-root)))
+  (define base (world:current-project-root))
+  (define file (url->path (request-uri req)))
+  (if (eq? (system-path-convention-type) 'windows)
+      (build-path base file)
+      (reroot-path file base)))
 
 ;; default route
 (define (route-default req)  
