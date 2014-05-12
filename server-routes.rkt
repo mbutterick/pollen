@@ -168,7 +168,7 @@
                            [(directory-exists? (build-path dashboard-dir filename)) ; links subdir to its dashboard
                             (cons (format "~a/~a" filename world:default-pagetree) (format "~a/" filename))]
                            [(and source (equal? (get-ext source) "scrbl")) 
-                            (cons #f `(a ((href ,filename)) ,filename (span ((class "file-ext")) " (from " ,(path->string (find-relative-path dashboard-dir source)) ")")))]
+                            (cons #f `(a ((href ,filename)) ,filename (span ((class "file-ext")) " (from " ,(->string (find-relative-path dashboard-dir source)) ")")))]
                            [source (cons #f `(a ((href ,filename)) ,filename (span ((class "file-ext")) "." ,(get-ext source))))]
                            [else   (cons filename filename)])
                          
