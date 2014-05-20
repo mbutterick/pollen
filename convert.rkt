@@ -20,9 +20,8 @@
       [else x])))
 
 
-(define/contract+provide (html->pollen html-string #:p-breaks [p-breaks #f])
-  ((string?) (#:p-breaks boolean?) . ->* . string?)
-  
+(define/contract+provide (html->xexpr html-string)
+  (string? . -> . xexpr?)
   (use-html-spec #f)
   (define xexpr-results 
     (let loop ([elem (read-html-as-xml (open-input-string html-string))])
@@ -33,9 +32,14 @@
         [(struct element (start stop name attributes content)) `(,name ,(map loop attributes) ,@(map loop content))]
         [(list elements ...) (map loop elements)]
         [else (format "unknown item: ~a" elem)])))
-  
+
   ; xexpr-results will be a list with whitespace elements, so strip those out
-  (xexpr->pollen #:p-breaks p-breaks (car (filter-not (λ(x) (and (string? x) (regexp-match #px"\\s+" x))) xexpr-results)))) 
+  (car (filter-not (λ(x) (and (string? x) (regexp-match #px"\\s+" x))) xexpr-results)))
+
+
+(define/contract+provide (html->pollen html-string #:p-breaks [p-breaks #f])
+  ((string?) (#:p-breaks boolean?) . ->* . string?)
+  (xexpr->pollen #:p-breaks p-breaks (html->xexpr html-string))) 
 
 
 (define/contract+provide (url->pollen url-or-string #:p-breaks [p-breaks #f])
@@ -50,4 +54,4 @@
   ; (xexpr->pollen '(p ((class "foo")) "You are" "\n\n" "puppy"))
   ; (xexpr->pollen '(p ((class "foo")) "You are " (em "so") " puppy"))
   ;  (display (html->pollen #:p-breaks #t (file->string "index.html"))))
-  )
+)
