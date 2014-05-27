@@ -26,7 +26,7 @@
 
 
 (define+provide/contract (select* key value-source)
-  (coerce/symbol? (or/c hash? txexpr?) . -> . (or/c #f (listof txexpr-element?)))
+  (coerce/symbol? (or/c hash? txexpr? pagenode? pathish?) . -> . (or/c #f (listof txexpr-element?)))
   (define metas-result (and (not (txexpr? value-source)) (select-from-metas key value-source)))
   (define doc-result (select-from-doc key value-source))
   (define result (append (or (and metas-result (list metas-result)) null) (or doc-result null)))
