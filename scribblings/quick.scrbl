@@ -166,7 +166,14 @@ Let's suppose you want to change the inset to 30%. Without a preprocessor, you'd
 </body>
 ]
 
-The ◊ character is called a @italic{lozenge}. In Pollen, the lozenge is a special character that marks anything Pollen should interpret as a command (rather than plain text). The whole command @tt{◊define[my-inset]{30%}} means ``create a variable called @tt{my-inset} and give it the value @tt{30%}.''
+The ◊ character is called a @italic{lozenge}. In Pollen, the lozenge is a special character that marks anything Pollen should interpret as a command (rather than plain text). 
+
+How to type a lozenge:
+@(linebreak)@bold{Mac}: option + shift + V
+@(linebreak)@bold{Windows}: holding down alt, type 9674 on the num pad
+@(linebreak)@bold{Ubuntu}: ctrl + shift + U, then 25CA
+
+The whole command @tt{◊define[my-inset]{30%}} means ``create a variable called @tt{my-inset} and give it the value @tt{30%}.''
 
 Then put the variable into the HTML like so, this time using the ◊ character with the variable name in the two places the value appears:
 

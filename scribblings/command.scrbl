@@ -25,9 +25,9 @@ Here's how you type it:
 
 @bold{Mac}: option + shift + V
 @(linebreak)
-@bold{Windows}:
+@bold{Windows}: holding down alt, type 9674 on the num pad
 @(linebreak)
-@bold{Ubuntu}:
+@bold{Ubuntu}: ctrl + shift + U, then 25CA
 
 Still, if you don't want to use the lozenge as your command marker, you can use something else. Set Pollen's @racket[world:command-marker] value to whatever character you want. 
 

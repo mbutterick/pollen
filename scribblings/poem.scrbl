@@ -425,6 +425,11 @@ And these are the equivalent commands in Pollen:
     ◊(define color "blue")
 }}
 
+How to type a lozenge:
+@(linebreak)@bold{Mac}: option + shift + V
+@(linebreak)@bold{Windows}: holding down alt, type 9674 on the num pad
+@(linebreak)@bold{Ubuntu}: ctrl + shift + U, then 25CA
+
 @subsection{Racket basics (if you're not familiar)}
 
 
