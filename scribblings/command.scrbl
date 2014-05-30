@@ -1,7 +1,7 @@
 #lang scribble/manual
 @(require scribble/bnf scribble/eval "utils.rkt"
           (for-syntax racket/base)
-          (for-label (only-in scribble/reader
+          (for-label pollen/world (only-in scribble/reader
                               use-at-readtable)))
 
 @(define read-eval (make-base-eval))
