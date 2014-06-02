@@ -282,7 +282,7 @@ In other words, when you clicked on the filename link in the dashboard, Pollen r
 
 If you go back to the dashboard and click on the filename link again, you'll see the same output file. If the source file hasn't changed, Pollen will just show you the output file that's already been rendered. 
 
-But if you like, open your @racketfont{poem.html.pp} source file in DrRacket, edit the first line, and save the file:
+But if you like, open your @racketfont{poem.html.pp} source file in DrRacket, edit the first two lines, and save the file:
 
 @nested[#:style 'code-inset]{@verbatim{
 #lang pollen
