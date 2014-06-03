@@ -15,7 +15,10 @@ This module also provides everything from @racket[sugar/coerce/value].
 
 @defproc[
 (->html
-[xexpr xexpr?])
+[xexpr xexpr?]
+[#:tag html-tag (or/c #f txexpr-tag?) #f]
+[#:attrs html-attrs (or/c #f txexpr-attrs?) #f]
+[#:splice splice-html? boolean? #f])
 string?]
 Convert @racket[_xexpr] to an HTML string. Similar to @racket[xexpr->string], but consistent with the HTML spec, text that appears within @code{script} or @code{style} blocks will not be escaped.
 
@@ -24,6 +27,26 @@ Convert @racket[_xexpr] to an HTML string. Similar to @racket[xexpr->string], bu
 (xexpr->string tx)
 (->html tx)
 ]
+
+The optional keyword arguments @racket[_html-tag] and @racket[_html-attrs] let you replace the tag and attributes in the generated HTML.
+
+@examples[#:eval my-eval
+(define tx '(root ((id "huff")) "Bunk beds"))
+(->html tx)
+(->html tx #:tag 'div)
+(->html tx #:attrs '((id "doback")))
+(->html tx #:tag 'div #:attrs '((id "doback")))
+]
+
+The @racket[_splice-html?] option will strip the outer tag from the generated HTML.
+
+@examples[#:eval my-eval
+(define tx '(root (p "Orange marmalade")))
+(->html tx)
+(->html tx #:splice #t)
+]
+
+
 
 Be careful not to pass existing HTML strings into this function, because the angle brackets will be escaped. Fine if that's what you want, but you probably don't.
 

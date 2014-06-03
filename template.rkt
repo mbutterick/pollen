@@ -70,11 +70,19 @@
       (error (format "get-doc: no source found for '~a' in directory ~a" pagenode-or-path (current-directory)))))
 
 
+(define (trim-outer-tag html)
+  (define matches (regexp-match #px"<.*?>(.*)</.*?>" html))
+  (define paren-match (cadr matches))
+  paren-match)
 
-
-(define+provide/contract (->html x)
-  (xexpr? . -> . string?)  
-  (xexpr->html x))
+(define+provide/contract (->html x #:tag [tag #f] #:attrs [attrs #f] #:splice [splice? #f])
+  ((xexpr?) (#:tag (or/c #f txexpr-tag?) #:attrs (or/c #f txexpr-attrs?) #:splice boolean?) . ->* . string?)
+  (define html-tag (or tag (get-tag x)))
+  (define html-attrs (or attrs (get-attrs x)))
+  (define html (xexpr->html (make-txexpr html-tag html-attrs (get-elements x))))
+  (if splice?
+      (trim-outer-tag html)
+      html))
 
 
 (provide when/block)
