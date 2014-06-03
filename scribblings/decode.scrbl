@@ -45,7 +45,15 @@ Recall from [future link: Pollen mechanics] that any tag can have a function att
 
 For instance, here's how @racket[decode] is attached to @racket[root] in @italic{Butterick's Practical Typography}. There's not much to it —
 
-[update with actual code]
+@racketblock[
+(define (root . items)
+  (decode (make-txexpr 'root '() items)
+          #:txexpr-elements-proc detect-paragraphs
+          #:block-txexpr-proc (compose1 hyphenate wrap-hanging-quotes 
+                insert-nonbreaking-last-space)
+          #:string-proc (compose1 smart-quotes smart-dashes)
+          #:exclude-tags '(style script)))
+          ]
 
 This illustrates another important point: even though @racket[decode] presents an imposing list of arguments, you're unlikely to use all of them at once. These represent possibilities, not requirements. For instance, let's see what happens when @racket[decode] is invoked without any of its optional arguments.
 
