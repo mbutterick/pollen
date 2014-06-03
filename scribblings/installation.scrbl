@@ -8,9 +8,9 @@
 
 @title{Installation}
 
-Install Racket, which includes DrRacket.
+@link["http://download.racket-lang.org/"]{Install Racket}, which includes DrRacket.
 
-Install Pollen from the command line:
+From the command line, install Pollen:
 @verbatim{raco pkg install pollen}
 
 After that, you can update the package from the command line:
