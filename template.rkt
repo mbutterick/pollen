@@ -51,7 +51,7 @@
 
 
 (define (get-metas pagenode-or-path)
-;  ((or/c pagenode? pathish?) . -> . hash?)
+  ;  ((or/c pagenode? pathish?) . -> . hash?)
   (define source-path (->source-path (cond
                                        [(pagenode? pagenode-or-path) (pagenode->path pagenode-or-path)]
                                        [else pagenode-or-path])))
@@ -61,7 +61,7 @@
 
 
 (define (get-doc pagenode-or-path)
-;  ((or/c pagenode? pathish?) . -> . (or/c txexpr? string?))
+  ;  ((or/c pagenode? pathish?) . -> . (or/c txexpr? string?))
   (define source-path (->source-path (cond
                                        [(pagenode? pagenode-or-path) (pagenode->path pagenode-or-path)]
                                        [else pagenode-or-path])))
@@ -77,13 +77,20 @@
 
 (define+provide/contract (->html x #:tag [tag #f] #:attrs [attrs #f] #:splice [splice? #f])
   ((xexpr?) (#:tag (or/c #f txexpr-tag?) #:attrs (or/c #f txexpr-attrs?) #:splice boolean?) . ->* . string?)
-  (define html-tag (or tag (get-tag x)))
-  (define html-attrs (or attrs (get-attrs x)))
-  (define html (xexpr->html (make-txexpr html-tag html-attrs (get-elements x))))
-  (if splice?
-      (trim-outer-tag html)
-      html))
 
+  (when (and (not (txexpr? x)) attrs (not tag))
+      (error '->html "can't use attribute list '~a without a #:tag argument" attrs))
+      
+  (if (or tag (txexpr? x))
+      (let ()
+        (define html-tag (or tag (get-tag x)))
+        (define html-attrs (or attrs (and (txexpr? x) (get-attrs x)) null))
+        (define html-elements (or (and (txexpr? x) (get-elements x)) (list x)))
+        (define html (xexpr->html (make-txexpr html-tag html-attrs html-elements)))
+        (if splice?
+            (trim-outer-tag html)
+            html))
+      (xexpr->html x)))  
 
 (provide when/block)
 (define-syntax (when/block stx)

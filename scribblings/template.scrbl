@@ -28,7 +28,7 @@ Convert @racket[_xexpr] to an HTML string. Similar to @racket[xexpr->string], bu
 (->html tx)
 ]
 
-The optional keyword arguments @racket[_html-tag] and @racket[_html-attrs] let you replace the tag and attributes in the generated HTML.
+The optional keyword arguments @racket[_html-tag] and @racket[_html-attrs] let you set the outer tag and attributes for the generated HTML. If @racket[_xexpr] already has an outer tag or attributes, they will be replaced.
 
 @examples[#:eval my-eval
 (define tx '(root ((id "huff")) "Bunk beds"))
@@ -38,12 +38,29 @@ The optional keyword arguments @racket[_html-tag] and @racket[_html-attrs] let y
 (->html tx #:tag 'div #:attrs '((id "doback")))
 ]
 
-The @racket[_splice-html?] option will strip the outer tag from the generated HTML.
+Whereas if @racket[_xexpr] has no tag or attributes, they will be added. If you supply attributes without a tag, you'll get an error.
 
 @examples[#:eval my-eval
-(define tx '(root (p "Orange marmalade")))
+(define x "Drum kit")
+(->html x)
+(->html x #:tag 'div)
+(->html x #:tag 'div #:attrs '((id "doback")))
+(->html x #:attrs '((id "doback")))
+]
+
+
+If the generated HTML has an outer tag, the @racket[_splice-html?] option will strip it off. Otherwise this option has no effect.
+
+@examples[#:eval my-eval
+(define tx '(root (p "Chicken nuggets")))
 (->html tx)
 (->html tx #:splice #t)
+(define x "Fancy sauce")
+(->html x)
+(code:comment @#,t{This next one won't do anything})
+(->html x #:splice #t)
+(code:comment @#,t{Adds the outer tag, but then #:splice removes it})
+(->html x #:tag 'div #:attrs '((id "doback")) #:splice #t)
 ]
 
 
