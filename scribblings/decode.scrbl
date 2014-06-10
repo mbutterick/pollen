@@ -342,8 +342,8 @@ In pro typography, quotation marks at the beginning of a line or paragraph are o
 
 This function will simply insert the @racket['squo] and @racket['dquo] tags, which provide hooks that let you do the actual hanging via CSS, like so (actual measurement can be refined to taste):
 
-@verbatim{.squo {margin-left: -0.25em;}
-.dquo {margin-left: -0.50em;}
+@verbatim{squo {margin-left: -0.25em;}
+dquo {margin-left: -0.50em;}
 }
 
 Be warned: there are many edge cases this function does not handle well.
