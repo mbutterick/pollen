@@ -1,6 +1,6 @@
 #lang racket/base
 (require racket/file racket/rerequire racket/path racket/match)
-(require sugar "file.rkt" "cache.rkt" "world.rkt" "debug.rkt" "pagetree.rkt" "project.rkt")
+(require sugar "file.rkt" "cache.rkt" "world.rkt" "debug.rkt" "pagetree.rkt" "project.rkt" "template.rkt")
 
 
 ;; when you want to generate everything fresh, 
@@ -190,7 +190,7 @@
                         (parameterize ([current-directory (world:current-project-root)])
                           (let ([source-metas (cached-require source-path 'metas)])
                             (and ((->symbol world:template-meta-key) . in? . source-metas)
-                                 (build-path source-dir (get source-metas (->string world:template-meta-key)))))) ; path based on metas
+                                 (build-path source-dir (select-from-metas (->string world:template-meta-key) source-metas))))) ; path based on metas
                         (build-path (world:current-project-root) 
                                     (add-ext world:default-template-prefix (get-ext (->output-path source-path))))))) ; path to default template
         (build-path (world:current-server-extras-path) world:fallback-template)))) ; fallback template
