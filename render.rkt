@@ -36,7 +36,7 @@
   (() #:rest (listof (or/c #f complete-path?)) . ->* . boolean?)
   (define key (make-mod-dates-key rest-paths))
   (or (not (key . in? . modification-date-hash))  ; no stored mod date
-      (not (equal? (map path->mod-date-value key) (get modification-date-hash key))))) ; data has changed
+     (not (equal? (map path->mod-date-value key) (get modification-date-hash key))))) ; data has changed
 
 
 (define/contract+provide (render-batch . xs)
@@ -47,15 +47,15 @@
   ;; Using reset-modification-dates is sort of like session control.
   (reset-modification-dates) 
   (for-each (λ(x) ((if (pagetree-source? x)
-                       render-pagetree
-                       render-from-source-or-output-path) x)) xs))
+                      render-pagetree
+                      render-from-source-or-output-path) x)) xs))
 
 
 (define/contract+provide (render-pagetree pagetree-or-path)
   ((or/c pagetree? pathish?) . -> . void?)
   (define pagetree (if (pagetree? pagetree-or-path)
-                       pagetree-or-path
-                       (cached-require pagetree-or-path world:main-pollen-export)))
+                      pagetree-or-path
+                      (cached-require pagetree-or-path world:main-pollen-export)))
   (parameterize ([current-directory (world:current-project-root)])
     (for-each render-from-source-or-output-path (map ->complete-path (pagetree->list pagetree)))))
 
@@ -75,8 +75,8 @@
   (complete-path? . -> . (values complete-path? complete-path?))
   ;; file-proc returns two values, but ormap only wants one
   (define file-proc (ormap (λ(test file-proc) (and (test source-or-output-path) file-proc))
-                           (list has/is-null-source? has/is-preproc-source? has/is-markup-source? has/is-scribble-source? has/is-markdown-source? has/is-template-source?)
-                           (list ->null-source+output-paths ->preproc-source+output-paths ->markup-source+output-paths ->scribble-source+output-paths ->markdown-source+output-paths ->template-source+output-paths)))
+                          (list has/is-null-source? has/is-preproc-source? has/is-markup-source? has/is-scribble-source? has/is-markdown-source? has/is-template-source?)
+                          (list ->null-source+output-paths ->preproc-source+output-paths ->markup-source+output-paths ->scribble-source+output-paths ->markdown-source+output-paths ->template-source+output-paths)))
   (file-proc source-or-output-path))
 
 
@@ -95,9 +95,9 @@
 (define/contract (render-needed? source-path template-path output-path)
   (complete-path? (or/c #f complete-path?) complete-path? . -> . boolean?)
   (or (not (file-exists? output-path))
-      (modification-date-expired? source-path template-path)
-      (and (not (null-source? source-path)) (file-needed-rerequire? source-path))
-      (and (world:check-project-requires-in-render?) (project-requires-changed? source-path))))
+     (modification-date-expired? source-path template-path)
+     (and (not (null-source? source-path)) (file-needed-rerequire? source-path))
+     (and (world:check-project-requires-in-render?) (project-requires-changed? source-path))))
 
 
 (define/contract+provide (render-to-file-if-needed source-path [template-path #f] [maybe-output-path #f] #:force [force #f])
@@ -119,8 +119,8 @@
   (define render-proc 
     (cond
       [(ormap (λ(test render-proc) (and (test source-path) render-proc))
-              (list has/is-null-source? has/is-preproc-source? has/is-markup-source? has/is-scribble-source? has/is-markdown-source? has/is-template-source?)
-              (list render-null-source render-preproc-source render-markup-or-markdown-source render-scribble-source render-markup-or-markdown-source render-preproc-source))] 
+             (list has/is-null-source? has/is-preproc-source? has/is-markup-source? has/is-scribble-source? has/is-markdown-source? has/is-template-source?)
+             (list render-null-source render-preproc-source render-markup-or-markdown-source render-scribble-source render-markup-or-markdown-source render-preproc-source))] 
       [else (error (format "render: no rendering function found for ~a" source-path))]))
   
   (message (format "render: ~a" (file-name-from-path source-path)))
@@ -183,17 +183,18 @@
   (complete-path? . -> . (or/c #f complete-path?))
   (match-define-values (source-dir _ _) (split-path source-path))
   (and (templated-source? source-path) ; doesn't make sense if it's not a templated source format
-       (or ; Build the possible paths and use the first one that either exists, or has existing source (template, preproc, or null)
-        (ormap (λ(p) (if (ormap file-exists? (list p (->template-source-path p) (->preproc-source-path p) (->null-source-path p))) p #f)) 
+      (let ([output-path (->output-path source-path)])
+        (or ; Build the possible paths and use the first one that either exists, or has existing source (template, preproc, or null)
+         (ormap (λ(p) (if (ormap file-exists? (list p (->template-source-path p) (->preproc-source-path p) (->null-source-path p))) p #f)) 
                (filter (λ(x) (->boolean x)) ; if any of the possibilities below are invalid, they return #f 
-                       (list                     
-                        (parameterize ([current-directory (world:current-project-root)])
-                          (let ([source-metas (cached-require source-path 'metas)])
-                            (and ((->symbol world:template-meta-key) . in? . source-metas)
-                                 (build-path source-dir (select-from-metas (->string world:template-meta-key) source-metas))))) ; path based on metas
-                        (and (filename-extension (->output-path source-path)) (build-path (world:current-project-root) 
-                                    (add-ext world:default-template-prefix (get-ext (->output-path source-path)))))))) ; path to default template
-        (build-path (world:current-server-extras-path) world:fallback-template)))) ; fallback template
+                      (list                     
+                       (parameterize ([current-directory (world:current-project-root)])
+                         (let ([source-metas (cached-require source-path 'metas)])
+                           (and ((->symbol world:template-meta-key) . in? . source-metas)
+                               (build-path source-dir (select-from-metas (->string world:template-meta-key) source-metas))))) ; path based on metas
+                       (and (filename-extension output-path) (build-path (world:current-project-root) 
+                                                                        (add-ext world:default-template-prefix (get-ext output-path))))))) ; path to default template
+         (and (filename-extension output-path) (build-path (world:current-server-extras-path) (add-ext world:fallback-template-prefix (get-ext output-path)))))))) ; fallback template
 
 
 (define/contract (file-needed-rerequire? source-path)
@@ -228,27 +229,27 @@
     (current-eval-namespace-cache (cons cache-ns (cons module-name cached-modules)))))
 
 (define initial-modules-to-cache '(web-server/templates 
-                           xml
-                           racket/port 
-                           racket/file 
-                           racket/rerequire 
-                           racket/contract 
-                           racket/list
-                           racket/match
-                           racket/syntax
-                           pollen/cache
-                           pollen/debug
-                           pollen/decode
-                           pollen/file
-                           pollen/main
-                           pollen/reader-base
-                           pollen/pagetree
-                           pollen/tag
-                           pollen/template
-                           pollen/world
-                           pollen/project
-                           sugar
-                           txexpr))
+                                   xml
+                                   racket/port 
+                                   racket/file 
+                                   racket/rerequire 
+                                   racket/contract 
+                                   racket/list
+                                   racket/match
+                                   racket/syntax
+                                   pollen/cache
+                                   pollen/debug
+                                   pollen/decode
+                                   pollen/file
+                                   pollen/main
+                                   pollen/reader-base
+                                   pollen/pagetree
+                                   pollen/tag
+                                   pollen/template
+                                   pollen/world
+                                   pollen/project
+                                   sugar
+                                   txexpr))
 
 
 (for-each add-module-to-current-eval-cache initial-modules-to-cache)

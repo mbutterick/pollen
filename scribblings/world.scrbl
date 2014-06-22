@@ -90,8 +90,8 @@ The magic character that indicates a Pollen command, function, or variable. Init
 @defthing[world:default-template-prefix string?]
 Prefix of the default template. Initialized to @racket["template"].
 
-@defthing[world:fallback-template string?]
-Name of the fallback template (i.e., the template used to render a Pollen markup file when no other template can be found). Initialized to @racket["fallback.html.pt"].
+@defthing[world:fallback-template-prefix string?]
+Used to generate the name of the fallback template (i.e., the template used to render a Pollen markup file when no other template can be found). Prefix is combined with the output suffix of the source file. Initialized to @racket["fallback"].
 
 @defthing[world:template-meta-key symbol?]
 Meta key used to store a template name for that particular source file. Initialized to @racket['template].
