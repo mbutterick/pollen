@@ -27,8 +27,10 @@
                       (require pollen/top pollen/world)
                       (provide (all-from-out pollen/top pollen/world))
                       
-                      ;; for anything defined in pollen source file
-                      (provide (all-defined-out))
+                      ;; provide everything defined in pollen source file
+                      ;; except reader-here-path & reader-mode, which were only for internal use
+                      ;; and will conflict if this source is imported into another
+                      (provide (except-out (all-defined-out) reader-here-path reader-mode))
                       
                       body-exprs (... ...))
                     
