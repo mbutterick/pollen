@@ -28,9 +28,11 @@
                       (provide (all-from-out pollen/top pollen/world))
                       
                       ;; provide everything defined in pollen source file
-                      ;; except reader-here-path & reader-mode, which were only for internal use
-                      ;; and will conflict if this source is imported into another
-                      (provide (except-out (all-defined-out) reader-here-path reader-mode))
+                      ;; change the name of reader-here-path & reader-mode for local use
+                      ;; so they don't conflict if this source is imported into another
+                      (provide (except-out (all-defined-out) reader-here-path reader-mode)
+                               (prefix-out inner: reader-here-path)
+                               (prefix-out inner: reader-mode))
                       
                       body-exprs (... ...))
                     
@@ -39,14 +41,14 @@
                     
                     ;; if reader-here-path is undefined, it will become a proc courtesy of #%top
                     ;; therefore that's how we can detect if it's undefined
-                    (define here-path (if (procedure? reader-here-path) "anonymous-module" reader-here-path))
+                    (define here-path (if (procedure? inner:reader-here-path) "anonymous-module" inner:reader-here-path))
                     
                     
                     ;; set the parser mode based on reader mode
                     ;; todo: this won't work with inline submodules
                     (define parser-mode 
-                      (if (not (procedure? reader-mode))
-                         (if (equal? reader-mode world:mode-auto)
+                      (if (not (procedure? inner:reader-mode))
+                         (if (equal? inner:reader-mode world:mode-auto)
                             (let* ([file-ext-pattern (pregexp "\\w+$")]
                                    [here-ext (string->symbol (car (regexp-match file-ext-pattern here-path)))])
                               (cond
@@ -54,7 +56,7 @@
                                 [(equal? here-ext world:markup-source-ext) world:mode-markup]
                                 [(equal? here-ext world:markdown-source-ext) world:mode-markdown]
                                 [else world:mode-preproc]))
-                            reader-mode)
+                            inner:reader-mode)
                          mode-arg))
                     
                     
