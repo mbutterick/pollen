@@ -85,17 +85,14 @@
                       (define metas (make-hash (map meta-element->assoc meta-elements)))
                       (values doc-without-metas metas)) 
                     
-                    
                     (require racket/list)
+                    
                     (define doc-with-metas
-                      (let ([doc-raw (if (equal? parser-mode world:mode-markdown)
-                                        (apply (compose1 (dynamic-require 'markdown 'parse-markdown) string-append) doc-raw)
-                                        doc-raw)])
                         `(placeholder-root 
                           ,@(cons (meta 'here-path: here-path) 
                                  (if (list? doc-raw) 
                                     (dropf doc-raw (λ(i) (equal? i "\n"))) ; discard all newlines at front of file
-                                    doc-raw))))) 
+                                    doc-raw)))) 
                     
                     (define-values (doc-without-metas metas) (split-metas-to-hash doc-with-metas))
                     
@@ -105,8 +102,8 @@
                                          [(equal? parser-mode world:mode-pagetree) (λ xs ((dynamic-require 'pollen/pagetree 'decode-pagetree) xs))]
                                          ;; 'root is the hook for the decoder function.
                                          ;; If it's not a defined identifier, it just hits #%top and becomes `(root ,@body ...)
-                                         [(or (equal? parser-mode world:mode-markup)
-                                             (equal? parser-mode world:mode-markdown)) root]
+                                         [(equal? parser-mode world:mode-markup) root]
+                                         [(equal? parser-mode world:mode-markdown) (λ xs (apply root (apply (compose1 (dynamic-require 'markdown 'parse-markdown) string-append) xs)))]
                                          ;; for preprocessor output, just make a string.
                                          [else (λ xs (apply string-append (map to-string xs)))]) ; default mode is preprocish
                                       (cdr doc-without-metas))) ;; cdr strips placeholder-root tag
