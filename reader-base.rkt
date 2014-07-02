@@ -27,9 +27,15 @@
                                                   [(symbol? path-string) (symbol->string path-string)]
                                                   [(equal? path-string "unsaved editor") path-string]
                                                   [else (path->string path-string)]))
-                      ,(require+provide-project-require-files path-string)
-                      ,@file-contents) 
-                   file-contents)))
+                      ;; change the name of reader-here-path & reader-mode for local use
+                      ;; so they don't conflict if this source is imported into another
+                      (provide (except-out (all-defined-out) reader-here-path reader-mode)
+                               (prefix-out inner: reader-here-path)
+                               (prefix-out inner: reader-mode)) 
+                   
+                   ,(require+provide-project-require-files path-string)
+                   ,@file-contents)
+    file-contents)))
 
 
 (define-syntax-rule (define+provide-reader-in-mode mode)

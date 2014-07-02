@@ -27,12 +27,7 @@
                       (require pollen/top pollen/world)
                       (provide (all-from-out pollen/top pollen/world))
                       
-                      ;; provide everything defined in pollen source file
-                      ;; change the name of reader-here-path & reader-mode for local use
-                      ;; so they don't conflict if this source is imported into another
-                      (provide (except-out (all-defined-out) reader-here-path reader-mode)
-                               (prefix-out inner: reader-here-path)
-                               (prefix-out inner: reader-mode))
+                      (provide (all-defined-out))
                       
                       body-exprs (... ...))
                     
