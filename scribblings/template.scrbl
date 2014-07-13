@@ -135,4 +135,14 @@ Look up the value of @racket[_key] in @racket[_doc-source]. The @racket[_doc-sou
 (select-from-doc 'nonexistent-key doc)
 ]
 
+@defproc[
+(when/block
+[condition any/c]
+[text-to-insert any/c])
+string?]
+Convenience function for templates that's simpler to use than plain @racket[when]. If @racket[_condition] is true, then put the @racket[_text-to-insert] into the template at the current location. Within a template file, usually invoked like so:
+
+@verbatim{◊when/block[@racketvarfont{condition}]{The text to insert.}}
+
+The inserted text can contain its own nested Pollen commands.
 

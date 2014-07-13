@@ -98,7 +98,7 @@
                                          ;; 'root is the hook for the decoder function.
                                          ;; If it's not a defined identifier, it just hits #%top and becomes `(root ,@body ...)
                                          [(equal? parser-mode world:mode-markup) root]
-                                         [(equal? parser-mode world:mode-markdown) (λ xs (apply root (apply (compose1 (dynamic-require 'markdown 'parse-markdown) string-append) xs)))]
+                                         [(equal? parser-mode world:mode-markdown) (λ xs (apply root (apply (compose1 (dynamic-require 'markdown 'parse-markdown) string-append) (map to-string xs))))]
                                          ;; for preprocessor output, just make a string.
                                          [else (λ xs (apply string-append (map to-string xs)))]) ; default mode is preprocish
                                       (cdr doc-without-metas))) ;; cdr strips placeholder-root tag

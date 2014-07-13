@@ -2,7 +2,7 @@
 
 @(require (for-label pollen/world))
 
-@title{First tutorial}
+@title[#:tag "first-tutorial"]{First tutorial}
 
 In this tutorial, you'll use Pollen to make a single HTML page with a poem. You'll learn about:
 
@@ -20,7 +20,7 @@ In this tutorial, you'll use Pollen to make a single HTML page with a poem. You'
 
 If you want the shortest possible introduction to Pollen, try the @secref["quick-tour"].
 
-@section{Prerequisites}
+@section[#:tag-prefix "tutorial-1"]{Prerequisites}
 
 I'm going to assume that you've already installed Racket and Pollen. If not, do that now.
 
@@ -431,7 +431,6 @@ How to type a lozenge:
 @(linebreak)@bold{Ubuntu}: ctrl + shift + U, then 25CA
 
 @subsection{Racket basics (if you're not familiar)}
-
 
 ``But how am I supposed to know Racket?'' You don't. So we'll start now. Here are the five basic rules of Racket:
 
