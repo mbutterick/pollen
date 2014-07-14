@@ -50,7 +50,7 @@ For instance, here's how @racket[decode] is attached to @racket[root] in @italic
   (decode (make-txexpr 'root '() items)
           #:txexpr-elements-proc detect-paragraphs
           #:block-txexpr-proc (compose1 hyphenate wrap-hanging-quotes 
-                insert-nonbreaking-last-space)
+                nonbreaking-last-space)
           #:string-proc (compose1 smart-quotes smart-dashes)
           #:exclude-tags '(style script)))
           ]
