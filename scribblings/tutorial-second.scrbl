@@ -1,6 +1,6 @@
 #lang scribble/manual
 
-@(require (for-label racket pollen/world))
+@(require (for-label racket pollen/world pollen/template pollen/pagetree sugar))
 
 @title[#:tag "second-tutorial"]{Second tutorial}
 
