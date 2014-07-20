@@ -54,6 +54,8 @@ For instance, here's how @racket[decode] is attached to @racket[root] in @italic
           #:exclude-tags '(style script)))
           ]
 
+@margin-note{The @racket[hyphenate] function is not part of Pollen, but rather the @link["http://github.com/mbutterick/hyphenate"]{@racket[hyphenate] package}, which you can install separately.}
+
 This illustrates another important point: even though @racket[decode] presents an imposing list of arguments, you're unlikely to use all of them at once. These represent possibilities, not requirements. For instance, let's see what happens when @racket[decode] is invoked without any of its optional arguments.
 
 @examples[#:eval my-eval
