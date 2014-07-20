@@ -393,7 +393,11 @@ This is exactly equivalent to the previous example. Skeptics are welcome to conf
 
 Finally, notice that in the @racket[select] command, the tag name @racket['h1] is written with a quote mark, whereas @racketfont{doc} is not. This is an easy place to get tripped up, but the rule is simple: you don't use a quote mark when you're referring to the name of an existing function or variable (like @racket[select] or @racketfont{doc}). But you do need a quote mark when you're using the text as a literal value.
 
-@margin-note{Racket (and hence Pollen) makes a distinction between @secref["symbols" #:doc '(lib "scribblings/guide/guide.scrbl")] (e.g. @racket['h1]) and @secref["strings" #:doc '(lib "scribblings/reference/reference.scrbl")] (e.g.  @racket["h1"]). Without getting into the weeds, just note for now that the tag of an X-expression is always a symbol, not a string. But if you write @racketfont{◊(select "h1" doc)}, the command will still work, because Pollen will treat it as @racketfont{◊(select @literal{'}h1 doc)}, consistent with a general policy of not being persnickety about input types when the intention is clear.}
+@(require scribble/core)
+@(define (racketfont* . args)
+  (element 'tt args))
+
+@margin-note{Racket (and hence Pollen) makes a distinction between @secref["symbols" #:doc '(lib "scribblings/guide/guide.scrbl")] (e.g. @racket['h1]) and @secref["strings" #:doc '(lib "scribblings/reference/reference.scrbl")] (e.g.  @racket["h1"]). Without getting into the weeds, just note for now that the tag of an X-expression is always a symbol, not a string. But if you write @racketfont{◊(select "h1" doc)}, the command will still work, because Pollen will treat it as @racketfont*{◊(select 'h1 doc)}, consistent with a general policy of not being persnickety about input types when the intention is clear.}
 
 
 @subsection{Linking to an external CSS file}
