@@ -1,6 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base))
-(require racket/string xml xml/path sugar/define sugar/container sugar/coerce/contract)
+(require racket/string xml xml/path sugar/define sugar/container sugar/coerce)
 (require "file.rkt" txexpr "world.rkt" "cache.rkt" "pagetree.rkt" "debug.rkt")
 
 

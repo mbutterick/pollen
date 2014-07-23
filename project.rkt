@@ -1,5 +1,5 @@
 #lang racket/base
-(require "world.rkt" sugar/define sugar/coerce/contract)
+(require "world.rkt" sugar/define sugar/coerce)
 
 
 (define/contract+provide (get-project-require-files source-path) ; keep contract local to ensure coercion
