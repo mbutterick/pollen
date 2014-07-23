@@ -1,5 +1,5 @@
 #lang racket/base
-(require rackunit)
+(require rackunit racket/port racket/system)
 
 
 (module test-default pollen
@@ -32,3 +32,11 @@
 (check-equal? ptree:doc '(pagetree-root (index (brother sister))))
 
 
+(define (run file)
+  (with-output-to-string (λ() (system (format "racket ~a" file)))))
+
+(check-equal? (run "test.ptree") "'(pagetree-root test ====)")
+(check-equal? (run "test.html.pm") "'(root \"test\" \"\\n\" \"====\")")
+(check-equal? (run "test.html.pmd") "'(root (h1 ((id \"test\")) \"test\"))")
+(check-equal? (run "test.html.pp") "test\n====")
+(check-equal? (run "test.no-ext") "test\n====")
