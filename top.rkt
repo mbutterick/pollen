@@ -11,12 +11,9 @@
 (provide (except-out (all-defined-out) top~)
          (rename-out (top~ #%top)))
 
-;; Allow tag attributes to be specified as follows:
-;; @foo['shape: "square" 'color: "red"]{hello}
 (define-syntax (top~ stx)
   (syntax-case stx ()
     [(_ . id) #'(make-tag-function 'id)]))
-
 
 (define-syntax (def/c stx)
   (syntax-case stx ()
