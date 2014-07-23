@@ -14,28 +14,46 @@
   (λ (path-string p)
     (define read-inner (make-at-reader 
                         #:command-char (if (or (equal? reader-mode world:mode-template) 
-                                              (and (string? path-string) (regexp-match (pregexp (format "\\.~a$" world:template-source-ext)) path-string)))
-                                          world:template-command-marker
-                                          world:command-marker)
+                                               (and (string? path-string) (regexp-match (pregexp (format "\\.~a$" world:template-source-ext)) path-string)))
+                                           world:template-command-marker
+                                           world:command-marker)
                         #:syntax? #t 
                         #:inside? #t))
     (define file-contents (read-inner path-string p))
     (datum->syntax file-contents 
-                  `(module pollen-lang-module pollen 
-                     (define reader-mode ',reader-mode)
-                     (define reader-here-path ,(cond
-                                                 [(symbol? path-string) (symbol->string path-string)]
-                                                 [(equal? path-string "unsaved editor") path-string]
-                                                 [else (path->string path-string)]))
-                     ;; change the name of reader-here-path & reader-mode for local use
-                     ;; so they don't conflict if this source is imported into another
-                     (provide (except-out (all-defined-out) reader-here-path reader-mode)
-                             (prefix-out inner: reader-here-path)
-                             (prefix-out inner: reader-mode)) 
-                     
-                     ,(require+provide-project-require-files path-string)
-                     ,@file-contents)
-                  file-contents)))
+                   `(module repl-wrapper racket/base
+                      (module pollen-lang-module pollen 
+                        (define reader-mode ',reader-mode)
+                        (define reader-here-path ,(cond
+                                                    [(symbol? path-string) (symbol->string path-string)]
+                                                    [(equal? path-string "unsaved editor") path-string]
+                                                    [else (path->string path-string)]))
+                        (define parser-mode
+                          (if (equal? reader-mode world:mode-auto)
+                              (let* ([file-ext-pattern (pregexp "\\w+$")]
+                                     [here-ext (string->symbol (car (regexp-match file-ext-pattern reader-here-path)))])
+                                (cond
+                                  [(equal? here-ext world:pagetree-source-ext) world:mode-pagetree]
+                                  [(equal? here-ext world:markup-source-ext) world:mode-markup]
+                                  [(equal? here-ext world:markdown-source-ext) world:mode-markdown]
+                                  [else world:mode-preproc]))
+                              reader-mode))
+                        ;; change names of exports for local use
+                        ;; so they don't conflict if this source is imported into another
+                        (provide (except-out (all-defined-out) reader-here-path reader-mode parser-mode)
+                                 (prefix-out inner: reader-here-path)
+                                 (prefix-out inner: reader-mode)
+                                 (prefix-out inner: parser-mode)) 
+                        
+                        ,(require+provide-project-require-files path-string)
+                        ,@file-contents)
+                      (require 'pollen-lang-module)
+                      (provide (all-from-out 'pollen-lang-module))
+                      (module+ main
+                        (if (or (equal? inner:parser-mode world:mode-preproc) (equal? inner:parser-mode world:mode-template))
+                            (display doc)
+                            (print doc))))
+                   file-contents)))
 
 
 (define-syntax-rule (define+provide-reader-in-mode mode)

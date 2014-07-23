@@ -34,25 +34,14 @@
                     (require 'inner)
                     
                     
-                    ;; if reader-here-path is undefined, it will become a proc courtesy of #%top
-                    ;; therefore that's how we can detect if it's undefined
-                    (define here-path (if (procedure? inner:reader-here-path) "anonymous-module" inner:reader-here-path))
-                    
-                    
-                    ;; set the parser mode based on reader mode
-                    ;; todo: this won't work with inline submodules
+                    ;; in an inline module, reader-here-path and parser-mode are undefined 
+                    ;; (because there's no reader)
+                    ;; but they'll become tag functions courtesy of #%top
+                    ;; so that's how we can detect if they are undefined
+                    (define here-path 
+                      (if (procedure? inner:reader-here-path) "anonymous-module" inner:reader-here-path))
                     (define parser-mode 
-                      (if (not (procedure? inner:reader-mode))
-                         (if (equal? inner:reader-mode world:mode-auto)
-                            (let* ([file-ext-pattern (pregexp "\\w+$")]
-                                   [here-ext (string->symbol (car (regexp-match file-ext-pattern here-path)))])
-                              (cond
-                                [(equal? here-ext world:pagetree-source-ext) world:mode-pagetree]
-                                [(equal? here-ext world:markup-source-ext) world:mode-markup]
-                                [(equal? here-ext world:markdown-source-ext) world:mode-markdown]
-                                [else world:mode-preproc]))
-                            inner:reader-mode)
-                         mode-arg))
+                      (if (procedure? inner:parser-mode) mode-arg inner:parser-mode))
                     
                     
                     ;; Split out the metas.   
@@ -106,10 +95,4 @@
                     
                     (provide metas doc
                             ;; hide the exports that were only for internal use.
-                            (except-out (all-from-out 'inner) doc-raw #%top))
-                    
-                    ;; for output in DrRacket
-                    (module+ main
-                      (if (or (equal? parser-mode world:mode-preproc) (equal? parser-mode world:mode-template))
-                         (display doc)
-                         (print doc)))))]))))]))
+                            (except-out (all-from-out 'inner) doc-raw #%top))))]))))]))
