@@ -3,9 +3,7 @@
 (require racket/string xml xml/path sugar/define sugar/container sugar/coerce)
 (require "file.rkt" txexpr "world.rkt" "cache.rkt" "pagetree.rkt" "debug.rkt")
 
-
-(require sugar/coerce/value)
-(provide (all-from-out sugar/coerce/value))
+(provide (all-from-out sugar/coerce))
 
 
 (define/contract+provide (metas->here metas)
