@@ -187,7 +187,7 @@
                    (let ([new-car-elements  (match (car elements)
                                               [(? two-or-more-char-string? tcs)
                                                (define str-first (get tcs 0))
-                                               (define str-rest (get tcs 1 'end))
+                                               (define str-rest (get tcs 1 (len tcs)))
                                                (cond
                                                  [(str-first . in? . '("\"" "“"))
                                                   ;; can wrap with any inline tag
