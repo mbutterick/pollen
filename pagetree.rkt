@@ -7,13 +7,13 @@
 
 
 (define+provide (pagenode? x)
-  (->boolean (and (symbol? x) (try (not (whitespace/nbsp? (->string x)))
-                                   (except [exn:fail? (λ(e) #f)])))))
+  (->boolean (and (symbol? x) (with-handlers ([exn:fail? (λ(e) #f)])
+                                (not (whitespace/nbsp? (->string x)))))))
 
 
 (define+provide (pagenodeish? x)
-  (try (pagenode? (->symbol x))
-       (except [exn:fail? (λ(e) #f)])))
+  (with-handlers ([exn:fail? (λ(e) #f)]) 
+    (pagenode? (->symbol x))))
 
 
 (define/contract+provide (->pagenode x)
@@ -34,14 +34,14 @@
        (let ([pagenodes (pagetree->list x)])
          (and
           (andmap (λ(p) (or (pagenode? p) (error (format "validate-pagetree: \"~a\" is not a valid pagenode" p)))) pagenodes)
-          (try (members-unique?/error pagenodes)
-               (except [exn:fail? (λ(e) (error (format "validate-pagetree: ~a" (exn-message e))))]))
+          (with-handlers ([exn:fail? (λ(e) (error (format "validate-pagetree: ~a" (exn-message e))))])
+            (members-unique?/error pagenodes))
           x))))
 
 
 (define+provide (pagetree? x)
-  (try (->boolean (validate-pagetree x))
-       (except [exn:fail? (λ(e) #f)])))
+  (with-handlers ([exn:fail? (λ(e) #f)]) 
+    (->boolean (validate-pagetree x))))
 
 
 (define+provide/contract (directory->pagetree dir)
