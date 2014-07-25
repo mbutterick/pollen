@@ -314,7 +314,7 @@
   
   (let ([elements (prep-paragraph-flow elements)]) 
     (if (ormap my-paragraph-break? elements) ; need this condition to prevent infinite recursion
-        (map wrap-paragraph (splitf-at* elements my-paragraph-break?)) ; split into ¶¶
+        (map wrap-paragraph (filter-split elements my-paragraph-break?)) ; split into ¶¶
         elements)))
 
 
