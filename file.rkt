@@ -9,8 +9,8 @@
 (define+provide/contract (sourceish? x)
   (any/c . -> . coerce/boolean?)
   (define sourceish-extensions (list "svg"))
-  (try ((get-ext x) . in? . sourceish-extensions)
-       (except [exn:fail? (λ(e) #f)])))
+  (with-handlers ([exn:fail? (λ(e) #f)])
+    ((get-ext x) . in? . sourceish-extensions)))
 
 
 ;; compare directories by their exploded path elements,
@@ -73,7 +73,7 @@
                                   x 
                                   #,(if (equal? stem-datum 'scribble)
                                         #'(if (x . has-ext? . 'html) ; different logic for scribble sources
-                                              (add-ext (remove-all-ext x) file-ext)
+                                              (add-ext (remove-ext* x) file-ext)
                                               #f)
                                         #'(add-ext x file-ext))))
                (and result (->path result)))

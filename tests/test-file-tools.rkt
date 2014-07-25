@@ -22,38 +22,6 @@
 (check-true (has-binary-ext? "foo.MP3"))
 (check-false (has-binary-ext? "foo.py"))
 
-
-(define foo-path-strings '("foo" "foo.txt" "foo.bar" "foo.bar.txt"))
-(define-values (foo-path foo.txt-path foo.bar-path foo.bar.txt-path) 
-  (apply values (map ->path foo-path-strings)))
-;; test the sample paths before using them for other tests
-(define foo-paths (list foo-path foo.txt-path foo.bar-path foo.bar.txt-path))
-(for-each check-equal? (map ->string foo-paths) foo-path-strings)
-
-(check-false (has-ext? foo-path 'txt)) 
-(check-true (foo.txt-path . has-ext? . 'txt))
-(check-true ((->path "foo.TXT") . has-ext? . 'txt))
-(check-true (has-ext? foo.bar.txt-path 'txt))
-(check-false (foo.bar.txt-path . has-ext? . 'doc)) ; wrong extension
-
-
-(check-equal? (get-ext (->path "foo.txt")) "txt")
-(check-false (get-ext "foo"))
-
-(check-equal? (add-ext (string->path "foo") "txt") (string->path "foo.txt"))
-(check-equal? (remove-ext foo-path) foo-path)
-(check-equal? (remove-ext (->path ".foo.txt")) (->path ".foo.txt"))
-(check-equal? (remove-ext foo.txt-path) foo-path)
-(check-equal? (remove-ext foo.bar.txt-path) foo.bar-path)
-(check-not-equal? (remove-ext foo.bar.txt-path) foo-path) ; does not remove all extensions
-
-
-(check-equal? (remove-all-ext foo-path) foo-path)
-(check-equal? (remove-all-ext foo.txt-path) foo-path)
-(check-equal? (remove-all-ext (->path ".foo.txt")) (->path ".foo.txt"))
-(check-not-equal? (remove-all-ext foo.bar.txt-path) foo.bar-path) ; removes more than one ext
-(check-equal? (remove-all-ext foo.bar.txt-path) foo-path)
-
 (check-true (preproc-source? "foo.pp"))
 (check-false (preproc-source? "foo.bar"))
 (check-false (preproc-source? #f))
