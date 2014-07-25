@@ -301,7 +301,7 @@
   
   ;; prepare elements for paragraph testing
   (define (prep-paragraph-flow xc)
-    (linebreak-proc (merge-newlines (trim xc whitespace?))))
+    (linebreak-proc (merge-newlines (trimf xc whitespace?))))
   
   
   (define my-paragraph-break? (λ(x) (and (paragraph-break? x #:separator sep) #t)))
