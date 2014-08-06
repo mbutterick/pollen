@@ -164,8 +164,8 @@
        (require (for-syntax racket/base))
        (require web-server/templates pollen/cache pollen/debug)
        ,(require-project-require-files source-path) 
-       (let ([doc (cached-require ,source-path ',world:main-pollen-export)]
-             [metas (cached-require ,source-path ',world:meta-pollen-export)])
+       (let ([doc (cached-require ,(path->string source-path) ',world:main-pollen-export)]
+             [metas (cached-require ,(path->string source-path) ',world:meta-pollen-export)])
          (local-require pollen/pagetree pollen/template pollen/top)
          (define here (metas->here metas))
          (include-template #:command-char ,world:command-marker (file ,(->string (find-relative-path source-dir template-path)))))))
