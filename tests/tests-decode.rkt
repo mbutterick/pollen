@@ -6,7 +6,7 @@
 (check-equal? (smart-dashes "I had --- maybe 13 -- 20 --- hob-nobs.") "I had—maybe 13–20—hob-nobs.")
 (check-equal? (smart-quotes "\"Why,\" she could've asked, \"are we in O‘ahu watching 'Mame'?\"") 
               "“Why,” she could’ve asked, “are we in O‘ahu watching ‘Mame’?”")
-
+(check-equal? (smart-quotes "\"\'Impossible.\' Yes.\"") "“‘Impossible.’ Yes.”")
 
 
 ;; todo: make some tougher tests, it gets flaky with edge cases
@@ -23,6 +23,7 @@
 (check-equal? (wrap-hanging-quotes '(p "'Hi' there")) '(p (squo "‘" "Hi' there")))
 (check-equal? (wrap-hanging-quotes '(p "'Hi' there") #:single-prepend '(foo ((bar "ino")))) 
               '(p (foo ((bar "ino")) "‘" "Hi' there")))
+
 ;; make sure txexpr without elements passes through unscathed
 (check-equal? (wrap-hanging-quotes '(div ((style "height:2em")))) '(div ((style "height:2em"))))
 

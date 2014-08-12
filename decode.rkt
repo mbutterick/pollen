@@ -121,9 +121,9 @@
   
   (define quotes
     '((#px"(?<=\\w)'(?=\\w)" "’") ; apostrophe
-      (#px"(?<!\\w)'(?=\\w)" "‘") ; single_at_beginning
+      (#px"(?<!\\w)'(?=\\S)" "‘") ; single_at_beginning
       (#px"(?<=\\S)'(?!\\w)" "’") ; single_at_end
-      (#px"(?<!\\w)\"(?=\\w)" "“") ; double_at_beginning
+      (#px"(?<!\\w)\"(?=\\S)" "“") ; double_at_beginning
       (#px"(?<=\\S)\"(?!\\w)" "”"))) ; double_at_end
   
   ((make-replacer quotes) str))
@@ -176,8 +176,8 @@
 ; todo: improve this
 ; does not handle <p>“<em>thing</em> properly
 (define+provide/contract (wrap-hanging-quotes nx 
-                                              #:single-prepend [single-pp 'squo]
-                                              #:double-prepend  [double-pp 'dquo])
+                                              #:single-prepend [single-pp '(squo)]
+                                              #:double-prepend  [double-pp '(dquo)])
   ((txexpr?) (#:single-prepend list? #:double-prepend list?) . ->* . txexpr?)
   
   (define two-or-more-char-string? (λ(i) (and (string? i) (>= (len i) 2))))
@@ -192,9 +192,9 @@
                                                  [(str-first . in? . '("\"" "“"))
                                                   ;; can wrap with any inline tag
                                                   ;; so that linebreak detection etc still works
-                                                  `(,double-pp ,(->string #\“) ,str-rest)]
+                                                  `(,@double-pp ,(->string #\“) ,str-rest)]
                                                  [(str-first . in? . '("\'" "‘")) 
-                                                  `(,single-pp ,(->string #\‘) ,str-rest)]
+                                                  `(,@single-pp ,(->string #\‘) ,str-rest)]
                                                  [else tcs])]
                                               [(? txexpr? nx) (wrap-hanging-quotes nx)]
                                               [else (car elements)])])
