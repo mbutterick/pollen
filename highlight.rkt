@@ -24,7 +24,7 @@ sudo easy_install --upgrade Pygments
 
 Sample usage in test.html.pm:
 
-◊(require pollen/highlighter)
+◊(require pollen/highlight)
 ◊(make-highlight-css)
 
 ; specify language in square brackets
