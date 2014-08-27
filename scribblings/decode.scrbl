@@ -309,7 +309,9 @@ Within @racket[_tagged-xexpr-elements], convert occurrences of @racket[_linebrea
 [#:tag paragraph-tag symbol? 'p]
 [#:linebreak-proc linebreak-proc (txexpr-elements? . -> . txexpr-elements?) detect-linebreaks])
 txexpr-elements?]
-Find paragraphs within @racket[_elements], as denoted by @racket[_paragraph-sep], and wrap them with @racket[_paragraph-tag], unless the @racket[_element] is already a @racket[block-txexpr?] (because in that case, the wrapping is superfluous). Thus, as a consequence, if @racket[_paragraph-sep] occurs between two blocks, it's ignored. 
+Find paragraphs within @racket[_elements] (as denoted by @racket[_paragraph-sep]) and wrap them with @racket[_paragraph-tag]. Also handle linebreaks using @racket[detect-linebreaks].
+
+If @racket[_element] is already a @racket[block-txexpr?], it will not be wrapped as a paragraph (because in that case, the wrapping would be superfluous). Thus, as a consequence, if @racket[_paragraph-sep] occurs between two blocks, it will be ignored (as in the example below using two sequential @racket['div] blocks.) 
 
 The @racket[_paragraph-tag] argument sets the tag used to wrap paragraphs. 
 
