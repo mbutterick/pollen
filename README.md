@@ -9,6 +9,6 @@ Using Racket 6.0+, install from the command line like so:
     
 And update like so:
 
-    raco pkg update pollen
+    raco pkg update --update-deps pollen
 
 Docs are installed with the package. You can also [read the docs here](http://mbutterick.github.io/pollen/doc/).
