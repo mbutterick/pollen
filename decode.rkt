@@ -221,7 +221,7 @@
   ;; todo: should this test be not block + not whitespace?
   (define not-block? (λ(i) (not (block-txexpr? i))))
   (filter-not empty?
-              (for/list ([i (len xc)])
+              (for/list ([i (in-range (len xc))])
                 (let ([item (get xc i)])
                   (cond
                     ;; skip first and last

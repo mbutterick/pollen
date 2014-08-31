@@ -154,7 +154,7 @@
                                  (explode-path (find-relative-path (world:current-project-root) dashboard-dir))
                                  null)))
     (define dirlinks (cons "/" (map (λ(ps) (format "/~a/" (apply build-path ps)))  
-                                    (for/list ([i (length (cdr dirs))])
+                                    (for/list ([i (in-range (length (cdr dirs)))])
                                       (take (cdr dirs) (add1 i))))))
     `(tr (th ((colspan "3")) ,@(add-between (map (λ(dir dirlink) `(a ((href ,(format "~a~a" dirlink world:default-pagetree))) ,(->string dir))) dirs dirlinks) "/"))))
   
