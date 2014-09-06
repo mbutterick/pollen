@@ -2,6 +2,8 @@
 
 @(require (for-label racket pollen/world pollen/template pollen/pagetree sugar))
 
+@(require "mb-tools.rkt")
+
 @title[#:tag "second-tutorial"]{Second tutorial}
 
 In this tutorial, you'll use Pollen to publish a multiple-page article written in Markdown. You'll learn about:
@@ -58,31 +60,37 @@ Because Markdown is a text-based format, you can use the Pollen preprocessor to 
 
 Suppose we have a Markdown file called @tt{brennan.md} that we want to use with the preprocessor. Create this file in DrRacket, save it, and start the project server in that directory.
 
-@filebox["brennan.md"]{@verbatim{
+@fileblock["brennan.md" 
+@codeblock[#:keep-lang-line? #f]{
+#lang pollen
 My name is _Brennan_, and I enjoy:
 
 + boring sauce
 
-+ 24 fish nuggets}}
++ 24 fish nuggets
+}]
 
 You'll be able to see this file in the project server, but for now, it's just a static file. Pollen isn't doing anything to it.
 
 Let's change that. Consistent with the usual preprocessor practice, we add @racketfont{#lang pollen} as the first line, and append the @racketfont{.pp} file extension, so our new preprocessor-ready file looks like this:
 
-@filebox["brennan.md.pp"]{@verbatim{
+@fileblock["brennan.md.pp" 
+@codeblock{
 #lang pollen
 
 My name is _Brennan_, and I enjoy:
 
 + boring sauce
 
-+ 24 fish nuggets}}
++ 24 fish nuggets
+}]
 
 Go back to the project server and you'll see the new filename. When you click on it, Pollen will render a new @racketfont{markdown.md} file, but it will look the same as the one you had before. 
 
 Now we'll change some of the values using Pollen commands:
 
-@filebox["brennan.md.pp"]{@verbatim{
+@fileblock["brennan.md.pp" 
+@codeblock{
 #lang pollen
 
 ◊(define sauce-type "fancy")
@@ -93,16 +101,17 @@ My name is _Brennan_, and I enjoy:
 
 + ◊sauce-type sauce
 
-+ ◊nugget-quantity ◊nugget-type nuggets}}
++ ◊nugget-quantity ◊nugget-type nuggets
+}]
 
 When you reload this file in the project server, @racketfont{brennan.md} will be regenerated, and will now look like this:
 
-@nested[#:style 'code-inset]{@verbatim{
+@terminal{
 My name is _Brennan_, and I enjoy:
 
 + fancy sauce
 
-+ 12 chicken nuggets}}
++ 12 chicken nuggets}
 
 
 
@@ -123,7 +132,7 @@ Pollen offers two variants of authoring mode: one that uses Markdown syntax (whi
 
 @subsection{X-expressions}
 
-@margin-note{Don't skip this part! It's not the same old shit. And it describes a concept that's key to how Pollen works.}
+@(noskip-note)
 
 I avoid nerdy jargon whenever possible. But in this case, the thing is called an @italic{X-expression} throughout the Racket documentation, for good reasons. So I use the term too. Better to acclimate you now.
 
@@ -131,31 +140,31 @@ An X-expression is a way of representing markup-based data in code. X-expression
 
 Let's start with the part you're familiar with. By ``markup-based data,'' I mean things like HTML and XML and SVG. The idea is that you have text-based data surrounded by @italic{tags}. Each tag can also have its own @italic{attributes} that are made of keys and values. Tags can contain other tags, thus creating a tree-like structure. Right? You know what I mean:
 
-@nested[#:style 'code-inset]{@verbatim{<body><h1>Hello world</h1><p class="first">Nice to <i>see</i> you.</p></body>}}
+@terminal{<body><h1>Hello world</h1><p class="first">Nice to <i>see</i> you.</p></body>}
 
 An X-expression is just a simplified, generalized method of notation for these data structures — much like Markdown is a simplified method of notation for HTML. To see the relationship, we'll convert one into the other. 
 
 First, we change the angle brackets to parentheses, and only use them on the outside of tags:
 
-@nested[#:style 'code-inset]{@verbatim{(body (h1 Hello world /h1) (p class="first" Nice to (i see /i) you. /p) /body)}}
+@terminal{(body (h1 Hello world /h1) (p class="first" Nice to (i see /i) you. /p) /body)}
 
-Then we get rid of the closing tags, which are superfluous, since the closing parenthesis marks the end of the tag perfectly well:
+Then we get rid of the closing tags, which are superfluous, since each closing parenthesis adequately marks the end of the tag:
 
-@nested[#:style 'code-inset]{@verbatim{(body (h1 Hello world) (p class="first" Nice to (i see) you.))}}
+@terminal{(body (h1 Hello world) (p class="first" Nice to (i see) you.))}
 
-However, this creates ambiguity between the name of the tag and the content. So we'll put the content within quote marks: 
+However, this creates ambiguity between the name of the tag and the content. So we'll put the content within double quotes: 
 
-@nested[#:style 'code-inset]{@verbatim{(body (h1 "Hello world") (p class="first" "Nice to" (i "see") "you."))}}
+@terminal{(body (h1 "Hello world") (p class="first" "Nice to" (i "see") "you."))}
 
 As for the @racketfont{class} attribute, we need to distinguish it from both the markup tags and the content, so we'll move it between double parentheses:
 
-@nested[#:style 'code-inset]{@verbatim{(body (h1 "Hello world") (p ((class "first")) "Nice to" (i "see") "you."))}}
+@terminal{(body (h1 "Hello world") (p ((class "first")) "Nice to" (i "see") "you."))}
 
 Net of a few boring details, that's basically all there is to it. 
 
 So why is it called an X-expression? Lisp languages are built out of units called S-expressions, which look like this:
 
-@nested[#:style 'code-inset]{@verbatim{(and (txexpr? x) (member (get-tag x) (project-block-tags)) #t))}}
+@terminal{(and (txexpr? x) (member (get-tag x) (project-block-tags)) #t))}
 
 S-expressions use prefix notation, where each pair of parentheses contains a list. The first element in the list names a function, and the other elements are the arguments to that function. (This is a review of @secref["Racket_basics__if_you_re_not_familiar_" #:doc '(lib "pollen/scribblings/pollen.scrbl")].) X-expressions are just a minor adaptation of S-expression notation to represent markup, hence the name (the @italic{X} is short for @italic{XML-like}).
 
@@ -182,18 +191,20 @@ Let's start putting together our article. For simplicity, I'm going to use unrea
 
 We want to use Markdown authoring mode to make a file that will ultimately be HTML. So consistent with Pollen file-naming conventions (see @secref["Saving___naming_your_source_file"  #:doc '(lib "pollen/scribblings/pollen.scrbl")]), we'll start with our desired output filename, @racketfont{article.html}, and then append the Markdown authoring suffix, @racketfont{.pmd}. So in DrRacket, start a new file called @racketfont{article.html.pmd} and put some Markdown in it: 
 
-@filebox["article.html.pmd"]{@verbatim{
+@fileblock["article.html.pmd"
+@codeblock{
 #lang pollen
 
 Deep Thought
 ============
 
-I am **so** happy to be writing this.}}
+I am **so** happy to be writing this.
+}]
 
 Before you preview this file in the project server, click the @onscreen{Run} button in DrRacket just to see what the file produces. You'll see something like this:
 
-@nested[#:style 'code-inset]{@racketvalfont{'(root (h1 ((id "my-article")) "Deep Thought") (p () "I am " 
-@(linebreak)(strong () "so") " happy to be writing this."))}}
+@repl-output{'(root (h1 ((id "my-article")) "Deep Thought") (p () "I am " 
+(strong () "so") " happy to be writing this."))}
 
 You should now be able to recognize this as an X-expression. In authoring mode, Pollen parses your Markdown into the corresponding HTML entities, but then provides the data as an X-expression rather than finished HTML.
 
@@ -202,23 +213,30 @@ You should now be able to recognize this as an X-expression. In authoring mode, 
 
 From what you learned in the last section, it should be evident that this X-expression corresponds to HTML that looks like this:
 
-@nested[#:style 'code-inset]{@racketvalfont{<root><h1 id="my-article">Deep Thought</h1><p>I am @(linebreak)<strong>so</strong> happy to be writing this.</p></root>}}
+@repl-output{<root><h1 id="my-article">Deep Thought</h1><p>I am @(linebreak)<strong>so</strong> happy to be writing this.</p></root>}
 
 ``But what's this @racketfont{root} tag? That's not HTML.'' An X-expression must have a root tag, so in the spirit of obviousness, every X-expression produced by a source file in authoring mode will start with @racketfont{root}. If you don't need it, you can discard it. But it also creates a useful hook for further processing, as we'll see later.
 
 By the way, as review, let's remind ourselves how this is different from preprocessor mode. Let's take the same Markdown content, but this time put it into a preprocessor source file called @racketfont{article.md.pp}.
 
-@filebox["article.md.pp"]{@verbatim{
+@fileblock["article.md.pp"
+@codeblock{
 #lang pollen
 
 Deep Thought
 ============
 
-I am **so** happy to be writing this.}}
+I am **so** happy to be writing this.
+}]
 
 When you run this file in DrRacket, you'll see:
 
-@nested[#:style 'code-inset]{@racketvalfont{Deep Thought@(linebreak)============@(linebreak)@(linebreak)I am **so** happy to be writing this.}}
+@repl-output{
+Deep Thought
+============
+
+I am **so** happy to be writing this.
+}
 
 Hopefully, this result makes sense to you: when you run Markdown source in preprocessor mode, you get Markdown. When you run Markdown source in authoring mode, you get an X-expression.
 
@@ -236,29 +254,32 @@ The major difference with Pollen templates is that there's no special ``template
 
 To see a template in action, let's return to the source file we started in the last section:
 
-@filebox["article.html.pmd"]{@verbatim{
+@fileblock["article.html.pmd"
+@codeblock{
 #lang pollen
 
 Deep Thought
 ============
 
-I am **so** happy to be writing this.}}
+I am **so** happy to be writing this.
+}]
 
 Last time, I had you run this file in DrRacket to see the X-expression it produced. This time, load it in the project server. You'll see something like this:
 
-@nested[#:style 'code-inset]{
+@terminal{
 @bold{@larger{@larger{Deep Thought}}}
 
-I am @bold{so} happy to be writing this.
+@larger{@smaller{I am @bold{so} happy to be writing this.}}
 }
 
 Here, you're seeing the X-expression from your source combined with an HTML template, which adds the necessary boilerplate for the finished HTML:
 
-@nested[#:style 'code-inset]{@racketvalfont{
+@repl-output{
 <html><head><meta charset="UTF-8" /></head><body>
-@(linebreak)<root><h1 id="my-article">Deep Thought</h1><p>I am 
-@(linebreak)<strong>so</strong> happy to be writing this.</p></root>
-@(linebreak)</body></html>}}
+<root><h1 id="my-article">Deep Thought</h1><p>I am 
+<strong>so</strong> happy to be writing this.</p></root>
+</body></html>
+}
 
 But wait — where did the template come from? When you view an authoring-mode source file in the project server without specifying a template, Pollen helps you out and uses its @italic{fallback template}. The fallback template is just a minimal template that's used as a last resort. Under ordinary circumstances, seeing the fallback template usually signals a problem (e.g., Pollen couldn't find the template you asked for).
 
@@ -268,25 +289,38 @@ But we can learn a few things from the fallback template about how to make an HT
 
 This is the fallback template that Pollen uses.
 
-@filebox["fallback.html"]{@verbatim{◊(->html (html (head (meta 'charset: "UTF-8")) (body doc)))}}
+@fileblock["fallback.html"
+@codeblock[#:keep-lang-line? #f]{
+#lang pollen
+◊(->html (html (head (meta 'charset: "UTF-8")) (body doc)))
+}]
 
 It has three key ingredients. 
 
 First, there's an X-expression that represents a basic HTML page:
 
-@nested[#:style 'code-inset]{@verbatim{(html (head (meta 'charset: "UTF-8")) (body))}}
+@codeblock[#:keep-lang-line? #f]{
+#lang pollen
+(html (head (meta 'charset: "UTF-8")) (body))
+}
 
 This is equivalent to the HTML:
 
-@nested[#:style 'code-inset]{@verbatim{<html><head><meta charset="UTF-8"></head><body></body></html>}}
+@terminal{<html><head><meta charset="UTF-8"></head><body></body></html>}
 
 But within a template, we need to explicitly convert from X-expression to HTML. So we wrap this X-expression with our second key ingredient, the Pollen command @racket[->html]:
 
-@nested[#:style 'code-inset]{@verbatim{◊(->html (html (head (meta 'charset: "UTF-8")) (body)))}}
+@codeblock[#:keep-lang-line? #f]{
+#lang pollen
+◊(->html (html (head (meta 'charset: "UTF-8")) (body)))
+}
 
 Third, we need to include the content from our source file. We do this by putting the variable @racketfont{doc} inside the @racketfont{body} tag.
 
-@nested[#:style 'code-inset]{@verbatim{◊(->html (html (head (meta 'charset: "UTF-8")) (body doc)))}}
+@codeblock[#:keep-lang-line? #f]{
+#lang pollen
+◊(->html (html (head (meta 'charset: "UTF-8")) (body doc)))
+}
 
 By convention, every Pollen source file makes its output available through the variable @racketfont{doc}. A source file in preprocessor mode puts its text result in @racketfont{doc}. And a source file in authoring mode puts its X-expression result in @racketfont{doc}. 
 
@@ -298,8 +332,11 @@ Caution — despite the name, a Pollen template is not necessarily a file of the
 
 It could be, however. Here's an equivalent way of writing @racketfont{fallback.html} that inserts @racketfont{doc} into actual HTML, rather than making the whole thing an X-expression.
 
- @nested[#:style 'code-inset]{@verbatim{<html><head><meta charset="UTF-8"></head>
-<body>◊(->html doc)</body></html>}}
+@codeblock[#:keep-lang-line? #f]{
+#lang pollen
+<html><head><meta charset="UTF-8"></head>
+<body>◊(->html doc)</body></html>
+}
 
 Notice that we still need to use the @racket[->html] function, but this time, instead of surrounding a larger X-expression, it just goes around @racketfont{doc}.
 
@@ -316,17 +353,24 @@ Therefore, to set up a custom template, all we need to do is create a file calle
 
 But don't take my word for it. In your project directory, create a new file called @racketfont{template.html}:
 
-@filebox["template.html"]{@verbatim{<html>
+@fileblock["template.html"
+@codeblock[#:keep-lang-line? #f]{
+#lang pollen
+<html>
 <head><meta charset="UTF-8">
 <title>Custom template</title></head>
 <body>◊(->html doc)</body>
-</html>}}
+</html>
+}]
 
 Recall from the last section that this is the same as the fallback template, but written out in HTML, and with a @racketfont{title} element added. In fact, you can now refresh @racketfont{article.html} in the project server. Does it look different? No — it won't, because the resulting template is the same. You should notice, however, that the title of the browser window is now ``Custom template,'' because Pollen is relying on your new template file, rather than the fallback template.
 
 Let's change our custom template by adding a @racketfont{style} block:
 
-@filebox["template.html"]{@verbatim{<html>
+@fileblock["template.html"
+@codeblock[#:keep-lang-line? #f]{
+#lang pollen
+<html>
 <head><meta charset="UTF-8">
 <title>Custom template</title>
 <style type="text/css">
@@ -335,7 +379,7 @@ h1 {background: gray; color: white;}
 strong {color: red;}
 </style></head>
 <body>◊(->html doc)</body>
-</html>}}
+</html>}]
 
 When you refresh @racketfont{article.html} in the project server, you'll see that the heading now has a gray background, and one word in the text is red.
 
@@ -353,63 +397,80 @@ Let's suppose that we'd rather use the name of the article — @italic{Deep Tho
 
 Beyond that, we just need to know the tag name that contains the title. If we have a little Markdown expertise, we might already know that this part of our Markdown source:
 
-@verbatim{Deep Thought
-          ============}
+
+@codeblock[#:keep-lang-line? #f]{
+#lang pollen
+Deep Thought
+============
+}
 
 is going to produce a tag named @racketfont{h1}. 
 
 What if we don't have all the Markdown conversions memorized? No problem. We can still figure out the tag name by running the @racketfont{article.html.pmd} source file in DrRacket and looking at the X-expression that results:
 
-@nested[#:style 'code-inset]{@racketvalfont{'(root (h1 ((id "my-article")) "Deep Thought") (p () "I am " 
-@(linebreak)(strong () "so") " happy to be writing this."))}}
+@repl-output{'(root (h1 ((id "my-article")) "Deep Thought") (p () "I am " 
+(strong () "so") " happy to be writing this."))}
 
 Either way, now we know that the text @italic{Deep Thought} lives in the @racketfont{h1} tag. So we update our template accordingly (for brevity, I'm going to omit the @racketfont{style} tag in these examples, but it's fine to leave it in):
 
-@filebox["template.html"]{@verbatim{<html>
+@fileblock["template.html"
+@codeblock[#:keep-lang-line? #f]{
+#lang pollen
+<html>
 <head><meta charset="UTF-8">
 <title>◊(select 'h1 doc)</title></head>
 <body>◊(->html doc)</body>
-</html>}}
+</html>
+}]
 
 When you refresh the page in the project server, the page title will now appear as ``Deep Thought.'' Of course, you can also combine static and dynamic elements in your template, like so:
 
-@filebox["template.html"]{@verbatim{<html>
+@fileblock["template.html"
+@codeblock[#:keep-lang-line? #f]{
+#lang pollen
+<html>
 <head><meta charset="UTF-8">
 <title>◊(select 'h1 doc), by MB</title></head>
 <body>◊(->html doc)</body>
-</html>}}
+</html>
+}]
 
 The page title will now be ``Deep Thought, by MB''.
 
 A couple notes on command syntax. We inserted the @racket[select] and @racket[->html] commands using Racket-mode syntax. We could also use text-mode syntax and write the commands this way:
 
-@filebox["template.html"]{@verbatim{<html>
+@fileblock["template.html"
+@codeblock[#:keep-lang-line? #f]{
+#lang pollen
+<html>
 <head><meta charset="UTF-8">
 <title>◊select['h1 doc], by MB</title></head>
 <body>◊->html[doc]</body>
-</html>}}
+</html>
+}]
 
 This is exactly equivalent to the previous example. Skeptics are welcome to confirm this by checking the result in the project server.
 
 Finally, notice that in the @racket[select] command, the tag name @racket['h1] is written with a quote mark, whereas @racketfont{doc} is not. This is an easy place to get tripped up, but the rule is simple: you don't use a quote mark when you're referring to the name of an existing function or variable (like @racket[select] or @racketfont{doc}). But you do need a quote mark when you're using the text as a literal value.
 
-@(require scribble/core)
-@(define (racketfont* . args)
-  (element 'tt args))
 
-@margin-note{Racket (and hence Pollen) makes a distinction between @secref["symbols" #:doc '(lib "scribblings/guide/guide.scrbl")] (e.g. @racket['h1]) and @secref["strings" #:doc '(lib "scribblings/reference/reference.scrbl")] (e.g.  @racket["h1"]). Without getting into the weeds, just note for now that the tag of an X-expression is always a symbol, not a string. But if you write @racketfont{◊(select "h1" doc)}, the command will still work, because Pollen will treat it as @racketfont*{◊(select 'h1 doc)}, consistent with a general policy of not being persnickety about input types when the intention is clear.}
+@margin-note{Racket (and hence Pollen) makes a distinction between @secref["symbols" #:doc '(lib "scribblings/guide/guide.scrbl")] (e.g. @racket['h1]) and @secref["strings" #:doc '(lib "scribblings/reference/reference.scrbl")] (e.g.  @racket["h1"]). Without getting into the weeds, just note for now that the tag of an X-expression is always a symbol, not a string. But if you write @racketfont*{◊(@racket[select] "h1" doc)}, the command will still work, because Pollen will treat it as @racketfont*{◊(@racket[select] 'h1 doc)}, consistent with a general policy of not being persnickety about input types when the intention is clear.}
 
 
 @subsection{Linking to an external CSS file}
 
 If you're a super web hotshot, you probably don't put your CSS selectors in the @racketfont{<head>} tag. Instead, you link to an external CSS file. So it will not surprise you that in Pollen, you can do this by adding the usual @racketfont{<link>} tag to your HTML template, in this case a file called @racketfont{styles.css}:
 
-@filebox["template.html"]{@verbatim{<html>
+@fileblock["template.html"
+@codeblock[#:keep-lang-line? #f]{
+#lang pollen
+<html>
 <head><meta charset="UTF-8">
 <title>◊select['h1 doc], by MB</title></head>
 <link rel="stylesheet" type="text/css" media="all" href="styles.css" />
 <body>◊->html[doc]</body>
-</html>}}
+</html>
+}]
 
 Fans of hand-coded CSS, I trust you to take it from here: make your @racketfont{styles.css} file, and enjoy the results.
 
@@ -419,14 +480,17 @@ Yes, of course. Here's the rule of thumb: when you're making links between files
 
 So to use a dynamic CSS file, we don't need to make any changes to @racketfont{template.html}. We just need to add @racketfont{styles.css.pp} to the project directory:
 
-@filebox["styles.css.pp"]{@verbatim{#lang pollen
+@fileblock["styles.css.pp"
+@codeblock{
+#lang pollen
 
 ◊(define h1-color "blue")
 ◊(define strong-color "green")
 
 body {padding: 3em; font-size: 20px;}
 h1 {background: ◊|h1-color|; color: white;}
-strong {color: ◊|strong-color|;}}}
+strong {color: ◊|strong-color|;}
+}]
 
 Now, when you refresh @racketfont{article.html} in the project server, Pollen will generate the @racketfont{styles.css} file it needs, and you'll see the new colors in the page. As before, if you update @racketfont{styles.css.pp}, Pollen will notice and regenerate the CSS file when you refresh the page.
 
@@ -460,31 +524,37 @@ If the multiple pages in your project are already ordered by filename, then you 
 
 From earlier in the tutorial, you have a Markdown source file called @racketfont{article.html.pmd} that looks like this:
 
-@filebox["article.html.pmd"]{@verbatim{
+@fileblock["article.html.pmd"
+@codeblock{
 #lang pollen
 
 Deep Thought
 ============
 
-I am **so** happy to be writing this.}}
+I am **so** happy to be writing this.
+}]
 
 Let's supplement this source file by creating two others for the project:
 
-@filebox["barticle.html.pmd"]{@verbatim{
+@fileblock["barticle.html.pmd"
+@codeblock{
 #lang pollen
 
 Barticle Title
 ==============
 
-The wonderful second part of the article.}}
+The wonderful second part of the article.
+}]
 
-@filebox["carticle.html.pmd"]{@verbatim{
+@fileblock["carticle.html.pmd"
+@codeblock{
 #lang pollen
 
 Carticle Title
 ==============
 
-The terrific third part.}}
+The terrific third part.
+}]
 
 As before, you can fill these source files with any sample Markdown content you like. Moreover, you don't have to use the filenames @racketfont{barticle.html.pmd} and @racketfont{carticle.html.pmd} — the point is that the intended sequence needs to match the alphabetic sorting of the filenames.
 
@@ -511,20 +581,27 @@ To make any navigation link — up, down, sideways — the general idea is that
 
 First, let's just see @racketfont{here} on its own. Update your template as follows:
 
-@filebox["template.html"]{@verbatim{<html>
+@fileblock["template.html"
+@codeblock[#:keep-lang-line? #f]{
+#lang pollen
+<html>
 <head><meta charset="UTF-8">
 <title>◊select['h1 doc], by MB</title></head>
 <link rel="stylesheet" type="text/css" media="all" href="styles.css" />
 <body>◊->html[doc]
 The current page is called ◊|here|.
 </body>
-</html>}}
+</html>
+}]
 
 If you refresh @racketfont{article.html}, you will now see the line ``The current page is called article.html.'' Switch to @racketfont{barticle.html}, and you'll see ``The current page is called barticle.html.'' Makes sense, right?
 
 Now let's use pagetree functions to show the names of the previous and next pages. Consistent with the usual policy of obviousness, these functions are called @racket[previous] and @racket[next]:
 
-@filebox["template.html"]{@verbatim{<html>
+@fileblock["template.html"
+@codeblock[#:keep-lang-line? #f]{
+#lang pollen
+<html>
 <head><meta charset="UTF-8">
 <title>◊select['h1 doc], by MB</title></head>
 <link rel="stylesheet" type="text/css" media="all" href="styles.css" />
@@ -533,13 +610,17 @@ The current page is called ◊|here|.
 The previous is ◊|(previous here)|. 
 The next is ◊|(next here)|.
 </body>
-</html>}}
+</html>
+}]
 
 Refresh @racketfont{barticle.html}. You'll now see that ``The current page is called barticle.html. The previous is article.html. The next is carticle.html.'' So far, so good: we're correctly deriving the previous and next pages from the automatic pagetree.
 
 All that's left is to add hyperlinks, which is easy:
 
-@filebox["template.html"]{@verbatim{<html>
+@fileblock["template.html"
+@codeblock[#:keep-lang-line? #f]{
+#lang pollen
+<html>
 <head><meta charset="UTF-8">
 <title>◊select['h1 doc], by MB</title></head>
 <link rel="stylesheet" type="text/css" media="all" href="styles.css" />
@@ -548,7 +629,8 @@ The current page is called ◊|here|.
 The previous is <a href="◊|(previous here)|">◊|(previous here)|</a>. 
 The next is <a href="◊|(next here)|">◊|(next here)|</a>.
 </body>
-</html>}}
+</html>
+}]
 
 Refresh @racketfont{barticle.html}, and you'll see that the names of the previous and next pages are now hyperlinks to those pages. Click through and convince yourself that it works.
 
@@ -564,49 +646,64 @@ But since we have a whole programming language available in Pollen, that's a dul
 
 To handle @racketfont{article.html}, we want to hide the previous-page navigation link when there's no previous page. As it turns out, if the @racket[previous] function can't find a previous page, it will return false. So we just need to wrap our previous-page navigation in the @racket[when/block] command like so:
 
-@filebox["template.html"]{@verbatim{<html>
+@fileblock["template.html"
+@codeblock[#:keep-lang-line? #f]{
+#lang pollen
+<html>
 <head><meta charset="UTF-8">
 <title>◊select['h1 doc], by MB</title></head>
 <link rel="stylesheet" type="text/css" media="all" href="styles.css" />
 <body>◊->html[doc]
 The current page is called ◊|here|.
-◊when/block[(previous here)]{The previous is <a href="◊|(previous here)|">◊|(previous here)|</a>.} 
+◊when/block[(previous here)]{The previous is 
+<a href="◊|(previous here)|">◊|(previous here)|</a>.} 
 The next is <a href="◊|(next here)|">◊|(next here)|</a>.
 </body>
-</html>}}
+</html>
+}]
 
-The basic structure of @racket[when/block] is @racketfont{◊when/block[@racketvarfont{condition}]{@racketvarfont{insert-this-text}}.} Note the square braces around the @racketvarfont{condition}, and the curly braces around the @racketvarfont{text}. Using @racketfont{(previous here)} as the condition is shorthand for ``when @racketfont{(previous here)} does not return false...''
+The basic structure of @racket[when/block] is @racketfont{◊when/block[@racketvarfont{condition}]{@racketvarfont{insert-this-text}}.} Note the square braces around the @racketvarfont{condition}, and the curly braces around the @racketvarfont{text}. Using @racket[(previous here)] as the condition is shorthand for ``when @racket{(previous here)} does not return false...''
 
-Programmers in the audience might be getting anxious about the repeated use of @racketfont{(previous here)} — you're welcome to store that value in a variable, and everything will work the same way:
+Programmers in the audience might be getting anxious about the repeated use of @racket[(previous here)] — you're welcome to store that value in a variable, and everything will work the same way:
 
-@filebox["template.html"]{@verbatim{<html>
+@fileblock["template.html"
+@codeblock[#:keep-lang-line? #f]{
+#lang pollen
+<html>
 <head><meta charset="UTF-8">
 <title>◊select['h1 doc], by MB</title></head>
 <link rel="stylesheet" type="text/css" media="all" href="styles.css" />
 <body>◊->html[doc]
 The current page is called ◊|here|.
 ◊(define prev-page (previous here))
-◊when/block[prev-page]{The previous is <a href="◊|prev-page|">◊|prev-page|</a>.} 
+◊when/block[prev-page]{The previous is 
+<a href="◊|prev-page|">◊|prev-page|</a>.} 
 The next is <a href="◊|(next here)|">◊|(next here)|</a>.
 </body>
-</html>}}
+</html>
+}]
 
 We need a different technique for handling the end of the next-page navigation, because we're not reaching the actual end of the pagetree. We're just reaching the end of the pages we care about navigating through. 
 
 What condition will help us detect this? Here, we can notice that the names of our article pages all contain the string @racketfont{article}. While you'd probably want a more robust condition for a real project, in this tutorial, what we'll do is hide the next-page navigation if the name of the next page doesn't contain ``@racketfont{article}''. As we did before, we wrap our navigation line in the @racket[when/block] function:
 
-@filebox["template.html"]{@verbatim{<html>
+@fileblock["template.html"
+@codeblock[#:keep-lang-line? #f]{
+#lang pollen
+<html>
 <head><meta charset="UTF-8">
 <title>◊select['h1 doc], by MB</title></head>
 <link rel="stylesheet" type="text/css" media="all" href="styles.css" />
 <body>◊->html[doc]
 The current page is called ◊|here|.
 ◊(define prev-page (previous here))
-◊when/block[prev-page]{The previous is <a href="◊|prev-page|">◊|prev-page|</a>.} 
+◊when/block[prev-page]{The previous is 
+<a href="◊|prev-page|">◊|prev-page|</a>.} 
 ◊when/block[(regexp-match "article" (->string (next here)))]{
 The next is <a href="◊|(next here)|">◊|(next here)|</a>.}
 </body>
-</html>}}
+</html>
+}]
 
 This time, the condition is @racket[(regexp-match "article" (->string (next here)))]. How were you supposed to know this? You weren't. That's why this is a tutorial. Without going on a lengthy detour, the @racket[regexp-match] function returns true if the first string (in this case, @racket["article"]) is found inside the second string (in this case, we convert @racket[(next here)] to a string by wrapping it in @racket[->string]).
 
@@ -620,29 +717,31 @@ Pagetree source files have a different syntax and status than other Pollen sourc
 
 So let's make an @racketfont{index.ptree} file. At its simplest, a pagetree file can just be a list of files in the intended order. In DrRacket, create a new file in your project directory as follows:
 
-@filebox["index.ptree"]{@verbatim{
+@fileblock["index.ptree"
+@codeblock{
 #lang pollen
 
 carticle.html
 article.html
 barticle.html
-}}
+}]
 
 Now run the file. The result will be:
 
-@nested[#:style 'code-inset]{@racketvalfont{'(pagetree-root carticle.html article.html barticle.html)}}
+@repl-output{'(pagetree-root carticle.html article.html barticle.html)}
 
 Pretty boring, I know. But behind the scenes, Pollen's pagetree parser is making sure your tree is valid (e.g., no duplicate or malformed names). Today it's boring, but on the day you have a long and complicated pagetree, you will be grateful.
 
 Notice that the names in this pagetree are the names of @italic{output} files, not source files. This is deliberate, so that neither you nor Pollen has to care which files are static vs. dynamic. This next pagetree wouldn't be wrong in the sense of bad syntax — the pagetree parser won't complain — but it would be wrong in the sense of not-what-you-want, because it refers to source names rather than output names:
 
-@filebox["bad-index.ptree"]{@verbatim{
+@fileblock["bad-index.ptree"
+@codeblock{
 #lang pollen
 
 carticle.html.pmd
 article.html.pmd
 barticle.html.pmd
-}}
+}]
 
 You also probably noticed that the files are in a different order than they were in the automatic pagetree: @racketfont{carticle.html} is first, followed by @racketfont{article.html} and then @racketfont{barticle.html}. This too is deliberate, so we can see what happens with a differently ordered pagetree.
 
@@ -654,19 +753,24 @@ BAM! An error page with a yellow box that says @racketfont{Can’t convert #f to
 
  So let's go back and fix that. Because we don't have extraneous files in our pagetree anymore, we can change the second conditional in the template to work the same way as the first:
 
-@filebox["template.html"]{@verbatim{<html>
+@fileblock["template.html"
+@codeblock[#:keep-lang-line? #f]{
+#lang pollen
+<html>
 <head><meta charset="UTF-8">
 <title>◊select['h1 doc], by MB</title></head>
 <link rel="stylesheet" type="text/css" media="all" href="styles.css" />
 <body>◊->html[doc]
 The current page is called ◊|here|.
 ◊(define prev-page (previous here))
-◊when/block[prev-page]{The previous is <a href="◊|prev-page|">◊|prev-page|</a>.} 
+◊when/block[prev-page]{The previous is 
+<a href="◊|prev-page|">◊|prev-page|</a>.} 
 ◊(define next-page (next here))
 ◊when/block[next-page]{
 The next is <a href="◊|next-page|">◊|next-page|</a>.}
 </body>
-</html>}}
+</html>
+}]
 
 Refresh @racketfont{barticle.html} — because you're updating the template, you don't need to restart the project server — and you'll see the right result. The previous-page link goes to @racketfont{article.html}, and the next-page link is hidden.
 

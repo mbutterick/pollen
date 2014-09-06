@@ -25,7 +25,7 @@ In standard Racket, @racket[#%top] is the function of last resort, called when @
 
 In the Pollen markup environment, however, this behavior is annoying. Because when you're writing X-expressions, you don't necessarily want to define all your tags ahead of time. 
 
-So Pollen redefines @racket[#%top]. For convenience, Pollen's version of @racket[#%top] assumes that an undefined tag should just refer to an X-expression beginning with that tag (and uses @racket[make-tag-function] to provide this behavior):
+So Pollen redefines @racket[#%top]. For convenience, Pollen's version of @racket[#%top] assumes that an undefined tag should just refer to an X-expression beginning with that tag (and uses @racket[make-default-tag-function] to provide this behavior):
 
 @examples[
 (code:comment @#,t{Again, let's call em without defining it, but using pollen/top})

@@ -13,14 +13,14 @@ Convenience functions for working with tags.
 
 
 @defproc[
-(make-tag-function
+(make-default-tag-function
 [id txexpr-tag?])
 (-> txexpr?)]
-Make a tag function for @racket[_id]. As arguments, a tag function takes an optional set of X-expression attributes (@racket[txexpr-attrs?]) followed by X-expression elements (@racket[txexpr-elements?]). From these, the tag function creates a tagged X-expression using @racket[_id] as the tag.
+Make a default tag function for @racket[_id]. As arguments, a tag function takes an optional set of X-expression attributes (@racket[txexpr-attrs?]) followed by X-expression elements (@racket[txexpr-elements?]). From these, the tag function creates a tagged X-expression using @racket[_id] as the tag.
 
 @examples[
 (require pollen/tag)
-(define beaucoup (make-tag-function 'em))
+(define beaucoup (make-default-tag-function 'em))
 (beaucoup "Bonjour")
 (beaucoup '((id "greeting")) "Bonjour")
 ]
@@ -29,7 +29,7 @@ Entering attributes this way can be cumbersome. So for convenience, a tag functi
 
 @examples[
 (require pollen/tag)
-(define beaucoup (make-tag-function 'em))
+(define beaucoup (make-default-tag-function 'em))
 (beaucoup 'id: "greeting" 'class: "large" "Bonjour")
 (code:comment @#,t{Don't forget the colons})
 (beaucoup 'id "greeting" 'class "large" "Bonjour")
@@ -38,3 +38,19 @@ Entering attributes this way can be cumbersome. So for convenience, a tag functi
 ]
 
 Pollen also uses this function to provide the default behavior for undefined tags. See @racket[#%top].
+
+@defproc[
+(split-attributes
+[parts list?])
+(values txexpr-attrs? txexpr-elements?)]
+Helper function for custom tag functions. Take a rest argument that possibly includes tag attributes plus elements, and split it into attributes and elements. If there are no attributes, that return value will be the empty list. Properly parses the abbreviated Pollen syntax for attributes (described in @racket[make-default-tag-function]).
+
+@examples[
+(require pollen/tag)
+(define (tag . parts) 
+  (define-values (attrs elements) (split-attributes parts))
+  (values attrs elements))
+(tag "Hello world")
+(tag '((key "value")) "Hello world")
+(tag 'key: "value" "Hello world")
+]

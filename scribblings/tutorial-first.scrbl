@@ -1,6 +1,6 @@
 #lang scribble/manual
 
-@(require (for-label pollen/world))
+@(require (for-label pollen/world) racket/runtime-path "mb-tools.rkt")
 
 @title[#:tag "first-tutorial"]{First tutorial}
 
@@ -56,11 +56,13 @@ DrRacket is the IDE for the Racket programming language, and other languages mad
 
 Launch DrRacket. Start a new file. The code in the file will look like this:
 
-@racketmod[racket]
+@codeblock{
+#lang racket
+}
 
 Within the main window, you should also see an @italic{interactions window}, which shows the output of the current file, and starts out looking something like this (details, like the version number, will vary):
 
-@verbatim{
+@terminal{
 Welcome to DrRacket, version 6.0.1.6--2013-11-26(-/f) [3m].
 Language: racket; memory limit: 1000 MB.
 > }
@@ -72,15 +74,17 @@ If you don't see the interactions window, select @menuitem["View"
 
 The first line of every Racket source file, and every Pollen source file, is called the @italic{@racketfont{#lang} line}. The @racketfont{#lang} line identifies the language used to interpret the rest of the file.  
 
-@margin-note{For more about the @racketfont{#lang} line, see @secref[#:doc '(lib "scribblings/guide/guide.scrbl") "hash-lang"].}
+@margin-note{For more about the @racketfont{#lang} line, see @secref["hash-languages" #:doc '(lib "scribblings/guide/guide.scrbl")]. BTW, it's pronounced @italic{hash lang}.}
 
 When you start a new Pollen source file in DrRacket, you'll need to change the @racketfont{#lang} line to the Pollen language. The simplest way is to change the first line to this:
 
-@racketmod[pollen]
+@codeblock{
+#lang pollen
+}
 
 Now run your file by clicking the @onscreen["Run"] button in the upper-right corner, or select @menuitem["Racket" "Run"] from the menu. You'll get something like:
 
-@verbatim{
+@terminal{
 Welcome to DrRacket, version 6.0.1.6--2013-11-26(-/f) [3m].
 Language: pollen; memory limit: 1000 MB.
 > 
@@ -93,8 +97,8 @@ Notice that the language is now reported as @racketfont{pollen}. If you like, ch
 
 Then click @onscreen["Run"] again. DrRacket will print an error:
 
-@verbatim{@racketerror{Module Language: invalid module text
-@(linebreak)standard-module-name-resolver: collection not found ...}}
+@errorblock{Module Language: invalid module text
+standard-module-name-resolver: collection not found ...}
 
 Why? Because there's no language called @racketfont{pollenxyz}. Switch it back to @racketfont{pollen} and let's move on.
 
@@ -102,7 +106,7 @@ Why? Because there's no language called @racketfont{pollenxyz}. Switch it back t
 
 Here's a short, bad poem I wrote about CSS.
 
-@verbatim{
+@terminal{
 The margin is 42em.
 The border is red.
 The padding is 15em.
@@ -111,25 +115,27 @@ The border is too.
 
 Paste the text of this poem into your DrRacket editing window, below the @racketfont{#lang} line, so it looks like this:
 
-@nested[#:style 'code-inset]{@verbatim{
+@codeblock{
 #lang pollen
 
 The margin is 42em.
 The border is red.
 The padding is 15em.
-The border is too.}}
+The border is too.}
 
 @onscreen["Run"] the file again. In the interactions window, you'll see:
 
-@racketvalfont{
+@repl-output{
 The margin is 8em.
-@(linebreak)The border is blue.
-@(linebreak)The padding is 2em.
-@(linebreak)The border is too.}
+The border is blue.
+The padding is 2em.
+The border is too.}
 
 This shows you something important: by default, any plain text in a Pollen source file is simply printed as written when you @onscreen["Run"] the file (minus the @racketfont{#lang} line, which is just for Racket's benefit). If you like, edit the text of the poem and click @onscreen["Run"] again. You'll see the updated text printed in the interactions window.
 
 @subsection{Saving & naming your source file}
+
+@(noskip-note)
 
 File naming in Pollen is consequential.
 
@@ -147,20 +153,22 @@ the output name @racketfont{poem.html} + the source extension @racketfont{.pp} =
 
 In a convenient location (e.g., your home directory or the desktop) create a new directory for your project called @racketfont{tutorial}. In this new directory, save your DrRacket file as @racketfont{poem.html.pp}.
 
-@filebox["/path/to/tutorial/poem.html.pp"]{@verbatim{
+@fileblock["/path/to/tutorial/poem.html.pp" @codeblock{
 #lang pollen
 
 The margin is 42em.
 The border is red.
 The padding is 15em.
-The border is too.}}
+The border is too.
+}]
 
 
 @section{Using the project server}
 
 The project server is a web server built into Pollen. Just as DrRacket lets you run individual files and see if they work as you expect, the project server lets you preview and test your project as a real website. While working on your Pollen project, you may find it convenient to have DrRacket open on half your screen, and on the other half, a web browser pointing at the project server.
 
-@image["scribblings/project-server.png" #:scale 0.7]
+@(define-runtime-path project-server "project-server.png")
+@image[project-server #:scale 0.7]
 
 ``Why can't I just open the HTML files directly in my browser?'' If you want to keep making web pages the way we did in 1996, go ahead. But that approach has several shortcomings. First, when you open files directly in your browser, you're cruising the local filesystem, and absolute URLs (the kind that start with a @litchar{/}) won't work. Second, if you want to test your website on devices other than your own machine — well, you can't. Third, you have to render your HTML files in advance, whereas the project server is clever about doing this dynamically. 
 
@@ -176,13 +184,13 @@ Before we start the project server, a word about the @racketfont{raco pollen} co
 
 When you installed Racket, Racket installed a utility program called @racketfont{raco}. This name is short for @bold{Ra}cket @bold{co}mmand, and @racketfont{raco} acts as a hub for — you guessed it — Racket commands. You used it when you first installed Pollen:
 
-@verbatim{
+@terminal{
 > raco pkg install pollen
 }
 
 The first argument after @racketfont{raco} is the subcommand. For instance, @racketfont{raco pkg ...} lets you install, update, and remove packages like so:
 
-@verbatim{
+@terminal{
 > raco pkg update pollen
 > raco pkg remove pollen
 }
@@ -191,7 +199,7 @@ Likewise, @racketfont{raco pollen} lets you issue commands relevant to Pollen, l
 
 Now we'll start the project server. Go to your command line and enter the following:
 
-@verbatim{
+@terminal{
 > cd /path/to/tutorial
 > raco pollen start}
 
@@ -199,7 +207,7 @@ Now we'll start the project server. Go to your command line and enter the follow
 
 After a moment, you'll see a startup message like this:
 
-@verbatim{
+@terminal{
 Welcome to Pollen 0.001 (Racket 6.x.x.x)
 Project root is /path/to/tutorial
 Project server is http://localhost:8080 (Ctrl-C to exit)
@@ -210,7 +218,7 @@ Ready to rock}
 
 If you use the bare command @racketfont{raco pollen start}, the project server will start in the current directory. But if you want to start the project server elsewhere, you can add that directory as an argument like this:
 
-@verbatim{
+@terminal{
 > raco pollen start /some/other/path
 }
 
@@ -220,20 +228,21 @@ If you want to access the project server from a different machine, you can't use
 
 Though port @racketfont{8080} is the default, you can start the project server on any port you like by adding it as an argument to @racketfont{raco pollen start}:
 
-@verbatim{
+@terminal{
 > raco pollen start /path/to/tutorial
 > raco pollen start /path/to/tutorial 8088
 }
 
 @margin-note{You can also change the default port by altering @racket[world:default-port], or parameterizing it with @racket[world:current-server-port].}
 
-Note that when you pass a port argument, you also have to pass a path argument. If you want the project server to start in the current directory, you can use the usual @litchar{.} shorthand:
+Note that when you pass a port argument, you also have to pass a path argument. (Without it, you'll get an error, as illustrated below.) If you want the project server to start in the current directory, you can use the usual @litchar{.} shorthand:
 
-@verbatim{
+@terminal{
 > cd /path/to/tutorial
 > raco pollen start 8088 
 @racketerror{/path/to/tutorial/8088 is not a directory}
 > raco pollen start . 8088 
+Welcome to Pollen 0.001 (Racket 6.x.x.x) ...
 }
 
 @margin-note{You can run multiple project servers simultaneously. Just start them on different ports so they don't conflict with each other.}
@@ -253,7 +262,7 @@ Thus, @racketfont{index.ptree}. The @racketfont{.ptree} extension is short for @
 
 Let's look at the root-level dashboard for our project. First, make sure your project server is running:
 
-@verbatim{
+@terminal{
 > cd /path/to/tutorial
 > raco pollen start
 }
@@ -262,7 +271,8 @@ Then, in your web browser, visit @link["http://localhost:8080/index.ptree"]{@rac
 
 You should see something like this:
 
-@image["scribblings/dashboard.png" #:scale 1]
+@(define-runtime-path dashboard "dashboard.png")
+@image[dashboard #:scale 1]
 
 The top line tells us that we're in the root directory of the project. We didn't make an explicit @racketfont{index.ptree} file, so the project server just shows us a directory listing. 
 
@@ -273,7 +283,7 @@ We see the only file, @racketfont{poem.html.pp}. Note that the @racketfont{.pp} 
 
 Every source-file entry in the dashboard has three links. The first link is attached to the filename itself, and takes you to a preview of the output file. If the output file doesn't yet exist — as is the case here — it will be dynamically rendered. (This is true whether you click its name in the dashboard, or link to it from another page.) So click the filename. You'll see in your web browser:
 
-@nested[#:style 'code-inset]{
+@browser{
 The margin is 42em. The border is red. The padding is 15em. The border is too.} 
 
 Granted, this is a boring web page. The main point here is that you're seeing the @italic{output} from your source file, which didn't exist before. Notice that the address bar says @racketfont{http://localhost:8080/poem.html}, not @racketfont{poem.html.pp}. And if you look in your @racketfont{tutorial} directory, you'll see a new file called @racketfont{poem.html}. 
@@ -284,17 +294,18 @@ If you go back to the dashboard and click on the filename link again, you'll see
 
 But if you like, open your @racketfont{poem.html.pp} source file in DrRacket, edit the first two lines, and save the file:
 
-@nested[#:style 'code-inset]{@verbatim{
+@codeblock{
 #lang pollen
 
 The cave is pitch black.
 Look out for the grue.
 The padding is 15em.
-The border is too.}}
+The border is too.
+}
 
 Go back to the dashboard and click on the filename. This time, you'll see:
 
-@nested[#:style 'code-inset]{
+@browser{
 The cave is pitch black. Look out for the grue. The padding is 15em. The border is too.} 
 
 Here, Pollen notices that the source file has changed, so it refreshes the output file. This makes it convenient to work between DrRacket and your web browser, editing source and then reloading to see the changes.
@@ -303,21 +314,22 @@ The other two links in the dashboard are labeled @racketfont{in} and @racketfont
 
 The link labeled @racketfont{in} will display the contents of the source file:
 
-@nested[#:style 'code-inset]{@verbatim{
+@codeblock{
 #lang pollen
 
 The cave is pitch black.
 Look out for the grue.
 The padding is 15em.
-The border is too.}}
+The border is too.
+}
 
 The link labeled @racketfont{out} will display the contents of the output file (just like the ``view source'' option in your web browser):
 
-@nested[#:style 'code-inset]{@verbatim{
+@terminal{
 The cave is pitch black.
 Look out for the grue.
 The padding is 15em.
-The border is too.}}
+The border is too.}
 
 For now, the files are identical except for the @racketfont{#lang} line. But let's change that.
 
@@ -343,27 +355,28 @@ The file extension of a Pollen source file tells Pollen what kind of processing 
 
 ``The preprocessor be used with @bold{any} kind of text-based file?'' Right. ``But how?'' The preprocessor reads the source file, handles any Pollen commands it finds, and lets the rest of the content pass through untouched. To the preprocessor, it's all just text data. It doesn't care whether that text represents HTML, CSS, JavaScript, or even @link["https://en.wikipedia.org/wiki/TI-BASIC"]{TI-BASIC}.
 
-Because the preprocessor only deals in text, the Pollen commands you use in the preprocessor also have to produce text. Moreover, Pollen doesn't enforce the semantics of the underlying file — that's your responsibility. For instance, Pollen won't stop you from doing nonsensical things like this:
+One caveat: because the preprocessor only deals with text, the Pollen commands you use in the preprocessor also have to produce text. Moreover, Pollen doesn't enforce the syntax rules of the underlying file — that's your responsibility. For instance, Pollen won't stop you from doing nonsensical things like this:
 
-@filebox["bad-poem.html.pp"]{@verbatim{
+@fileblock["bad-poem.html.pp" @codeblock{
 #lang pollen
 
 The cave is pitch black.
 Look out for the grue.
 ◊(insert-mp3-recording-of-scream)
- }}
+ }]
 
-Here, the result is not going to be valid HTML, because you can't simply drop binary data in the middle of an HTML file. To paraphrase Mr. Babbage — garbage in, garbage out.
+Pollen will fulfill your request, but the result won't be valid HTML, because you can't simply drop binary data in the middle of an HTML file. To paraphrase Mr. Babbage — garbage in, garbage out.
 
 I've encouraged you to mess with the source file, but let's return it to its original state:
 
-@filebox["/path/to/tutorial/poem.html.pp"]{@verbatim{
+@fileblock["/path/to/tutorial/poem.html.pp" @codeblock{
 #lang pollen
 
 The margin is 42em.
 The border is red.
 The padding is 15em.
-The border is too.}}
+The border is too.
+}]
 
 This file has @racketfont{#lang pollen} as the first line, and @racketfont{.pp} as the file extension, so it meets the minimum requirements for the preprocessor.
 
@@ -371,7 +384,7 @@ This file has @racketfont{#lang pollen} as the first line, and @racketfont{.pp} 
 
 Let's update our source so it produces valid HTML. Edit the source as follows:
 
-@filebox["/path/to/tutorial/poem.html.pp"]{@verbatim{
+@fileblock["/path/to/tutorial/poem.html.pp" @codeblock{
 #lang pollen
 <!DOCTYPE html>
 <html>
@@ -383,21 +396,21 @@ The padding is 15em.
 The border is too.
 </pre>
 </body>
-</html>}}
+</html>}]
 
 Return to the project server and view @link["http://localhost:8080/poem.html" "http://localhost:8080/poem.html"]. Earlier, the output looked like this:
 
-@nested[#:style 'code-inset]{
+@browser{
 The margin is 42em. The border is red. The padding is 15em. The border is too.} 
 
 
 But now, because of the @racketfont{<pre>} tag, the poem will appear in a monospaced font, and the line breaks will be preserved:
 
-@nested[#:style 'code-inset]{
-@tt{The margin is 42em.
-@(linebreak)The border is red.
-@(linebreak)The padding is 15em.
-@(linebreak)The border is too.}}
+@terminal{
+The margin is 42em.
+The border is red.
+The padding is 15em.
+The border is too.}
 
 As before, because the source has changed, Pollen refreshes the output file. From the dashboard, you can use the @racketfont{in} and @racketfont{out} links to inspect the source and output. 
 
@@ -409,21 +422,23 @@ I mentioned that the preprocessor reads the file and handles any Pollen commands
 
 Pollen commands can be embedded in your source file using one of two modes: @italic{Racket mode} or @italic{text mode}. We'll try text mode in a later tutorial. For now, we'll use Racket mode.
 
-To make a Racket-mode Pollen command, just take any Racket expression and put the lozenge character (@litchar["◊"]) in front of it. For instance, these are valid Racket expressions:
+To make a Racket-mode Pollen command, just take any Racket expression and put the lozenge character @litchar["◊"] in front of it. For instance, these are valid Racket expressions:
 
-@nested[#:style 'code-inset]{@verbatim{
-    (define inner 2)
-    (define edge (* inner 4))
-    (define color "blue")
-}}
+@codeblock{
+#lang racket
+(define inner 2)
+(define edge (* inner 4))
+(define color "blue")
+}
 
 And these are the equivalent commands in Pollen:
 
-@nested[#:style 'code-inset]{@verbatim{
-    ◊(define inner 2)
-    ◊(define edge (* inner 4))
-    ◊(define color "blue")
-}}
+@codeblock{
+#lang pollen
+◊(define inner 2)
+◊(define edge (* inner 4))
+◊(define color "blue")
+}
 
 How to type a lozenge:
 @(linebreak)@bold{Mac}: option + shift + V
@@ -432,7 +447,7 @@ How to type a lozenge:
 
 @subsection{Racket basics (if you're not familiar)}
 
-``But how am I supposed to know Racket?'' You don't. So we'll start now. Here are the five basic rules of Racket:
+``But I've never used Racket.'' Today, you start. Here are the five basic rules of Racket:
 
 @itemlist[#:style 'ordered
 
@@ -452,14 +467,15 @@ How to type a lozenge:
 
 That should tell you enough to infer what's going on in the Pollen commands above:
 
-@nested[#:style 'code-inset]{@verbatim{
-    ◊(define inner 2)
-    ◊; create a variable 'inner' that holds the value 2
-    ◊(define edge (* inner 4))
-    ◊; create a variable 'edge' that's four times the value of 'inner'
-    ◊(define color "blue")
-    ◊; create a variable 'color' that holds the value "blue"
-}}
+@codeblock{
+#lang pollen
+◊(define inner 2)
+◊; create a variable 'inner' that holds the value 2
+◊(define edge (* inner 4))
+◊; create a variable 'edge' that's four times the value of 'inner'
+◊(define color "blue")
+◊; create a variable 'color' that holds the value "blue"
+}
 
 To learn more about Racket syntax, consider a detour through the excellent @other-doc['(lib "scribblings/quick/quick.scrbl")].
 
@@ -468,8 +484,9 @@ To learn more about Racket syntax, consider a detour through the excellent @othe
 
 Let's use commands to define variables that will hold some values for our page. First, add a @racketfont{<head>} tag to your source file, and three commmands to define three variables:
 
-@filebox["/path/to/tutorial/poem.html.pp"]{@verbatim{
+@fileblock["/path/to/tutorial/poem.html.pp" @codeblock{
 #lang pollen
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -485,11 +502,11 @@ The padding is 15em.
 The border is too.
 </pre>
 </body>
-</html>}}
+</html>}]
 
 Then look at @link["http://localhost:8080/poem.html" "http://localhost:8080/poem.html"] again. Does it look the same? Not a trick question — it should. If you click the @onscreen{Out} link on the dashboard, you'll see this:
 
-@nested[#:style 'code-inset]{@verbatim{
+@terminal{
 <!DOCTYPE html>
 <html>
 <head>
@@ -505,16 +522,17 @@ The padding is 15em.
 The border is too.
 </pre>
 </body>
-</html>}}
+</html>}
 
-What's happening here? Our @racketfont{◊(define ...)} commands just define variables, so they don't evaluate to any value. Instead, we get blank lines. So far, so good.
+What's with the blank lines? Don't panic — our @racketfont{◊(define ...)} commands define variables, so they don't evaluate to any value. Instead, we get blank lines. So far, so good.
 
 @subsection{Inserting values from variables}
 
 To insert the value of a variable in our file, we use the command @litchar{◊|}@italic{variable-name}@litchar{|}. Let's do that now:
 
-@filebox["/path/to/tutorial/poem.html.pp"]{@verbatim{
+@fileblock["/path/to/tutorial/poem.html.pp" @codeblock{
 #lang pollen
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -530,15 +548,15 @@ The padding is ◊|inner|em.
 The border is too.
 </pre>
 </body>
-</html>}}
+</html>}]
 
 Here, we're replacing three values in the poem with the variables containing those values — @racketfont{◊|edge|}, @racketfont{◊|color|}, and @racketfont{◊|inner|}. @link["http://localhost:8080/poem.html"]{Reload the file} in the project server, and you'll see:
 
-@nested[#:style 'code-inset]{@verbatim{
+@terminal{
 The margin is 8em.
 The border is blue.
 The padding is 2em.
-The border is too.}}
+The border is too.}
 
 Hey, look at that — the text of the poem changed. Now it even rhymes.
 
@@ -551,8 +569,10 @@ Our poem makes claims about the @racketfont{margin}, @racketfont{border}, and @r
 Update the @racketfont{<head>} section of the page with a new @racketfont{<style>} tag that defines a style for @racketfont{pre} like so, using our variables for the relevant values:
 
 
-@filebox["/path/to/tutorial/poem.html.pp"]{@verbatim{
+@fileblock["/path/to/tutorial/poem.html.pp" 
+@codeblock{
 #lang pollen
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -575,7 +595,8 @@ The padding is ◊|inner|em.
 The border is too.
 </pre>
 </body>
-</html>}}
+</html>
+}]
 
 Notice that we're using the same @litchar{◊|}@italic{variable-name}@litchar{|} pattern as before to insert the variable values. 
 
@@ -583,7 +604,8 @@ What do we expect to see? We expect that the @racketfont{padding} and @racketfon
 
 And indeed, when you @link["http://localhost:8080/poem.html"]{reload the file} in the project server, you'll see exactly that:
 
-@image["scribblings/result.png" #:scale 0.7]
+@(define-runtime-path result "result.png")
+@image[result #:scale 0.7]
 
 
 As before, if you edit the values of the variables in the source file and reload in the project server, you'll see both the text and the layout change.

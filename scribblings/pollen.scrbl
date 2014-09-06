@@ -51,7 +51,7 @@ Or, if you can find a better digital-publishing tool, use that. But I'm never go
 
 @include-section["tutorial-second.scrbl"]
 
-@;include-section["tutorial-third.scrbl"]
+@include-section["tutorial-third.scrbl"]
 
 @include-section["raco.scrbl"]
 

@@ -25,11 +25,11 @@ A parameter that sets the HTTP port for the project server. Initialized to @rack
 )]
 The two exports from a compiled Pollen source file. Initialized to @racket['doc] and @racket['metas], respectively.
 
-@(defthing world:project-require string?)
-File implicitly required into every Pollen source file from its directory. Initialized to @racket["project-require.rkt"].
+@(defthing world:directory-require string?)
+File implicitly required into every Pollen source file from its directory. Initialized to @racket["directory-require.rkt"].
 
-@defparam[world:check-project-requires-in-render? check? boolean?]{
-A parameter that determines whether the @racket[world:project-require] file is checked for changes on every pass through @racket[render]. (Can be faster to turn this off if you don't need it.) Initialized to @racket[#t].}
+@defparam[world:check-directory-requires-in-render? check? boolean?]{
+A parameter that determines whether the @racket[world:directory-require] file is checked for changes on every pass through @racket[render]. (Can be faster to turn this off if you don't need it.) Initialized to @racket[#t].}
 
 @defthing[world:server-extras-dir string?]
 Name of directory where server support files live. Initialized to @racket["server-extras"].

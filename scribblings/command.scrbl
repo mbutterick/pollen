@@ -297,13 +297,13 @@ For instance, suppose we want to use @tt{map} as a tag even though Racket is usi
 @racketoutput{@literal{'(my-map "How I would love this to be a map.")}}
 
 
-But @code{my-map} is not the tag we want. We need to define @code{my-map} to be a tag function for @tt{map}. We can do this with the Pollen helper @racket[make-tag-function]. That function lives in @racket[pollen/tag], so we @racket[require] that too:
+But @code{my-map} is not the tag we want. We need to define @code{my-map} to be a tag function for @tt{map}. We can do this with the Pollen helper @racket[make-default-tag-function]. That function lives in @racket[pollen/tag], so we @racket[require] that too:
 
 
 @codeblock|{
 #lang pollen
 ◊(require pollen/tag)
-◊(define my-map (make-tag-function 'map))
+◊(define my-map (make-default-tag-function 'map))
 ◊my-map{How I would love this to be a map.}
 }|
 
