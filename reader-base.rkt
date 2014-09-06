@@ -45,14 +45,16 @@
                                  (prefix-out inner: reader-mode)
                                  (prefix-out inner: parser-mode)) 
                         
-                        ,(require+provide-project-require-files path-string)
+                        ,(require+provide-directory-require-files path-string)
                         ,@file-contents)
                       (require 'pollen-lang-module)
                       (provide (all-from-out 'pollen-lang-module))
                       (module+ main
+                        (require txexpr racket/string)
                         (if (or (equal? inner:parser-mode world:mode-preproc) (equal? inner:parser-mode world:mode-template))
                             (display doc)
-                            (print doc))))
+                            (print (with-handlers ([exn:fail? (λ(exn) ((error '|pollen markup error| (string-join (cdr (string-split (exn-message exn) ": ")) ": "))))])
+     (validate-txexpr doc))))))
                    file-contents)))
 
 
