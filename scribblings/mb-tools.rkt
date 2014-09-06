@@ -3,7 +3,7 @@
 
 (provide (all-defined-out))
 
-(define-runtime-path mb-css "mb.scss")
+(define-runtime-path mb-css "mb.css")
 
 (define (racketfont* . args)
   (element 'tt args))
