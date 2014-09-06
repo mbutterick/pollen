@@ -34,7 +34,7 @@
 (define main-pollen-export 'doc) ; don't forget to change fallback template too
 (define meta-pollen-export 'metas)
 
-(define project-require "project-require.rkt")
+(define directory-require "directory-require.rkt")
 
 (define newline "\n")
 (define linebreak-separator newline)
@@ -54,6 +54,6 @@
 (define server-extras-dir "server-extras")
 (define current-server-extras-path (make-parameter #f))
 
-(define check-project-requires-in-render? (make-parameter #t))
+(define check-directory-requires-in-render? (make-parameter #t))
 
 (define clone-directory-name "clone")
