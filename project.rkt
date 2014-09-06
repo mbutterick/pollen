@@ -2,20 +2,20 @@
 (require "world.rkt" sugar/define sugar/coerce)
 
 
-(define/contract+provide (get-project-require-files source-path) ; keep contract local to ensure coercion
+(define/contract+provide (get-directory-require-files source-path) ; keep contract local to ensure coercion
   (coerce/path? . -> . (or/c #f (listof path?)))
-  (define possible-requires (list (simplify-path (build-path source-path 'up world:project-require))))
+  (define possible-requires (list (simplify-path (build-path source-path 'up world:directory-require))))
   (and (andmap file-exists? possible-requires) possible-requires))
 
 
-(define+provide/contract (require+provide-project-require-files here-path #:provide [provide #t])
+(define+provide/contract (require+provide-directory-require-files here-path #:provide [provide #t])
   (coerce/path? . -> . (or/c list? void?))
   (define (put-file-in-require-form file)
     `(file ,(path->string file)))
-  (define project-require-files (get-project-require-files here-path))
+  (define directory-require-files (get-directory-require-files here-path))
   
-  (if project-require-files
-      (let ([files-in-require-form (map put-file-in-require-form project-require-files)])
+  (if directory-require-files
+      (let ([files-in-require-form (map put-file-in-require-form directory-require-files)])
         `(begin
            (require ,@files-in-require-form)
            ,@(if provide
@@ -24,5 +24,5 @@
       '(begin)))
 
 
-(define+provide (require-project-require-files here-path)
-  (require+provide-project-require-files here-path #:provide #f))
+(define+provide (require-directory-require-files here-path)
+  (require+provide-directory-require-files here-path #:provide #f))
