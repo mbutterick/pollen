@@ -728,9 +728,3 @@ With the expected results:
 
 [Coming soon]
 
-@;section{
-1 directory-require.rkt
-2-4 three source files
-5 pagetree
-6 template
-}
