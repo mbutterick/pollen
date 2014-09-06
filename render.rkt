@@ -80,9 +80,9 @@
   (file-proc source-or-output-path))
 
 
-(define (project-requires-changed? source-path)
-  (define project-require-files (get-project-require-files source-path))
-  (define rerequire-results (and project-require-files (map file-needed-rerequire? project-require-files)))
+(define (directory-requires-changed? source-path)
+  (define directory-require-files (get-directory-require-files source-path))
+  (define rerequire-results (and directory-require-files (map file-needed-rerequire? directory-require-files)))
   (define requires-changed? (and rerequire-results (ormap (λ(x) x) rerequire-results)))
   (when requires-changed?
     (begin
@@ -97,7 +97,7 @@
   (or (not (file-exists? output-path))
      (modification-date-expired? source-path template-path)
      (and (not (null-source? source-path)) (file-needed-rerequire? source-path))
-     (and (world:check-project-requires-in-render?) (project-requires-changed? source-path))))
+     (and (world:check-directory-requires-in-render?) (directory-requires-changed? source-path))))
 
 
 (define/contract+provide (render-to-file-if-needed source-path [template-path #f] [maybe-output-path #f] #:force [force #f])
@@ -163,7 +163,7 @@
     `(begin 
        (require (for-syntax racket/base))
        (require web-server/templates pollen/cache pollen/debug)
-       ,(require-project-require-files source-path) 
+       ,(require-directory-require-files source-path) 
        (let ([doc (cached-require ,(path->string source-path) ',world:main-pollen-export)]
              [metas (cached-require ,(path->string source-path) ',world:meta-pollen-export)])
          (local-require pollen/pagetree pollen/template pollen/top)
