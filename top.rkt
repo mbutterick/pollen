@@ -13,7 +13,7 @@
 
 (define-syntax (top~ stx)
   (syntax-case stx ()
-    [(_ . id) #'(make-tag-function 'id)]))
+    [(_ . id) #'(make-default-tag-function 'id)]))
 
 (define-syntax (def/c stx)
   (syntax-case stx ()

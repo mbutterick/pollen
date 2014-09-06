@@ -1,8 +1,8 @@
 #lang racket/base
+(require txexpr sugar/define) 
 
-(provide make-tag-function)
-
-(define (make-tag-function . ids)
+(define/contract+provide (make-default-tag-function . ids)
+  (() #:rest (listof txexpr-tag?) . ->* . procedure?)
   (define (make-one-tag id)
     (λ x 
       (define reversed-pieces ; list of attribute pairs, and last element holds a list of everything else, then reversed
@@ -27,3 +27,12 @@
       `(,id ,@(if (equal? attrs null) null (list (reverse attrs))) ,@body)))
   
   (apply compose1 (map make-one-tag ids)))
+
+
+
+(define/contract+provide (split-attributes parts)
+  (list? . -> . (values txexpr-attrs? txexpr-elements?))
+   (define dummy-tag (gensym))
+   (define dummy-txexpr (apply (make-default-tag-function dummy-tag) parts))
+   (define-values (tag attrs elements) (txexpr->values dummy-txexpr))
+   (values attrs elements))
