@@ -17,5 +17,6 @@ Icon
 # generated documentation
 scribblings/*.js
 scribblings/*.css
+!scribblings/mb.css
 scribblings/*.html
 scribblings/pollen/*
