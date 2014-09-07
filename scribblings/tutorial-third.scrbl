@@ -1,6 +1,6 @@
 #lang scribble/manual
 
-@(require scribble/eval (for-label plot pollen/world pollen/tag racket/base pollen/template txexpr racket/list racket/string))
+@(require scribble/eval (for-label pollen/decode plot pollen/world pollen/tag racket/base pollen/template txexpr racket/list racket/string))
 @(require "mb-tools.rkt")
 
 @(define my-eval (make-base-eval))
@@ -19,6 +19,8 @@ Now you're getting to the good stuff. In this tutorial, you'll use Pollen to pub
 @item{Attaching behavior to tag functions}
 
 @item{the @racketfont{directory-require.rkt} file}
+
+@item{Using @racket[decode] with Pollen markup}
 
 @item{@exec{raco pollen render} and @exec{raco pollen clone}}
 
