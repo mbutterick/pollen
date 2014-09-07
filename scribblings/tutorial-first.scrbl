@@ -167,8 +167,7 @@ The border is too.
 
 The project server is a web server built into Pollen. Just as DrRacket lets you run individual files and see if they work as you expect, the project server lets you preview and test your project as a real website. While working on your Pollen project, you may find it convenient to have DrRacket open on half your screen, and on the other half, a web browser pointing at the project server.
 
-@(define-runtime-path project-server "project-server.png")
-@image[project-server #:scale 0.7]
+@image/rp["project-server.png" 0.7]
 
 ``Why can't I just open the HTML files directly in my browser?'' If you want to keep making web pages the way we did in 1996, go ahead. But that approach has several shortcomings. First, when you open files directly in your browser, you're cruising the local filesystem, and absolute URLs (the kind that start with a @litchar{/}) won't work. Second, if you want to test your website on devices other than your own machine — well, you can't. Third, you have to render your HTML files in advance, whereas the project server is clever about doing this dynamically. 
 
@@ -271,8 +270,7 @@ Then, in your web browser, visit @link["http://localhost:8080/index.ptree"]{@rac
 
 You should see something like this:
 
-@(define-runtime-path dashboard "dashboard.png")
-@image[dashboard #:scale 1]
+@image/rp["dashboard.png"]
 
 The top line tells us that we're in the root directory of the project. We didn't make an explicit @racketfont{index.ptree} file, so the project server just shows us a directory listing. 
 
@@ -604,9 +602,7 @@ What do we expect to see? We expect that the @racketfont{padding} and @racketfon
 
 And indeed, when you @link["http://localhost:8080/poem.html"]{reload the file} in the project server, you'll see exactly that:
 
-@(define-runtime-path result "result.png")
-@image[result #:scale 0.7]
-
+@image/rp["result.png" 0.7]
 
 As before, if you edit the values of the variables in the source file and reload in the project server, you'll see both the text and the layout change.
 

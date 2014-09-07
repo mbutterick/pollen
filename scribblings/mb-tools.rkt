@@ -1,5 +1,5 @@
 #lang racket/base
-(require scribble/core scribble/base scribble/manual racket/list scribble/private/manual-sprop scribble/decode scribble/html-properties racket/runtime-path racket/string)
+(require (for-syntax racket/base) scribble/core scribble/base scribble/manual racket/list scribble/private/manual-sprop scribble/decode scribble/html-properties racket/runtime-path racket/string)
 
 (provide (all-defined-out))
 
@@ -44,3 +44,10 @@
   (nested #:style (style "noskip" (list (css-style-addition mb-css) (alt-tag "div")))
          (margin-note "Don’t skip this section! It explains a concept that's essential to understanding how Pollen works.")))
   
+
+(define-syntax (image/rp stx)
+  (syntax-case stx ()
+    [(_ name) #'(image/rp name 1.0)]
+    [(_ name scale) #'(begin
+                        (define-runtime-path rp name)
+                        (image rp #:scale scale))]))
