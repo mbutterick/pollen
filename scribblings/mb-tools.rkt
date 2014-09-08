@@ -1,5 +1,5 @@
 #lang racket/base
-(require (for-syntax racket/base) scribble/core scribble/base scribble/manual racket/list scribble/private/manual-sprop scribble/decode scribble/html-properties racket/runtime-path racket/string)
+(require (for-syntax racket/base racket/syntax) scribble/core scribble/base scribble/manual racket/list scribble/private/manual-sprop scribble/decode scribble/html-properties racket/runtime-path racket/string)
 
 (provide (all-defined-out))
 
@@ -46,8 +46,9 @@
   
 
 (define-syntax (image/rp stx)
-  (syntax-case stx ()
-    [(_ name) #'(image/rp name 1.0)]
-    [(_ name scale) #'(begin
-                        (define-runtime-path rp name)
-                        (image rp #:scale scale))]))
+ (syntax-case stx ()
+   [(_ name xs ...)
+    (with-syntax ([id (generate-temporary)])
+      #'(begin
+          (define-runtime-path id name)
+          (image id xs ...)))]))
