@@ -101,7 +101,7 @@ Note that you need to take more care when building a pagetree by hand. Pagenodes
 
 @section{Using pagetrees for navigation}
 
-Typically you'll call the pagetree-navigation functions from inside templates, using the special variable @racket[here] as the starting point. For more on this technique, see @seclink["Pagetrees" #:doc '(lib "pollen/scribblings/pollen.scrbl")]{pagetree navigation}.
+Typically you'll call the pagetree-navigation functions from inside templates, using the special variable @racket[here] as the starting point. For more on this technique, see @secref["Pagetree_navigation" #:tag-prefixes '( "tutorial-2")].
 
 @section{Using @racketfont{index.ptree} in the dashboard}
 
