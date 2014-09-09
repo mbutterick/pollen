@@ -455,7 +455,7 @@ The value of edge is ◊|edge| pixels}
 
 Metas are not a foundational abstraction. They're just a convenience — a place to store arbitrary pieces of information that you might want to use later. 
 
-@margin-note{Pollen occasionally relies on metas. For instance, the @racket[get-template-for] function will look in the metas of a source file to see if a template is explicitly specified. The @racket[pollen/template] module also contains functions for working with metas, such as @racket[select-from-metas].}
+@margin-note{Pollen occasionally uses metas. For instance, the @racket[get-template-for] function will look in the metas of a source file to see if a template is explicitly specified. The @racket[pollen/template] module also contains functions for working with metas, such as @racket[select-from-metas].}
 
 To insert a meta, use the standard command syntax for inserting a tag with an attribute pair, but use the special @tt{meta} name:
 
@@ -474,6 +474,8 @@ When you mark a meta like this, two things happen. First, when you run the file,
 
 '(some-tag ((key "value")) "Another normal tag")
 }
+
+@margin-note{If your @tt{meta} includes a text argument between curly braces — or any other arguments aside from the initial key–value pair — they will be ignored.}
 
 Second, the meta is collected into a hash table that is exported with the name @tt{metas}. To see this hash table, run the file above in DrRacket, then move to the interactions window and type @exec{metas} at the prompt:
 

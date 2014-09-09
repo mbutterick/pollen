@@ -49,7 +49,7 @@
                       (define (meta-key x) (car (caadr x)))
                       (define (meta-value x) (cadr (caadr x)))
                       (define is-meta-element? (λ(x) (and (list? x) ; possible txexpr
-                                                         (= (length x) 2) ; = tag + attribute
+                                                         (>= (length x) 2) ; = tag + attribute + other elements (which are ignored)
                                                          (equal? 'meta (car x)) ; tag is 'meta
                                                          (symbol? (meta-key x)) ; attribute key is symbol
                                                          (string? (meta-value x))))) ; attribute value is string
