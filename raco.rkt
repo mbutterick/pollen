@@ -9,7 +9,9 @@
 
 (define-for-syntax first-arg-or-current-dir
   (with-handlers ([exn:fail? (λ(exn) (current-directory))])
-    (path->complete-path (simplify-path (string->path (vector-ref args 1))))))
+    ;; incoming path argument is handled as described in
+    ;; docs for current-directory
+    (path->complete-path (path->directory-path (simplify-path (cleanse-path (string->path (vector-ref args 1))))))))
 
 (define-for-syntax rest-args
   (with-handlers ([exn:fail? (λ(exn) #f)])
