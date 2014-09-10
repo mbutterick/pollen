@@ -336,8 +336,7 @@ And most important:
 @itemlist[
 
 
-@item{@bold{Tags are functions.} As I @seclink["Tags___tag_functions"
-         #:doc '(lib "pollen/scribblings/pollen.scrbl")]{mentioned above}, every tag has a function behind it that uses the content of the tag as input. The default tag function just outputs the tag and its content.  But you can replace this with any kind of function. So in practice, you can offload a lot of labor to tags. }
+@item{@bold{Tags are functions.} As I @seclink["Tags___tag_functions"]{mentioned above}, every tag has a function behind it that uses the content of the tag as input. The default tag function just outputs the tag and its content.  But you can replace this with any kind of function. So in practice, you can offload a lot of labor to tags. }
 ]
 
 
@@ -367,8 +366,7 @@ Leading us to the Three Golden Rules of Pollen Tags:
 
 ]
 
-You've already seen the simplest kind of function in a Pollen document: the @seclink["Tags___tag_functions"
-         #:doc '(lib "pollen/scribblings/pollen.scrbl")]{default tag function}, which emulates the behavior of standard markup tags. 
+You've already seen the simplest kind of function in a Pollen document: the @seclink["Tags___tag_functions"]{default tag function}, which emulates the behavior of standard markup tags. 
 
  Let's revisit an earlier example, now with the help of the Golden Rules:
 
@@ -724,6 +722,157 @@ With the expected results:
 @;subsection{Importing from a Pollen source file}
 
 @;subsection{Making a Racket package}
+
+@section{Decoding markup via the @tt{root} tag}
+
+As you've seen, the X-expression you get when you run a Pollen markup file always starts with a  node called @tt{root}. You can attach a tag function to @tt{root} the same way as any other tag. For instance, you could do something simple, like change the name of the output X-expression:
+
+@fileblock["article.html.pm" @codeblock|{
+#lang pollen
+
+◊(define (root . elements) `(content ,@elements))
+
+The ◊tt{root} tag is now called ◊tt{content}.
+}|]
+
+Resulting in:
+
+@repl-output{'(content "The " (tt "root") " tag is now called " (tt "content") ".")}
+
+But unlike other tags in your document, @tt{root} contains the entire content of the document. So the function you attach to @tt{root} can operate on everything.
+
+For that reason, one of the most useful things you can do with a tag function attached to @tt{root} is @italic{decoding} the content of the page. Decoding refers to any post-processing of content that happens after the tags within the page have been evaluated. 
+
+Decoding is a good way to automatically accomplish:
+
+@itemlist[
+
+@item{Detection of linebreaks, paragraphs, and list items based on whitespace.}
+
+@item{Hyphenation.}
+
+@item{Typographic optimizations, like smart quotes, dashes, and ligatures.}
+
+@item{Gathering data for indexing or cross-referencing.}
+
+@item{Any document enhancements a) that can be handled programmatically and b) that you'd prefer not to hard-code within your source files.}
+
+]
+
+As an example, let's take one of my favorites — linebreak and paragraph detection. In XML authoring, you have to insert every @tt{<br />} and @tt{<p>} tag by hand. This is profoundly dull, clutters up the source file, and makes editing a chore. 
+
+Instead, let's make a decoder that allows us to denote a linebreak with a single newline in the source, and a paragraph break with a double newline. Here's some sample content with single and double newlines:
+
+@fileblock["article.html.pm" @codeblock|{
+#lang pollen
+
+The first line of the first paragraph.
+And a new line.
+
+The second paragraph.
+}|]
+
+But without a decoder, the newlines just get passed through:
+
+@repl-output{'(root "The first line of the first paragraph." "\n" "And a new line." "\n" "\n" "The second paragraph.")}
+
+When this X-expression is converted to HTML, the newlines persist:
+
+@repl-output{<root>The first line of the first paragraph.\nAnd a new line.\n\nThe second paragraph.</root>}
+
+But in HTML, raw newlines are displayed as a single space. So if you view this file in the project server, you'll see:
+
+@terminal{@larger{@smaller{The first line of the first paragraph. And a new line. The second paragraph.}}}
+
+Not what we want.
+
+So we need to make a decoder. To do this, we use the @racket[decode-elements] function, which provides hooks to selectively process certain categories of content within the document. 
+
+@margin-note{@racket[decode-elements] is a convenience variant of @racket[decode], which takes a full X-expression as input. Under the hood, they work the same way, so use whichever you prefer.}
+
+Add a basic @racket[decode-elements] to the source file like so:
+
+@fileblock["article.html.pm" @codeblock|{
+#lang pollen
+
+◊(require pollen/decode txexpr)
+◊(define (root . elements)
+   (make-txexpr 'root null (decode-elements elements)))
+
+The first line of the first paragraph.
+And a new line.
+
+The second paragraph.
+}|]
+
+The @racket[make-txexpr] function is a utility from the @racket[txexpr] package, which is installed with Pollen. It builds a new X-expression from a tag, attribute list, and list of elements. Here, we'll keep the tag name @tt{root}, leave the attributes as @tt{null}, and append our decoded list of elements.
+
+@margin-note{Racket jocks: you could also write this using @racket[quasiquote] and @racket[unquote-splicing] syntax as @code|{`(root ,@(decode-elements elements))}|. The @racket[txexpr] package is just a more explicit way of accomplishing the task.}
+
+If you run this file, what changes? Right — nothing. That's because by default, both @racket[decode-elements] (and @racket[decode]) will let the content pass through unaltered.
+
+We change this by giving @racket[decode-elements] the name of a processing function and attaching it to the type of content we want to process. In this case, we're in luck — the @racket[decode] module already contains a @racket[detect-paragraphs] function (that also detects linebreaks). We add this function using the keyword argument @racket[#:txexpr-elements-proc], which is short for ``the function used to process the elements of a tagged X-expression'':
+
+@fileblock["article.html.pm" @codeblock|{
+#lang pollen
+
+◊(require pollen/decode txexpr)
+◊(define (root . elements)
+   (make-txexpr 'root null (decode-elements elements
+     #:txexpr-elements-proc detect-paragraphs)))
+
+The first line of the first paragraph.
+And a new line.
+
+The second paragraph.
+}|]
+
+Now, when we run the file, the X-expression has changed to include two @racket[p] tags and a @racket[br] tag:
+
+@repl-output{'(root (p "The first line of the first paragraph." (br) "And a new line.") (p "The second paragraph."))}
+
+That means when we convert to HTML, we get the tags we need:
+
+@repl-output{<root><p>The first line of the first paragraph.<br />And a new line.</p><p>The second paragraph.</p></root>}
+
+So when we view this in the project server, the linebreaks and paragraph breaks are displayed correctly:
+
+@terminal{@larger{@smaller{The first line of the first paragraph.@(linebreak) 
+And a new line. 
+@(linebreak)@(linebreak)
+The second paragraph.}}}
+
+Of course, in practice you wouldn't put your decoding function in a single source file. You'd make it available to all your source files by putting it in @tt{directory-require.rkt}. So let's do that now:
+
+@fileblock["directory-require.rkt" @codeblock{
+#lang racket
+(require pollen/decode txexpr)
+(define (root . elements)
+   (make-txexpr 'root null (decode-elements elements
+     #:txexpr-elements-proc detect-paragraphs)))
+(provide (all-defined-out))
+}]
+
+We'll also restore the source of @tt{article.html.pm} to its original, simplified state:
+
+@fileblock["article.html.pm" @codeblock|{
+#lang pollen
+
+The first line of the first paragraph.
+And a new line.
+
+The second paragraph.
+}|]
+
+And the result in the project server will be the same:
+
+@terminal{@larger{@smaller{The first line of the first paragraph.@(linebreak) 
+And a new line. 
+@(linebreak)@(linebreak)
+The second paragraph.}}}
+
+
+By the way, though decoding via the @tt{root} tag is the most likely usage scenario, you don't have to do it that way. Decoding is just a special kind of tag function. So you can make a decoder that only affects a certain tag within the page. Or you can make multiple decoders for different tags. The advantage of using a decoder with @tt{root} is that it can affect all the content, and it will be the last tag function that gets called.
 
 
 @section{Putting it all together}
