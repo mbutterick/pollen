@@ -66,6 +66,43 @@
       [else (error "decode: can't decode" x)])))
 
 
+(define+provide/contract (decode-elements elements
+                                 #:txexpr-tag-proc [txexpr-tag-proc (λ(x)x)]
+                                 #:txexpr-attrs-proc [txexpr-attrs-proc (λ(x)x)]
+                                 #:txexpr-elements-proc [txexpr-elements-proc (λ(x)x)]
+                                 #:block-txexpr-proc [block-txexpr-proc (λ(x)x)]
+                                 #:inline-txexpr-proc [inline-txexpr-proc (λ(x)x)]
+                                 #:string-proc [string-proc (λ(x)x)]
+                                 #:symbol-proc [symbol-proc (λ(x)x)]
+                                 #:valid-char-proc [valid-char-proc (λ(x)x)]
+                                 #:cdata-proc [cdata-proc (λ(x)x)]
+                                 #:exclude-tags [excluded-tags '()])
+  ((txexpr-elements?)  
+   (#:txexpr-tag-proc (txexpr-tag? . -> . txexpr-tag?)
+                      #:txexpr-attrs-proc (txexpr-attrs? . -> . txexpr-attrs?)
+                      #:txexpr-elements-proc (txexpr-elements? . -> . txexpr-elements?)
+                      #:block-txexpr-proc (block-txexpr? . -> . xexpr?)
+                      #:inline-txexpr-proc (txexpr? . -> . xexpr?)
+                      #:string-proc (string? . -> . xexpr?)
+                      #:symbol-proc (symbol? . -> . xexpr?)
+                      #:valid-char-proc (valid-char? . -> . xexpr?)
+                      #:cdata-proc (cdata? . -> . xexpr?)
+                      #:exclude-tags (listof symbol?)  ) . ->* . txexpr-elements?)
+  
+  (define temp-tag (gensym "temp-tag"))
+  (define decode-result (decode `(temp-tag ,@elements)
+                                #:txexpr-tag-proc txexpr-tag-proc
+                                 #:txexpr-attrs-proc txexpr-attrs-proc
+                                 #:txexpr-elements-proc txexpr-elements-proc
+                                 #:block-txexpr-proc block-txexpr-proc
+                                 #:inline-txexpr-proc inline-txexpr-proc
+                                 #:string-proc string-proc
+                                 #:symbol-proc symbol-proc
+                                 #:valid-char-proc valid-char-proc
+                                 #:cdata-proc cdata-proc
+                                 #:exclude-tags excluded-tags))
+  (get-elements decode-result))
+  
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
