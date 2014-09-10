@@ -173,9 +173,27 @@ The @racket[_tags-to-exclude] argument is useful if you're decoding source that'
 #:exclude-tags '(style script))
 ]
 
+
+@defproc[
+(decode-elements
+[elements txexpr-elements?]
+[#:txexpr-tag-proc txexpr-tag-proc (txexpr-tag? . -> . txexpr-tag?) (λ(tag) tag)]
+[#:txexpr-attrs-proc txexpr-attrs-proc (txexpr-attrs? . -> . txexpr-attrs?) (λ(attrs) attrs)]
+[#:txexpr-elements-proc txexpr-elements-proc (txexpr-elements? . -> . txexpr-elements?) (λ(elements) elements)]
+[#:block-txexpr-proc block-txexpr-proc (block-txexpr? . -> . xexpr?) (λ(tx) tx)]
+[#:inline-txexpr-proc inline-txexpr-proc (txexpr? . -> . xexpr?) (λ(tx) tx)]
+[#:string-proc string-proc (string? . -> . xexpr?) (λ(str) str)]
+[#:symbol-proc symbol-proc (symbol? . -> . xexpr?) (λ(sym) sym)]
+[#:valid-char-proc valid-char-proc (valid-char? . -> . xexpr?) (λ(vc) vc)]
+[#:cdata-proc cdata-proc (cdata? . -> . xexpr?) (λ(cdata) cdata)]
+[#:exclude-tags tags-to-exclude (listof symbol?) null]
+)
+txexpr-elements?]
+Identical to @racket[decode], but takes @racket[txexpr-elements?] as input rather than a whole tagged X-expression, and likewise returns @racket[txexpr-elements?] rather than a tagged X-expression. A convenience variant for use inside tag functions.
+
 @section{Block}
 
-Because it's convenient, Pollen categorizes tagged X-expressions into two categories: @italic{block} and @italic{inline}. Why is it convenient? When using @racket[decode], you often want to treat the two categories differently. Not that you have to. But this is how you can.
+Because it's convenient, Pollen puts tagged X-expressions into two categories: @italic{block} and @italic{inline}. Why is it convenient? When using @racket[decode], you often want to treat the two categories differently. Not that you have to. But this is how you can.
 
 @defparam[project-block-tags block-tags (listof txexpr-tag?)]{
 A parameter that defines the set of tags that @racket[decode] will treat as blocks. This parameter is initialized with the HTML block tags, namely:
