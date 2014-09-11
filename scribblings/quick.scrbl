@@ -231,15 +231,15 @@ Pollen + Markdown
 
 As before, go to the @link["http://localhost:8080/index.ptree"]{dashboard} for the project server. This time, click the link for @link["http://localhost:8080/downtown.html"]{@tt{downtown.html}}. You'll see something like this:
 
-@nested[#:style 'code-inset]{
-@bold{@larger{Pollen + Markdown}}
 
-@nested[#:style 'inset]{@itemlist[
+@browser{
+ @bold{@larger{Pollen + Markdown}}   
 
-@item{You @bold{wanted} it — you @italic{got} it.}
+       • You @bold{wanted} it — you @italic{got} it.
 
-@item{@link["https://google.com/search?q=racket"]{search for Racket}}
-]}}
+       • @link["https://google.com/search?q=racket"]{search for Racket}
+}
+
 
 As usual, you're welcome to edit @tt{downtown.html.pmd} and then refresh the web browser to see the changes.
 
@@ -260,15 +260,14 @@ Pollen + ◊metal
 
 Refresh @link["http://localhost:8080/downtown.html"]{@tt{downtown.html}} in the browser:
 
-@nested[#:style 'code-inset]{
-@bold{@larger{Pollen + Plutonium}}
+@browser{
+ @bold{@larger{Pollen + Plutonium}}   
 
-@nested[#:style 'inset]{@itemlist[
+       • You @bold{wanted} Plutonium — you @italic{got} it.
 
-@item{You @bold{wanted} Plutonium — you @italic{got} it.}
+       • @link["https://google.com/search?q=Plutonium"]{search for Plutonium}
+}
 
-@item{@link["https://google.com/search?q=Plutonium"]{search for Plutonium}}
-]}}
 
 Pollen is handling two tasks here: interpreting the commands in the source, and then converting the Markdown to HTML. But what if you wanted to use Pollen as a preprocessor that outputs a Markdown file? No problem — just change the source name from @tt{downtown.html.pmd} to @tt{downtown.md.pp}. Changing the extension from @tt{.pmd} to @tt{.pp} switches Pollen from Markdown mode back to preprocessor mode. And changing the base name from @tt{downtown.html} to @tt{downtown.md} updates the name of the output file.
 
@@ -298,8 +297,9 @@ Let's convert our Markdown example into Pollen markup. Marking up content is sim
 
 Go to the @link["http://localhost:8080/index.ptree"]{project dashboard} and click on @link["http://localhost:8080/uptown.html"]{@tt{uptown.html}}. You'll see something like this:
 
-@nested[#:style 'code-inset]{
-Pollen markup You @bold{wanted} it — you @italic{got} it. https://google.com/search?q=racketsearch for Racket}
+@browser{
+Pollen markup You @bold{wanted} it — you @italic{got} it. https://google.com/search?q=racketsearch for Racket
+}
 
 That's not right. What happened?
 
@@ -321,15 +321,13 @@ For that, we'll make a special file called @tt{directory-require.rkt}. This is a
 
 Return to the @link["http://localhost:8080/index.ptree"]{project dashboard} and click on @link["http://localhost:8080/uptown.html"]{@tt{uptown.html}}. Now you'll get the right result:
 
-@nested[#:style 'code-inset]{
-@bold{@larger{Pollen markup}}
+@browser{
+ @bold{@larger{Pollen markup}}   
 
-@nested[#:style 'inset]{@itemlist[
+       • You @bold{wanted} it — you @italic{got} it.
 
-@item{You @bold{wanted} it — you @italic{got} it.}
-
-@item{@link["https://google.com/search?q=racket"]{search for Racket}}
-]}}
+       • @link["https://google.com/search?q=racket"]{search for Racket}
+}
 
 Markup mode takes a little more effort to set up. But it also allows you more flexibility. If you want to do semantic markup, or convert your source into multiple output formats, or handle complex page layouts — it's the way to go. 
 

@@ -1,6 +1,6 @@
 #lang scribble/manual
 
-@(require (for-label pollen/world) racket/runtime-path "mb-tools.rkt")
+@(require (for-label pollen/world) "mb-tools.rkt")
 
 @title[#:tag "first-tutorial"]{First tutorial}
 
@@ -70,13 +70,13 @@ Language: racket; memory limit: 1000 MB.
 If you don't see the interactions window, select @menuitem["View"
 "Show Interactions"] from the menu.
 
-@subsection{Setting the @racketfont{#lang} line}
+@subsection{Setting the @tt{#lang} line}
 
-The first line of every Racket source file, and every Pollen source file, is called the @italic{@racketfont{#lang} line}. The @racketfont{#lang} line identifies the language used to interpret the rest of the file.  
+The first line of every Racket source file, and every Pollen source file, is called the @italic{@tt{#lang} line}. The @tt{#lang} line identifies the language used to interpret the rest of the file.  
 
-@margin-note{For more about the @racketfont{#lang} line, see @secref["hash-languages" #:doc '(lib "scribblings/guide/guide.scrbl")]. BTW, it's pronounced @italic{hash lang}.}
+@margin-note{For more about the @tt{#lang} line, see @secref["hash-languages" #:doc '(lib "scribblings/guide/guide.scrbl")]. BTW, it's pronounced @italic{hash lang}.}
 
-When you start a new Pollen source file in DrRacket, you'll need to change the @racketfont{#lang} line to the Pollen language. The simplest way is to change the first line to this:
+When you start a new Pollen source file in DrRacket, you'll need to change the @tt{#lang} line to the Pollen language. The simplest way is to change the first line to this:
 
 @codeblock{
 #lang pollen
@@ -90,7 +90,7 @@ Language: pollen; memory limit: 1000 MB.
 > 
 }
 
-Notice that the language is now reported as @racketfont{pollen}. If you like, change the @racketfont{#lang} line to this:
+Notice that the language is now reported as @tt{pollen}. If you like, change the @tt{#lang} line to this:
 
 @nested[#:style 'code-inset]{@verbatim{
 #lang pollenxyz}}
@@ -100,7 +100,7 @@ Then click @onscreen["Run"] again. DrRacket will print an error:
 @errorblock{Module Language: invalid module text
 standard-module-name-resolver: collection not found ...}
 
-Why? Because there's no language called @racketfont{pollenxyz}. Switch it back to @racketfont{pollen} and let's move on.
+Why? Because there's no language called @tt{pollenxyz}. Switch it back to @tt{pollen} and let's move on.
 
 @subsection{Putting in the text of the poem}
 
@@ -113,7 +113,7 @@ The padding is 15em.
 The border is too.
 }
 
-Paste the text of this poem into your DrRacket editing window, below the @racketfont{#lang} line, so it looks like this:
+Paste the text of this poem into your DrRacket editing window, below the @tt{#lang} line, so it looks like this:
 
 @codeblock{
 #lang pollen
@@ -131,7 +131,7 @@ The border is blue.
 The padding is 2em.
 The border is too.}
 
-This shows you something important: by default, any plain text in a Pollen source file is simply printed as written when you @onscreen["Run"] the file (minus the @racketfont{#lang} line, which is just for Racket's benefit). If you like, edit the text of the poem and click @onscreen["Run"] again. You'll see the updated text printed in the interactions window.
+This shows you something important: by default, any plain text in a Pollen source file is simply printed as written when you @onscreen["Run"] the file (minus the @tt{#lang} line, which is just for Racket's benefit). If you like, edit the text of the poem and click @onscreen["Run"] again. You'll see the updated text printed in the interactions window.
 
 @subsection{Saving & naming your source file}
 
@@ -139,19 +139,19 @@ This shows you something important: by default, any plain text in a Pollen sourc
 
 File naming in Pollen is consequential.
 
-Ultimately, every Pollen source file in your project will be @italic{rendered} into an output file. Each Pollen source file corresponds to one output file. @bold{The name of this output file will be the name of the source file minus the Pollen source extension.} So a source file called @racketfont{file.txt.pp} will become @racketfont{file.txt}.
+Ultimately, every Pollen source file in your project will be @italic{rendered} into an output file. Each Pollen source file corresponds to one output file. @bold{The name of this output file will be the name of the source file minus the Pollen source extension.} So a source file called @tt{file.txt.pp} will become @tt{file.txt}.
 
-Thus, to build the name of a source file, we take the name we want for the output file and add the appropriate Pollen file extension. Different Pollen source files use different extensions — but more about that later. For now, the extension you'll use for your source is @racketfont{.pp}.
+Thus, to build the name of a source file, we take the name we want for the output file and add the appropriate Pollen file extension. Different Pollen source files use different extensions — but more about that later. For now, the extension you'll use for your source is @tt{.pp}.
 
-In this case, let's say we want to end up with a file called @racketfont{poem.html}. Therefore, the name of our source file needs to be:
+In this case, let's say we want to end up with a file called @tt{poem.html}. Therefore, the name of our source file needs to be:
 
-the output name @racketfont{poem.html} + the source extension @racketfont{.pp} = @racketfont{poem.html.pp} 
+the output name @tt{poem.html} + the source extension @tt{.pp} = @tt{poem.html.pp} 
 
-(If you want to name the file @racketfont{something-else.html.pp}, be my guest. There's no magic associated with the prefix.)
+(If you want to name the file @tt{something-else.html.pp}, be my guest. There's no magic associated with the prefix.)
 
 @margin-note{You're welcome to change the name of your source files from the desktop. On Mac OS X and Windows, however, the desktop interface often hides file extensions, so check the properties of the file afterward to make sure you got the name you expected.}
 
-In a convenient location (e.g., your home directory or the desktop) create a new directory for your project called @racketfont{tutorial}. In this new directory, save your DrRacket file as @racketfont{poem.html.pp}.
+In a convenient location (e.g., your home directory or the desktop) create a new directory for your project called @tt{tutorial}. In this new directory, save your DrRacket file as @tt{poem.html.pp}.
 
 @fileblock["/path/to/tutorial/poem.html.pp" @codeblock{
 #lang pollen
@@ -177,24 +177,24 @@ A note about security. The project server isn't intended for real-world use, but
 
 
 
-@subsection{Starting the project server with @racketfont{raco pollen}}
+@subsection{Starting the project server with @tt{raco pollen}}
 
-Before we start the project server, a word about the @racketfont{raco pollen} command. 
+Before we start the project server, a word about the @tt{raco pollen} command. 
 
-When you installed Racket, Racket installed a utility program called @racketfont{raco}. This name is short for @bold{Ra}cket @bold{co}mmand, and @racketfont{raco} acts as a hub for — you guessed it — Racket commands. You used it when you first installed Pollen:
+When you installed Racket, Racket installed a utility program called @tt{raco}. This name is short for @bold{Ra}cket @bold{co}mmand, and @tt{raco} acts as a hub for — you guessed it — Racket commands. You used it when you first installed Pollen:
 
 @terminal{
 > raco pkg install pollen
 }
 
-The first argument after @racketfont{raco} is the subcommand. For instance, @racketfont{raco pkg ...} lets you install, update, and remove packages like so:
+The first argument after @tt{raco} is the subcommand. For instance, @tt{raco pkg ...} lets you install, update, and remove packages like so:
 
 @terminal{
 > raco pkg update pollen
 > raco pkg remove pollen
 }
 
-Likewise, @racketfont{raco pollen} lets you issue commands relevant to Pollen, like starting the project server. (See @secref["raco-pollen"] for a full description of available commands.) 
+Likewise, @tt{raco pollen} lets you issue commands relevant to Pollen, like starting the project server. (See @secref["raco-pollen"] for a full description of available commands.) 
 
 Now we'll start the project server. Go to your command line and enter the following:
 
@@ -202,7 +202,7 @@ Now we'll start the project server. Go to your command line and enter the follow
 > cd /path/to/tutorial
 > raco pollen start}
 
-@margin-note{Windows users, I'll trust you to convert @racketfont{raco} into the appropriate command for your system — assuming defaults, it's likely to be @racketfont{"C:\Program Files\Racket\raco"} (include the surrounding quotes in the command).}
+@margin-note{Windows users, I'll trust you to convert @tt{raco} into the appropriate command for your system — assuming defaults, it's likely to be @tt{"C:\Program Files\Racket\raco"} (include the surrounding quotes in the command).}
 
 After a moment, you'll see a startup message like this:
 
@@ -213,19 +213,19 @@ Project server is http://localhost:8080 (Ctrl-C to exit)
 Project dashboard is http://localhost:8080/index.ptree
 Ready to rock}
 
-@italic{Project root} means the directory that the project server was started in, and which it's treating as its root directory. Any absolute URLs (i.e., those beginning with @litchar{/}) will resolve into this directory. So a URL like @racketfont{/styles.css} will impliedly become @racketfont{/path/to/tutorial/styles.css}. 
+@italic{Project root} means the directory that the project server was started in, and which it's treating as its root directory. Any absolute URLs (i.e., those beginning with @litchar{/}) will resolve into this directory. So a URL like @tt{/styles.css} will impliedly become @tt{/path/to/tutorial/styles.css}. 
 
-If you use the bare command @racketfont{raco pollen start}, the project server will start in the current directory. But if you want to start the project server elsewhere, you can add that directory as an argument like this:
+If you use the bare command @tt{raco pollen start}, the project server will start in the current directory. But if you want to start the project server elsewhere, you can add that directory as an argument like this:
 
 @terminal{
 > raco pollen start /some/other/path
 }
 
-The next line of the startup message tells you that the web address of the project server is @racketfont{http://localhost:8080}. This is the address you put into your web browser to test your project. If you're unfamiliar with this style of URL, @racketfont{localhost} refers to your own machine, and @racketfont{8080} is the network port where the project server will respond to browser requests.
+The next line of the startup message tells you that the web address of the project server is @tt{http://localhost:8080}. This is the address you put into your web browser to test your project. If you're unfamiliar with this style of URL, @tt{localhost} refers to your own machine, and @tt{8080} is the network port where the project server will respond to browser requests.
 
-If you want to access the project server from a different machine, you can't use @racketfont{localhost}. But you can use the IP address of the machine running the project server (e.g., @racketfont{http://192.168.1.10:8080}) or any name for that machine available through local DNS (e.g., @racketfont{http://mb-laptop:8080}).
+If you want to access the project server from a different machine, you can't use @tt{localhost}. But you can use the IP address of the machine running the project server (e.g., @tt{http://192.168.1.10:8080}) or any name for that machine available through local DNS (e.g., @tt{http://mb-laptop:8080}).
 
-Though port @racketfont{8080} is the default, you can start the project server on any port you like by adding it as an argument to @racketfont{raco pollen start}:
+Though port @tt{8080} is the default, you can start the project server on any port you like by adding it as an argument to @tt{raco pollen start}:
 
 @terminal{
 > raco pollen start /path/to/tutorial
@@ -253,11 +253,11 @@ Your terminal window will report status and error messages from the project serv
 
 For each directory in your project, starting at the top, the project server displays a @italic{dashboard} in your web browser. The dashboard gives you an overview of the files in the directory, and links to view them.
 
-The address of the top-level dashboard is @racketfont{http://localhost:8080/index.ptree}. Other dashboards follow the same pattern (e.g., @racketfont{http://localhost:8080/path/to/dir/index.ptree}.) 
+The address of the top-level dashboard is @tt{http://localhost:8080/index.ptree}. Other dashboards follow the same pattern (e.g., @tt{http://localhost:8080/path/to/dir/index.ptree}.) 
 
-Note that the dashboard is @bold{not} at @racketfont{http://localhost:8080/} or its equivalent, @racketfont{http://localhost:8080/index.html}. Why? So it doesn’t interfere with any @racketfont{index.html} that you may want to put in your project.
+Note that the dashboard is @bold{not} at @tt{http://localhost:8080/} or its equivalent, @tt{http://localhost:8080/index.html}. Why? So it doesn’t interfere with any @tt{index.html} that you may want to put in your project.
 
-Thus, @racketfont{index.ptree}. The @racketfont{.ptree} extension is short for @italic{pagetree}. In Pollen, a pagetree is a hierarchical list of pages. We'll do more with pagetrees in a later tutorial. For now, just be aware that to generate the dashboard, the project server will first look for an actual @racketfont{index.ptree} file in each directory. If it doesn't find one, it will generate a pagetree from a listing of files in the directory.
+Thus, @tt{index.ptree}. The @tt{.ptree} extension is short for @italic{pagetree}. In Pollen, a pagetree is a hierarchical list of pages. We'll do more with pagetrees in a later tutorial. For now, just be aware that to generate the dashboard, the project server will first look for an actual @tt{index.ptree} file in each directory. If it doesn't find one, it will generate a pagetree from a listing of files in the directory.
 
 Let's look at the root-level dashboard for our project. First, make sure your project server is running:
 
@@ -266,31 +266,31 @@ Let's look at the root-level dashboard for our project. First, make sure your pr
 > raco pollen start
 }
 
-Then, in your web browser, visit @link["http://localhost:8080/index.ptree"]{@racketfont{http://localhost:8080/index.ptree}}. 
+Then, in your web browser, visit @link["http://localhost:8080/index.ptree"]{@tt{http://localhost:8080/index.ptree}}. 
 
 You should see something like this:
 
 @image/rp["dashboard.png"]
 
-The top line tells us that we're in the root directory of the project. We didn't make an explicit @racketfont{index.ptree} file, so the project server just shows us a directory listing. 
+The top line tells us that we're in the root directory of the project. We didn't make an explicit @tt{index.ptree} file, so the project server just shows us a directory listing. 
 
 
 @subsection{Source files in the dashboard}
 
-We see the only file, @racketfont{poem.html.pp}. Note that the @racketfont{.pp} extension is grayed out. The dashboard automatically consolidates references to source and output files into a single entry. What this entry says is ``The directory contains a source file in @racketfont{.pp} format for the output file @racketfont{poem.html}.''
+We see the only file, @tt{poem.html.pp}. Note that the @tt{.pp} extension is grayed out. The dashboard automatically consolidates references to source and output files into a single entry. What this entry says is ``The directory contains a source file in @tt{.pp} format for the output file @tt{poem.html}.''
 
 Every source-file entry in the dashboard has three links. The first link is attached to the filename itself, and takes you to a preview of the output file. If the output file doesn't yet exist — as is the case here — it will be dynamically rendered. (This is true whether you click its name in the dashboard, or link to it from another page.) So click the filename. You'll see in your web browser:
 
 @browser{
 The margin is 42em. The border is red. The padding is 15em. The border is too.} 
 
-Granted, this is a boring web page. The main point here is that you're seeing the @italic{output} from your source file, which didn't exist before. Notice that the address bar says @racketfont{http://localhost:8080/poem.html}, not @racketfont{poem.html.pp}. And if you look in your @racketfont{tutorial} directory, you'll see a new file called @racketfont{poem.html}. 
+Granted, this is a boring web page. The main point here is that you're seeing the @italic{output} from your source file, which didn't exist before. Notice that the address bar says @tt{http://localhost:8080/poem.html}, not @tt{poem.html.pp}. And if you look in your @tt{tutorial} directory, you'll see a new file called @tt{poem.html}. 
 
-In other words, when you clicked on the filename link in the dashboard, Pollen rendered the output file from your source file and saved it in your project directory. As promised earlier, the name of the output file (@racketfont{poem.html}) is the name of the source file (@racketfont{poem.html.pp}) minus the Pollen extension (@racketfont{.pp}).
+In other words, when you clicked on the filename link in the dashboard, Pollen rendered the output file from your source file and saved it in your project directory. As promised earlier, the name of the output file (@tt{poem.html}) is the name of the source file (@tt{poem.html.pp}) minus the Pollen extension (@tt{.pp}).
 
 If you go back to the dashboard and click on the filename link again, you'll see the same output file. If the source file hasn't changed, Pollen will just show you the output file that's already been rendered. 
 
-But if you like, open your @racketfont{poem.html.pp} source file in DrRacket, edit the first two lines, and save the file:
+But if you like, open your @tt{poem.html.pp} source file in DrRacket, edit the first two lines, and save the file:
 
 @codeblock{
 #lang pollen
@@ -308,9 +308,9 @@ The cave is pitch black. Look out for the grue. The padding is 15em. The border 
 
 Here, Pollen notices that the source file has changed, so it refreshes the output file. This makes it convenient to work between DrRacket and your web browser, editing source and then reloading to see the changes.
 
-The other two links in the dashboard are labeled @racketfont{in} and @racketfont{out}. 
+The other two links in the dashboard are labeled @tt{in} and @tt{out}. 
 
-The link labeled @racketfont{in} will display the contents of the source file:
+The link labeled @tt{in} will display the contents of the source file:
 
 @codeblock{
 #lang pollen
@@ -321,7 +321,7 @@ The padding is 15em.
 The border is too.
 }
 
-The link labeled @racketfont{out} will display the contents of the output file (just like the ``view source'' option in your web browser):
+The link labeled @tt{out} will display the contents of the output file (just like the ``view source'' option in your web browser):
 
 @terminal{
 The cave is pitch black.
@@ -329,22 +329,22 @@ Look out for the grue.
 The padding is 15em.
 The border is too.}
 
-For now, the files are identical except for the @racketfont{#lang} line. But let's change that.
+For now, the files are identical except for the @tt{#lang} line. But let's change that.
 
 @section{Working with the preprocessor}
 
 Pollen can operate in several processing modes. One of these is @italic{preprocessor} mode.  A preprocessor is a tool for making systematic, automated changes to a file, often in contemplation of further processing (hence the @italic{pre-}). You can use the Pollen preprocessor this way. Or you can just use it on its own, and leave your files in a finished state. 
 
-That's how we'll use it in this tutorial. We'll build out our @racketfont{poem.html.pp} source file so that it exits the preprocessor as a legit HTML file.
+That's how we'll use it in this tutorial. We'll build out our @tt{poem.html.pp} source file so that it exits the preprocessor as a legit HTML file.
 
 @subsection{Setting up a preprocessor source file}
 
-The file extension of a Pollen source file tells Pollen what kind of processing to apply to it. The ``@racketfont{.pp}'' file extension stands for ``Pollen preprocessor.'' You can use the preprocessor with any text-based file by:
+The file extension of a Pollen source file tells Pollen what kind of processing to apply to it. The ``@tt{.pp}'' file extension stands for ``Pollen preprocessor.'' You can use the preprocessor with any text-based file by:
 @itemlist[
 
-@item{inserting @racketfont{#lang pollen} as the first line,}
+@item{inserting @tt{#lang pollen} as the first line,}
 
-@item{adding the @racketfont{.pp} file extension,}
+@item{adding the @tt{.pp} file extension,}
 
 @item{running it through Pollen.}
 ]
@@ -376,7 +376,7 @@ The padding is 15em.
 The border is too.
 }]
 
-This file has @racketfont{#lang pollen} as the first line, and @racketfont{.pp} as the file extension, so it meets the minimum requirements for the preprocessor.
+This file has @tt{#lang pollen} as the first line, and @tt{.pp} as the file extension, so it meets the minimum requirements for the preprocessor.
 
 @subsection{Creating valid HTML output}
 
@@ -402,7 +402,7 @@ Return to the project server and view @link["http://localhost:8080/poem.html" "h
 The margin is 42em. The border is red. The padding is 15em. The border is too.} 
 
 
-But now, because of the @racketfont{<pre>} tag, the poem will appear in a monospaced font, and the line breaks will be preserved:
+But now, because of the @tt{<pre>} tag, the poem will appear in a monospaced font, and the line breaks will be preserved:
 
 @terminal{
 The margin is 42em.
@@ -410,7 +410,7 @@ The border is red.
 The padding is 15em.
 The border is too.}
 
-As before, because the source has changed, Pollen refreshes the output file. From the dashboard, you can use the @racketfont{in} and @racketfont{out} links to inspect the source and output. 
+As before, because the source has changed, Pollen refreshes the output file. From the dashboard, you can use the @tt{in} and @tt{out} links to inspect the source and output. 
 
 This is now a valid HTML page.
 
@@ -449,11 +449,11 @@ How to type a lozenge:
 
 @itemlist[#:style 'ordered
 
-@item{The core building block of Racket is the @italic{expression}. An expression can be a value (like @racket[2] or @racket{blue}), a variable (like @racketfont{edge}), or a function call (like @racket[(* inner 4)]).}
+@item{The core building block of Racket is the @italic{expression}. An expression can be a value (like @racket[2] or @racket{blue}), a variable (like @tt{edge}), or a function call (like @racket[(* inner 4)]).}
 
 @item{Every expression is @italic{evaluated} to produce a value.}
 
-@item{A variable evaluates to whatever value it holds (so @racketfont{inner} would become @racket[2]). A function call evaluates to its return value (so @racket[(+ 1 1)] would become @racket[2]).}
+@item{A variable evaluates to whatever value it holds (so @tt{inner} would become @racket[2]). A function call evaluates to its return value (so @racket[(+ 1 1)] would become @racket[2]).}
 
 @item{Function calls go between parentheses. Unlike most languages, the function name comes @italic{first}, followed by its arguments (so it's @racket[(* inner 4)], not @racket[(inner * 4)]). This is called @italic{prefix notation}.}
 
@@ -480,7 +480,7 @@ To learn more about Racket syntax, consider a detour through the excellent @othe
 
 @subsection{Defining variables with commands}
 
-Let's use commands to define variables that will hold some values for our page. First, add a @racketfont{<head>} tag to your source file, and three commmands to define three variables:
+Let's use commands to define variables that will hold some values for our page. First, add a @tt{<head>} tag to your source file, and three commmands to define three variables:
 
 @fileblock["/path/to/tutorial/poem.html.pp" @codeblock{
 #lang pollen
@@ -522,7 +522,7 @@ The border is too.
 </body>
 </html>}
 
-What's with the blank lines? Don't panic — our @racketfont{◊(define ...)} commands define variables, so they don't evaluate to any value. Instead, we get blank lines. So far, so good.
+What's with the blank lines? Don't panic — our @tt{◊(define ...)} commands define variables, so they don't evaluate to any value. Instead, we get blank lines. So far, so good.
 
 @subsection{Inserting values from variables}
 
@@ -548,7 +548,7 @@ The border is too.
 </body>
 </html>}]
 
-Here, we're replacing three values in the poem with the variables containing those values — @racketfont{◊|edge|}, @racketfont{◊|color|}, and @racketfont{◊|inner|}. @link["http://localhost:8080/poem.html"]{Reload the file} in the project server, and you'll see:
+Here, we're replacing three values in the poem with the variables containing those values — @tt{◊|edge|}, @tt{◊|color|}, and @tt{◊|inner|}. @link["http://localhost:8080/poem.html"]{Reload the file} in the project server, and you'll see:
 
 @terminal{
 The margin is 8em.
@@ -558,13 +558,13 @@ The border is too.}
 
 Hey, look at that — the text of the poem changed. Now it even rhymes.
 
-If you like, in the source file, edit the variable definitions with different values and reload the page in the project server. The page will be rendered afresh with the new values. In particular, if you update @racketfont{inner}, you'll also see @racketfont{edge} change, since its value depends on @racketfont{inner}.
+If you like, in the source file, edit the variable definitions with different values and reload the page in the project server. The page will be rendered afresh with the new values. In particular, if you update @tt{inner}, you'll also see @tt{edge} change, since its value depends on @tt{inner}.
 
 @subsection{Inserting variables within CSS}
 
-Our poem makes claims about the @racketfont{margin}, @racketfont{border}, and @racketfont{padding} of the page that aren't yet true. To fix this, we'll rely on the same basic technique of inserting variables into our HTML file. But instead of putting them in the @racketfont{<body>} of the page, we'll put them in a CSS @racketfont{<style>} tag.
+Our poem makes claims about the @tt{margin}, @tt{border}, and @tt{padding} of the page that aren't yet true. To fix this, we'll rely on the same basic technique of inserting variables into our HTML file. But instead of putting them in the @tt{<body>} of the page, we'll put them in a CSS @tt{<style>} tag.
 
-Update the @racketfont{<head>} section of the page with a new @racketfont{<style>} tag that defines a style for @racketfont{pre} like so, using our variables for the relevant values:
+Update the @tt{<head>} section of the page with a new @tt{<style>} tag that defines a style for @tt{pre} like so, using our variables for the relevant values:
 
 
 @fileblock["/path/to/tutorial/poem.html.pp" 
@@ -598,7 +598,7 @@ The border is too.
 
 Notice that we're using the same @litchar{◊|}@italic{variable-name}@litchar{|} pattern as before to insert the variable values. 
 
-What do we expect to see? We expect that the @racketfont{padding} and @racketfont{border} will be 2em wide, because @racketfont{inner} is 2. We expect the @racketfont{margin} to be 8em, because it's equal to @racketfont{edge}, which is @racketfont{inner} multiplied by 4. And we expect the color of the border to be @racket["blue"], because that's the value of the variable @racketfont{color}.
+What do we expect to see? We expect that the @tt{padding} and @tt{border} will be 2em wide, because @tt{inner} is 2. We expect the @tt{margin} to be 8em, because it's equal to @tt{edge}, which is @tt{inner} multiplied by 4. And we expect the color of the border to be @racket["blue"], because that's the value of the variable @tt{color}.
 
 And indeed, when you @link["http://localhost:8080/poem.html"]{reload the file} in the project server, you'll see exactly that:
 

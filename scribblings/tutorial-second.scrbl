@@ -72,7 +72,7 @@ My name is _Brennan_, and I enjoy:
 
 You'll be able to see this file in the project server, but for now, it's just a static file. Pollen isn't doing anything to it.
 
-Let's change that. Consistent with the usual preprocessor practice, we add @racketfont{#lang pollen} as the first line, and append the @racketfont{.pp} file extension, so our new preprocessor-ready file looks like this:
+Let's change that. Consistent with the usual preprocessor practice, we add @tt{#lang pollen} as the first line, and append the @tt{.pp} file extension, so our new preprocessor-ready file looks like this:
 
 @fileblock["brennan.md.pp" 
 @codeblock{
@@ -85,7 +85,7 @@ My name is _Brennan_, and I enjoy:
 + 24 fish nuggets
 }]
 
-Go back to the project server and you'll see the new filename. When you click on it, Pollen will render a new @racketfont{markdown.md} file, but it will look the same as the one you had before. 
+Go back to the project server and you'll see the new filename. When you click on it, Pollen will render a new @tt{markdown.md} file, but it will look the same as the one you had before. 
 
 Now we'll change some of the values using Pollen commands:
 
@@ -104,7 +104,7 @@ My name is _Brennan_, and I enjoy:
 + ◊nugget-quantity ◊nugget-type nuggets
 }]
 
-When you reload this file in the project server, @racketfont{brennan.md} will be regenerated, and will now look like this:
+When you reload this file in the project server, @tt{brennan.md} will be regenerated, and will now look like this:
 
 @terminal{
 My name is _Brennan_, and I enjoy:
@@ -156,7 +156,7 @@ However, this creates ambiguity between the name of the tag and the content. So 
 
 @terminal{(body (h1 "Hello world") (p class="first" "Nice to" (i "see") "you."))}
 
-As for the @racketfont{class} attribute, we need to distinguish it from both the markup tags and the content, so we'll move it between double parentheses:
+As for the @tt{class} attribute, we need to distinguish it from both the markup tags and the content, so we'll move it between double parentheses:
 
 @terminal{(body (h1 "Hello world") (p ((class "first")) "Nice to" (i "see") "you."))}
 
@@ -189,7 +189,7 @@ In Pollen's authoring modes, your source file is parsed into an X-expression, wh
 
 Let's start putting together our article. For simplicity, I'm going to use unrealistically short sample texts. But you can use whatever Markdown content you want.
 
-We want to use Markdown authoring mode to make a file that will ultimately be HTML. So consistent with Pollen file-naming conventions (see @secref["Saving___naming_your_source_file"  #:doc '(lib "pollen/scribblings/pollen.scrbl")]), we'll start with our desired output filename, @racketfont{article.html}, and then append the Markdown authoring suffix, @racketfont{.pmd}. So in DrRacket, start a new file called @racketfont{article.html.pmd} and put some Markdown in it: 
+We want to use Markdown authoring mode to make a file that will ultimately be HTML. So consistent with Pollen file-naming conventions (see @secref["Saving___naming_your_source_file"  #:doc '(lib "pollen/scribblings/pollen.scrbl")]), we'll start with our desired output filename, @tt{article.html}, and then append the Markdown authoring suffix, @tt{.pmd}. So in DrRacket, start a new file called @tt{article.html.pmd} and put some Markdown in it: 
 
 @fileblock["article.html.pmd"
 @codeblock{
@@ -215,9 +215,9 @@ From what you learned in the last section, it should be evident that this X-expr
 
 @repl-output{<root><h1 id="my-article">Deep Thought</h1><p>I am @(linebreak)<strong>so</strong> happy to be writing this.</p></root>}
 
-``But what's this @racketfont{root} tag? That's not HTML.'' An X-expression must have a root tag, so in the spirit of obviousness, every X-expression produced by a source file in authoring mode will start with @racketfont{root}. If you don't need it, you can discard it. But it also creates a useful hook for further processing, as we'll see later.
+``But what's this @tt{root} tag? That's not HTML.'' An X-expression must have a root tag, so in the spirit of obviousness, every X-expression produced by a source file in authoring mode will start with @tt{root}. If you don't need it, you can discard it. But it also creates a useful hook for further processing, as we'll see later.
 
-By the way, as review, let's remind ourselves how this is different from preprocessor mode. Let's take the same Markdown content, but this time put it into a preprocessor source file called @racketfont{article.md.pp}.
+By the way, as review, let's remind ourselves how this is different from preprocessor mode. Let's take the same Markdown content, but this time put it into a preprocessor source file called @tt{article.md.pp}.
 
 @fileblock["article.md.pp"
 @codeblock{
@@ -266,10 +266,10 @@ I am **so** happy to be writing this.
 
 Last time, I had you run this file in DrRacket to see the X-expression it produced. This time, load it in the project server. You'll see something like this:
 
-@terminal{
-@bold{@larger{@larger{Deep Thought}}}
+@browser{
+@bold{@larger{Deep Thought}}
 
-@larger{@smaller{I am @bold{so} happy to be writing this.}}
+I am @bold{so} happy to be writing this.
 }
 
 Here, you're seeing the X-expression from your source combined with an HTML template, which adds the necessary boilerplate for the finished HTML:
@@ -285,7 +285,7 @@ But wait — where did the template come from? When you view an authoring-mode s
 
 But we can learn a few things from the fallback template about how to make an HTML template.
 
-@subsection{The @racketfont{->html} function and the @racketfont{doc} variable}
+@subsection{The @tt{->html} function and the @tt{doc} variable}
 
 This is the fallback template that Pollen uses.
 
@@ -315,22 +315,22 @@ But within a template, we need to explicitly convert from X-expression to HTML. 
 ◊(->html (html (head (meta 'charset: "UTF-8")) (body)))
 }
 
-Third, we need to include the content from our source file. We do this by putting the variable @racketfont{doc} inside the @racketfont{body} tag.
+Third, we need to include the content from our source file. We do this by putting the variable @tt{doc} inside the @tt{body} tag.
 
 @codeblock[#:keep-lang-line? #f]{
 #lang pollen
 ◊(->html (html (head (meta 'charset: "UTF-8")) (body doc)))
 }
 
-By convention, every Pollen source file makes its output available through the variable @racketfont{doc}. A source file in preprocessor mode puts its text result in @racketfont{doc}. And a source file in authoring mode puts its X-expression result in @racketfont{doc}. 
+By convention, every Pollen source file makes its output available through the variable @tt{doc}. A source file in preprocessor mode puts its text result in @tt{doc}. And a source file in authoring mode puts its X-expression result in @tt{doc}. 
 
-@margin-note{You can change the name to something other than @racketfont{doc} by changing @racket[world:main-pollen-export].}
+@margin-note{You can change the name to something other than @tt{doc} by changing @racket[world:main-pollen-export].}
 
-Under the hood, a template is just a partial program that relies on a set of variables defined by another source file (fancy name: @italic{lexical context}). So if you ran this template on its own, nothing would happen, because @racketfont{doc} isn't defined. But when you run it in the context of another source file, it picks up the @racketfont{doc} that's defined by that file.
+Under the hood, a template is just a partial program that relies on a set of variables defined by another source file (fancy name: @italic{lexical context}). So if you ran this template on its own, nothing would happen, because @tt{doc} isn't defined. But when you run it in the context of another source file, it picks up the @tt{doc} that's defined by that file.
 
-Caution — despite the name, a Pollen template is not necessarily a file of the type suggested by its extension. For instance, @racketfont{fallback.html} is a file that ultimately produces HTML, but it's not actually written in HTML.
+Caution — despite the name, a Pollen template is not necessarily a file of the type suggested by its extension. For instance, @tt{fallback.html} is a file that ultimately produces HTML, but it's not actually written in HTML.
 
-It could be, however. Here's an equivalent way of writing @racketfont{fallback.html} that inserts @racketfont{doc} into actual HTML, rather than making the whole thing an X-expression.
+It could be, however. Here's an equivalent way of writing @tt{fallback.html} that inserts @tt{doc} into actual HTML, rather than making the whole thing an X-expression.
 
 @codeblock[#:keep-lang-line? #f]{
 #lang pollen
@@ -338,20 +338,20 @@ It could be, however. Here's an equivalent way of writing @racketfont{fallback.h
 <body>◊(->html doc)</body></html>
 }
 
-Notice that we still need to use the @racket[->html] function, but this time, instead of surrounding a larger X-expression, it just goes around @racketfont{doc}.
+Notice that we still need to use the @racket[->html] function, but this time, instead of surrounding a larger X-expression, it just goes around @tt{doc}.
 
 Truly, there is no difference between these two methods. Use whichever works best for you. I often prefer the second method because I like to build & test HTML layouts by hand using placeholder content to make sure all the fiddly bits work. Then it's easy to replace the placeholder content with @racket[(->html doc)], and it becomes a template.
 
 
 @subsection{Making a custom template}
 
-We'll use these three ingredients to make our own template for @racketfont{article.html.pmd}. 
+We'll use these three ingredients to make our own template for @tt{article.html.pmd}. 
 
-In general, template files can have any name you want. But by default, Pollen will first look for a file in your project directory called @racketfont{template.ext}, where @racketfont{ext} matches the output-file extension of the source file. So if your source file is @racketfont{database.xml.pmd}, Pollen will look for @racketfont{template.xml}. And for @racketfont{article.html.pmd}, Pollen will look for @racketfont{template.html}.
+In general, template files can have any name you want. But by default, Pollen will first look for a file in your project directory called @tt{template.ext}, where @tt{ext} matches the output-file extension of the source file. So if your source file is @tt{database.xml.pmd}, Pollen will look for @tt{template.xml}. And for @tt{article.html.pmd}, Pollen will look for @tt{template.html}.
 
-Therefore, to set up a custom template, all we need to do is create a file called @racketfont{template.html} in our project directory, and make sure it has the three key ingredients we saw in the fallback template. Pollen will automatically apply it to @racketfont{article.html.pmd} when we view it in the project server.
+Therefore, to set up a custom template, all we need to do is create a file called @tt{template.html} in our project directory, and make sure it has the three key ingredients we saw in the fallback template. Pollen will automatically apply it to @tt{article.html.pmd} when we view it in the project server.
 
-But don't take my word for it. In your project directory, create a new file called @racketfont{template.html}:
+But don't take my word for it. In your project directory, create a new file called @tt{template.html}:
 
 @fileblock["template.html"
 @codeblock[#:keep-lang-line? #f]{
@@ -363,9 +363,9 @@ But don't take my word for it. In your project directory, create a new file call
 </html>
 }]
 
-Recall from the last section that this is the same as the fallback template, but written out in HTML, and with a @racketfont{title} element added. In fact, you can now refresh @racketfont{article.html} in the project server. Does it look different? No — it won't, because the resulting template is the same. You should notice, however, that the title of the browser window is now ``Custom template,'' because Pollen is relying on your new template file, rather than the fallback template.
+Recall from the last section that this is the same as the fallback template, but written out in HTML, and with a @tt{title} element added. In fact, you can now refresh @tt{article.html} in the project server. Does it look different? No — it won't, because the resulting template is the same. You should notice, however, that the title of the browser window is now ``Custom template,'' because Pollen is relying on your new template file, rather than the fallback template.
 
-Let's change our custom template by adding a @racketfont{style} block:
+Let's change our custom template by adding a @tt{style} block:
 
 @fileblock["template.html"
 @codeblock[#:keep-lang-line? #f]{
@@ -381,19 +381,19 @@ strong {color: red;}
 <body>◊(->html doc)</body>
 </html>}]
 
-When you refresh @racketfont{article.html} in the project server, you'll see that the heading now has a gray background, and one word in the text is red.
+When you refresh @tt{article.html} in the project server, you'll see that the heading now has a gray background, and one word in the text is red.
 
-Feel free to add other settings to @racketfont{template.html}, or update the text in @racketfont{article.html}, and see how the page changes. As you'd expect, the project server keeps an eye on both your source files and your template files, and if one changes, it will refresh the output file automatically.
+Feel free to add other settings to @tt{template.html}, or update the text in @tt{article.html}, and see how the page changes. As you'd expect, the project server keeps an eye on both your source files and your template files, and if one changes, it will refresh the output file automatically.
 
 @subsection{Inserting specific source data into templates}
 
-In the last example, we used @racketfont{doc} to insert the entire content of the source file — as an X-expression — into the template.
+In the last example, we used @tt{doc} to insert the entire content of the source file — as an X-expression — into the template.
 
 But what if you want to only insert part of your source file into the template? For instance, you'll look like a dork if the title on each page is ``Custom template.'' So let's fix that.
 
-When you're working in a template, Pollen provides a @racket[select] function that lets you extract the content of a specific tag, like so: @racketfont{◊(select '@racketvarfont{tag-name} doc)}, which means ``get the content of @racketvarfont{tag-name} out of @racketfont{doc} and put it here.''
+When you're working in a template, Pollen provides a @racket[select] function that lets you extract the content of a specific tag, like so: @tt{◊(select '@racketvarfont{tag-name} doc)}, which means ``get the content of @racketvarfont{tag-name} out of @tt{doc} and put it here.''
 
-Let's suppose that we'd rather use the name of the article — @italic{Deep Thought} — as the page title. We're going to put a @racketfont{◊(select ...)} command inside the @racketfont{<title>} tag. 
+Let's suppose that we'd rather use the name of the article — @italic{Deep Thought} — as the page title. We're going to put a @tt{◊(select ...)} command inside the @tt{<title>} tag. 
 
 Beyond that, we just need to know the tag name that contains the title. If we have a little Markdown expertise, we might already know that this part of our Markdown source:
 
@@ -404,14 +404,14 @@ Deep Thought
 ============
 }
 
-is going to produce a tag named @racketfont{h1}. 
+is going to produce a tag named @tt{h1}. 
 
-What if we don't have all the Markdown conversions memorized? No problem. We can still figure out the tag name by running the @racketfont{article.html.pmd} source file in DrRacket and looking at the X-expression that results:
+What if we don't have all the Markdown conversions memorized? No problem. We can still figure out the tag name by running the @tt{article.html.pmd} source file in DrRacket and looking at the X-expression that results:
 
 @repl-output{'(root (h1 ((id "my-article")) "Deep Thought") (p () "I am " 
 (strong () "so") " happy to be writing this."))}
 
-Either way, now we know that the text @italic{Deep Thought} lives in the @racketfont{h1} tag. So we update our template accordingly (for brevity, I'm going to omit the @racketfont{style} tag in these examples, but it's fine to leave it in):
+Either way, now we know that the text @italic{Deep Thought} lives in the @tt{h1} tag. So we update our template accordingly (for brevity, I'm going to omit the @tt{style} tag in these examples, but it's fine to leave it in):
 
 @fileblock["template.html"
 @codeblock[#:keep-lang-line? #f]{
@@ -451,7 +451,7 @@ A couple notes on command syntax. We inserted the @racket[select] and @racket[->
 
 This is exactly equivalent to the previous example. Skeptics are welcome to confirm this by checking the result in the project server.
 
-Finally, notice that in the @racket[select] command, the tag name @racket['h1] is written with a quote mark, whereas @racketfont{doc} is not. This is an easy place to get tripped up, but the rule is simple: you don't use a quote mark when you're referring to the name of an existing function or variable (like @racket[select] or @racketfont{doc}). But you do need a quote mark when you're using the text as a literal value.
+Finally, notice that in the @racket[select] command, the tag name @racket['h1] is written with a quote mark, whereas @tt{doc} is not. This is an easy place to get tripped up, but the rule is simple: you don't use a quote mark when you're referring to the name of an existing function or variable (like @racket[select] or @tt{doc}). But you do need a quote mark when you're using the text as a literal value.
 
 
 @margin-note{Racket (and hence Pollen) makes a distinction between @secref["symbols" #:doc '(lib "scribblings/guide/guide.scrbl")] (e.g. @racket['h1]) and @secref["strings" #:doc '(lib "scribblings/reference/reference.scrbl")] (e.g.  @racket["h1"]). Without getting into the weeds, just note for now that the tag of an X-expression is always a symbol, not a string. But if you write @racketfont*{◊(@racket[select] "h1" doc)}, the command will still work, because Pollen will treat it as @racketfont*{◊(@racket[select] 'h1 doc)}, consistent with a general policy of not being persnickety about input types when the intention is clear.}
@@ -459,26 +459,28 @@ Finally, notice that in the @racket[select] command, the tag name @racket['h1] i
 
 @subsection{Linking to an external CSS file}
 
-If you're a super web hotshot, you probably don't put your CSS selectors in the @racketfont{<head>} tag. Instead, you link to an external CSS file. So it will not surprise you that in Pollen, you can do this by adding the usual @racketfont{<link>} tag to your HTML template, in this case a file called @racketfont{styles.css}:
+If you're a super web hotshot, you probably don't put your CSS selectors in the @tt{<head>} tag. Instead, you link to an external CSS file. So it will not surprise you that in Pollen, you can do this by adding the usual @tt{<link>} tag to your HTML template, in this case a file called @tt{styles.css}:
 
 @fileblock["template.html"
 @codeblock[#:keep-lang-line? #f]{
 #lang pollen
 <html>
-<head><meta charset="UTF-8">
-<title>◊select['h1 doc], by MB</title></head>
+<head>
+<meta charset="UTF-8">
+<title>◊select['h1 doc], by MB</title>
 <link rel="stylesheet" type="text/css" media="all" href="styles.css" />
+</head>
 <body>◊->html[doc]</body>
 </html>
 }]
 
-Fans of hand-coded CSS, I trust you to take it from here: make your @racketfont{styles.css} file, and enjoy the results.
+Fans of hand-coded CSS, I trust you to take it from here: make your @tt{styles.css} file, and enjoy the results.
 
-But folks who paid attention during the @secref["first-tutorial"] might be wondering ``Can we link to a dynamically generated @racketfont{styles.css.pp} file?''
+But folks who paid attention during the @secref["first-tutorial"] might be wondering ``Can we link to a dynamically generated @tt{styles.css.pp} file?''
 
-Yes, of course. Here's the rule of thumb: when you're making links between files — whether CSS, or HTML, or anything else — Pollen doesn't care whether the file is static or dynamic. You just refer to it by its ultimate name, in this case @racketfont{styles.css}. If a static @racketfont{styles.css} file exists, Pollen will use that. If it doesn't, Pollen will look for a source file it can use to make @racketfont{styles.css}, and generate it on the spot. (You can also start with a static file, and change it to be dynamic later, and Pollen will do the right thing.)
+Yes, of course. Here's the rule of thumb: when you're making links between files — whether CSS, or HTML, or anything else — Pollen doesn't care whether the file is static or dynamic. You just refer to it by its ultimate name, in this case @tt{styles.css}. If a static @tt{styles.css} file exists, Pollen will use that. If it doesn't, Pollen will look for a source file it can use to make @tt{styles.css}, and generate it on the spot. (You can also start with a static file, and change it to be dynamic later, and Pollen will do the right thing.)
 
-So to use a dynamic CSS file, we don't need to make any changes to @racketfont{template.html}. We just need to add @racketfont{styles.css.pp} to the project directory:
+So to use a dynamic CSS file, we don't need to make any changes to @tt{template.html}. We just need to add @tt{styles.css.pp} to the project directory:
 
 @fileblock["styles.css.pp"
 @codeblock{
@@ -492,7 +494,7 @@ h1 {background: ◊|h1-color|; color: white;}
 strong {color: ◊|strong-color|;}
 }]
 
-Now, when you refresh @racketfont{article.html} in the project server, Pollen will generate the @racketfont{styles.css} file it needs, and you'll see the new colors in the page. As before, if you update @racketfont{styles.css.pp}, Pollen will notice and regenerate the CSS file when you refresh the page.
+Now, when you refresh @tt{article.html} in the project server, Pollen will generate the @tt{styles.css} file it needs, and you'll see the new colors in the page. As before, if you update @tt{styles.css.pp}, Pollen will notice and regenerate the CSS file when you refresh the page.
 
 Can you add multiple dynamic style sheets? Yes. 
 @(linebreak)Can you mix dynamic and static style sheets? Yes.
@@ -518,11 +520,11 @@ Pagetrees are used in various ways throughout Pollen. But the most obvious use f
 
 @subsection{Using the automatic pagetree}
 
-You've actually already been exposed to pagetrees (though I didn't tell you about it at the time). Recall that the dashboard of the project server is located at @racketfont{http://localhost:8080/index.ptree}. The list of files you see in the dashboard is a pagetree that Pollen creates by reading the files in the current directory and arranging them in alphabetical order.
+You've actually already been exposed to pagetrees (though I didn't tell you about it at the time). Recall that the dashboard of the project server is located at @tt{http://localhost:8080/index.ptree}. The list of files you see in the dashboard is a pagetree that Pollen creates by reading the files in the current directory and arranging them in alphabetical order.
 
 If the multiple pages in your project are already ordered by filename, then you can rely on this automatic pagetree. 
 
-From earlier in the tutorial, you have a Markdown source file called @racketfont{article.html.pmd} that looks like this:
+From earlier in the tutorial, you have a Markdown source file called @tt{article.html.pmd} that looks like this:
 
 @fileblock["article.html.pmd"
 @codeblock{
@@ -556,45 +558,47 @@ Carticle Title
 The terrific third part.
 }]
 
-As before, you can fill these source files with any sample Markdown content you like. Moreover, you don't have to use the filenames @racketfont{barticle.html.pmd} and @racketfont{carticle.html.pmd} — the point is that the intended sequence needs to match the alphabetic sorting of the filenames.
+As before, you can fill these source files with any sample Markdown content you like. Moreover, you don't have to use the filenames @tt{barticle.html.pmd} and @tt{carticle.html.pmd} — the point is that the intended sequence needs to match the alphabetic sorting of the filenames.
 
-We'll reuse the @racketfont{template.html} and @racketfont{styles.css} files from earlier in the tutorial. Move or delete the other tutorial files so that your dashboard in the project server shows only these five files:
+We'll reuse the @tt{template.html} and @tt{styles.css} files from earlier in the tutorial. Move or delete the other tutorial files so that your dashboard in the project server shows only these five files:
 
 @itemlist[
 
-@item{@racketfont{article.html.pmd}}
-@item{@racketfont{barticle.html.pmd}}
-@item{@racketfont{carticle.html.pmd}}
-@item{@racketfont{styles.css} (or @racketfont{styles.css.pp})}
-@item{@racketfont{template.html}}
+@item{@tt{article.html.pmd}}
+@item{@tt{barticle.html.pmd}}
+@item{@tt{carticle.html.pmd}}
+@item{@tt{styles.css} (or @tt{styles.css.pp})}
+@item{@tt{template.html}}
 ]
 
-If you click on any of the three Markdown sources, you will see it converted into HTML using @racketfont{template.html}, with styles appiled from @racketfont{styles.css}.
+If you click on any of the three Markdown sources, you will see it converted into HTML using @tt{template.html}, with styles appiled from @tt{styles.css}.
 
-The automatic pagetree for this project is exactly what you see in the dashboard: a list of the three article files, followed by @racketfont{styles.css} and @racketfont{template.html}.
+The automatic pagetree for this project is exactly what you see in the dashboard: a list of the three article files, followed by @tt{styles.css} and @tt{template.html}.
 
-@subsection{Adding navigation links to the template with @racketfont{here}}
+@subsection{Adding navigation links to the template with @tt{here}}
 
-Recall from earlier in the tutorial that the content of your source file is made available in the template through the special variable @racketfont{doc}. Likewise, the name of the current source file is made available through the special variable @racketfont{here}. 
+Recall from earlier in the tutorial that the content of your source file is made available in the template through the special variable @tt{doc}. Likewise, the name of the current source file is made available through the special variable @tt{here}. 
 
-To make any navigation link — up, down, sideways — the general idea is that we use @racketfont{here} as input to a pagetree-navigation function, which then looks up the answer in the current pagetree.
+To make any navigation link — up, down, sideways — the general idea is that we use @tt{here} as input to a pagetree-navigation function, which then looks up the answer in the current pagetree.
 
-First, let's just see @racketfont{here} on its own. Update your template as follows:
+First, let's just see @tt{here} on its own. Update your template as follows:
 
 @fileblock["template.html"
 @codeblock[#:keep-lang-line? #f]{
 #lang pollen
 <html>
-<head><meta charset="UTF-8">
-<title>◊select['h1 doc], by MB</title></head>
+<head>
+<meta charset="UTF-8">
+<title>◊select['h1 doc], by MB</title>
 <link rel="stylesheet" type="text/css" media="all" href="styles.css" />
+</head>
 <body>◊->html[doc]
 The current page is called ◊|here|.
 </body>
 </html>
 }]
 
-If you refresh @racketfont{article.html}, you will now see the line ``The current page is called article.html.'' Switch to @racketfont{barticle.html}, and you'll see ``The current page is called barticle.html.'' Makes sense, right?
+If you refresh @tt{article.html}, you will now see the line ``The current page is called article.html.'' Switch to @tt{barticle.html}, and you'll see ``The current page is called barticle.html.'' Makes sense, right?
 
 Now let's use pagetree functions to show the names of the previous and next pages. Consistent with the usual policy of obviousness, these functions are called @racket[previous] and @racket[next]:
 
@@ -602,9 +606,11 @@ Now let's use pagetree functions to show the names of the previous and next page
 @codeblock[#:keep-lang-line? #f]{
 #lang pollen
 <html>
-<head><meta charset="UTF-8">
-<title>◊select['h1 doc], by MB</title></head>
+<head>
+<meta charset="UTF-8">
+<title>◊select['h1 doc], by MB</title>
 <link rel="stylesheet" type="text/css" media="all" href="styles.css" />
+</head>
 <body>◊->html[doc]
 The current page is called ◊|here|.
 The previous is ◊|(previous here)|. 
@@ -613,7 +619,7 @@ The next is ◊|(next here)|.
 </html>
 }]
 
-Refresh @racketfont{barticle.html}. You'll now see that ``The current page is called barticle.html. The previous is article.html. The next is carticle.html.'' So far, so good: we're correctly deriving the previous and next pages from the automatic pagetree.
+Refresh @tt{barticle.html}. You'll now see that ``The current page is called barticle.html. The previous is article.html. The next is carticle.html.'' So far, so good: we're correctly deriving the previous and next pages from the automatic pagetree.
 
 All that's left is to add hyperlinks, which is easy:
 
@@ -621,9 +627,11 @@ All that's left is to add hyperlinks, which is easy:
 @codeblock[#:keep-lang-line? #f]{
 #lang pollen
 <html>
-<head><meta charset="UTF-8">
-<title>◊select['h1 doc], by MB</title></head>
+<head>
+<meta charset="UTF-8">
+<title>◊select['h1 doc], by MB</title>
 <link rel="stylesheet" type="text/css" media="all" href="styles.css" />
+</head>
 <body>◊->html[doc]
 The current page is called ◊|here|.
 The previous is <a href="◊|(previous here)|">◊|(previous here)|</a>. 
@@ -632,27 +640,29 @@ The next is <a href="◊|(next here)|">◊|(next here)|</a>.
 </html>
 }]
 
-Refresh @racketfont{barticle.html}, and you'll see that the names of the previous and next pages are now hyperlinks to those pages. Click through and convince yourself that it works.
+Refresh @tt{barticle.html}, and you'll see that the names of the previous and next pages are now hyperlinks to those pages. Click through and convince yourself that it works.
 
 @margin-note{The documentation for pagetree @secref["Navigation" #:doc '(lib "pollen/scribblings/pollen.scrbl")] will tell you about the other functions available for generating navigation links.}
 
 @subsection{Handling navigation boundaries with conditionals}
 
-If you clicked through to @racketfont{article.html} or @racketfont{carticle.html}, you might've noticed a couple problems. Because @racketfont{article.html} is the first page in the automatic pagetree, it doesn't have any previous page it can link to. And the next-page link for @racketfont{carticle.html} is @racketfont{styles.css}, which is strictly correct — it is, in fact, the next file in the automatic pagetree — but it's not part of our article, so we'd rather stop the navigation there.
+If you clicked through to @tt{article.html} or @tt{carticle.html}, you might've noticed a couple problems. Because @tt{article.html} is the first page in the automatic pagetree, it doesn't have any previous page it can link to. And the next-page link for @tt{carticle.html} is @tt{styles.css}, which is strictly correct — it is, in fact, the next file in the automatic pagetree — but it's not part of our article, so we'd rather stop the navigation there.
 
 One way to fix the problem would be to have three separate template files — the standard one with both previous- and next-page links, one with only a next-page link, and one with only a previous-page link. 
 
-But since we have a whole programming language available in Pollen, that's a dull-witted way to solve the problem. The better way is to add @italic{conditionals} to the template to selectively change the navigation. That keeps things simple, because we'll still have only one @racketfont{template.html} to deal with.
+But since we have a whole programming language available in Pollen, that's a dull-witted way to solve the problem. The better way is to add @italic{conditionals} to the template to selectively change the navigation. That keeps things simple, because we'll still have only one @tt{template.html} to deal with.
 
-To handle @racketfont{article.html}, we want to hide the previous-page navigation link when there's no previous page. As it turns out, if the @racket[previous] function can't find a previous page, it will return false. So we just need to wrap our previous-page navigation in the @racket[when/block] command like so:
+To handle @tt{article.html}, we want to hide the previous-page navigation link when there's no previous page. As it turns out, if the @racket[previous] function can't find a previous page, it will return false. So we just need to wrap our previous-page navigation in the @racket[when/block] command like so:
 
 @fileblock["template.html"
 @codeblock[#:keep-lang-line? #f]{
 #lang pollen
 <html>
-<head><meta charset="UTF-8">
-<title>◊select['h1 doc], by MB</title></head>
+<head>
+<meta charset="UTF-8">
+<title>◊select['h1 doc], by MB</title>
 <link rel="stylesheet" type="text/css" media="all" href="styles.css" />
+</head>
 <body>◊->html[doc]
 The current page is called ◊|here|.
 ◊when/block[(previous here)]{The previous is 
@@ -662,7 +672,7 @@ The next is <a href="◊|(next here)|">◊|(next here)|</a>.
 </html>
 }]
 
-The basic structure of @racket[when/block] is @racketfont{◊when/block[@racketvarfont{condition}]{@racketvarfont{insert-this-text}}.} Note the square braces around the @racketvarfont{condition}, and the curly braces around the @racketvarfont{text}. Using @racket[(previous here)] as the condition is shorthand for ``when @racket{(previous here)} does not return false...''
+The basic structure of @racket[when/block] is @tt{◊when/block[@racketvarfont{condition}]{@racketvarfont{insert-this-text}}.} Note the square braces around the @racketvarfont{condition}, and the curly braces around the @racketvarfont{text}. Using @racket[(previous here)] as the condition is shorthand for ``when @racket{(previous here)} does not return false...''
 
 Programmers in the audience might be getting anxious about the repeated use of @racket[(previous here)] — you're welcome to store that value in a variable, and everything will work the same way:
 
@@ -670,9 +680,11 @@ Programmers in the audience might be getting anxious about the repeated use of @
 @codeblock[#:keep-lang-line? #f]{
 #lang pollen
 <html>
-<head><meta charset="UTF-8">
-<title>◊select['h1 doc], by MB</title></head>
+<head>
+<meta charset="UTF-8">
+<title>◊select['h1 doc], by MB</title>
 <link rel="stylesheet" type="text/css" media="all" href="styles.css" />
+</head>
 <body>◊->html[doc]
 The current page is called ◊|here|.
 ◊(define prev-page (previous here))
@@ -685,15 +697,17 @@ The next is <a href="◊|(next here)|">◊|(next here)|</a>.
 
 We need a different technique for handling the end of the next-page navigation, because we're not reaching the actual end of the pagetree. We're just reaching the end of the pages we care about navigating through. 
 
-What condition will help us detect this? Here, we can notice that the names of our article pages all contain the string @racketfont{article}. While you'd probably want a more robust condition for a real project, in this tutorial, what we'll do is hide the next-page navigation if the name of the next page doesn't contain ``@racketfont{article}''. As we did before, we wrap our navigation line in the @racket[when/block] function:
+What condition will help us detect this? Here, we can notice that the names of our article pages all contain the string @tt{article}. While you'd probably want a more robust condition for a real project, in this tutorial, what we'll do is hide the next-page navigation if the name of the next page doesn't contain ``@tt{article}''. As we did before, we wrap our navigation line in the @racket[when/block] function:
 
 @fileblock["template.html"
 @codeblock[#:keep-lang-line? #f]{
 #lang pollen
 <html>
-<head><meta charset="UTF-8">
-<title>◊select['h1 doc], by MB</title></head>
+<head>
+<meta charset="UTF-8">
+<title>◊select['h1 doc], by MB</title>
 <link rel="stylesheet" type="text/css" media="all" href="styles.css" />
+</head>
 <body>◊->html[doc]
 The current page is called ◊|here|.
 ◊(define prev-page (previous here))
@@ -707,15 +721,15 @@ The next is <a href="◊|(next here)|">◊|(next here)|</a>.}
 
 This time, the condition is @racket[(regexp-match "article" (->string (next here)))]. How were you supposed to know this? You weren't. That's why this is a tutorial. Without going on a lengthy detour, the @racket[regexp-match] function returns true if the first string (in this case, @racket["article"]) is found inside the second string (in this case, we convert @racket[(next here)] to a string by wrapping it in @racket[->string]).
 
-In any case, even if some of the programmy bits went over your head just now, relax and paste the code into your template. What you'll see when you refresh @racketfont{carticle.html} is that the next-page link is gone. So now our template lets us navigate among the pages of our article, and the conditionals handle the end pages correctly.
+In any case, even if some of the programmy bits went over your head just now, relax and paste the code into your template. What you'll see when you refresh @tt{carticle.html} is that the next-page link is gone. So now our template lets us navigate among the pages of our article, and the conditionals handle the end pages correctly.
 
 @subsection{Making a pagetree file}
 
 I didn't want to dwell on programming complications in the last conditional. Why? The extra programming was necessary only because we made life somewhat difficult for ourselves by relying on the automatic pagetree. A better way to solve the problem is to avoid it altogether by making a pagetree file.
 
-Pagetree source files have a different syntax and status than other Pollen source files, so they are parsed using their own Pollen dialect. To invoke this dialect, you just start the file with @racketfont{#lang pollen} and name the file with the @racketfont{ptree} extension, for instance @racketfont{my-project.ptree}. While you can have as many pagetrees in your project as you want, Pollen will accord primary status to the one named @racketfont{index.ptree}.
+Pagetree source files have a different syntax and status than other Pollen source files, so they are parsed using their own Pollen dialect. To invoke this dialect, you just start the file with @tt{#lang pollen} and name the file with the @tt{ptree} extension, for instance @tt{my-project.ptree}. While you can have as many pagetrees in your project as you want, Pollen will accord primary status to the one named @tt{index.ptree}.
 
-So let's make an @racketfont{index.ptree} file. At its simplest, a pagetree file can just be a list of files in the intended order. In DrRacket, create a new file in your project directory as follows:
+So let's make an @tt{index.ptree} file. At its simplest, a pagetree file can just be a list of files in the intended order. In DrRacket, create a new file in your project directory as follows:
 
 @fileblock["index.ptree"
 @codeblock{
@@ -743,13 +757,13 @@ article.html.pmd
 barticle.html.pmd
 }]
 
-You also probably noticed that the files are in a different order than they were in the automatic pagetree: @racketfont{carticle.html} is first, followed by @racketfont{article.html} and then @racketfont{barticle.html}. This too is deliberate, so we can see what happens with a differently ordered pagetree.
+You also probably noticed that the files are in a different order than they were in the automatic pagetree: @tt{carticle.html} is first, followed by @tt{article.html} and then @tt{barticle.html}. This too is deliberate, so we can see what happens with a differently ordered pagetree.
 
 Pagetrees don't change nearly as often as other source files, so as a performance optimization, the project server does @italic{not} dynamically reflect changes to pagetrees. To see the effect of this new pagetree on our project, you'll need to go to your terminal window and stop the project server with ctrl+C, and then restart it. Which will take all of three seconds.
 
-Now refresh @racketfont{carticle.html}. You'll notice that the navigation links are different. You won't see a previous-page link — because @racketfont{carticle.html} is now the first page in the pagetree — and the next page will show up as @racketfont{article.html}. Click through to @racketfont{article.html}, and you'll see the navigation likewise updated. Click through to @racketfont{barticle.html}, and you'll see ...
+Now refresh @tt{carticle.html}. You'll notice that the navigation links are different. You won't see a previous-page link — because @tt{carticle.html} is now the first page in the pagetree — and the next page will show up as @tt{article.html}. Click through to @tt{article.html}, and you'll see the navigation likewise updated. Click through to @tt{barticle.html}, and you'll see ...
 
-BAM! An error page with a yellow box that says @racketfont{Can’t convert #f to string}. What happened? We switched to using our own pagetree file but we didn't update our template conditionals. Once you reach @racketfont{barticle.html}, the value of @racket[(next here)] is false, which means the @racket[(->string (next here))] command in the template conditional is trying to convert false into a string. Hence the error.
+BAM! An error page with a yellow box that says @tt{Can’t convert #f to string}. What happened? We switched to using our own pagetree file but we didn't update our template conditionals. Once you reach @tt{barticle.html}, the value of @racket[(next here)] is false, which means the @racket[(->string (next here))] command in the template conditional is trying to convert false into a string. Hence the error.
 
  So let's go back and fix that. Because we don't have extraneous files in our pagetree anymore, we can change the second conditional in the template to work the same way as the first:
 
@@ -757,9 +771,11 @@ BAM! An error page with a yellow box that says @racketfont{Can’t convert #f to
 @codeblock[#:keep-lang-line? #f]{
 #lang pollen
 <html>
-<head><meta charset="UTF-8">
-<title>◊select['h1 doc], by MB</title></head>
+<head>
+<meta charset="UTF-8">
+<title>◊select['h1 doc], by MB</title>
 <link rel="stylesheet" type="text/css" media="all" href="styles.css" />
+</head>
 <body>◊->html[doc]
 The current page is called ◊|here|.
 ◊(define prev-page (previous here))
@@ -772,13 +788,13 @@ The next is <a href="◊|next-page|">◊|next-page|</a>.}
 </html>
 }]
 
-Refresh @racketfont{barticle.html} — because you're updating the template, you don't need to restart the project server — and you'll see the right result. The previous-page link goes to @racketfont{article.html}, and the next-page link is hidden.
+Refresh @tt{barticle.html} — because you're updating the template, you don't need to restart the project server — and you'll see the right result. The previous-page link goes to @tt{article.html}, and the next-page link is hidden.
 
-@subsection{@racketfont{index.ptree} & the project server}
+@subsection{@tt{index.ptree} & the project server}
 
-One more thing to show you before we wrap up this tutorial. Remember that the dashboard of the project server is at @racketfont{http://localhost:8080/index.ptree}? By default, the project server will synthesize a pagetree from an alphbetical directory listing. 
+One more thing to show you before we wrap up this tutorial. Remember that the dashboard of the project server is at @tt{http://localhost:8080/index.ptree}? By default, the project server will synthesize a pagetree from an alphbetical directory listing. 
 
-But if you put your own @racketfont{index.ptree} file in the directory, the project server will use that for the dashboard instead. In fact, visit @racketfont{http://localhost:8080/index.ptree} now and you'll see what I mean. Consistent with the @racketfont{index.ptree} you made, you'll now see @racketfont{carticle.html}, @racketfont{article.html}, and @racketfont{barticle.html}, but not @racketfont{template.html} nor @racketfont{styles.css} (even though they're still in the project directory).
+But if you put your own @tt{index.ptree} file in the directory, the project server will use that for the dashboard instead. In fact, visit @tt{http://localhost:8080/index.ptree} now and you'll see what I mean. Consistent with the @tt{index.ptree} you made, you'll now see @tt{carticle.html}, @tt{article.html}, and @tt{barticle.html}, but not @tt{template.html} nor @tt{styles.css} (even though they're still in the project directory).
 
 
 @section{Second tutorial complete}
