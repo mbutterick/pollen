@@ -1,7 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base racket/syntax) scribble/core scribble/base scribble/manual racket/list scribble/private/manual-sprop scribble/decode scribble/html-properties racket/runtime-path racket/string)
 
-(provide (all-defined-out))
+(provide (all-defined-out) (all-from-out racket/runtime-path))
 
 (define-runtime-path mb-css "mb.css")
 
@@ -33,11 +33,13 @@
 (define (errorblock . args)
   (nested (racketerror (racketfont* (convert-newlines args)))))
 
-(define (browser . args)
-  (compound-paragraph (style "browser" (list (css-style-addition mb-css) (alt-tag "div"))) (list (paragraph (style #f null) (string-append* args)))))
+
 
 (define (terminal . args)
   (compound-paragraph (style "terminal" (list (css-style-addition mb-css) (alt-tag "div"))) (list (apply verbatim args))))
+
+(define (browser . args)
+  (compound-paragraph (style "browser" (list (css-style-addition mb-css) (alt-tag "div"))) (list (paragraph (style #f null) (convert-newlines args)))))
 
 
 (define (noskip-note)
