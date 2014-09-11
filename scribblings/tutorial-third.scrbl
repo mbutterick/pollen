@@ -921,7 +921,7 @@ It also provides a recipe you can adapt for your own projects, whether small or 
 
 As we go through the ingredients, I'll review the purpose of each. Save these files into a single project directory with the project server running.
 
-@subsection{The @tt{directory-require.rkt} file}
+@subsection[#:tag-prefix "tutorial-3"]{The @tt{directory-require.rkt} file}
 
 This file provides functions that are available to all Pollen source files in the same directory. It's written in standard Racket. The @tt{directory-require.rkt} file is optional — without it, your tags will just be treated as default tag functions. But you'll probably find it a convenient way to make tag functions available within your project, including a @racket[decode] function attached to @tt{root}.
 
