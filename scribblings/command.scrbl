@@ -363,8 +363,7 @@ The value of zam is ◊zam
 
 @repl-output{The value of zam is 42}
 
-@margin-note{In an unsaved DrRacket file, or a file without a special Pollen source extension, the @tt{#lang pollen} designation invokes the Pollen preprocessor by default. You can explicitly invoke preprocessor mode by starting a file with @tt{#lang pollen/pre}. See also @secref["Preprocessor___pp_extension_"
-         #:doc '(lib "pollen/scribblings/pollen.scrbl")].}
+@margin-note{In an unsaved DrRacket file, or a file without a special Pollen source extension, the @tt{#lang pollen} designation invokes the Pollen preprocessor by default. You can explicitly invoke preprocessor mode by starting a file with @tt{#lang pollen/pre}. See also @secref["Preprocessor___pp_extension_"].}
 
 If the variable holds a container datatype (like a @racket[list], @racket[hash], or @racket[vector]), Pollen will produce the Racket text representation of the item. Here, @tt{zam} is a @racket[list] of integers:
 

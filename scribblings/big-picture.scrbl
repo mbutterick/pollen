@@ -5,7 +5,7 @@
 A summary of the key components & concepts of the Pollen publishing system and how they fit together. If you've completed the @secref["quick-tour"], this will lend some context to what you saw. The next tutorials will make more sense if you read this first.
 
 
-@section{The book is a program}
+@section[#:tag "the-book-is-a-program"]{The book is a program}
 
 This is the core design principle of Pollen. Consistent with this principle, Pollen adopts the habits of software development in its functionality, workflow, and project management.
 

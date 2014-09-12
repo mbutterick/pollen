@@ -113,7 +113,7 @@ Pollen addresses the deficiencies I experienced with other tools:
 
 ]
 
-@section{Further reading}
+@section[#:tag "why-racket-why-lisp"]{Further reading}
 
 In @link["http://practicaltypography.com/why-racket-why-lisp.html"]{@italic{Why Racket? Why Lisp?}}, I explain why Racket was the right tool for this job.
 

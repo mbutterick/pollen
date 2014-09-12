@@ -33,7 +33,7 @@ If you want the shortest possible introduction to Pollen, try the @secref["quick
 
 I'll assume you've completed the @secref["second-tutorial"] and that you understand the principles of Pollen authoring mode — creating source files, converting them to X-expressions, and then combining them with templates to make output files. 
 
-Because now it's time to pick up the pace. You've learned how to do some handy things with Pollen. But we haven't yet exploited the full fusion of writing environment and programming language. I promised you that @secref["The_book_is_a_program" #:doc '(lib "pollen/scribblings/pollen.scrbl")], right? So let's do some programming.
+Because now it's time to pick up the pace. You've learned how to do some handy things with Pollen. But we haven't yet exploited the full fusion of writing environment and programming language. I promised you that @secref["the-book-is-a-program"], right? So let's do some programming.
 
 
 @section{Pollen markup vs. XML}
@@ -125,7 +125,7 @@ Restore the non-Markdown source, and let's continue.
 
 @subsection{Tags & tag functions}
 
-Pollen markup uses the same Pollen command syntax that we first saw in @secref["Adding_commands" #:doc '(lib "pollen/scribblings/pollen.scrbl")]. Previously, we used this command syntax to invoke functions like @racket[define] and @racket[->html]. Pollen markup is used to invoke a special kind of function called a @italic{tag function}, which is a function that, by default, adds a tag to the text.
+Pollen markup uses the same Pollen command syntax that we first saw in @secref["Adding_commands"]. Previously, we used this command syntax to invoke functions like @racket[define] and @racket[->html]. Pollen markup is used to invoke a special kind of function called a @italic{tag function}, which is a function that, by default, adds a tag to the text.
 
 To see how this works, restore your @tt{article.html.pm} file to its original state:
 
@@ -207,7 +207,7 @@ Both of these forms will produce the same X-expression:
 @repl-output{'(span ((class "author")(id "primary")(living "true")) "Prof. Leonard")}
 
 
-Now that you know how to make tags and attributes, you might wonder whether Pollen markup can be used as a quick & dirty HTML-notation system. Sure — for a quick & dirty project, why not. Recall that @secref["X-expressions" #:doc '(lib "pollen/scribblings/pollen.scrbl")] are just alternative notation for the standard angle-bracket notation used in HTML. So if you wanted HTML like this:
+Now that you know how to make tags and attributes, you might wonder whether Pollen markup can be used as a quick & dirty HTML-notation system. Sure — for a quick & dirty project, why not. Recall that @secref["X-expressions"] are just alternative notation for the standard angle-bracket notation used in HTML. So if you wanted HTML like this:
 
 @repl-output{<div class="red" style="font-size:150%">Important <em>News</em></div>}
 
@@ -255,8 +255,7 @@ For a document to be format independent, two conditions have to be satisfied.
 
 First, the document has to be readable by other programs, so they can handle the conversion of format-independent markup into a format-specific rendering (e.g., mapping semantic tags like @racketvalfont{movie-title} onto visual tags like @racketvalfont{em}). Most word-processor formats, like Word's .docx, are bad for authoring because these formats are opaque and proprietary. We needn't get into the political objections. As a practical matter, they're inarguably restrictive — if you can't get your data out of your file, you're stuck.
 
-Second, the document itself has to be represented in a way that's independent of the particularities of any one format. For instance, HTML is a bad authoring format because it encourages authors to litter their text with HTML-isms like @racketvalfont{h1} and @racketvalfont{span}. These have no meaning outside of HTML, and thus will always cause conversion problems. The @seclink["Prelude__my_principled_objection_to_Markdown"
-         #:doc '(lib "pollen/scribblings/pollen.scrbl")]{same goes for Markdown}, which is simply HTML in disguise.
+Second, the document itself has to be represented in a way that's independent of the particularities of any one format. For instance, HTML is a bad authoring format because it encourages authors to litter their text with HTML-isms like @racketvalfont{h1} and @racketvalfont{span}. These have no meaning outside of HTML, and thus will always cause conversion problems. The @seclink["Prelude__my_principled_objection_to_Markdown"]{same goes for Markdown}, which is simply HTML in disguise.
 
 
 
@@ -308,8 +307,7 @@ expected: list?
 
 The problem is that Racket already provides a function called @racket[length]. Consistent with the usual rules of Pollen command notation, your command is interpreted as an attempt to invoke the @racket[length] function, rather than apply a tag named @racketvalfont{length}.
 
-In practice, namespace clashes are rare. But if necessary, they're easy to work around (for the simplest method, see @secref["Invoking_tag_functions"
-         #:doc '(lib "pollen/scribblings/pollen.scrbl")]).
+In practice, namespace clashes are rare. But if necessary, they're easy to work around (for the simplest method, see @secref["Invoking_tag_functions"]).
 
 
 @subsection{Choosing custom tags}
@@ -423,8 +421,7 @@ When you run this file, you indeed get:
 
 @repl-output{'(root "I want to attend " (em "RacketCon " "BOOM" " year"))}
 
-How does this work? First, although you can define a function in Pollen command syntax using either of @secref["The_two_command_modes__text_mode___Racket_mode"
-         #:doc '(lib "pollen/scribblings/pollen.scrbl")], it tends to be easier to use Racket mode. I wrote the first one in text mode. But for clarity, I'm going to switch to Racket mode (run this file and convince yourself it comes out the same):
+How does this work? First, although you can define a function in Pollen command syntax using either of @secref["The_two_command_modes__text_mode___Racket_mode"], it tends to be easier to use Racket mode. I wrote the first one in text mode. But for clarity, I'm going to switch to Racket mode (run this file and convince yourself it comes out the same):
 
 @fileblock["article.html.pm" @codeblock{
 #lang pollen
@@ -600,8 +597,7 @@ The result:
 
 @repl-output{'(root "Pi is close to " 3.141592653589793 "." "\n" "The hyperbolic sine of pi is close to " 11.548739357257748 ".")}
 
-One caveat — you're still in a Pollen markup file, so the return value of whatever function you call has to produce a string or an X-expression, so it can be merged into the document. @margin-note*{This is similar to the restriction introduced in the @seclink["Setting_up_a_preprocessor_source_file"
-         #:doc '(lib "pollen/scribblings/pollen.scrbl")]{first tutorial} where functions used in preprocessor files had to produce text.}
+One caveat — you're still in a Pollen markup file, so the return value of whatever function you call has to produce a string or an X-expression, so it can be merged into the document. @margin-note*{This is similar to the restriction introduced in the @seclink["Setting_up_a_preprocessor_source_file"]{first tutorial} where functions used in preprocessor files had to produce text.}
 Pollen won't stop you from calling a function that returns an incompatible value, like @racket[plot], which returns a bitmap image: 
 
 @fileblock["article.html.pm" @codeblock{

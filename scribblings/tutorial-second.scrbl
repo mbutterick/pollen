@@ -36,12 +36,11 @@ I'm mystified by the popularity of Markdown among writers. I can agree that it's
 
 In longer-form writing, however, its shortcomings become evident. Like programming languages, the best writing tools maximize expressive possibilities, and minimize constraints. But Markdown is hugely constrained. First and worst, Markdown isn't semantic. It only knows about formatting, and in that regard, isn't that much of an improvement on tools like Microsoft Word. Second, even as a formatting-notation tool, it's limited to a small subset of the already-small set of formatting tags permitted in HTML. Third, it can't be extended by an author.
 
-An animating principle of Pollen, as explained in the @secref["Backstory" #:doc '(lib "pollen/scribblings/pollen.scrbl")], is that after 20 years, we ought to move beyond thinking of HTML as a source format. Since Markdown is just well-disguised HTML, a vote for Markdown is really a vote to continue the status quo (albeit with fewer angle brackets). For me, that's not good enough. I'm ready for the tools to expand to fit my ideas; I don't want to keep cutting down my ideas to fit the tools.
+An animating principle of Pollen, as explained in the @secref["Backstory"], is that after 20 years, we ought to move beyond thinking of HTML as a source format. Since Markdown is just well-disguised HTML, a vote for Markdown is really a vote to continue the status quo (albeit with fewer angle brackets). For me, that's not good enough. I'm ready for the tools to expand to fit my ideas; I don't want to keep cutting down my ideas to fit the tools.
 
 All that said, if you genuinely prefer Markdown, I'm not looking to pry it from your fingers. Pollen has excellent Markdown support (due entirely to Greg Hendershott's excellent @link["https://github.com/greghendershott/markdown/"]{Markdown parser} for Racket). It makes Markdown more useful. 
 
-But let's make a deal, Markdown fans. Having met you more than halfway, will you at least consider that @seclink["Pollen_markup_vs__XML"
-         #:doc '(lib "pollen/scribblings/pollen.scrbl")]{Pollen markup} might be a better option for you than Markdown? Because it can notate anything that's in your brain, not just a subset of HTML? And if @secref["The_book_is_a_program" #:doc '(lib "pollen/scribblings/pollen.scrbl")], the source for that book should look more like your brain, and less like HTML?
+But let's make a deal, Markdown fans. Having met you more than halfway, will you at least consider that @seclink["Pollen_markup_vs__XML"]{Pollen markup} might be a better option for you than Markdown? Because it can notate anything that's in your brain, not just a subset of HTML? And if @secref["the-book-is-a-program"], the source for that book should look more like your brain, and less like HTML?
 
 That's all I ask.
 
@@ -56,8 +55,7 @@ The authoring-mode approach is better if you want to end up with something other
 
 @subsection{Using Markdown with the preprocessor}
 
-Because Markdown is a text-based format, you can use the Pollen preprocessor to add programmatic features to existing Markdown files. (See @secref["Working_with_the_preprocessor"
-         #:doc '(lib "pollen/scribblings/pollen.scrbl")] in the @secref["first-tutorial"] if you need a refresher.)
+Because Markdown is a text-based format, you can use the Pollen preprocessor to add programmatic features to existing Markdown files. (See @secref["Working_with_the_preprocessor"] in the @secref["first-tutorial"] if you need a refresher.)
 
 Suppose we have a Markdown file called @tt{brennan.md} that we want to use with the preprocessor. Create this file in DrRacket, save it, and start the project server in that directory.
 
@@ -167,7 +165,7 @@ So why is it called an X-expression? Lisp languages are built out of units calle
 
 @terminal{(and (txexpr? x) (member (get-tag x) (project-block-tags)) #t))}
 
-S-expressions use prefix notation, where each pair of parentheses contains a list. The first element in the list names a function, and the other elements are the arguments to that function. (This is a review of @secref["Racket_basics__if_you_re_not_familiar_" #:doc '(lib "pollen/scribblings/pollen.scrbl")].) X-expressions are just a minor adaptation of S-expression notation to represent markup, hence the name (the @italic{X} is short for @italic{XML-like}).
+S-expressions use prefix notation, where each pair of parentheses contains a list. The first element in the list names a function, and the other elements are the arguments to that function. (This is a review of @secref["Racket_basics__if_you_re_not_familiar_"].) X-expressions are just a minor adaptation of S-expression notation to represent markup, hence the name (the @italic{X} is short for @italic{XML-like}).
 
 For handling markup-based data, X-expressions have some useful advantages compared to other methods:
 
@@ -190,7 +188,7 @@ In Pollen's authoring modes, your source file is parsed into an X-expression, wh
 
 Let's start putting together our article. For simplicity, I'm going to use unrealistically short sample texts. But you can use whatever Markdown content you want.
 
-We want to use Markdown authoring mode to make a file that will ultimately be HTML. So consistent with Pollen file-naming conventions (see @secref["Saving___naming_your_source_file"  #:doc '(lib "pollen/scribblings/pollen.scrbl")]), we'll start with our desired output filename, @tt{article.html}, and then append the Markdown authoring suffix, @tt{.pmd}. So in DrRacket, start a new file called @tt{article.html.pmd} and put some Markdown in it: 
+We want to use Markdown authoring mode to make a file that will ultimately be HTML. So consistent with Pollen file-naming conventions (see @secref["Saving___naming_your_source_file"]), we'll start with our desired output filename, @tt{article.html}, and then append the Markdown authoring suffix, @tt{.pmd}. So in DrRacket, start a new file called @tt{article.html.pmd} and put some Markdown in it: 
 
 @fileblock["article.html.pmd"
 @codeblock{
@@ -643,7 +641,7 @@ The next is <a href="◊|(next here)|">◊|(next here)|</a>.
 
 Refresh @tt{barticle.html}, and you'll see that the names of the previous and next pages are now hyperlinks to those pages. Click through and convince yourself that it works.
 
-@margin-note{The documentation for pagetree @secref["Navigation" #:doc '(lib "pollen/scribblings/pollen.scrbl")] will tell you about the other functions available for generating navigation links.}
+@margin-note{The documentation for pagetree @secref["Navigation"] will tell you about the other functions available for generating navigation links.}
 
 @subsection{Handling navigation boundaries with conditionals}
 
