@@ -127,7 +127,7 @@ if zero is False:
               [else (default code)])))
   result)
 
-/* Other CSS options available from http://richleland.github.io/pygments-css/ */
+;; Other CSS options available from http://richleland.github.io/pygments-css/ 
 
 (define (make-highlight-css) '(style ((type "text/css")) 
 ".highlight .hll { background-color: #ffffcc }
