@@ -84,6 +84,23 @@ Instead, you'll get an error:
 
 @errorblock{validate-pagetree: members-unique? failed because item isn’t unique: (index.html)}
 
+Pagenodes can refer to files in subdirectories. Just write the pagenode as a path relative to the directory where the pagetree lives:
+
+@fileblock["flat.ptree" @codeblock{
+#lang pollen
+
+foreword.html
+◊facts-intro.html{
+    facts/brennan.html
+    facts/dale.html
+}
+◊analysis/intro.html{
+    analysis/fancy-sauce/part-1.html
+    analysis/fancy-sauce/part-2.html
+}
+conclusion.html
+}]
+
 @section{Making pagetrees by hand}
 
 Experienced programmers may want to know that because a pagetree is just an X-expression, you can synthesize a pagetree using any Pollen or Racket tools for making X-expressions. For example, here's some Racket code that generates the same pagetree as the @racketfont{flat.ptree} source file above:
