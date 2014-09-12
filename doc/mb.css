@@ -3,6 +3,7 @@
 .noskip .refcolumn {
     background: #998;
     color: white;
+    padding-top: 0.6rem;
 }
 
 .noskip .refcontent p {
