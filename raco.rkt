@@ -11,7 +11,7 @@
   (with-handlers ([exn:fail? (λ(exn) (current-directory))])
     ;; incoming path argument is handled as described in
     ;; docs for current-directory
-    (path->complete-path (path->directory-path (simplify-path (cleanse-path (string->path (vector-ref args 1))))))))
+    (path->complete-path (simplify-path (cleanse-path (string->path (vector-ref args 1)))))))
 
 (define-for-syntax rest-args
   (with-handlers ([exn:fail? (λ(exn) #f)])
@@ -31,7 +31,7 @@
                  (case arg-command-name
                    [("test" "xyzzy") (handle-test)]
                    [(#f "help") (handle-help)]
-                   [("start") (handle-start first-arg-or-current-dir port-arg)]
+                   [("start") (handle-start (path->directory-path first-arg-or-current-dir) port-arg)]
                    [("render") (handle-render first-arg-or-current-dir rest-args)]
                    [("clone") (handle-clone first-arg-or-current-dir rest-args)]
                    [else (handle-else arg-command-name)])))
