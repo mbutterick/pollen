@@ -208,7 +208,7 @@ After a moment, you'll see a startup message like this:
 
 @terminal{
 Welcome to Pollen 0.001 (Racket 6.x.x.x)
-Project root is /path/to/tutorial
+Project root is /path/to/tutorial/
 Project server is http://localhost:8080 (Ctrl-C to exit)
 Project dashboard is http://localhost:8080/index.ptree
 Ready to rock}
@@ -292,14 +292,14 @@ If you go back to the dashboard and click on the filename link again, you'll see
 
 But if you like, open your @tt{poem.html.pp} source file in DrRacket, edit the first two lines, and save the file:
 
-@codeblock{
+@fileblock["/path/to/tutorial/poem.html.pp" @codeblock|{
 #lang pollen
 
 The cave is pitch black.
 Look out for the grue.
 The padding is 15em.
 The border is too.
-}
+}|]
 
 Go back to the dashboard and click on the filename. This time, you'll see:
 
@@ -312,7 +312,7 @@ The other two links in the dashboard are labeled @tt{in} and @tt{out}.
 
 The link labeled @tt{in} will display the contents of the source file:
 
-@codeblock{
+@terminal{
 #lang pollen
 
 The cave is pitch black.
