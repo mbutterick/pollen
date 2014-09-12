@@ -122,7 +122,9 @@ A more useful example: paragraph detection. The behavior is not merely a @racket
 ]
 
 
-The @racket[_block-txexpr-proc] argument and the @racket[_inline-txexpr-proc] arguments are procedures that operate on tagged X-expressions. If the X-expression meets the @racket[block-txexpr?] test, it is processed by @racket[_block-txexpr-proc]. Otherwise, it is processed by @racket[_inline-txexpr-proc]. Thus every tagged X-expression will be handled by one or the other. Of course, if you want block and inline elements to be handled the same way, you can set @racket[_block-txexpr-proc] and @racket[_inline-txexpr-proc] to be the same procedure.
+The @racket[_block-txexpr-proc] argument and the @racket[_inline-txexpr-proc] arguments are procedures that operate on tagged X-expressions. If the X-expression meets the @racket[block-txexpr?] test, it's processed by @racket[_block-txexpr-proc]. Otherwise, it's inline, so it's processed by @racket[_inline-txexpr-proc]. (Careful, however — these aren't mutually exclusive, because @racket[_block-txexpr-proc] operates on all the elements of a block, including other tagged X-expressions within.) 
+
+Of course, if you want block and inline elements to be handled the same way, you can set @racket[_block-txexpr-proc] and @racket[_inline-txexpr-proc] to be the same procedure.
 
 @examples[#:eval my-eval
 (define tx '(div "Please" (em "mind the gap") (h1 "Tuesdays only"))) 
