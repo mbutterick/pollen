@@ -14,13 +14,13 @@ I made my first web page in 1994, shortly after the web was invented. I opened m
 
 If you weren't around then, you didn't miss much. Everything about the web was horrible: the web browsers, the computers running the browsers, the dial-up connections feeding the browsers, and of course HTML itself. At that point, the desktop-software experience was already slick and refined. By comparison, using the web felt like banging rocks together.
 
-That's no longer true. The web is now 20 years old. During that time, most parts of the web have improved dramatically — for instance, the connections are faster, the browsers are more sophisticated, the screens have more pixels. 
+That's no longer true. The web is now more than 20 years old. During that time, most parts of the web have improved dramatically — for instance, the connections are faster, the browsers are more sophisticated, the screens have more pixels. 
 
-But one part has not improved: the way we make web pages. Over the years, tools promising to simplify HTML development have come and mostly gone — from @link["http://www.macobserver.com/reviews/pagemill2.shtml"]{PageMill} to Dreamweaver to @link["http://wordpress.org"]{WordPress} to @link["http://jekyllrb.com"]{Jekyll}. Meanwhile, true web jocks have remained loyal to the original HTML power tool: the humble text editor.
+But one part has not improved: the way we make web pages. Over the years, tools promising to simplify HTML development have come and mostly gone — from @link["http://www.macobserver.com/reviews/pagemill2.shtml"]{PageMill} to @link["http://www.adobe.com/products/dreamweaver.html"]{Dreamweaver} to @link["http://wordpress.org"]{WordPress} to @link["http://jekyllrb.com"]{Jekyll}. Meanwhile, true web jocks have remained loyal to the original HTML power tool: the humble text editor.
 
 In one way, this makes sense. Web pages are mostly made of text-based data — HTML, CSS, JavaScript, and so on — and the simplest way to mainpulate this data is with a text editor. While HTML and CSS are @link["http://programmers.stackexchange.com/questions/28098/why-does-it-matter-that-html-and-css-are-not-programming-languages"]{not} programming languages, they lend themselves to semantic and logical structure that's most easily expressed by editing them as text. Furthermore, text-based editing makes debugging and performance improvements easier.
 
-But text-based editing is also limited. Though the underlying description of a web page is notionally human-readable, it's largely optimized to be readable by other software — namely, web browsers. HTML markup in particular is verbose and easily mistyped. And isn't it fatally dull to manage all the boilerplate, like surrounding every paragraph with @code{<p>...</p>}? Yes, it is.
+But text-based editing is also limited. Though the underlying description of a web page is notionally human-readable, it's optimized to be readable by other software — namely, web browsers. HTML markup in particular is verbose and easily mistyped. And isn't it fatally dull to manage all the boilerplate, like surrounding every paragraph with @code{<p>...</p>}? Yes, it is.
 
 For these reasons, much of web development should lend itself to @italic{abstraction} & @italic{automation}. Abstraction means consolidating repetitve, complex patterns into simpler, parameterized forms. Automation means avoiding the manual drudgery of generating the output files. But in practice, tools that enable this abstraction & automation have been slow to arrive, and most have come hobbled with unacceptable deficiencies. 
 
@@ -44,7 +44,7 @@ Why not? All these tools promised a great leap forward in solving the web-develo
 
 @item{@bold{Mandatory separation of code, presentation, and content.} This principle has often been @link["http://alistapart.com/article/separationdilemma/"]{held out} as an ideal in web development. But it's also counterintuitive, because an HTML page naturally contains all three. If you want to separate them, your tools should let you. But if you don't, your tools shouldn't make you.}
 
-@item{@bold{Compromised template languages.} Seems like every programming language has at least 10 templating systems for HTML, all of which require you to learn a new ``template language'' that offers the worst of both worlds: fewer features and different syntax than the underlying language.}
+@item{@bold{Compromised template languages.} It seems like every programming language has at least 10 templating systems for HTML, all of which require you to learn a new ``template language'' that offers the worst of both worlds: fewer features and different syntax than the underlying language.}
 
 @item{@bold{Steep learning curves.} Web programmers have often chided designers for not knowing @link["http://elliotjaystocks.com/blog/web-designers-who-cant-code/"]{how to code}. But programming-based web-development tools have often had a high initial learning curve that requires you to throw out your existing workflow. Programmers built these tools — no surprise that programmers have been more comfortable with them.}
 
@@ -59,11 +59,13 @@ In 2008, I launched a website called @link["http://typographyforlawyers.com"]{@i
 
 So I used @link["http://wordpress.org"]{WordPress}. The major chore became scraping out all the crap that typically lives in blog templates. Largely because of this, people @link["http://ma.tt/2010/04/typography-for-lawyers/"]{liked the site}, because it was simpler & cleaner than the usual WordPress website.
 
-Eventually, a publisher offered to release it as a paperback. Later came the inevitable request to make it into a Kindle book. As a fan of typography, I hate the Kindle. The layout controls are coarse, and so is the reading experience. But I didn't run and hide. Basically a Kindle book is a little website made with 1995-era HTML. So I coded up some tools in Perl to convert my book to Kindle format while preserving the formatting and images as well as possible.
+Eventually, a publisher offered to release it as @link["http://typo.la/amzn"]{a paperback}, which came out in 2010.
+
+Later came the inevitable request to make it into a Kindle book. As a fan of typography, I hate the Kindle. The layout controls are coarse, and so is the reading experience. But I didn't run and hide. Basically a Kindle book is a little website made with 1995-era HTML. So I coded up some tools in Perl to convert my book to Kindle format while preserving the formatting and images as well as possible.
 
 At that point, I noticed I had converted @italic{Typography for Lawyers} into web format twice, using two different sets of tools. Before someone asked me to do it a third time, I started thinking about how I might create source code for the book that allowed me to render it into different formats. 
 
-This was the beginning of the Pollen project.
+That was the beginning of the Pollen project.
 
 I wrote the initial version of Pollen in Python. I devised a simplified markup-notation language for the source files. This language was compiled into XML-ish data structures using @link["http://www.dabeaz.com/ply/"]{ply} (Python lex/yacc). These structures were parsed into trees using @link["http://lxml.de/"]{LXML}. The trees were combined with templates made in @link["http://chameleon.readthedocs.org/en/latest/"]{Chameleon}. These templates were rendered and previewed with the @link["http://bottlepy.org/"]{Bottle} web server. 
 
@@ -81,13 +83,13 @@ So I did. And here we are.
 
 @section{What is Pollen?}
 
-Pollen is a publishing system built on top of Scribble and Racket. So far I've optimized Pollen for digital books, because that's mainly what I use it for. But it can be used for small projects too.
+Pollen is a publishing system built on top of Scribble and Racket. So far, I've optimized Pollen for digital books, because that's mainly what I use it for. But it can be used for small projects too.
 
 As a publishing system, Pollen includes:
 
 @itemlist[
 
-@item{@bold{A programming language.} The Pollen language is a variant of Scribble, with specific ``dialects'' tailored to different kinds of source files. You don't need to use the programming features to do useful work, but they're available when you need them.}
+@item{@bold{A programming language.} The Pollen language is a variant of Scribble, with specific dialects tailored to different kinds of source files. You don't need to use the programming features to do useful work, but they're available when you need them.}
 
 @item{@bold{A set of tools & libraries.} Pollen targets HTML output. So it includes a variety of tools that cure common HTML annoyances, including a CSS preprocessor.}
 
@@ -110,6 +112,10 @@ Pollen addresses the deficiencies I experienced with other tools:
 
 
 ]
+
+@section{Further reading}
+
+In @link["http://practicaltypography.com/why-racket-why-lisp.html"]{@italic{Why Racket? Why Lisp?}}, I explain why Racket was the right tool for this job.
 
 
 
