@@ -1,6 +1,6 @@
 #lang scribble/manual
 
-@(require "mb-tools.rkt")
+@(require "mb-tools.rkt" (for-label racket))
 
 @title[#:tag "quick-tour"]{Quick tour}
 
@@ -224,7 +224,7 @@ Try it. In DrRacket, create a file with the following lines and save it as @tt{d
 Pollen + Markdown
 -----------------
 
-+ You **wanted** it — you #,(racketfont "_got_") it.
++ You **wanted** it — you _got_ it.
 
 + [search for Racket](https://google.com/search?q=racket)
 }]
@@ -251,9 +251,9 @@ In Markdown mode, you can still embed Pollen commands within the source as you d
 ◊define[metal]{Plutonium}
  
 Pollen + ◊metal
---------
+---------------
  
-+ You **wanted** ◊metal — you #,(racketfont "_got_") it.
++ You **wanted** ◊metal — you _got_ it.
  
 + [search for ◊metal](https://google.com/search?q=◊metal)
 }]
@@ -365,7 +365,7 @@ Pollen can also be used as a dynamic preview server for Scribble files. From you
 > cd [directory containing your Scribble files]
 > raco pollen start}
 
-On the @link["http://localhost:8080/index.ptree"]{project dashboard}, you'll see your @tt{[filename].scrbl} files listed as @tt{[filename].html}. This may not represent the ultimate structure of your Scribble project — you may end up combining multiple Scribble source files into one HTML file, or making multiple HTML files from one Scribble source — but it's handy for checking your work as you go.
+On the @link["http://localhost:8080/index.ptree"]{project dashboard}, you'll see your @tt{filename.scrbl} files listed as @tt{filename.html}. This may not represent the ultimate structure of your Scribble project — you may end up combining multiple Scribble source files into one HTML file, or making multiple HTML files from one Scribble source — but it's handy for checking your work as you go.
 
 
 
@@ -377,7 +377,7 @@ Now you've seen the key features of Pollen. What do you think?
 
 @item{@italic{``So it's like WordPress, but harder to use?''} I was a happy WordPress user for several years. If you need a blog, it's great. But the farther you get from blogs, the more it becomes like teaching an elephant to pirouette. And for those who like to solve problems with programming, PHP is, um, limited.}
 
-@item{@italic{``What about pairing a Python template system and Python web server?''} Good idea. I even tried it. But Python template systems don't offer you Python — they offer you pidgin dialects that ain't very Pythonic. Also, Python's handing of markup-based data structures is cumbersome.}
+@item{@italic{``What about pairing a Python template system and Python web server?''} Good idea. I even tried it. But Python template systems don't offer you Python — they offer you limited dialects that aren't very Pythonic. Also, Python's handing of XML-ish data is cumbersome.}
 
 @item{@italic{``Haven't you heard of Jekyll?''} Yes. If everything you need to write is expressible in Markdown, it's great. If you need more than that, you're stuck.}
 
@@ -389,4 +389,4 @@ Now you've seen the key features of Pollen. What do you think?
 
 ]
 
-But don't take my word for it. The rest of this documentation will show you the cool, useful, and sophisticated things you can do with Pollen. If there's another tool that suits you better, great. Keep in mind that I didn't make Pollen because I'm a programmer. I'm a writer who wants to make electronic books that are better than the ones we have now.  And for that, I needed a better tool.
+But don't take my word for it. The rest of this documentation will show you the useful and sophisticated things you can do with Pollen. If there's another tool that suits you better, great. Keep in mind that I didn't make Pollen because I'm a programmer. I'm a writer who wants to make electronic books that are better than the ones we have now.  And for that, I needed a better tool.
