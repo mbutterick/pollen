@@ -40,7 +40,8 @@ An animating principle of Pollen, as explained in the @secref["Backstory" #:doc 
 
 All that said, if you genuinely prefer Markdown, I'm not looking to pry it from your fingers. Pollen has excellent Markdown support (due entirely to Greg Hendershott's excellent @link["https://github.com/greghendershott/markdown/"]{Markdown parser} for Racket). It makes Markdown more useful. 
 
-But let's make a deal, Markdown fans. Having met you more than halfway, will you at least consider that Pollen markup might be a better option for you than Markdown? Because it can notate anything that's in your brain, not just a subset of HTML? And if @secref["The_book_is_a_program" #:doc '(lib "pollen/scribblings/pollen.scrbl")], the source for that book should look more like your brain, and less like HTML?
+But let's make a deal, Markdown fans. Having met you more than halfway, will you at least consider that @seclink["Pollen_markup_vs__XML"
+         #:doc '(lib "pollen/scribblings/pollen.scrbl")]{Pollen markup} might be a better option for you than Markdown? Because it can notate anything that's in your brain, not just a subset of HTML? And if @secref["The_book_is_a_program" #:doc '(lib "pollen/scribblings/pollen.scrbl")], the source for that book should look more like your brain, and less like HTML?
 
 That's all I ask.
 
@@ -209,7 +210,7 @@ Before you preview this file in the project server, click the @onscreen{Run} but
 You should now be able to recognize this as an X-expression. In authoring mode, Pollen parses your Markdown into the corresponding HTML entities, but then provides the data as an X-expression rather than finished HTML.
 
 
-@margin-note{The empty parentheses @racketvalfont{()} after @racketvalfont{p} and @racketvalfont{strong} signal that the tag's attributes are empty. When you write an X-expression without attributes, these parentheses are optional — @racketvalfont{(tag () "text")} and @racketvalfont{(tag "text")} are equivalent — but Pollen will always print X-expressions this way.}
+@margin-note{The empty parentheses @tt{()} after @tt{p} and @tt{strong} signal that the tag's attributes are empty. When you write an X-expression without attributes, these parentheses are optional — @tt{(tag () "text")} and @tt{(tag "text")} are equivalent — but Pollen will always print X-expressions this way.}
 
 From what you learned in the last section, it should be evident that this X-expression corresponds to HTML that looks like this:
 
@@ -332,11 +333,11 @@ Caution — despite the name, a Pollen template is not necessarily a file of the
 
 It could be, however. Here's an equivalent way of writing @tt{fallback.html} that inserts @tt{doc} into actual HTML, rather than making the whole thing an X-expression.
 
-@codeblock[#:keep-lang-line? #f]{
+@fileblock["fallback.html" @codeblock[#:keep-lang-line? #f]{
 #lang pollen
 <html><head><meta charset="UTF-8"></head>
 <body>◊(->html doc)</body></html>
-}
+}]
 
 Notice that we still need to use the @racket[->html] function, but this time, instead of surrounding a larger X-expression, it just goes around @tt{doc}.
 
@@ -723,7 +724,7 @@ This time, the condition is @racket[(regexp-match "article" (->string (next here
 
 In any case, even if some of the programmy bits went over your head just now, relax and paste the code into your template. What you'll see when you refresh @tt{carticle.html} is that the next-page link is gone. So now our template lets us navigate among the pages of our article, and the conditionals handle the end pages correctly.
 
-@subsection{Making a pagetree file}
+@subsection{Making a pagetree source file}
 
 I didn't want to dwell on programming complications in the last conditional. Why? The extra programming was necessary only because we made life somewhat difficult for ourselves by relying on the automatic pagetree. A better way to solve the problem is to avoid it altogether by making a pagetree file.
 
@@ -794,7 +795,7 @@ Refresh @tt{barticle.html} — because you're updating the template, you don't n
 
 One more thing to show you before we wrap up this tutorial. Remember that the dashboard of the project server is at @tt{http://localhost:8080/index.ptree}? By default, the project server will synthesize a pagetree from an alphbetical directory listing. 
 
-But if you put your own @tt{index.ptree} file in the directory, the project server will use that for the dashboard instead. In fact, visit @tt{http://localhost:8080/index.ptree} now and you'll see what I mean. Consistent with the @tt{index.ptree} you made, you'll now see @tt{carticle.html}, @tt{article.html}, and @tt{barticle.html}, but not @tt{template.html} nor @tt{styles.css} (even though they're still in the project directory).
+But if you put your own @tt{index.ptree} file in the directory, the project server will use that for the dashboard instead. In fact, visit @link-tt{http://localhost:8080/index.ptree} now and you'll see what I mean. Consistent with the @tt{index.ptree} you made, you'll now see @tt{carticle.html}, @tt{article.html}, and @tt{barticle.html}, but not @tt{template.html} nor @tt{styles.css} (even though they're still in the project directory).
 
 
 @section{Second tutorial complete}
