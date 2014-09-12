@@ -5,6 +5,8 @@
 
 (define-runtime-path mb-css "mb.css")
 
+(define (link-tt url) (link url (tt url)))
+
 (define (racketfont* . args)
   (element 'tt args))
 

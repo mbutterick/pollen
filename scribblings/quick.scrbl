@@ -4,8 +4,6 @@
 
 @title[#:tag "quick-tour"]{Quick tour}
 
-@(define (link-tt url) (link url (tt url)))
-
 
 @section{Creating a source file}
 
