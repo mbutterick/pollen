@@ -86,7 +86,7 @@
   (define requires-changed? (and rerequire-results (ormap (λ(x) x) rerequire-results)))
   (when requires-changed?
     (begin
-      (message "render: project requires have changed, resetting cache & file-modification table")
+      (message "render: directory require files have changed. Resetting cache & file-modification table")
       (reset-cache) ; because stored data is obsolete
       (reset-modification-dates))) ; because rendered files are obsolete
   requires-changed?)
