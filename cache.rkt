@@ -1,16 +1,27 @@
 #lang racket/base
-(require racket/rerequire "world.rkt")
+(require racket/rerequire racket/serialize racket/file "world.rkt")
 
 ;; The cache is a hash with paths as keys.
 ;; The cache values are also hashes, with key/value pairs for that path.
 
 (provide reset-cache current-cache make-cache cached-require cache-ref)
 
-(define (make-cache) (make-hash))
+(define (get-cache-file-path)
+  (build-path (world:current-project-root) world:cache-filename))
+
+(define (make-cache) 
+  (define cache-file-path (get-cache-file-path))
+  (if (file-exists? cache-file-path)
+      (deserialize (file->value cache-file-path))
+      (make-hash)))
 
 (define current-cache (make-parameter (make-cache)))
 
-(define (reset-cache) (hash-clear! (current-cache)))
+(define (reset-cache)
+  (define cache-path (get-cache-file-path))
+  (when (file-exists? cache-path)
+    (delete-file cache-path))
+  (current-cache (make-cache)))
 
 (define (->complete-path path-string)
   (path->complete-path (if (string? path-string) (string->path path-string) path-string)))
@@ -28,6 +39,7 @@
   (hash-set! cache-hash 'mod-time (file-or-directory-modify-seconds path))
   (hash-set! cache-hash world:main-pollen-export (dynamic-require path world:main-pollen-export))
   (hash-set! cache-hash world:meta-pollen-export (dynamic-require path world:meta-pollen-export))
+  (write-to-file (serialize (current-cache)) (get-cache-file-path) #:exists 'replace)
   (void))
 
 (define (cached-require path-string key)

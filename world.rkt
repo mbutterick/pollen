@@ -19,6 +19,8 @@
 (define mode-pagetree 'ptree)
 (define mode-template 'template)
 
+(define cache-filename "pollen.cache")
+
 (define decodable-extensions (list markup-source-ext pagetree-source-ext))
 
 (define default-pagetree "index.ptree")
