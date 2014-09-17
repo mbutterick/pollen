@@ -544,7 +544,7 @@ Be careful if you're working with integers and X-expressions — a raw integer i
 
 @subsubsection{Parsing attributes}
 
-Detecting attributes in an argument list can be tricky because a) the tag may or may not have attributes, b) those attributes may be in standard or abbreviated syntax. For this reason, Pollen provides a @racket[split-attributes] function (in the @racket[pollen/tag] librar) that you can use in custom tag functions to separate the attributes and elements:
+Detecting attributes in an argument list can be tricky because a) the tag may or may not have attributes, b) those attributes may be in standard or abbreviated syntax. For this reason, Pollen provides a @racket[split-attributes] function (in the @racket[pollen/tag] library) that you can use in custom tag functions to separate the attributes and elements:
 
 @fileblock["article.html.pm" @codeblock{
 #lang pollen
