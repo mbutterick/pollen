@@ -36,7 +36,7 @@
   (() #:rest (listof (or/c #f complete-path?)) . ->* . boolean?)
   (define key (make-mod-dates-key rest-paths))
   (or (not (key . in? . modification-date-hash))  ; no stored mod date
-     (not (equal? (map path->mod-date-value key) (get modification-date-hash key))))) ; data has changed
+      (not (equal? (map path->mod-date-value key) (get modification-date-hash key))))) ; data has changed
 
 
 (define/contract+provide (render-batch . xs)
@@ -47,15 +47,15 @@
   ;; Using reset-modification-dates is sort of like session control.
   (reset-modification-dates) 
   (for-each (λ(x) ((if (pagetree-source? x)
-                      render-pagetree
-                      render-from-source-or-output-path) x)) xs))
+                       render-pagetree
+                       render-from-source-or-output-path) x)) xs))
 
 
 (define/contract+provide (render-pagetree pagetree-or-path)
   ((or/c pagetree? pathish?) . -> . void?)
   (define pagetree (if (pagetree? pagetree-or-path)
-                      pagetree-or-path
-                      (cached-require pagetree-or-path world:main-pollen-export)))
+                       pagetree-or-path
+                       (cached-require pagetree-or-path world:main-pollen-export)))
   (parameterize ([current-directory (world:current-project-root)])
     (for-each render-from-source-or-output-path (map ->complete-path (pagetree->list pagetree)))))
 
@@ -75,8 +75,8 @@
   (complete-path? . -> . (values complete-path? complete-path?))
   ;; file-proc returns two values, but ormap only wants one
   (define file-proc (ormap (λ(test file-proc) (and (test source-or-output-path) file-proc))
-                          (list has/is-null-source? has/is-preproc-source? has/is-markup-source? has/is-scribble-source? has/is-markdown-source? has/is-template-source?)
-                          (list ->null-source+output-paths ->preproc-source+output-paths ->markup-source+output-paths ->scribble-source+output-paths ->markdown-source+output-paths ->template-source+output-paths)))
+                           (list has/is-null-source? has/is-preproc-source? has/is-markup-source? has/is-scribble-source? has/is-markdown-source? has/is-template-source?)
+                           (list ->null-source+output-paths ->preproc-source+output-paths ->markup-source+output-paths ->scribble-source+output-paths ->markdown-source+output-paths ->template-source+output-paths)))
   (file-proc source-or-output-path))
 
 
@@ -95,9 +95,9 @@
 (define/contract (render-needed? source-path template-path output-path)
   (complete-path? (or/c #f complete-path?) complete-path? . -> . boolean?)
   (or (not (file-exists? output-path))
-     (modification-date-expired? source-path template-path)
-     (and (not (null-source? source-path)) (file-needed-rerequire? source-path))
-     (and (world:check-directory-requires-in-render?) (directory-requires-changed? source-path))))
+      (modification-date-expired? source-path template-path)
+      (and (not (null-source? source-path)) (file-needed-rerequire? source-path))
+      (and (world:check-directory-requires-in-render?) (directory-requires-changed? source-path))))
 
 
 (define/contract+provide (render-to-file-if-needed source-path [template-path #f] [maybe-output-path #f] #:force [force #f])
@@ -111,16 +111,18 @@
 (define/contract+provide (render-to-file source-path [template-path #f] [maybe-output-path #f])
   ((complete-path?) ((or/c #f complete-path?) (or/c #f complete-path?)) . ->* . void?)
   (define output-path (or maybe-output-path (->output-path source-path)))
-  (display-to-file (render source-path template-path) output-path #:exists 'replace))
+  (define render-result (render source-path template-path)) ; will either be string or bytes
+  (display-to-file render-result output-path #:exists 'replace
+                   #:mode (if (string? render-result) 'text 'binary)))
 
 
 (define/contract+provide (render source-path [template-path #f])
-  ((complete-path?) ((or/c #f complete-path?)) . ->* . bytes?)
+  ((complete-path?) ((or/c #f complete-path?)) . ->* . (or/c string? bytes?))
   (define render-proc 
     (cond
       [(ormap (λ(test render-proc) (and (test source-path) render-proc))
-             (list has/is-null-source? has/is-preproc-source? has/is-markup-source? has/is-scribble-source? has/is-markdown-source? has/is-template-source?)
-             (list render-null-source render-preproc-source render-markup-or-markdown-source render-scribble-source render-markup-or-markdown-source render-preproc-source))] 
+              (list has/is-null-source? has/is-preproc-source? has/is-markup-source? has/is-scribble-source? has/is-markdown-source? has/is-template-source?)
+              (list render-null-source render-preproc-source render-markup-or-markdown-source render-scribble-source render-markup-or-markdown-source render-preproc-source))] 
       [else (error (format "render: no rendering function found for ~a" source-path))]))
   
   (message (format "render: ~a" (file-name-from-path source-path)))
@@ -136,7 +138,7 @@
 
 
 (define/contract (render-scribble-source source-path)
-  (complete-path? . -> . bytes?)
+  (complete-path? . -> . string?)
   (match-define-values (source-dir _ _) (split-path source-path))
   (file-needed-rerequire? source-path) ; called for its reqrequire side effect only, so dynamic-require below isn't cached
   (time (parameterize ([current-directory (->complete-path source-dir)])
@@ -148,14 +150,14 @@
 
 
 (define/contract (render-preproc-source source-path)
-  (complete-path? . -> . bytes?)
+  (complete-path? . -> . (or/c string? bytes?))
   (match-define-values (source-dir _ _) (split-path source-path))
   (time (parameterize ([current-directory (->complete-path source-dir)])
           (render-through-eval `(begin (require pollen/cache)(cached-require ,source-path ',world:main-pollen-export))))))
 
 
 (define/contract (render-markup-or-markdown-source source-path [maybe-template-path #f]) 
-  ((complete-path?) ((or/c #f complete-path?)) . ->* . bytes?)
+  ((complete-path?) ((or/c #f complete-path?)) . ->* . (or/c string? bytes?))
   (match-define-values (source-dir _ _) (split-path source-path))
   (define template-path (or maybe-template-path (get-template-for source-path)))
   (render-from-source-or-output-path template-path) ; because template might have its own preprocessor source
@@ -168,8 +170,10 @@
              [metas (cached-require ,(path->string source-path) ',world:meta-pollen-export)])
          (local-require pollen/pagetree pollen/template pollen/top)
          (define here (metas->here metas))
-         (include-template #:command-char ,world:command-marker (file ,(->string (find-relative-path source-dir template-path)))))))
-  
+         (cond 
+           [(bytes? doc) doc] ; if doc is binary, just pass it through
+           [else
+            (include-template #:command-char ,world:command-marker (file ,(->string (find-relative-path source-dir template-path))))]))))
   (time (parameterize ([current-directory source-dir]) ; because include-template wants to work relative to source location
           (render-through-eval expr-to-eval))))
 
@@ -183,18 +187,18 @@
   (complete-path? . -> . (or/c #f complete-path?))
   (match-define-values (source-dir _ _) (split-path source-path))
   (and (templated-source? source-path) ; doesn't make sense if it's not a templated source format
-      (let ([output-path (->output-path source-path)])
-        (or ; Build the possible paths and use the first one that either exists, or has existing source (template, preproc, or null)
-         (ormap (λ(p) (if (ormap file-exists? (list p (->template-source-path p) (->preproc-source-path p) (->null-source-path p))) p #f)) 
-               (filter (λ(x) (->boolean x)) ; if any of the possibilities below are invalid, they return #f 
-                      (list                     
-                       (parameterize ([current-directory (world:current-project-root)])
-                         (let ([source-metas (cached-require source-path 'metas)])
-                           (and ((->symbol world:template-meta-key) . in? . source-metas)
-                               (build-path source-dir (select-from-metas (->string world:template-meta-key) source-metas))))) ; path based on metas
-                       (and (filename-extension output-path) (build-path (world:current-project-root) 
-                                                                        (add-ext world:default-template-prefix (get-ext output-path))))))) ; path to default template
-         (and (filename-extension output-path) (build-path (world:current-server-extras-path) (add-ext world:fallback-template-prefix (get-ext output-path)))))))) ; fallback template
+       (let ([output-path (->output-path source-path)])
+         (or ; Build the possible paths and use the first one that either exists, or has existing source (template, preproc, or null)
+          (ormap (λ(p) (if (ormap file-exists? (list p (->template-source-path p) (->preproc-source-path p) (->null-source-path p))) p #f)) 
+                 (filter (λ(x) (->boolean x)) ; if any of the possibilities below are invalid, they return #f 
+                         (list                     
+                          (parameterize ([current-directory (world:current-project-root)])
+                            (let ([source-metas (cached-require source-path 'metas)])
+                              (and ((->symbol world:template-meta-key) . in? . source-metas)
+                                   (build-path source-dir (select-from-metas (->string world:template-meta-key) source-metas))))) ; path based on metas
+                          (and (filename-extension output-path) (build-path (world:current-project-root) 
+                                                                            (add-ext world:default-template-prefix (get-ext output-path))))))) ; path to default template
+          (and (filename-extension output-path) (build-path (world:current-server-extras-path) (add-ext world:fallback-template-prefix (get-ext output-path)))))))) ; fallback template
 
 
 (define/contract (file-needed-rerequire? source-path)
@@ -256,11 +260,11 @@
 
 
 (define/contract (render-through-eval expr-to-eval)
-  (list? . -> . bytes?)
+  (list? . -> . (or/c string? bytes?))
   (define cache-ns (car (current-eval-namespace-cache)))
   (define cached-modules (cdr (current-eval-namespace-cache)))
   (parameterize ([current-namespace (make-base-namespace)]
                  [current-output-port (current-error-port)]
                  [current-pagetree (make-project-pagetree (world:current-project-root))])
     (for-each (λ(mod-name) (namespace-attach-module cache-ns mod-name)) cached-modules)   
-    (string->bytes/utf-8 (eval expr-to-eval (current-namespace)))))
+    (eval expr-to-eval (current-namespace))))
