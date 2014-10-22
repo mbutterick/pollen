@@ -20,4 +20,4 @@ Using Racket 6.0+, install from the command line:
     
 And update like so:
 
-    raco pkg update pollen
+    raco pkg update --update-deps pollen
