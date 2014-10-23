@@ -164,7 +164,7 @@
   (define expr-to-eval 
     `(begin 
        (require (for-syntax racket/base))
-       (require web-server/templates pollen/cache pollen/debug)
+       (require pollen/include-template pollen/cache pollen/debug)
        ,(require-directory-require-files source-path) 
        (let ([doc (cached-require ,(path->string source-path) ',world:main-pollen-export)]
              [metas (cached-require ,(path->string source-path) ',world:meta-pollen-export)])
@@ -232,8 +232,7 @@
     (eval `(require ,module-name) cache-ns)
     (current-eval-namespace-cache (cons cache-ns (cons module-name cached-modules)))))
 
-(define initial-modules-to-cache '(web-server/templates 
-                                   xml
+(define initial-modules-to-cache '(xml
                                    racket/port 
                                    racket/file 
                                    racket/rerequire 
@@ -245,6 +244,7 @@
                                    pollen/debug
                                    pollen/decode
                                    pollen/file
+                                   pollen/include-template
                                    pollen/main
                                    pollen/reader-base
                                    pollen/pagetree
