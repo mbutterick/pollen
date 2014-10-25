@@ -233,12 +233,18 @@
     (current-eval-namespace-cache (cons cache-ns (cons module-name cached-modules)))))
 
 (define initial-modules-to-cache '(xml
-                                   racket/port 
-                                   racket/file 
-                                   racket/rerequire 
+                                   racket/bool
+                                   racket/class
                                    racket/contract 
+                                   racket/draw
+                                   racket/file
+                                   racket/format
+                                   racket/function
+                                   racket/port 
+                                   racket/rerequire 
                                    racket/list
                                    racket/match
+                                   racket/string
                                    racket/syntax
                                    pollen/cache
                                    pollen/debug
