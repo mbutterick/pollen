@@ -1,4 +1,5 @@
 #lang racket/base
+(require racket/runtime-path)
 
 (provide (prefix-out world: (all-defined-out)))
 
@@ -53,8 +54,8 @@
 
 (define dashboard-css "poldash.css")
 
-(define server-extras-dir "server-extras")
-(define current-server-extras-path (make-parameter #f))
+(define-runtime-path server-extras-dir "server-extras")
+(define current-server-extras-path (make-parameter server-extras-dir))
 
 (define check-directory-requires-in-render? (make-parameter #t))
 

@@ -1,6 +1,6 @@
 #lang web-server/base
 
-(require racket/list racket/contract
+(require racket/list
          web-server/servlet-env 
          web-server/dispatch)
 (require "server-routes.rkt" 
@@ -26,12 +26,8 @@
   (define server-name (format "http://localhost:~a" (world:current-server-port)))
   (message (format "Project server is ~a" server-name) "(Ctrl-C to exit)")
   (message (format "Project dashboard is ~a/~a" server-name world:default-pagetree))
-  
   (message "Ready to rock")
-  
-  (define module-root (apply build-path (drop-right (explode-path (current-contract-region)) 1)))
-  (world:current-server-extras-path (build-path module-root world:server-extras-dir))
-  
+    
   (parameterize ([error-print-width 1000]
                  [current-cache (make-cache)])
     (serve/servlet pollen-servlet
