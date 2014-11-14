@@ -144,7 +144,7 @@
   (time (parameterize ([current-directory (->complete-path source-dir)])
           ;; BTW this next action has side effects: scribble will copy in its core files if they don't exist.
           ((dynamic-require 'scribble/render 'render) (list (dynamic-require source-path world:main-pollen-export)) (list source-path))))
-  (define result (file->bytes (->output-path source-path)))
+  (define result (file->string (->output-path source-path)))
   (delete-file (->output-path source-path)) ; because render promises the data, not the side effect
   result)
 
