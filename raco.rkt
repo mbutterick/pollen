@@ -1,5 +1,5 @@
 #lang racket/base
-(require (for-syntax racket/base pollen/command))
+(require (for-syntax racket/base pollen/command racket/path))
 
 ;; Handle commands from raco
 
@@ -28,13 +28,16 @@
 ;; which is slow, and needs to happen at the top level.
 (define-syntax (select-syntax-for-command stx)
   (datum->syntax stx 
-                 (case arg-command-name
-                   [("test" "xyzzy") (handle-test)]
-                   [(#f "help") (handle-help)]
-                   [("start") (handle-start (path->directory-path first-arg-or-current-dir) port-arg)]
-                   [("render") (handle-render first-arg-or-current-dir rest-args)]
-                   [("clone") (handle-clone first-arg-or-current-dir rest-args)]
-                   [else (handle-else arg-command-name)])))
+                 ;; normalize-path happens here because it needs filesystem access
+                 ;; (unlike cleanse-path or simplify-path)
+                 (let ([first-arg-or-current-dir (normalize-path first-arg-or-current-dir)])
+                   (case arg-command-name
+                     [("test" "xyzzy") (handle-test)]
+                     [(#f "help") (handle-help)]
+                     [("start") (handle-start (path->directory-path first-arg-or-current-dir) port-arg)]
+                     [("render") (handle-render first-arg-or-current-dir rest-args)]
+                     [("clone") (handle-clone first-arg-or-current-dir rest-args)]
+                     [else (handle-else arg-command-name)]))))
 
 (select-syntax-for-command)
 
