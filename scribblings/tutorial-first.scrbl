@@ -126,9 +126,9 @@ The border is too.}
 @onscreen["Run"] the file again. In the interactions window, you'll see:
 
 @repl-output{
-The margin is 8em.
+The margin is 42em.
 The border is blue.
-The padding is 2em.
+The padding is 15em.
 The border is too.}
 
 This shows you something important: by default, any plain text in a Pollen source file is simply printed as written when you @onscreen["Run"] the file (minus the @tt{#lang} line, which is just for Racket's benefit). If you like, edit the text of the poem and click @onscreen["Run"] again. You'll see the updated text printed in the interactions window.
