@@ -1,9 +1,10 @@
 #lang racket/base
 (require "world.rkt" sugar/define sugar/coerce)
 
+(define (paths? x) (and (list? x) (andmap path? x)))
 
 (define/contract+provide (get-directory-require-files source-path) ; keep contract local to ensure coercion
-  (coerce/path? . -> . (or/c #f (listof path?)))
+  (coerce/path? . -> . (or/c #f paths?))
   (define possible-requires (list (simplify-path (build-path source-path 'up world:directory-require))))
   (and (andmap file-exists? possible-requires) possible-requires))
 

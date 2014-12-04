@@ -2,7 +2,7 @@
 (require txexpr sugar/define) 
 
 (define/contract+provide (make-default-tag-function . ids)
-  (() #:rest (listof txexpr-tag?) . ->* . procedure?)
+  (() #:rest txexpr-tags? . ->* . procedure?)
   (define (make-one-tag id)
     (λ x 
       (define reversed-pieces ; list of attribute pairs, and last element holds a list of everything else, then reversed

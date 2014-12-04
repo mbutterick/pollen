@@ -3,6 +3,7 @@
 (require "debug.rkt" "world.rkt")
 
 
+(define (symbols? x) (and (list? x) (andmap symbol? x)))
 
 (define+provide (to-string x)
   (if (string? x)
@@ -42,7 +43,7 @@
                       #:symbol-proc (symbol? . -> . xexpr?)
                       #:valid-char-proc (valid-char? . -> . xexpr?)
                       #:cdata-proc (cdata? . -> . xexpr?)
-                      #:exclude-tags (listof symbol?)  ) . ->* . txexpr?)
+                      #:exclude-tags symbols?) . ->* . txexpr?)
   
   
   (let loop ([x txexpr])
@@ -88,7 +89,7 @@
                       #:symbol-proc (symbol? . -> . xexpr?)
                       #:valid-char-proc (valid-char? . -> . xexpr?)
                       #:cdata-proc (cdata? . -> . xexpr?)
-                      #:exclude-tags (listof symbol?)  ) . ->* . txexpr-elements?)
+                      #:exclude-tags symbols?) . ->* . txexpr-elements?)
   
   (define temp-tag (gensym "temp-tag"))
   (define decode-result (decode `(temp-tag ,@elements)

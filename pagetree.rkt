@@ -10,6 +10,9 @@
   (->boolean (and (symbol? x) (with-handlers ([exn:fail? (λ(e) #f)])
                                 (not (whitespace/nbsp? (->string x)))))))
 
+(define+provide (pagenodes? x)
+  (and (list? x) (andmap pagenode? x)))
+
 
 (define+provide (pagenodeish? x)
   (with-handlers ([exn:fail? (λ(e) #f)]) 
@@ -78,7 +81,7 @@
 
 
 (define+provide/contract (children p [pt (current-pagetree)])
-  (((or/c #f pagenodeish?)) (pagetree?) . ->* . (or/c #f (listof pagenode?)))  
+  (((or/c #f pagenodeish?)) (pagetree?) . ->* . (or/c #f pagenodes?))  
   (and pt p 
        (let ([pagenode (->pagenode p)])
          (if (equal? pagenode (car pt))
@@ -87,19 +90,18 @@
 
 
 (define+provide/contract (siblings pnish [pt (current-pagetree)])
-  (((or/c #f pagenodeish?)) (pagetree?) . ->* . (or/c #f (listof pagenode?)))  
+  (((or/c #f pagenodeish?)) (pagetree?) . ->* . (or/c #f pagenodes?))  
   (children (parent pnish pt) pt))
 
 
 ;; flatten tree to sequence
 (define+provide/contract (pagetree->list pt)
-  (pagetree? . -> . (listof pagenode?))
+  (pagetree? . -> . pagenodes?)
   ; use cdr to get rid of root tag at front
   (cdr (flatten pt))) 
 
 
 (define (adjacents side pnish [pt (current-pagetree)])
-  ; ((symbol? (or/c #f pagenodeish?)) (pagetree?) . ->* . (or/c #f (listof pagenode?)))
   (and pt pnish
        (let* ([pagenode (->pagenode pnish)]
               [proc (if (equal? side 'left) takef takef-right)]
@@ -108,12 +110,12 @@
 
 
 (define+provide/contract (previous* pnish [pt (current-pagetree)]) 
-  (((or/c #f pagenodeish?)) (pagetree?) . ->* . (or/c #f (listof pagenode?)))
+  (((or/c #f pagenodeish?)) (pagetree?) . ->* . (or/c #f pagenodes?))
   (adjacents 'left pnish pt))
 
 
 (define+provide/contract (next* pnish [pt (current-pagetree)]) 
-  (((or/c #f pagenodeish?)) (pagetree?) . ->* . (or/c #f (listof pagenode?)))
+  (((or/c #f pagenodeish?)) (pagetree?) . ->* . (or/c #f pagenodes?))
   (adjacents 'right pnish pt))
 
 

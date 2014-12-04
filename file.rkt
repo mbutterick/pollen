@@ -28,9 +28,11 @@
   (coerce/path? . -> . coerce/boolean?)
   (not ((->string path) . starts-with? . ".")))
 
+(define (paths? x) (and (list? x) (andmap path? x)))
+(define (complete-paths? x) (and (list? x) (andmap complete-path? x)))
 
 (define+provide/contract (visible-files dir)
-  (pathish? . -> . (listof path?))
+  (pathish? . -> . paths?)
   (filter visible? 
           (map (λ(p) (find-relative-path dir p)) 
                (filter file-exists? 
@@ -108,7 +110,7 @@
 
 
 (define+provide/contract (project-files-with-ext ext)
-  (coerce/symbol? . -> . (listof complete-path?))
+  (coerce/symbol? . -> . complete-paths?)
   (map ->complete-path (filter (λ(i) (has-ext? i ext)) (directory-list (world:current-project-root)))))
 
 

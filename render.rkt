@@ -16,8 +16,17 @@
 
 ;; using internal contracts to provide some extra safety (negligible performance hit)
 
+(define/contract (valid-path-arg? x)
+  (any/c . -> . boolean?)
+  (or (equal? #f x) (complete-path? x)))
+
+(define/contract (valid-path-args? x)
+  (any/c . -> . boolean?)
+  (and (list? x) (andmap valid-path-arg? x)))
+
+
 (define/contract (make-mod-dates-key paths)
-  ((listof (or/c #f complete-path?)) . -> . (listof (or/c #f complete-path?)))
+  (valid-path-args? . -> . valid-path-args?)
   paths) ; for now, this does nothing; maybe later, it will do more
 
 
@@ -27,20 +36,21 @@
 
 
 (define/contract (store-render-in-modification-dates . rest-paths)
-  (() #:rest (listof (or/c #f complete-path?)) . ->* . void?)
+  (() #:rest valid-path-args? . ->* . void?)
   (define key (make-mod-dates-key rest-paths))
   (hash-set! modification-date-hash key (map path->mod-date-value key)))
 
 
 (define/contract (modification-date-expired? . rest-paths)
-  (() #:rest (listof (or/c #f complete-path?)) . ->* . boolean?)
+  (() #:rest valid-path-args? . ->* . boolean?)
   (define key (make-mod-dates-key rest-paths))
   (or (not (key . in? . modification-date-hash))  ; no stored mod date
       (not (equal? (map path->mod-date-value key) (get modification-date-hash key))))) ; data has changed
 
+(define (list-of-pathish? x) (and (list? x) (andmap pathish? x)))
 
 (define/contract+provide (render-batch . xs)
-  (() #:rest (listof pathish?) . ->* . void?)
+  (() #:rest list-of-pathish? . ->* . void?)
   ;; Why not just (map render ...)?
   ;; Because certain files will pass through multiple times (e.g., templates)
   ;; And with render, they would be rendered repeatedly.

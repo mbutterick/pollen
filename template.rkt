@@ -24,7 +24,7 @@
 
 
 (define+provide/contract (select* key value-source)
-  (coerce/symbol? (or/c hash? txexpr? pagenode? pathish?) . -> . (or/c #f (listof txexpr-element?)))
+  (coerce/symbol? (or/c hash? txexpr? pagenode? pathish?) . -> . (or/c #f txexpr-elements?))
   (define metas-result (and (not (txexpr? value-source)) (select-from-metas key value-source)))
   (define doc-result (select-from-doc key value-source))
   (define result (append (or (and metas-result (list metas-result)) null) (or doc-result null)))
@@ -40,7 +40,7 @@
 
 
 (define+provide/contract (select-from-doc key doc-source)
-  (coerce/symbol? (or/c txexpr? pagenode? pathish?) . -> . (or/c #f (listof txexpr-element?)))
+  (coerce/symbol? (or/c txexpr? pagenode? pathish?) . -> . (or/c #f txexpr-elements?))
   (define doc (cond
                 [(txexpr? doc-source) doc-source]
                 [else (get-doc doc-source)]))
