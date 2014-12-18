@@ -275,19 +275,19 @@
 
 
 
-;; recursive whitespace test
-(define+provide/contract (whitespace? x)  
-  (any/c . -> . coerce/boolean?)
+(define+provide/contract (whitespace? x [nbsp? #f])
+  ((any/c)(boolean?) . ->* . coerce/boolean?)
+  (define pat (pregexp (format "^[\\s~a]+$" (if nbsp? #\u00A0 ""))))
   (cond
     [(equal? "" x) #t] ; empty string is deemed whitespace
-    [(or (string? x) (symbol? x)) (regexp-match #px"^\\s+$" (->string x))]
-    [(or (list? x) (vector? x)) (andmap whitespace? (->list x))]
+    [(or (string? x) (symbol? x)) (regexp-match pat (->string x))]
+    [(or (list? x) (vector? x)) (and (not (empty? x)) (andmap (λ(i) (whitespace? i nbsp?)) (->list x)))] ; andmap returns #t for empty lists
     [else #f]))
 
-
-(define+provide/contract (whitespace/nbsp? x)  
+(define+provide/contract (whitespace/nbsp? x)
   (any/c . -> . coerce/boolean?)
-  (or (whitespace? x) (equal? (->string x) (->string #\u00A0))))
+  (whitespace? x #t))
+
 
 ;; is x a paragraph break?
 (define+provide/contract (paragraph-break? x #:separator [sep world:paragraph-separator])

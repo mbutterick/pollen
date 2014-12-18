@@ -1,5 +1,5 @@
 #lang racket/base
-(require pollen/decode rackunit txexpr)
+(require pollen/decode racket/format rackunit txexpr)
 
 (check-true (begin (register-block-tag 'barfoo) (block-txexpr? '(barfoo "foo"))))
 
@@ -42,3 +42,10 @@
 (check-equal? (merge-newlines '(p "\n" "foo" "\n" "\n" "bar" (em "\n" "\n" "\n"))) 
               '(p "\n" "foo" "\n\n" "bar" (em "\n\n\n")))
 
+
+(check-true (whitespace? " "))
+(check-false (whitespace? (~a #\u00A0)))
+(check-true (whitespace/nbsp? (~a #\u00A0)))
+(check-true (whitespace/nbsp? (vector (~a #\u00A0))))
+(check-false (whitespace? (format " ~a " #\u00A0)))
+(check-true (whitespace/nbsp? (format " ~a " #\u00A0)))
