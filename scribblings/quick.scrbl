@@ -72,6 +72,8 @@ Open a terminal window and issue two commands:
 > cd [directory containing your file]
 > raco pollen render hello.txt.pp}
 
+@margin-note{Windows users, I'll trust you to convert @tt{raco} into the appropriate command for your system — assuming defaults, it's likely to be @tt{"C:\Program Files\Racket\raco"} (include the surrounding quotes in the command).}
+
 After a moment, a new file will appear called @tt{hello.txt}. Let's see what's in it:
 
 @terminal{
