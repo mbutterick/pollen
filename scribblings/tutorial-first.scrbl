@@ -463,7 +463,7 @@ How to type a lozenge:
 
 @margin-note{Newcomers to Racket often gripe about prefix notation and the parentheses. If you need to get it out of your system, go ahead. Keep in mind, however, that it's not some peculiar affectation, but rather a necessary consequence of rule #1. As you'll come to learn, rule #1 is where the magic happens.}
 
-That should tell you enough to infer what's going on in the Pollen commands above:
+That's all you need to figure out what's going on in the Pollen commands below:
 
 @codeblock{
 #lang pollen
