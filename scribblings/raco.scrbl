@@ -83,7 +83,7 @@ Alternatively, the command can take a variable number of path arguments. @racket
 
 Makes a copy of the project directory on the desktop, and removes any source files or other Pollen-related files.
 
-@racket[raco pollen clobe _directory-path] will perform the same copying and filtering, but using @racket[_directory-path] as the destination rather than the desktop.
+@racket[raco pollen clone _directory-path] will perform the same copying and filtering, but using @racket[_directory-path] as the destination rather than the desktop.
 
 
 
