@@ -44,15 +44,21 @@ clone                 copy project to desktop without source files" ,(world:curr
                        (build-path (find-system-path 'desk-dir) (string->path world:clone-directory-name))))
   
   `(begin
-     (displayln "Cloning ...")
-     (require racket/file pollen/file)
+     (require racket/file pollen/file racket/list)
      (define (delete-it path)
        (cond
          [(directory-exists? path) (delete-directory/files path)]
          [(file-exists? path) (delete-file path)]))
+     (define (contains-directory? possible-superdir possible-subdir)
+       (define (has-prefix? xs prefix)
+         (and (>= (length xs) (length prefix))
+              (andmap equal? prefix (take xs (length prefix)))))
+       ((explode-path possible-subdir) . has-prefix? . (explode-path possible-superdir)))
      (define source-dir ,directory)
-     (when (not (directory-exists? source-dir)) (error (format "clone error: source directory ~a does not exist" source-dir)))
+     (when (not (directory-exists? source-dir)) (error 'clone (format "source directory ~a does not exist" source-dir)))
      (define target-dir ,target-path)
+     (when (source-dir . contains-directory? . target-dir) (error 'clone "aborted because target directory for cloning (~a) can't be inside source directory (~a)" target-dir source-dir))
+     (displayln "Cloning ...")
      (when (directory-exists? target-dir) (delete-directory/files target-dir))
      (copy-directory/files source-dir target-dir)
      (for-each delete-it (find-files pollen-related-file? target-dir))
