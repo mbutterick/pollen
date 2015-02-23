@@ -127,6 +127,9 @@
   (and (directory-exists? path) 
        (or (ends-with? (path->string path) "compiled"))))
 
+(define+provide (cache-file? path)
+  (or (ends-with? (path->string path) world:cache-filename)))
+
 
 (define+provide (pollen-related-file? file)
   (ormap (λ(proc) (proc file)) (list
@@ -138,4 +141,5 @@
                                 scribble-source?
                                 null-source?
                                 racket-source?
-                                magic-directory?)))
+                                magic-directory?
+                                cache-file?)))
