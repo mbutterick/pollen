@@ -65,7 +65,7 @@ If you want to start in the current directory but with a different port, use @li
 
 @section{@racket[raco pollen render]}
 
-Renders all preprocessor source files and then all pagetree files found in the current directory.
+Renders all preprocessor source files and then all pagetree files found in the current directory. If no pagetree files are found, all source files will be rendered.
 
 This command can be invoked with extra arguments.
 
@@ -83,7 +83,11 @@ Alternatively, the command can take a variable number of path arguments. @racket
 
 Makes a copy of the project directory on the desktop, and removes any source files or other Pollen-related files.
 
-@racket[raco pollen clone _directory-path] will perform the same copying and filtering, but using @racket[_directory-path] as the destination rather than the desktop.
+@racket[raco pollen clone _source-path] will clone source from the @racket[_source-path] onto the desktop.
+
+@racket[raco pollen clone _source-path _dest-path] will clone source from the @racket[_source-path] to @racket[_dest-path] rather than the desktop. 
+
+If you're already in the project directory and want to clone somewhere other than the desktop, use @racket[raco pollen clone . _dest-path].
 
 
 
