@@ -16,16 +16,23 @@ clone                 copy project to desktop without source files" ,(world:curr
 
 (define (handle-render dir-or-path rest-args)  
   `(begin 
-     (require pollen/render pollen/world pollen/file sugar)
+     (require pollen/render pollen/world pollen/file sugar pollen/pagetree racket/list)
      (parameterize ([current-directory (world:current-project-root)])
        (define dir-or-path ,dir-or-path)
        (apply render-batch (map ->complete-path (if (not (directory-exists? dir-or-path))
                                                     (begin
                                                       (displayln (format "Rendering ~a" dir-or-path)) 
                                                       (cons dir-or-path ',rest-args))
-                                                    (begin
-                                                      (displayln (format "Rendering preproc & pagetree files in directory ~a" dir-or-path))
-                                                      (apply append (map (λ(proc) (filter proc (directory-list dir-or-path))) (list preproc-source? pagetree-source?))))))))))
+                                                    (let ([dir dir-or-path]) ; now we know it's a dir
+                                                      (displayln (format "Rendering preproc & pagetree files in directory ~a" dir))
+                                                      (define preprocs (filter preproc-source? (directory-list dir)))
+                                                      (define static-pagetrees (filter pagetree-source? (directory-list dir)))
+                                                      ;; if there are no static pagetrees, use make-project-pagetree
+                                                      ;; (which will synthesize a pagetree if needed, which includes all sources)
+                                                      (define pagetrees (if (empty? static-pagetrees)
+                                                                            (list (make-project-pagetree dir))
+                                                                            static-pagetrees))
+                                                      (append* preprocs pagetrees))))))))
 
 
 (define (handle-start directory [port #f])
