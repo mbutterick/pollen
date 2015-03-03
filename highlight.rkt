@@ -44,8 +44,8 @@ if zero is False:
   (match x
     [`(,tag ([,ks ,vs] ...) . ,els)
      `(,tag
-       ,(for/list ([k (in-value ks)]
-                   [v (in-value vs)])
+       ,(for/list ([k (in-list ks)]
+                   [v (in-list vs)])
           (list k (regexp-replace* "&amp;" v "\\&")))
        ,@(map decode-ampersands-in-attributes els))]
     [v v]))
