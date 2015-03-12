@@ -15,3 +15,6 @@ From the command line, install Pollen:
 
 After that, you can update the package from the command line:
 @verbatim{raco pkg update pollen}
+
+
+Windows users, I'll trust you to convert @tt{raco} into the appropriate command for your system — assuming defaults, it's likely to be @tt{"C:\Program Files\Racket\raco"} (include the surrounding quotes in the command).
