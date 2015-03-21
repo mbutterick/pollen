@@ -341,7 +341,7 @@ And most important:
 
  As we'll see in the next section, this is where your book truly becomes programmable.
 
-@section{Tags are functions}
+@section[#:tag "tags-are-functions"]{Tags are functions}
 
 @(noskip-note)
 
