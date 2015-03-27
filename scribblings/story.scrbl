@@ -22,7 +22,7 @@ In one way, this makes sense. Web pages are mostly made of text-based data — 
 
 But text-based editing is also limited. Though the underlying description of a web page is notionally human-readable, it's optimized to be readable by other software — namely, web browsers. HTML markup in particular is verbose and easily mistyped. And isn't it fatally dull to manage all the boilerplate, like surrounding every paragraph with @code{<p>...</p>}? Yes, it is.
 
-For these reasons, much of web development should lend itself to @italic{abstraction} & @italic{automation}. Abstraction means consolidating repetitve, complex patterns into simpler, parameterized forms. Automation means avoiding the manual drudgery of generating the output files. But in practice, tools that enable this abstraction & automation have been slow to arrive, and most have come hobbled with unacceptable deficiencies. 
+For these reasons, much of web development should lend itself to @italic{abstraction} & @italic{automation}. Abstraction means consolidating repetitive, complex patterns into simpler, parameterized forms. Automation means avoiding the manual drudgery of generating the output files. But in practice, tools that enable this abstraction & automation have been slow to arrive, and most have come hobbled with unacceptable deficiencies. 
 
 @section{The better idea: a programming model}
 
