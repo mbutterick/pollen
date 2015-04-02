@@ -1,4 +1,4 @@
-## Pollen: the book is a program
+## Pollen: the book is a program [![Build Status](https://travis-ci.org/mbutterick/pollen.svg)](https://travis-ci.org/mbutterick/pollen)
 
 A book-publishing system written in [Racket](http://racket-lang.org). Unstable. Incomplete. Et cetera. It’s becoming more civilized. But this is the actual software I use to publish & maintain my web-based book [Butterick’s Practical Typography](http://practicaltypography.com).
 
