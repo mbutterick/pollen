@@ -1,11 +1,12 @@
 #lang racket/base
-(require rackunit)
+(require rackunit racket/runtime-path)
 (require "../render.rkt")
 (require/expose "../render.rkt" (modification-date-hash make-mod-dates-key path->mod-date-value store-render-in-modification-dates modification-date-expired?))
 
+
 (check-pred hash? modification-date-hash)
 
-(define sample-dir (string->path "samples"))
+(define-runtime-path sample-dir "samples")
 (define samples (parameterize ([current-directory sample-dir])
                   (map path->complete-path (directory-list "."))))
 (define-values (sample-01 sample-02 sample-03) (apply values samples))
