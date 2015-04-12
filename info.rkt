@@ -5,5 +5,5 @@
 (define build-deps '("plot-gui-lib" "rackunit-lib" "scribble-lib"))
 (define update-implies '("txexpr" "sugar"))
 (define scribblings '(("scribblings/pollen.scrbl" (multi-page))))
-(define raco-commands '(("pollen" pollen/raco "issue Pollen command" #f)))
+(define raco-commands '(("pollen" (submod pollen/raco main) "issue Pollen command" #f)))
 (define compile-omit-paths '("tests" "raco.rkt"))

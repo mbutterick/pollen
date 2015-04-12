@@ -39,6 +39,5 @@
                      [("clone") (handle-clone first-arg-or-current-dir rest-args)]
                      [else (handle-else arg-command-name)]))))
 
-(select-syntax-for-command)
-
-
+(module+ main
+  (select-syntax-for-command))
