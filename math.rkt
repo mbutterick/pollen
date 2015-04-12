@@ -1,7 +1,7 @@
 #lang racket/base
 (require pollen/convert)
 
-(provide $ $$)
+(provide $ $$ mathjax-config mathjax-library)
 
 (define mathjax-config #<<HTML
 <script type="text/x-mathjax-config">
@@ -17,18 +17,11 @@ HTML
 HTML
   )
 
-(define first-run #t)
-
 (define (mathjax-wrapper #:delimiter delimiter xs)
-  `(mathjax 
-    ,@(if first-run ; only need mathjax-config & mathjax-library once on the page
-          (begin (set! first-run #f) (map html->xexpr (list mathjax-config mathjax-library))) 
-          null) 
-    ,(apply string-append `(,delimiter ,@xs ,delimiter)))) 
+  `(mathjax ,(apply string-append `(,delimiter ,@xs ,delimiter)))) 
 
 (define ($ . x)
   (mathjax-wrapper #:delimiter "$" x))
-
 
 (define ($$ . x)
   (mathjax-wrapper #:delimiter "$$" x))
