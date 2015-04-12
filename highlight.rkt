@@ -8,14 +8,15 @@
          racket/string
          rackjure/threading
          rackjure/str
-         xml
+          xml
          (only-in html read-html-as-xml)
          pollen/debug)
 
 (provide highlight make-highlight-css)
 
+
 #|
-A small edit of Greg Hendershott's pygments.rkt,
+A small mashup of Greg Hendershott's pygments.rkt, html.rkt, and params.rkt,
 part of Frog, the static-blog generator
 http://github.com/greghendershott/frog
 
@@ -37,19 +38,11 @@ if zero is False:
 
 |#
 
-(define current-pygments-linenos? (make-parameter #t))
-(define current-pygments-cssclass (make-parameter "source"))
+(define prn0 void)
+(define prn1 message)
 
-(define (decode-ampersands-in-attributes x)
-  (match x
-    [`(,tag ([,ks ,vs] ...) . ,els)
-     `(,tag
-       ,(for/list ([k (in-list ks)]
-                   [v (in-list vs)])
-          (list k (regexp-replace* "&amp;" v "\\&")))
-       ,@(map decode-ampersands-in-attributes els))]
-    [v v]))
-
+;;;;;;;;;;;;;;;;;;
+;; from frog/html
 
 (define (read-html-as-xexprs) ;; (-> (listof xexpr?))
   (~>> (read-html-as-xml)
@@ -58,48 +51,74 @@ if zero is False:
        decode-ampersands-in-attributes
        cddr))
 
+(define (decode-ampersands-in-attributes x)
+  (match x
+    [`(,tag ([,ks ,vs] ...) . ,els)
+     `(,tag
+       ,(for/list ([k ks]
+                   [v vs])
+          (list k (regexp-replace* "&amp;" v "\\&")))
+       ,@(map decode-ampersands-in-attributes els))]
+    [v v]))
 
-;; Go ahead during module load and start a thread to launch the
-;; subprocess that runs Python with our pipe.py script.
-(define-runtime-path pipe.py "pipe.py")
+;; end frog/html
+;;;;;;;;;;;;;;;;;;
+
+
+;;;;;;;;;;;;;;;;;;
+;; from frog/params
+
+(define current-pygments-linenos? (make-parameter #t))
+(define current-pygments-cssclass (make-parameter "source"))
+
+;; end frog/params
+;;;;;;;;;;;;;;;;;;
+
+
+
+;;;;;;;;;;;;;;;;;;
+;; from frog/pygments
+
+;; Process that runs Python with our pipe.py script.
+
 (define-values (pyg-in pyg-out pyg-pid pyg-err pyg-proc)
   (values #f #f #f #f #f))
+(define-runtime-path pipe.py "pipe.py")
 
-(define (make-pygments-thread)
-  (thread
-   (thunk
-    ;; Start a subprocess running our pipe.py script.
-    (match (process (str "python -u " pipe.py
-                         (if (current-pygments-linenos?) " --linenos" "")
-                         " --cssclass " (current-pygments-cssclass)))
-      [(list in out pid err proc)
-       (set!-values (pyg-in pyg-out pyg-pid pyg-err pyg-proc)
-                    (values in out pid err proc))
-       (file-stream-buffer-mode out 'line)])
-    ;; Wait for its "ready\n"
-    (when (sync/timeout 3 pyg-in)
-      (read-line pyg-in 'linefeed)))))
+(define start
+  (let ([start-attempted? #f])
+    (λ ()
+      (unless start-attempted?
+        (set! start-attempted? #t)
+        (prn0 "Launching python pipe.py")
+        (match (process (str "python -u " pipe.py
+                             (if (current-pygments-linenos?) " --linenos" "")
+                             " --cssclass " (current-pygments-cssclass)))
+          [(list in out pid err proc)
+           (set!-values (pyg-in pyg-out pyg-pid pyg-err pyg-proc)
+                        (values in out pid err proc))
+           (file-stream-buffer-mode out 'line)
+           (match (read-line pyg-in 'any)  ;; consume "ready" line or EOF
+             [(? eof-object?) (say-no-pygments)]
+             [_ (say-pygments)])]
+          [_ (say-no-pygments)])))))
 
-(define load-thread #t)
+(define (say-pygments)
+  (prn1 "Using Pygments."))
+(define (say-no-pygments)
+  (prn1 "Pygments not found. Using plain `pre` blocks."))
 
-(define (pygments-running?)
-  (define (pygments-status-is-running?)
-    (and pyg-proc
-         (eq? (pyg-proc 'status) 'running)))
-  (when load-thread ;; first time
-    (thread-wait (make-pygments-thread))
-    (set! load-thread #f)
-    (unless (pygments-status-is-running?)
-      (message "Pygments not installed. Using plain `pre` blocks.")))
-  (pygments-status-is-running?))
+(define (running?)
+  (and pyg-proc
+       (eq? (pyg-proc 'status) 'running)))
 
 (define (stop) ;; -> void
-  (when (pygments-running?)
+  (when (running?)
     (displayln "__EXIT__" pyg-out)
     (begin0 (or (pyg-proc 'exit-code) (pyg-proc 'kill))
-            (close-input-port pyg-in)
-            (close-output-port pyg-out)
-            (close-input-port pyg-err)))
+      (close-input-port pyg-in)
+      (close-output-port pyg-out)
+      (close-input-port pyg-err)))
   (void))
 
 (exit-handler
@@ -108,24 +127,31 @@ if zero is False:
      (stop)
      (old-exit-handler v))))
 
-(define (highlight lang . codelines)
-  (define code (string-append* codelines))
+(define (pygmentize code lang) ;; string? string? -> (listof xexpr?)
   (define (default code)
     `((pre () (code () ,code))))
-  (define result
-    `(div ((class "highlight"))
-      ,@(cond [(pygments-running?)
-               (displayln lang pyg-out)
-               (displayln code pyg-out)
-               (displayln "__END__" pyg-out)
-               (let loop ([s ""])
-                 (match (read-line pyg-in 'any)
-                   ["__END__" (with-input-from-string s read-html-as-xexprs)]
-                   [(? string? v) (loop (str s v "\n"))]
-                   [_ (copy-port pyg-err (current-output-port)) ;echo error msg
-                      (default code)]))]
-              [else (default code)])))
-  result)
+  (unless (running?)
+    (start))
+  (cond [(running?)
+         (displayln lang pyg-out)
+         (displayln code pyg-out)
+         (displayln "__END__" pyg-out)
+         (let loop ([s ""])
+           (match (read-line pyg-in 'any)
+             ["__END__" (with-input-from-string s read-html-as-xexprs)]
+             [(? string? v) (loop (str s v "\n"))]
+             [_ (copy-port pyg-err (current-output-port)) ;echo error msg
+                (default code)]))]
+        [else (default code)]))
+
+;; end frog/pygments
+;;;;;;;;;;;;;;;;;;
+
+
+(define (highlight lang . codelines)
+  (define code (string-append* codelines))
+  `(div ((class "highlight"))
+      ,@(pygmentize code lang)))
 
 ;; Other CSS options available from http://richleland.github.io/pygments-css/ 
 
