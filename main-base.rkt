@@ -65,8 +65,9 @@
                         (values result meta-acc))
                       
                       (define-values (doc-without-metas meta-elements) (splitter x))
+                      (define meta-xexpr (apply metaroot meta-elements))
                       (define meta-element->assoc (λ(x) (let ([key (meta-key x)][value (meta-value x)]) (cons key value))))
-                      (define metas (make-hash (map meta-element->assoc meta-elements)))
+                      (define metas (make-hash (map meta-element->assoc (cdr meta-xexpr))))
                       (values doc-without-metas metas)) 
                     
                     (require racket/list)
