@@ -331,7 +331,7 @@ Return the pagenode immediately after @racket[_p]. For @racket[next*], return al
 [pagetree pagetree?])
 list?
 ]
-Convert @racket[_pagetree] to a simple list. Equivalent to a pre-order depth-first traversal of @racket[_pagetree].
+Convert @racket[_pagetree] to a simple list. Uses @racket[flatten], and is thus equivalent to a pre-order depth-first traversal of @racket[_pagetree].
 
 @defproc[
 (in-pagetree?

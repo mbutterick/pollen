@@ -43,7 +43,7 @@ This function doesn't do much on its own. Rather, it provides the hooks upon whi
 
 Recall that in Pollen, all @secref["tags-are-functions"]. By default, the @racket[_tagged-xexpr] from a source file is tagged with @racket[root]. So the typical way to use @racket[decode] is to attach your decoding functions to it, and then define @racket[root] to invoke your @racket[decode] function. Then it will be automatically applied to every @racket[doc] during compile. 
 
-For instance, here's how @racket[decode] is attached to @racket[root] in @italic{Butterick's Practical Typography}. There's not much to it —
+For instance, here's how @racket[decode] is attached to @racket[root] in @link["http://practicaltypography.com"]{@italic{Butterick's Practical Typography}}. There's not much to it —
 
 @racketblock[
 (define (root . items)

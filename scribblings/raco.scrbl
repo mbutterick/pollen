@@ -1,6 +1,6 @@
 #lang scribble/manual
 
-@(require scribble/eval pollen/world (for-label racket pollen/world))
+@(require "mb-tools.rkt" scribble/eval pollen/world (for-label racket pollen/world))
 
 @(define my-eval (make-base-eval))
 @(my-eval `(require pollen pollen/file))
@@ -9,7 +9,7 @@
 @title[#:tag "raco-pollen"]{Using @exec{raco pollen}}
 
 
-Racket provides centralized command-line options through @racket[raco] (short for @code{racket command}, see @other-doc['(lib "scribblings/raco/raco.scrbl")]). 
+Racket provides centralized command-line options through @exec{raco} (short for @exec{racket command}, see @other-doc['(lib "scribblings/raco/raco.scrbl")]). 
 
 Once you install Pollen, you can access the following Pollen-specific commands through @racket[raco] using the subcommand @exec{raco pollen}.
 
@@ -17,20 +17,24 @@ Once you install Pollen, you can access the following Pollen-specific commands t
 
 Open a terminal window and type:
 
-@verbatim{
+@terminal{
 > raco pollen test}
 
 If @racket[raco pollen] is installed correctly, you'll see:
 
-@verbatim{raco pollen is installed correctly}
+@terminal{raco pollen is installed correctly}
 
 But if you get:
 
-@verbatim{raco: Unrecognized command: pollen}
+@terminal{raco: Unrecognized command: pollen}
 
-You'll need to fix the problem before proceeding, most likely by reinstalling Pollen (see @racket[Installation]).
+You'll need to fix the problem before proceeding, most likely by reinstalling Pollen (see @secref["Installation" #:doc '(lib "pollen/scribblings/pollen.scrbl")]).
 
-@margin-note{Pro tip: I have an alias in my @racketfont{.bash_profile} like so: @racketfont{alias polcom=@literal{'}raco pollen@literal{'}}}
+If your error is like this:
+
+@terminal{Unrecognized command: raco}
+
+You have a deeper problem with your Racket installation (often a misconfiguration of @code{PATH}).
 
 @section{@racket[raco pollen]}
 
@@ -49,18 +53,18 @@ This command can be invoked with two optional arguments.
 
 @racket[raco pollen start _path] will start the project server in @racket[_path] rather than the current directory.
 
-@verbatim{
+@terminal{
 > raco pollen start ~/path/to/project/}
 
 @racket[raco pollen start _path _port] will start the project server in @racket[_path] using @racket[_port] rather than @racket[world:current-server-port]. This is useful if you want to have multiple project servers running simultaneously.
 
-@verbatim{
+@terminal{
 > raco pollen start ~/path/to/project/
 > raco pollen start ~/path/to/project/scribblings 8088}
 
 If you want to start in the current directory but with a different port, use @litchar{.} as the path:
 
-@verbatim{
+@terminal{
 > raco pollen start . 8088}
 
 @section{@racket[raco pollen render]}
@@ -73,7 +77,7 @@ This command can be invoked with extra arguments.
 
 Alternatively, the command can take a variable number of path arguments. @racket[raco pollen render _path...] will render only the paths specified in @racket[_path...]. Consistent with the usual command-line idiom, this can be a single path, a list of paths, or a pattern:
 
-@verbatim{
+@terminal{
 > raco pollen render foo.html.pm
 > raco pollen render foo.html.pm bar.html.pm zam.css.pp
 > raco pollen render *.html.pm}

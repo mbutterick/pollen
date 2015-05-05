@@ -52,7 +52,7 @@ A text-mode command has the three possible parts after the @litchar["◊"]:
 
 @itemlist[
 @item{The @italic{command name} appears immediately after the @litchar["◊"]. Typically it's a short word.} 
-@item{The @italic{Racket arguments} appear between square brackets. Pollen is partly an interface to the Racket programming language. These arguments are entered using Racket conventions — e.g., a @tt{string of text} needs to be put in quotes as a @code{"string of text"}. If you like programming, you'll end up using these frequently. If you don't, you won't.}
+@item{The @italic{Racket arguments} appear between square brackets. Pollen is partly an interface to the Racket programming language. These arguments are entered using Racket conventions — e.g., a @code{string of text} needs to be put in quotes as a @code{"string of text"}. If you like programming, you'll end up using these frequently. If you don't, you won't.}
 @item{The @italic{text argument} appears between braces (aka curly brackets). You can put any ordinary text here. Unlike with the Racket arguments, you don't put quotes around the text.}
 ]
 
@@ -157,7 +157,7 @@ In Pollen, you'll typically use the command name for one of four purposes:
 @item{To invoke a tag function.}
 @item{To invoke another function.}
 @item{To insert the value of a variable.}
-@item{To insert a @tt{meta} value.}
+@item{To insert a @code{meta} value.}
 @item{To insert a comment.}
 ]
 
@@ -185,7 +185,7 @@ To streamline markup, Pollen doesn't restrict you to a certain set of tags, nor 
 
 
 
-The one restriction is that you can't invent names for tags that are already being used for other commands. For instance, @tt{map} is a name permanently reserved by the Racket function @racket[map]. It's also a rarely-used HTML tag. But gosh, you really want to use it. Problem is, if you invoke it directly, Pollen will think you mean the other @racket[map]: 
+The one restriction is that you can't invent names for tags that are already being used for other commands. For instance, @code{map} is a name permanently reserved by the Racket function @racket[map]. It's also a rarely-used HTML tag. But gosh, you really want to use it. Problem is, if you invoke it directly, Pollen will think you mean the other @racket[map]: 
 
 
 @codeblock{
@@ -218,7 +218,7 @@ Use the @racket[define] command to create your own function for a command name. 
 
 @repl-output{'(strong "Fancy Sauce, $1")}
 
-We can define @tt{strong} to do something else, like add to the text:
+We can define @code{strong} to do something else, like add to the text:
 
 @codeblock{
 #lang pollen
@@ -228,7 +228,7 @@ We can define @tt{strong} to do something else, like add to the text:
 
 @repl-output{'(strong "Hey! Listen up! Fancy Sauce, $1")}
 
-The replacement function has to accept any arguments that might get passed along, but it doesn't have to do anything with them. For instance, this function definition won't work because @tt{strong} is going to get a text argument that it's not defined to handle:
+The replacement function has to accept any arguments that might get passed along, but it doesn't have to do anything with them. For instance, this function definition won't work because @code{strong} is going to get a text argument that it's not defined to handle:
 
 @codeblock{
 #lang pollen
@@ -243,7 +243,7 @@ the expected number of arguments does not match the given number
   arguments...:
     "Fancy Sauce, $1"}
 
-Whereas in this version, @tt{strong} accepts an argument called @tt{text}, but then ignores it:
+Whereas in this version, @code{strong} accepts an argument called @code{text}, but then ignores it:
 
 @codeblock|{
   #lang pollen
@@ -267,7 +267,7 @@ You aren't limited to functions you define. Any function from Racket, or any Rac
 
 @repl-output{'(range 1 20)}
 
-Hold on — that's not what we want. Where's the list of numbers? The problem here is that we didn't explicitly import the @racketmodname[racket/list] library, which contains the definition for @racket[range]. (If you need to find out what library contains a certain function, the Racket documentation will tell you.) Without @racketmodname[racket/list], Pollen just thinks we're trying to use @tt{range} as a tag function (and if we had been, then @repl-output{'(range 1 20)} would've been the right result). 
+Hold on — that's not what we want. Where's the list of numbers? The problem here is that we didn't explicitly import the @racketmodname[racket/list] library, which contains the definition for @racket[range]. (If you need to find out what library contains a certain function, the Racket documentation will tell you.) Without @racketmodname[racket/list], Pollen just thinks we're trying to use @code{range} as a tag function (and if we had been, then @repl-output{'(range 1 20)} would've been the right result). 
 
 We fix this by using the @racket[require] command to bring in the @racketmodname[racket/list] library, which contains the @racket[range]  we want:
 
@@ -293,7 +293,7 @@ Of course, you can also invoke Racket functions indirectly, by attaching them to
 
 Let's return to the problem that surfaced in the last section — the fact that some command names can't be used as tag functions because they're already being used for other things. You can work around this by defining your own tag function with a non-conflicting name. 
 
-For instance, suppose we want to use @tt{map} as a tag even though Racket is using it for its own function called @racket[map]. First, we invent a command name that doesn't conflict. Let's call it @code{my-map}. As you learned above, Pollen will treat a new command name as a tag function by default:
+For instance, suppose we want to use @code{map} as a tag even though Racket is using it for its own function called @racket[map]. First, we invent a command name that doesn't conflict. Let's call it @code{my-map}. As you learned above, Pollen will treat a new command name as a tag function by default:
 
 @codeblock|{
 #lang pollen
@@ -303,7 +303,7 @@ For instance, suppose we want to use @tt{map} as a tag even though Racket is usi
 @repl-output{'(my-map "How I would love this to be a map.")}
 
 
-But @code{my-map} is not the tag we want. We need to define @code{my-map} to be a tag function for @tt{map}. We can do this with the Pollen helper @racket[make-default-tag-function]. That function lives in @racket[pollen/tag], so we @racket[require] that too:
+But @code{my-map} is not the tag we want. We need to define @code{my-map} to be a tag function for @code{map}. We can do this with the Pollen helper @racket[make-default-tag-function]. That function lives in @racket[pollen/tag], so we @racket[require] that too:
 
 
 @codeblock|{
@@ -365,7 +365,7 @@ The value of zam is ◊zam
 
 @margin-note{In an unsaved DrRacket file, or a file without a special Pollen source extension, the @tt{#lang pollen} designation invokes the Pollen preprocessor by default. You can explicitly invoke preprocessor mode by starting a file with @tt{#lang pollen/pre}. See also @secref["Preprocessor___pp_extension_"].}
 
-If the variable holds a container datatype (like a @racket[list], @racket[hash], or @racket[vector]), Pollen will produce the Racket text representation of the item. Here, @tt{zam} is a @racket[list] of integers:
+If the variable holds a container datatype (like a @racket[list], @racket[hash], or @racket[vector]), Pollen will produce the Racket text representation of the item. Here, @code{zam} is a @racket[list] of integers:
 
 @codeblock|{
 #lang pollen
@@ -386,7 +386,7 @@ The value of zam is ◊string-join[(map number->string zam)]{ and }
 
 @repl-output{The value of zam is 1 and 2 and 3}
 
-Pollen will still produce an error if you try to convert an esoteric value to a string. Here, @tt{zam} is the addition function (@racket[+]):
+Pollen will still produce an error if you try to convert an esoteric value to a string. Here, @code{zam} is the addition function (@racket[+]):
 
 @codeblock|{
 #lang pollen
@@ -412,7 +412,7 @@ This time, the file will produce an error:
 
 One special case to know about. In the examples above, there's a word space between the variable and the other text. But suppose you need to insert a variable into text so that there's no space in between. The simple ◊ notation won't work, because it won't be clear where the variable name ends and the text begins. 
 
-For instance, suppose we want to use a  variable @tt{edge} next to the string @tt{px}:
+For instance, suppose we want to use a  variable @code{edge} next to the string @code{px}:
 
 @codeblock|{
 #lang pollen
@@ -422,7 +422,7 @@ p { margin-left: ◊edgepx; }
 
 @errorblock{Pollen decoder: can't convert #<procedure:...t/pollen/tag.rkt:6:2> to string}
 
-The example fails because Pollen reads the whole string after the @litchar{◊} as the single variable name @tt{edgepx}. Since @tt{edgepx} isn't defined, it's treated as a tag function, and since Pollen can't convert a function to a string, we get an error.
+The example fails because Pollen reads the whole string after the @litchar{◊} as the single variable name @code{edgepx}. Since @code{edgepx} isn't defined, it's treated as a tag function, and since Pollen can't convert a function to a string, we get an error.
 
 In these situations, surround the variable name with vertical bars @litchar{◊|}like so@litchar{|} to explicitly indicate where the variable name ends. The bars are not treated as part of the name, nor are they included in the result. Once we do that, we get what we intended:
 
@@ -456,7 +456,7 @@ Metas are not a foundational abstraction. They're just a convenience — a place
 
 @margin-note{Pollen occasionally uses metas. For instance, the @racket[get-template-for] function will look in the metas of a source file to see if a template is explicitly specified. The @racket[pollen/template] module also contains functions for working with metas, such as @racket[select-from-metas].}
 
-To insert a meta, use the standard command syntax for inserting a tag with an attribute pair, but use the special @tt{meta} name:
+To insert a meta, use the standard command syntax for inserting a tag with an attribute pair, but use the special @code{meta} name:
 
 @codeblock{
 #lang pollen
@@ -474,16 +474,16 @@ When you mark a meta like this, two things happen. First, when you run the file,
 '(some-tag ((key "value")) "Another normal tag")
 }
 
-@margin-note{If your @tt{meta} includes a text argument between curly braces — or any other arguments aside from the initial key–value pair — they will be ignored.}
+@margin-note{If your @code{meta} includes a text argument between curly braces — or any other arguments aside from the initial key–value pair — they will be ignored.}
 
-Second, the meta is collected into a hash table that is exported with the name @tt{metas}. To see this hash table, run the file above in DrRacket, then move to the interactions window and type @exec{metas} at the prompt:
+Second, the meta is collected into a hash table that is exported with the name @code{metas}. To see this hash table, run the file above in DrRacket, then move to the interactions window and type @exec{metas} at the prompt:
 
 @terminal{
 > metas
 '#hash((here-path . "unsaved-editor167056") (dog . "Roxy"))
 }
 
-The only key that's automatically defined in every meta table is @tt{here-path}, which is the absolute path to the source file. (Here, because the file hasn't been saved, you'll see the @tt{unsaved-editor...} name instead.) 
+The only key that's automatically defined in every meta table is @code{here-path}, which is the absolute path to the source file. (Here, because the file hasn't been saved, you'll see the @code{unsaved-editor...} name instead.) 
 
 Still, you can override this too:
 
@@ -503,7 +503,7 @@ When you run this code, the result will be the same as before, but this time the
 '#hash((dog . "Roxy") (here-path . "nowhere"))
 }
 
-It doesn't matter how many metas you put in a source file or where you put them. They'll all be extracted and put into the @tt{metas} hash table. The order of the metas is not preserved (because order is not preserved in a hash table). But if you have two metas with the same key, the later one will supersede the earlier one:
+It doesn't matter how many metas you put in a source file or where you put them. They'll all be extracted and put into the @code{metas} hash table. The order of the metas is not preserved (because order is not preserved in a hash table). But if you have two metas with the same key, the later one will supersede the earlier one:
 
 @codeblock{
 #lang pollen
@@ -582,7 +582,7 @@ Here's the hard way. You can type out your list of attributes in Racket format a
 @repl-output{'(title ((class "red") (id "first")) "The Beginning of the End")}
 
 
-But that's a lot of parentheses to think about. So here's the easy way. Anytime you use a tag function, there's a shortcut for inserting attributes. You can enter them as a series of @racket[symbol] / @racket[string] pairs between the Racket-argument brackets. The only caveat is that the symbols have to begin with a quote mark @litchar{'} and end with a colon @litchar{:}. So taken together, they look like this:
+But that's a lot of parentheses to think about. So here's the easy way. Anytime you use a tag function, there's a shortcut for inserting attributes. You can enter them as a series of symbol–string pairs between the Racket-argument brackets. The only caveat is that the symbols have to begin with a quote mark @litchar{'} and end with a colon @litchar{:}. So taken together, they look like this:
 
 @codeblock|{
 #lang pollen
@@ -600,7 +600,7 @@ Racket arguments can be any valid Racket expressions. For instance, this will al
 
 @repl-output{'(title ((class "42") (id "first")) "The Beginning of the End")}
 
-Since Pollen commands are really just Racket arguments underneath, you can use those too. Here, we'll define a variable called @tt{name} and use it in the Racket arguments of @tt{title}:
+Since Pollen commands are really just Racket arguments underneath, you can use those too. Here, we'll define a variable called @code{name} and use it in the Racket arguments of @code{title}:
 
 @codeblock|{
 #lang pollen
@@ -610,7 +610,7 @@ Since Pollen commands are really just Racket arguments underneath, you can use t
 
 @repl-output{'(title ((class "read") (id "Brennan")) "The Beginning of the End")}
 
-You can also use this area for @italic{keyword arguments}. Keyword arguments can be used to provide options for a particular Pollen command, to avoid redundancy. Suppose that instead of using the @tt{h1 ... h6} tags, you want to consolidate them into one command called @tt{heading} and select the level separately. You can do this with a keyword, in this case @racket[#:level], which is passed as a Racket argument:
+You can also use this area for @italic{keyword arguments}. Keyword arguments can be used to provide options for a particular Pollen command, to avoid redundancy. Suppose that instead of using the @code{h1 ... h6} tags, you want to consolidate them into one command called @code{heading} and select the level separately. You can do this with a keyword, in this case @racket[#:level], which is passed as a Racket argument:
 
 @codeblock|{
 #lang pollen
@@ -685,7 +685,7 @@ Instead of this:
 
 @repl-output{'(div "Roomy!\n\nI agree.")}
 
-Under most circumstances, these two tagged X-expressions will behave the same way. The biggest exception is with functions. A function that operates on multiline text arguments needs to be able to handle an indefinite number of strings. For instance, this @tt{jejune} function only accepts a single argument. It will work with a single-line text argument, because that produces a single string:
+Under most circumstances, these two tagged X-expressions will behave the same way. The biggest exception is with functions. A function that operates on multiline text arguments needs to be able to handle an indefinite number of strings. For instance, this @code{jejune} function only accepts a single argument. It will work with a single-line text argument, because that produces a single string:
 
 @codeblock|{
 #lang pollen
@@ -715,7 +715,7 @@ the expected number of arguments does not match the given number
    "\n"
    "chastened"}
  
-The answer is to use a @italic{rest argument} in the function, which takes the ``rest'' of the arguments — however many there may be — and combines them into a single @racket[list]. If we rewrite   @tt{jejune} with a rest argument, we can fix the problem:
+The answer is to use a @italic{rest argument} in the function, which takes the ``rest'' of the arguments — however many there may be — and combines them into a single @racket[list]. If we rewrite   @code{jejune} with a rest argument, we can fix the problem:
 
 @codeblock|{
 #lang pollen
@@ -731,4 +731,4 @@ The answer is to use a @italic{rest argument} in the function, which takes the `
 
 @section{Further reading}
 
-The Pollen language is a variant of Racket's own text-processing language, called Scribble. Thus, many things that are true about Scribble are also true about Pollen. For the sake of clarity & brevity, I've omitted them from this summary. But if you want the full story, see @secref["reader" #:doc '(lib "scribblings/scribble/scribble.scrbl")] in the Scribble documentation.
+The Pollen language is a variant of Racket's own text-processing language, called Scribble. Thus, most things that can be done with Scribble syntax can also be done with Pollen syntax. For the sake of clarity & brevity, I've only shown you the highlights here. But if you want the full story, see @secref["reader" #:doc '(lib "scribblings/scribble/scribble.scrbl")] in the Scribble documentation.

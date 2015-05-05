@@ -18,7 +18,7 @@ Now you're getting to the good stuff. In this tutorial, you'll use Pollen to pub
 
 @item{Attaching behavior to tag functions}
 
-@item{the @tt{directory-require.rkt} file}
+@item{the @filepath{directory-require.rkt} file}
 
 @item{Using @racket[decode] with Pollen markup}
 
@@ -50,9 +50,9 @@ So why hasn't XML taken over the world? In practice, XML promises more than it d
 
 @itemlist[
 
-@item{@bold{Verbose syntax}. Unfortunately, XML relies on the same angle-bracket notation as HTML. If you think HTML source is hard to read, XML is even worse. Since much of writing involves reading, this feature is also a major bug.}
+@item{@bold{Verbose syntax}. Unfortunately, XML relies on the same angle-bracket notation as HTML. If you think HTML source is hard to read, XML is worse. Since much of writing involves reading, this feature is also a major bug.}
 
-@item{@bold{Validation overhead}. Integral to XML is the concept of @italic{validation}, which guarantees that a document meets certain formal criteria, usually asserted in a @italic{schema}. To get the full value from XML, you generally want to use validation. But doing so imposes a lot more work on you as an author, and removes much of the expressive potential of XML.}
+@item{@bold{Validation overhead}. Integral to XML is the concept of @defterm{validation}, which guarantees that a document meets certain formal criteria, usually asserted in a @italic{schema}. To get the full value from XML, you generally want to use validation. But doing so imposes a lot more work on you as an author, and removes much of the expressive potential of XML.}
 
 @item{@bold{Masochistic document processing}. I'm referring to XSLT, the preferred method of transforming XML documents. I know a little XSLT, so I'll concede that there's a method to its madness. But it's still madness.}
 
@@ -86,7 +86,7 @@ In this tutorial, I'll be rendering Pollen markup with an HTML template. But you
 
 @section{Writing with Pollen markup}
 
-Pollen markup is a free-form markup system that lets you add arbitrary @italic{tags} and @italic{attributes} to your text. By arbitrary, I mean that they don't need to match up with an existing schema or specification (e.g., the tags permitted by HTML). They can — but that's an option, not a requirement. 
+Pollen markup is a free-form markup system that lets you add arbitrary @defterm{tags} and @defterm{attributes} to your text. By arbitrary, I mean that they don't need to match up with an existing schema or specification (e.g., the tags permitted by HTML). They can — but that's an option, not a requirement. 
 
 I like to think of Pollen markup a way of capturing not just the text, but also my @bold{ideas about the text}. Some of these are low-level ideas (``this text should be italicized''). Some are high-level ideas (``this text is the topic of the page''). Some are just notes to myself. In short, everything I know about the text becomes part of the text. 
 
@@ -94,9 +94,9 @@ In so doing, Pollen markup becomes the source code of the book. Let's try it out
 
 @subsection{Creating a Pollen markup file}
 
-We're going to use Pollen markup to make a file that will ultimately be HTML. So consistent with the authoring-mode workflow we learned in the @secref["second-tutorial"], we'll start with our desired output filename, @tt{article.html}, and then append the Pollen markup suffix, @tt{.pm}.
+We're going to use Pollen markup to make a file that will ultimately be HTML. So consistent with the authoring-mode workflow we learned in the @secref["second-tutorial"], we'll start with our desired output filename, @filepath{article.html}, and then append the Pollen markup suffix, @filepath{.pm}.
 
-In DrRacket, start a new file called @tt{article.html.pm} like so (BTW you can use any sample text you like):
+In DrRacket, start a new file called @filepath{article.html.pm} like so (BTW you can use any sample text you like):
 
 @fileblock["article.html.pm" @codeblock{
 #lang pollen
@@ -104,11 +104,11 @@ In DrRacket, start a new file called @tt{article.html.pm} like so (BTW you can u
 I want to attend RacketCon this year.
 }]
 
-Consistent with usual authoring-mode policy, when you run this file, you'll get an X-expression that starts with @racketvalfont{root}:
+Consistent with usual authoring-mode policy, when you run this file, you'll get an X-expression that starts with @code{root}:
 
 @repl-output{'(root "I want to attend RacketCon this year.")}
 
-Remember, even though the first line of the file is @racketmodfont{#lang} @racketmodname[pollen] — same as the last tutorial — the new @tt{.pm} suffix signals that Pollen should interpret the source as Pollen markup. Look what happens if you goof up and put Markdown source in a Pollen markup file, like so:
+Remember, even though the first line of the file is @racketmodfont{#lang} @racketmodname[pollen] — same as the last tutorial — the new @filepath{.pm} suffix signals that Pollen should interpret the source as Pollen markup. Look what happens if you goof up and put Markdown source in a Pollen markup file, like so:
 
 @codeblock{
 #lang pollen
@@ -125,9 +125,9 @@ Restore the non-Markdown source, and let's continue.
 
 @subsection{Tags & tag functions}
 
-Pollen markup uses the same Pollen command syntax that we first saw in @secref["Adding_commands"]. Previously, we used this command syntax to invoke functions like @racket[define] and @racket[->html]. Pollen markup is used to invoke a special kind of function called a @italic{tag function}, which is a function that, by default, adds a tag to the text.
+Pollen markup uses the same Pollen command syntax that we first saw in @secref["Adding_commands"]. Previously, we used this command syntax to invoke functions like @racket[define] and @racket[->html]. Pollen markup is used to invoke a special kind of function called a @defterm{tag function}, which is a function that, by default, adds a tag to the text.
 
-To see how this works, restore your @tt{article.html.pm} file to its original state:
+To see how this works, restore your @filepath{article.html.pm} file to its original state:
 
 @codeblock{
 #lang pollen
@@ -135,7 +135,7 @@ To see how this works, restore your @tt{article.html.pm} file to its original st
 I want to attend RacketCon this year.
 }
 
-We can add any tag with Pollen markup, but for now, let's start with an old favorite: @racketvalfont{em}, which is used in HTML to add emphasis to text. We apply a tag by starting with the lozenge character (◊) followed by the tag name @racketvalfont{em}, followed by the text in curly braces, like so:
+We can add any tag with Pollen markup, but for now, let's start with an old favorite: @code{em}, which is used in HTML to add emphasis to text. We apply a tag by starting with the lozenge character (◊) followed by the tag name @code{em}, followed by the text in curly braces, like so:
 
 @fileblock["article.html.pm" @codeblock{
 #lang pollen
@@ -161,11 +161,11 @@ With the expected results:
 
 @subsection{Attributes}
 
-@italic{Attributes} are like tags for tags. Each attribute is a key–value pair where the key is any name, and the value is a string. Anyone who's seen HTML is familiar with them:
+@defterm{Attributes} are like tags for tags. Each attribute is a key–value pair where the key is any name, and the value is a string. Anyone who's seen HTML is familiar with them:
 
 @repl-output{<span class="author">Prof. Leonard</span>}
 
-Here, @racketvalfont{class} is an attribute for @racketvalfont{span} that has value @racketvalfont{"author"}. And this is what it looks like as an X-expression:
+Here, @code{class} is an attribute for @code{span} that has value @code{"author"}. And this is what it looks like as an X-expression:
 
 @repl-output{'(span ((class "author")) "Prof. Leonard")}
 
@@ -175,7 +175,7 @@ You can add any number of attributes to a tag (first as an X-expression, then as
 
 @repl-output{<span class="author" id="primary" living="true">Prof. Leonard</span>}
 
-In Pollen markup, attributes have the same logic, but a slightly different syntax. In keeping with the tag notation you just saw, the @racketvalfont{span} tag is added in the usual way:
+In Pollen markup, attributes have the same logic, but a slightly different syntax. In keeping with the tag notation you just saw, the @code{span} tag is added in the usual way:
 
 @fileblock["article.html.pm" @codeblock{
 #lang pollen
@@ -215,7 +215,7 @@ You could write it in Pollen markup like so:
 
 @repl-output{◊div['class:"red" style:"font-size:150%"]{Important ◊em{News}}}
 
-And then just convert it (using the @racket[->html] function) into the HTML above. Thus, the tags you already know and love (?) can be used in Pollen markup, but with fewer keystrokes and cruft.
+And then just convert it (using the @racket[->html] function) into the HTML above. Thus, the tags you already know (and love?) can be used in Pollen markup, but with fewer keystrokes and cruft.
 
 Still, if Pollen markup were just an alternative notation system for HTML tags, it would be pretty boring. As I alluded above, that's merely a boring way to use it. 
 
@@ -225,25 +225,25 @@ In the XML spirit, Pollen markup lets you use any tags you want. That's consider
 
 XML jocks can skip this section, since you already know. But if you've been mired in Markdown or HTML, read on.
 
-Tags, broadly speaking, are a means of annotating a text with extra information, which I'll call @italic{metadata} (using that term in its generic sense, not in any fiddly computery way). Metadata is the key tool that enables an author to write a book with the benefits of @italic{semantic markup} and @italic{format independence}.
+Tags, broadly speaking, are a means of annotating a text with extra information, which I'll call @defterm{metadata} (using that term in its generic sense, not in any fiddly computery way). Metadata is the key tool that enables an author to write a book with the benefits of @defterm{semantic markup} and @defterm{format independence}.
 
 @subsection{Semantic markup}
 
-@italic{Semantic markup} means adding metadata to text according to the meaning of the text, not merely its intended visual appearance. So rather than tagging @racketvalfont{RacketCon} with an @racketvalfont{em} tag, as we did above to indicate how the word should look, maybe we would tag it with an @racketvalfont{event} tag, to indicate what @italic{kind} of thing it is.
+@defterm{Semantic markup} means adding metadata to text according to the meaning of the text, not merely its intended visual appearance. So rather than tagging @code{RacketCon} with an @code{em} tag, as we did above to indicate how the word should look, maybe we would tag it with an @code{event} tag, to indicate what @italic{kind} of thing it is.
 
-Semantic markup lets an author specify distinctions that would be ambiguous in pure visual terms, thereby capturing more meaning and intent. For instance, in books, italic styling is commonly applied to a number of unrelated types of information: emphasized words, movie titles, terms being used for the first time, headings, captions and labels, and so on. Under a non-semantic formatting scheme, perhaps one would tag them all @racketvalfont{em}. But in semantic terms, one would tag them @racketvalfont{movie-title}, @racketvalfont{first-use}, @racketvalfont{heading}, as appropriate.
+Semantic markup lets an author specify distinctions that would be ambiguous in pure visual terms, thereby capturing more meaning and intent. For instance, in books, italic styling is commonly applied to a number of unrelated types of information: emphasized words, movie titles, terms being used for the first time, headings, captions and labels, and so on. Under a non-semantic formatting scheme, perhaps one would tag them all @code{em}. But in semantic terms, one would tag them @code{movie-title}, @code{first-use}, @code{heading}, as appropriate.
 
-This has two major benefits. First, by separating appearance and meaning, an author can manage the content of the book in useful ways. For instance, if every movie title were tagged as @racketvalfont{movie-title} rather than @racketvalfont{italic}, then it would be simple to generate a list of all movies mentioned in the book (for the author's benefit) or a page index of movie references (for the reader's benefit). But without that semantic tagging, a movie title couldn't be distinguished from any other italicized text.
+This has two major benefits. First, by separating appearance and meaning, an author can manage the content of the book in useful ways. For instance, if every movie title were tagged as @code{movie-title} rather than @code{italic}, then it would be simple to generate a list of all movies mentioned in the book (for the author's benefit) or a page index of movie references (for the reader's benefit). But without that semantic tagging, a movie title couldn't be distinguished from any other italicized text.
 
 @subsection{Format independence}
 
-The second benefit of custom tags is @italic{format independence}, or the ability to change the rendering of the text to suit a particular device or context. 
+The second benefit of custom tags is @defterm{format independence}, or the ability to change the rendering of the text to suit a particular device or context. 
 
  When a text is encrusted with format-specific visual tags — for instance, HTML tags — then the document markup is entangled with a single output format. If you only need one output format, fine.
 
  But increasingly, book authors have been called upon to publish their work in multiple formats: paper and PDF, but also web, e-book, or other natively digital formats, that connect to devices with differing display capabilities. 
 
- @margin-note{Yes, I know that many of these formats are based on variants of HTML. But the HTML you can use in a desktop web browser is quite different from, say, the HTML you can use in a Kindle .mobi file. The .mobi file has other technical requirements too, like an .ncx and .opf file. So despite some genetic kinship, these HTML-ish formats are best understood as separate targets.}
+ @margin-note{Yes, I know that many of these formats are based on variants of HTML. But the HTML you can use in a desktop web browser is quite different from, say, the HTML you can use in a Kindle @code{.mobi} file. The @code{.mobi} file has other technical requirements too, like an @code{.ncx} and @code{.opf} file. So despite some genetic kinship, these HTML-ish formats are best understood as separate targets.}
 
 Using a display-driven model to manage this complexity is a terrible idea — as anyone who's tried it can attest. Converting from one display-based file type to another — for instance, word processor to HTML, or HTML to PDF — is an exercise in frustration and drain-circling expectations. 
 
@@ -253,9 +253,9 @@ This isn't surprising. For a long time, text processing has been dominated by th
 
 For a document to be format independent, two conditions have to be satisfied.
 
-First, the document has to be readable by other programs, so they can handle the conversion of format-independent markup into a format-specific rendering (e.g., mapping semantic tags like @racketvalfont{movie-title} onto visual tags like @racketvalfont{em}). Most word-processor formats, like Word's .docx, are bad for authoring because these formats are opaque and proprietary. We needn't get into the political objections. As a practical matter, they're inarguably restrictive — if you can't get your data out of your file, you're stuck.
+First, the document has to be readable by other programs, so they can handle the conversion of format-independent markup into a format-specific rendering (e.g., mapping semantic tags like @code{movie-title} onto visual tags like @code{em}). Most word-processor formats, like Word's .docx, are bad for authoring because these formats are opaque and proprietary. We needn't get into the political objections. As a practical matter, they're inarguably restrictive — if you can't get your data out of your file, you're stuck.
 
-Second, the document itself has to be represented in a way that's independent of the particularities of any one format. For instance, HTML is a bad authoring format because it encourages authors to litter their text with HTML-isms like @racketvalfont{h1} and @racketvalfont{span}. These have no meaning outside of HTML, and thus will always cause conversion problems. The @seclink["Prelude__my_principled_objection_to_Markdown"]{same goes for Markdown}, which is simply HTML in disguise.
+Second, the document itself has to be represented in a way that's independent of the particularities of any one format. For instance, HTML is a bad authoring format because it encourages authors to litter their text with HTML-isms like @code{h1} and @code{span}. These have no meaning outside of HTML, and thus will always cause conversion problems. The @seclink["The_case_against_Markdown"]{same goes for Markdown}, which is simply HTML in disguise.
 
 
 
@@ -264,7 +264,7 @@ The solution to the first condition is to use text-based markup rather than prop
 
 @subsection{Using custom tags}
 
-You can insert a custom tag using the same syntax as any other tag. Suppose you want to use an @racketvalfont{event} tag to mark events. You would insert it like so:
+You can insert a custom tag using the same syntax as any other tag. Suppose you want to use an @code{event} tag to mark events. You would insert it like so:
 
 @fileblock["article.html.pm" @codeblock{
 #lang pollen
@@ -288,11 +288,11 @@ Don't take my word for it. See what happens if you write this:
  
 I want to attend ◊verylongandimpracticaltagname{RacketCon} this year.}]
 
-One small but important exception to this rule. If you were wondering why I sometimes call them @italic{tag functions} instead of just @italic{tags}, it's because under the hood, every tag is implemented as a function. The default behavior of this function is just to wrap the text in a tag with the given name. 
+One small but important exception to this rule. If you were wondering why I sometimes call them @defterm{tag functions} instead of just @defterm{tags}, it's because under the hood, every tag is implemented as a function. The default behavior of this function is just to wrap the text in a tag with the given name. 
 
 The benefit of treating tags as functions will become evident later in this tutorial. But the cost of this approach is that tags occupy the same namespace as the other functions available in Pollen (and by extension, Racket). So if you try to use a tag name that's already the name of an existing function, an error will occur. 
 
-For instance, let's suppose you try to use a custom tag called  @racketvalfont{length}:
+For instance, let's suppose you try to use a custom tag called  @code{length}:
 
 @fileblock["article.html.pm" @codeblock{
 #lang pollen
@@ -305,7 +305,7 @@ When you run this file, you get an error:
 expected: list?
   given: "77km"}
 
-The problem is that Racket already provides a function called @racket[length]. Consistent with the usual rules of Pollen command notation, your command is interpreted as an attempt to invoke the @racket[length] function, rather than apply a tag named @racketvalfont{length}.
+The problem is that Racket already provides a function called @racket[length]. Consistent with the usual rules of Pollen command notation, your command is interpreted as an attempt to invoke the @racket[length] function, rather than apply a tag named @code{length}.
 
 In practice, namespace clashes are rare. But if necessary, they're easy to work around (for the simplest method, see @secref["Invoking_tag_functions"]).
 
@@ -349,7 +349,7 @@ If you've used HTML or XML, tags are just tags: things you type into the documen
 
 That's not so in Pollen. Under the hood, Pollen is just an alternate way of writing code in the Racket programming language. And tags, instead of being inert markers, are actually functions.
 
-I think most of you know what a function is, but just to be safe — in programming, a @italic{function} is a chunk of code that accepts some input, processes it, and then returns a value. Asking a function to process some data is known as @italic{calling} the function. 
+I think most of you know what a function is, but just to be safe — in programming, a @defterm{function} is a chunk of code that accepts some input, processes it, and then returns a value. Asking a function to process some data is known as @defterm{calling} the function. 
 
 Leading us to the Three Golden Rules of Pollen Tags:
 
@@ -374,7 +374,7 @@ You've already seen the simplest kind of function in a Pollen document: the @sec
  
 I want to attend ◊em{RacketCon ◊strong{this} year}.}]
 
-What happens when you run this source? Working from the inside out, Pollen calls the function @racketvalfont{strong} with the input @racketvalfont{"this"}. The result is @racketvalfont{(strong "this")}. Then Pollen calls the function @racketvalfont{em} with the three input values @racketvalfont{"RacketCon " (strong "this") " year"}, which yields @racketvalfont{(em "RacketCon " (strong "this") " year")}. Finally, Pollen calls the @racketvalfont{root} function with everything in the document, resulting in:
+What happens when you run this source? Working from the inside out, Pollen calls the function @code{strong} with the input @code{"this"}. The result is @code{(strong "this")}. Then Pollen calls the function @code{em} with the three input values @code{"RacketCon " (strong "this") " year"}, which yields @code{(em "RacketCon " (strong "this") " year")}. Finally, Pollen calls the @code{root} function with everything in the document, resulting in:
 
 @repl-output{'(root "I want to attend " (em "RacketCon " (strong "this") " year") ".")}
 
@@ -407,7 +407,7 @@ Sometimes this default behavior will suffice. But other times, you'll want to ch
 
 How do you change the behavior of a tag? By 1) writing a new function and 2) giving it the name of the tag. Once you do this, this new behavior will automatically be invoked when you use the tag.
 
-For example, let's redefine the @racketvalfont{strong} tag in our example above to simply print @racketvalfont{BOOM}:
+For example, let's redefine the @code{strong} tag in our example above to simply print @code{BOOM}:
 
 @fileblock["article.html.pm" @codeblock{
 #lang pollen
@@ -430,9 +430,9 @@ How does this work? First, although you can define a function in Pollen command 
 
 I want to attend ◊em{RacketCon ◊strong{this} year}.}]
 
-Let's look at our new function definition. As usual, we start with the lozenge character (@litchar{◊}) to denote a Pollen command. Then we use @racket[define] to introduce a function definition. The name of the function comes next, which needs to match our tag name, @racketvalfont{strong}. The expression @racket[(strong word)] means ``the name of this function is @racket[strong], and it takes a single word as input, which we'll refer to as @racket[word].'' Finally we have the return value, which is @racket["BOOM"].
+Let's look at our new function definition. As usual, we start with the lozenge character (@litchar{◊}) to denote a Pollen command. Then we use @racket[define] to introduce a function definition. The name of the function comes next, which needs to match our tag name, @code{strong}. The expression @racket[(strong word)] means ``the name of this function is @racket[strong], and it takes a single word as input, which we'll refer to as @racket[word].'' Finally we have the return value, which is @racket["BOOM"].
 
-Let's run this file again, but go back to the Golden Rules to understand what happens. Working from the inside out, Pollen calls the function @racketvalfont{strong} with the input @racketvalfont{"this"} — same as before. But this time, the result of the @racket[strong] function is not @racketvalfont{(strong "this")}, but simply @racketvalfont{BOOM}. Then Pollen calls the function @racketvalfont{em} with the three input values @racketvalfont{"RacketCon " "BOOM" " year"}, which yields @racketvalfont{(em "RacketCon " "BOOM" " year")}. Finally, Pollen calls the @racketvalfont{root} function with everything in the document, resulting in:
+Let's run this file again, but go back to the Golden Rules to understand what happens. Working from the inside out, Pollen calls the function @code{strong} with the input @code{"this"} — same as before. But this time, the result of the @racket[strong] function is not @code{(strong "this")}, but simply @code{BOOM}. Then Pollen calls the function @code{em} with the three input values @code{"RacketCon " "BOOM" " year"}, which yields @code{(em "RacketCon " "BOOM" " year")}. Finally, Pollen calls the @code{root} function with everything in the document, resulting in:
 
 @repl-output{'(root "I want to attend " (em "RacketCon " "BOOM" " year"))}
 
@@ -442,7 +442,7 @@ This example is contrived, of course. But the basic idea — defining a functio
 
 Having said that, some of you are probably eager to hack around a bit. Let me chip off a few more cubes from the iceberg to help you on your way. (Everyone else, take five.)
 
-@subsubsection{Point of no @code{return}} If you've written functions in other programming languages, you might be accustomed to using a @code{return} statement to send a value back from the function. This doesn't exist in Pollen or Racket — the return value of any function is just the last expression evaluated. In the example below, @racketvalfont{"BAP"} becomes the return value because it's in the last position, and @racketvalfont{"BOOM"} is ignored:
+@subsubsection{Point of no @code{return}} If you've written functions in other programming languages, you might be accustomed to using a @code{return} statement to send a value back from the function. This doesn't exist in Pollen or Racket — the return value of any function is just the last expression evaluated. In the example below, @code{"BAP"} becomes the return value because it's in the last position, and @code{"BOOM"} is ignored:
 
 @fileblock["article.html.pm" @codeblock{
 #lang pollen
@@ -469,7 +469,7 @@ expected: 1
   given: 3
 }
 
-The error arises because the @racket[em] function is getting three arguments — @racketvalfont{"RacketCon " "BOOM" " year"} — but has been defined to only accept one argument, @racket[word]. This is the ``arity mismatch.''
+The error arises because the @racket[em] function is getting three arguments — @code{"RacketCon " "BOOM" " year"} — but has been defined to only accept one argument, @racket[word]. This is the ``arity mismatch.''
 
 To fix this, it's better to get in the habit of writing tag functions that accept an indefinite number of input values. You do this by defining your function with a @italic{@seclink["contracts-rest-args" #:doc '(lib "scribblings/guide/guide.scrbl")]{rest argument}} (as in, ``give me the rest of the input values.'') To use a rest argument, put it last in your list of input arguments, and add a period @litchar{.} before:
 
@@ -529,7 +529,7 @@ I want to attend ◊em{RacketCon ◊strong{this} year}.}]
 
 The second option for building X-expressions is to use the @other-doc['(lib "txexpr/scribblings/txexpr.scrbl")] library that's included with Pollen (see those docs for more information).
 
-@subsubsection{Interpolating variables into strings} The usual way is to use the @racket[format] function:
+@subsubsection{Using variables within strings} The usual way is to use the @racket[format] function:
 
 @racket[(format "String with variable: ~a" variable-name)]
 
@@ -644,21 +644,21 @@ And get this output:
 @repl-output{'(root "A list of integers: " "0 1 2 3 4")}
 
 
-@subsection[#:tag-prefix "tutorial-3"]{Using the @tt{directory-require.rkt} file}
+@subsection[#:tag-prefix "tutorial-3"]{Using the @filepath{directory-require.rkt} file}
 
 @(noskip-note)
 
-As you get more comfortable attaching behavior to tags using tag functions, you'll likely want to create some functions that can be shared between multiple source files. The @tt{directory-require.rkt} file is a special file that is automatically imported by Pollen source files in the same directory. So every function and value provided by @tt{directory-require.rkt} can be used in these Pollen files.
+As you get more comfortable attaching behavior to tags using tag functions, you'll likely want to create some functions that can be shared between multiple source files. The @filepath{directory-require.rkt} file is a special file that is automatically imported by Pollen source files in the same directory. So every function and value provided by @filepath{directory-require.rkt} can be used in these Pollen files.
 
-First, using this file is not mandatory. You can always import functions and values from another file using @racket[require] (as seen in the previous section). The @tt{directory-require.rkt} is just meant to cure the tedium of importing the same file into every Pollen source file in your project. In a small project, not much tedium; in a large project, more.
+First, using this file is not mandatory. You can always import functions and values from another file using @racket[require] (as seen in the previous section). The @filepath{directory-require.rkt} is just meant to cure the tedium of importing the same file into every Pollen source file in your project. In a small project, not much tedium; in a large project, more.
 
-Second, notice from the @tt{.rkt} suffix that @tt{directory-require.rkt} is a source file containing Racket code, not Pollen code. This is the default because while Pollen is better for text-driven source files, Racket is better for code-driven source files. Still, the choice is yours: the name of this file can be changed by resetting the @racket[world:directory-require] value.
+Second, notice from the @filepath{.rkt} suffix that @filepath{directory-require.rkt} is a source file containing Racket code, not Pollen code. This is the default because while Pollen is better for text-driven source files, Racket is better for code-driven source files. Still, the choice is yours: the name of this file can be changed by resetting the @racket[world:directory-require] value.
 
-Third, notice from the @tt{directory-} prefix that @tt{directory-require.rkt} is only used by Pollen source files @italic{in the same directory}. So if your project has source files nested inside a subdirectory, you'll need to explicitly create another @tt{directory-require.rkt} there and share the functions & values as needed.
+Third, notice from the @filepath{directory-} prefix that @filepath{directory-require.rkt} is only used by Pollen source files @italic{in the same directory}. So if your project has source files nested inside a subdirectory, you'll need to explicitly create another @filepath{directory-require.rkt} there and share the functions & values as needed.
 
 @margin-note{``Why not make this file visible throughout a project, rather than just a directory?'' Good idea, but I couldn't figure out how to do it without creating finicky new dependencies. If you have a better idea, I'm open to it.}
 
-Let's see how this works in practice. In the same directory as @tt{article.html.pm}, create a new @tt{directory-require.rkt} file as follows:
+Let's see how this works in practice. In the same directory as @filepath{article.html.pm}, create a new @filepath{directory-require.rkt} file as follows:
 
 @fileblock["directory-require.rkt" @codeblock{
 #lang racket
@@ -668,7 +668,7 @@ Let's see how this works in practice. In the same directory as @tt{article.html.
 
 Here we use the @racket[define] function (which we've seen before) to set @racket[author] equal to @racket["Trevor Goodchild"]. Note the final step: consistent with standard Racket rules, we have to explicitly @racket[provide] the new value so that other files can see it (unlike Python, things you @racket[define] in Racket are private by default, not public).
 
-Then update good old @tt{article.html.pm}:
+Then update good old @filepath{article.html.pm}:
 
 @fileblock["article.html.pm" @codeblock{
 #lang pollen
@@ -692,7 +692,7 @@ Run this, and you'll get:
 
 @repl-output{'(root "The author is really " "Trevor Goodchild" "?")}
 
-That's all there is to it. Everything provided by @tt{directory-require.rkt} is automatically available within each Pollen source file.
+That's all there is to it. Everything provided by @filepath{directory-require.rkt} is automatically available within each Pollen source file.
 
 You can include functions, including tag functions, the same way. For instance, add a function for @racket[em]:
 
@@ -721,23 +721,23 @@ With the expected results:
 
 @section{Decoding markup via the @tt{root} tag}
 
-As you've seen, the X-expression you get when you run a Pollen markup file always starts with a  node called @tt{root}. You can attach a tag function to @tt{root} the same way as any other tag. For instance, you could do something simple, like change the name of the output X-expression:
+As you've seen, the X-expression you get when you run a Pollen markup file always starts with a  node called @code{root}. You can attach a tag function to @code{root} the same way as any other tag. For instance, you could do something simple, like change the name of the output X-expression:
 
 @fileblock["article.html.pm" @codeblock|{
 #lang pollen
 
 ◊(define (root . elements) `(content ,@elements))
 
-The ◊tt{root} tag is now called ◊tt{content}.
+The ◊code{root} tag is now called ◊code{content}.
 }|]
 
 Resulting in:
 
 @repl-output{'(content "The " (tt "root") " tag is now called " (tt "content") ".")}
 
-But unlike other tags in your document, @tt{root} contains the entire content of the document. So the function you attach to @tt{root} can operate on everything.
+But unlike other tags in your document, @code{root} contains the entire content of the document. So the function you attach to @code{root} can operate on everything.
 
-For that reason, one of the most useful things you can do with a tag function attached to @tt{root} is @italic{decoding} the content of the page. Decoding refers to any post-processing of content that happens after the tags within the page have been evaluated. 
+For that reason, one of the most useful things you can do with a tag function attached to @code{root} is @defterm{decoding} the content of the page. Decoding refers to any post-processing of content that happens after the tags within the page have been evaluated. 
 
 Decoding is a good way to automatically accomplish:
 
@@ -755,7 +755,7 @@ Decoding is a good way to automatically accomplish:
 
 ]
 
-As an example, let's take one of my favorites — linebreak and paragraph detection. In XML authoring, you have to insert every @tt{<br />} and @tt{<p>} tag by hand. This is profoundly dull, clutters up the source file, and makes editing a chore. 
+As an example, let's take one of my favorites — linebreak and paragraph detection. In XML authoring, you have to insert every @code{<br />} and @code{<p>} tag by hand. This is profoundly dull, clutters up the source file, and makes editing a chore. 
 
 Instead, let's make a decoder that allows us to denote a linebreak with a single newline in the source, and a paragraph break with a double newline. Here's some sample content with single and double newlines:
 
@@ -768,7 +768,7 @@ And a new line.
 The second paragraph --- isn't it great.
 }|]
 
-But without a decoder, the newlines just get passed through:
+Because we don't yet have a decoder, these newlines just get passed through:
 
 @repl-output{'(root "The first line of the 'first' paragraph." "\n" "And a new line." "\n" "\n" "The second paragraph --- isn't it great.")}
 
@@ -804,9 +804,9 @@ And a new line.
 The second paragraph --- isn't it great.
 }|]
 
-The @racket[make-txexpr] function is a utility from the @racket[txexpr] package, which is installed with Pollen. It builds a new X-expression from a tag, attribute list, and list of elements. Here, we'll keep the tag name @tt{root}, leave the attributes as @tt{null}, and append our decoded list of elements.
+The @racket[make-txexpr] function is a utility from the @racket[txexpr] package, which is installed with Pollen. It builds a new X-expression from a tag, attribute list, and list of elements. Here, we'll keep the tag name @code{root}, leave the attributes as @code{null}, and append our decoded list of elements.
 
-@margin-note{Racket jocks: you could also write this using @racket[quasiquote] and @racket[unquote-splicing] syntax as @code|{`(root ,@(decode-elements elements))}|. The @racket[txexpr] package is just a more explicit way of accomplishing the task.}
+@margin-note{Racket jocks: you could also write this using @racket[quasiquote] and @racket[unquote-splicing] syntax as @code|{`(root ,@(decode-elements elements))}|. The @racket[txexpr] package is just an alternate way of accomplishing the task.}
 
 If you run this file, what changes? Right — nothing. That's because by default, both @racket[decode-elements] (and @racket[decode]) will let the content pass through unaltered.
 
@@ -844,7 +844,7 @@ The second paragraph --- isn't it great.
 }
 
 
-Of course, in practice you wouldn't put your decoding function in a single source file. You'd make it available to all your source files by putting it in @tt{directory-require.rkt}. So let's do that now:
+Of course, in practice you wouldn't put your decoding function in a single source file. You'd make it available to all your source files by putting it in @filepath{directory-require.rkt}. So let's do that now:
 
 @fileblock["directory-require.rkt" @codeblock{
 #lang racket
@@ -855,7 +855,7 @@ Of course, in practice you wouldn't put your decoding function in a single sourc
 (provide root)
 }]
 
-We'll also restore the source of @tt{article.html.pm} to its original, simplified state:
+We'll also restore the source of @filepath{article.html.pm} to its original, simplified state:
 
 @fileblock["article.html.pm" @codeblock|{
 #lang pollen
@@ -891,9 +891,9 @@ This time, however, we're going to attach them to another part of @racket[decode
 (provide root)
 }]
 
-Because @racket[#:string-proc] only accepts one function (not two), we need to use @racket[compose] to combine @racket[smart-quotes] and @racket[smart-dashes] into one (@racket[compose] will apply the last function, then the previous one, and so on to the left end of the list).
+Because @racket[#:string-proc] only accepts one function (not two), we need to use @racket[compose] to combine @racket[smart-quotes] and @racket[smart-dashes] into one (@racket[compose], from the Racket library, will apply the last function, then the previous one, and so on to the left end of the list).
 
-Now, if we run @tt{article.html.pm} in DrRacket, we can see the effects of the new decoder functions. The quotes are curled, and the three hyphens become an em dash:
+Now, if we run @filepath{article.html.pm} in DrRacket, we can see the effects of the new decoder functions. The quotes are curled, and the three hyphens become an em dash:
 
 @repl-output{'(root (p "The first line of the ‘first’ paragraph." (br) "And a new line.") (p "The second paragraph—isn’t it great."))}
 
@@ -906,7 +906,7 @@ And a new line.
 The second paragraph—isn’t it great.    
 }
 
-By the way, even though decoding via the @tt{root} tag is the most likely usage scenario, you don't have to do it that way. Decoding is just a special kind of tag function. So you can make a decoder that only affects a certain tag within the page. Or you can make multiple decoders for different tags. The advantage of using a decoder with @tt{root} is that it can affect all the content, and since it's attached to the root node, it will always be the last tag function that gets called.
+By the way, even though decoding via the @code{root} tag is the most likely use case, you don't have to do it that way. Decoding is just a special kind of tag function. So you can make a decoder that only affects a certain tag within the page. Or you can make multiple decoders for different tags. The advantage of using a decoder with @code{root} is that it can affect all the content, and since it's attached to the root node, it will always be the last tag function that gets called.
 
 
 @section{Putting it all together}
@@ -917,11 +917,11 @@ It also provides a recipe you can adapt for your own projects, whether small or 
 
 As we go through the ingredients, I'll review the purpose of each. Save these files into a single project directory with the project server running.
 
-@subsection[#:tag-prefix "tutorial-3"]{The @tt{directory-require.rkt} file}
+@subsection[#:tag-prefix "tutorial-3"]{The @filepath{directory-require.rkt} file}
 
-This file provides functions that are available to all Pollen source files in the same directory. It's written in standard Racket. The @tt{directory-require.rkt} file is optional — without it, your tags will just be treated as default tag functions. But you'll probably find it a convenient way to make tag functions available within your project, including a @racket[decode] function attached to @tt{root}.
+This file provides functions that are available to all Pollen source files in the same directory. It's written in standard Racket. The @filepath{directory-require.rkt} file is optional — without it, your tags will just be treated as default tag functions. But you'll probably find it a convenient way to make tag functions available within your project, including a @racket[decode] function attached to @code{root}.
 
-Here, we'll use the @tt{directory-require.rkt} we devised in the previous section to set up decoding for our source files:
+Here, we'll use the @filepath{directory-require.rkt} we devised in the previous section to set up decoding for our source files:
 
 @fileblock["directory-require.rkt" @codeblock{
 #lang racket/base
@@ -938,9 +938,9 @@ Here, we'll use the @tt{directory-require.rkt} we devised in the previous sectio
 
 When you're using Pollen authoring mode for your content — using either Markdown syntax, or Pollen markup — your source files will produce an X-expression. To convert this X-expression into a finished file, you need to use a template. 
 
-By default, when Pollen finds a source file called @tt{filename.ext.pm} or @tt{filename.ext.pmd}, it will look for a template in your project directory called @tt{template.ext}, where @tt{.ext} is the matching output extension. 
+By default, when Pollen finds a source file called @filepath{filename.ext.pm} or @filepath{filename.ext.pmd}, it will look for a template in your project directory called @filepath{template.ext}, where @filepath{.ext} is the matching output extension. 
 
-In this project, we want to end up with HTML, so our source files will be called @tt{filename.html.pm}, and thus we need to make a @tt{template.html}. Let's use a modified version of the one we made in the second tutorial:
+In this project, we want to end up with HTML, so our source files will be called @filepath{filename.html.pm}, and thus we need to make a @filepath{template.html}. Let's use a modified version of the one we made in the second tutorial:
 
 @fileblock["template.html"
 @codeblock[#:keep-lang-line? #f]{
@@ -966,7 +966,7 @@ In this project, we want to end up with HTML, so our source files will be called
 
 A pagetree defines sequential and hierarchical relationships among a set of output files. The pagetree is used by the template to calculate navigational links (e.g., previous, next, up, etc.) A pagetree is optional — if you don't need navigation in your project, you don't need a pagetree.
 
-But in this project, we do want navigation. So we'll add an @tt{index.ptree} file like so:
+But in this project, we do want navigation. So we'll add an @filepath{index.ptree} file like so:
 
 @fileblock["index.ptree"
 @codeblock{
@@ -979,11 +979,11 @@ sermon.html
 
 @subsection{A CSS stylesheet using the preprocessor}
 
-Our template file above refers to a CSS file called @tt{styles.css}. When resolving linked files, the project server makes no distinction between static and dynamic files. If there's a static file called @tt{styles.css}, it will use that. 
+Our template file above refers to a CSS file called @filepath{styles.css}. When resolving linked files, the project server makes no distinction between static and dynamic files. If there's a static file called @filepath{styles.css}, it will use that. 
 
-Or, if you make a preprocessor source file called @tt{styles.css.pp}, it will be dynamically rendered into the requested @tt{styles.css} file. The preprocessor will operate on any file with the @tt{.pp} extension — so a preprocessor source called @tt{filename.ext.pp} will be rendered into @tt{filename.ext}. (The corollary is that preprocessor functionality can be added to @italic{any} kind of text-based file.)
+Or, if you make a preprocessor source file called @filepath{styles.css.pp}, it will be dynamically rendered into the requested @filepath{styles.css} file. The preprocessor will operate on any file with the @filepath{.pp} extension — so a preprocessor source called @filepath{filename.ext.pp} will be rendered into @filepath{filename.ext}. (The corollary is that preprocessor functionality can be added to @italic{any} kind of text-based file.)
 
-Preprocessor source files, like authoring source files, get access to everything in @tt{directory-require.rkt}, so you can share common functions and variables.
+Preprocessor source files, like authoring source files, get access to everything in @filepath{directory-require.rkt}, so you can share common functions and variables.
 
 Let's use an improved version of the dynamic CSS file we made in the first tutorial.
 
@@ -1024,7 +1024,7 @@ h1 {
 
 @subsection{The content source files using Pollen markup}
 
-With the scaffolding in place, we need the content. Our pagetree contains three output files — @tt{burial.html}, @tt{chess.html}, and @tt{sermon.html}. We're going to make these output files using Pollen markup. So we'll create three source files and name them by adding the @tt{.pm} source extension to each of the output names — thus @tt{burial.html.pm}, @tt{chess.html.pm}, and @tt{sermon.html.pm}, as follows (and with apologies to T. S. Eliot):
+With the scaffolding in place, we need the content. Our pagetree contains three output files — @filepath{burial.html}, @filepath{chess.html}, and @filepath{sermon.html}. We're going to make these output files using Pollen markup. So we'll create three source files and name them by adding the @filepath{.pm} source extension to each of the output names — thus @filepath{burial.html.pm}, @filepath{chess.html.pm}, and @filepath{sermon.html.pm}, as follows (and with apologies to T. S. Eliot):
 
 
 @fileblock["burial.html.pm" @codeblock[#:keep-lang-line? #f]{
@@ -1089,21 +1089,21 @@ I made no comment. What should I resent?"
 
 @subsection{The result}
 
-Now visit the project server and view @tt{burial.html}, which should look something like this (the box will expand to fit your browser window):
+Now visit the project server and view @filepath{burial.html}, which should look something like this (the box will expand to fit your browser window):
 
 @image/rp["burial.png" #:scale 0.8]
 
-Click the navigational links at the top to move between pages. You're encouraged to change the source files, the style sheet, the template, or @tt{directory-require.rkt}, and see how these changes immediately affect the page rendering in the project server. (You can also change the sequence of the pages in @tt{index.ptree}, but in that case, you'll need to restart the project server to see the change.)
+Click the navigational links at the top to move between pages. You're encouraged to change the source files, the style sheet, the template, or @filepath{directory-require.rkt}, and see how these changes immediately affect the page rendering in the project server. (You can also change the sequence of the pages in @filepath{index.ptree}, but in that case, you'll need to restart the project server to see the change.)
 
 This page isn't a miracle of web design, but it shows you in one example:
 
 @itemlist[
 
-@item{Pollen markup being decoded — paragraph breaks, linebreaks, smart quotes, smart dashes — with a @racket[decode] function attached to the @tt{root} node by @tt{directory-require.rkt};}
+@item{Pollen markup being decoded — paragraph breaks, linebreaks, smart quotes, smart dashes — with a @racket[decode] function attached to the @code{root} node by @filepath{directory-require.rkt};}
 
 @item{A dynamically-generated CSS file that computes positions for CSS elements using numerical values set up with @racket[define], and mathematical conversions thereof;}
 
-@item{Navigational links that appear and disappear as needed using conditional statements (@racket[when/block]) in @tt{template.html}, with the page sequence defined by @tt{index.ptree} and the names of the links being pulled from the @tt{h1} tag of each source file using @racket[select].}
+@item{Navigational links that appear and disappear as needed using conditional statements (@racket[when/block]) in @filepath{template.html}, with the page sequence defined by @filepath{index.ptree} and the names of the links being pulled from the @code{h1} tag of each source file using @racket[select].}
 
 ]
 

@@ -16,9 +16,9 @@
 
 The Pollen language is divided into variants, or @italic{dialects}, that are tailored to suit each of the core source formats.
 
-These dialects can be invoked one of two ways: either by invoking a specific dialect in the first line of the file (also known as the @litchar{#lang} line), or by using the generic @litchar{#lang pollen} as the first line, and then the correct dialect will be automatically selected based on the source file extension.
+These dialects can be invoked one of two ways: either by invoking a specific dialect in the first line of the file (also known as the @tt{#lang} line), or by using the generic @tt{#lang pollen} as the first line, and then the correct dialect will be automatically selected based on the source file extension.
 
-If the @litchar{#lang} line specifies a dialect different from the one specified by the file extension, the @litchar{#lang} line will take precedence. 
+If the @tt{#lang} line specifies a dialect different from the one specified by the file extension, the @tt{#lang} line will take precedence. 
 
 
 For ease of use, the behavior of the Pollen language departs from the standard Racket language in several ways. The differences are noted below.
@@ -40,11 +40,11 @@ There are no undefined commands in Pollen. If a command has not already been def
 
 By default, every Pollen source file exports two identifiers, which you can access by using the source file with @racket[require]:
 
-@racket['doc] contains the output of the file. The type of output depends on the source format (documented below).
+@racket[doc] contains the output of the file. The type of output depends on the source format (documented below).
 
-@racket['metas] is a hash of key–value pairs with extra information that is extracted from the source. These @racket['metas] will always contain the key @racket['here-path], which returns a string representation of the full path to the source file. Beyond that, the only @racket['metas] are the ones that are specified within the source file (see the source formats below for more detail on how to specify metas).
+@racket[metas] is a hash of key–value pairs with extra information that is extracted from the source. These @racket[metas] will always contain the key @racket['here-path], which returns a string representation of the full path to the source file. Beyond that, the only @racket[metas] are the ones that are specified within the source file (see the source formats below for more detail on how to specify metas).
 
-@margin-note{The Pollen rendering system relies on these two identifiers, but otherwise doesn't care how they're generated. Meaning, the code inside your Pollen source file could be @litchar{#lang racket} or @litchar{#lang whatever}. As long as you manually @racket[provide] those two identifiers and follow the usual file-naming convention, your source file will be usable.}
+@margin-note{The Pollen rendering system relies on these two identifiers, but otherwise doesn't care how they're generated. Meaning, the code inside your Pollen source file could be @tt{#lang racket} or @tt{#lang whatever}. As long as you manually @racket[provide] those two identifiers and follow the usual file-naming convention, your source file will be usable.}
 
 @bold{How is this different from Racket?} In Racket, you must explicitly @racket[define] and then @racket[provide] any values you want to export.
 
@@ -55,9 +55,9 @@ Any value or function that is defined within the source file using @racket[defin
 @bold{How is this different from Racket?} In Racket, you must explicitly @racket[provide] any values you want to export. Unlike Racket, every Pollen source file impliedly uses @racket[(provide (all-defined-out))].
 
 
-@subsection{The @code{@(format "~a" world:directory-require)} file}
+@subsection{The @filepath{directory-require.rkt} file}
 
-If a file called @code{@(format "~a" world:directory-require)} exists in the same directory with a source file, it's automatically imported when the source file is compiled.
+If a file called @filepath{directory-require.rkt} exists in the same directory with a source file, it's automatically imported when the source file is compiled.
 
 @bold{How is this different from Racket?} In Racket, you must explicitly import files using @racket[require].
 
@@ -74,7 +74,7 @@ _...source...
 _...source...
 ]
 
-When no dialect is explicitly specified by either the @litchar{#lang} line or the file extension, Pollen will default to using the preprocessor dialect. For instance, this file will be treated as preprocessor source:
+When no dialect is explicitly specified by either the @tt{#lang} line or the file extension, Pollen will default to using the preprocessor dialect. For instance, this file will be treated as preprocessor source:
 
 @racketmod[#:file "test.yyz" pollen
 _...source...
@@ -99,7 +99,7 @@ _...source...
 _...source...
 ]
 
-The output of the Markdown dialect, provided by @racket['doc], is a tagged X-expression.
+The output of the Markdown dialect, provided by @racket[doc], is a tagged X-expression.
 
 
 @subsection{Markup (@(format ".~a" world:markup-source-ext) extension)}
@@ -115,7 +115,7 @@ _...source...
 _...source...
 ]
 
-The output of the Pollen markup dialect, provided by @racket['doc], is a tagged X-expression.
+The output of the Pollen markup dialect, provided by @racket[doc], is a tagged X-expression.
 
 @subsection{Pagetree  (@(format ".~a" world:pagetree-source-ext) extension)}
 
@@ -133,14 +133,14 @@ _...source...
 
 
 
-The output of the pagetree dialect, provided by @racket['doc], is a @racket[pagetree?] that is checked for correctness using @racket[validate-pagetree].
+The output of the pagetree dialect, provided by @racket[doc], is a @racket[pagetree?] that is checked for correctness using @racket[validate-pagetree].
 
 
 
 
 @section{Utility formats}
 
-These aren't source formats because they don't contain a @litchar{#lang pollen} line. But for convenience, they get special handling by the Pollen project server.
+These aren't source formats because they don't contain a @tt{#lang pollen} line. But for convenience, they get special handling by the Pollen project server.
 
 
 
@@ -151,6 +151,6 @@ Scribble files are recognized by the project server and can be compiled and prev
 
 @subsection{Null (@(format ".~a" world:null-source-ext) extension)}
 
-Files with the null extension are simply rendered as a copy of the file without the extension, so @code{index.html.p} becomes @code{index.html}. 
+Files with the null extension are simply rendered as a copy of the file without the extension, so @filepath{index.html.p} becomes @filepath{index.html}. 
 
-This can be useful you're managing your project with git. Most likely you'll want to ignore @code{*.html} and other file types that are frequently regenerated by the project server. But if you have isolated static files — for instance, a @code{index.html} that doesn't have source associated with it — they'll be ignored too. You can cure this problem by appending the null extension to these static files, so they'll be tracked in your source system without actually being source files.
+This can be useful you're managing your project with git. Most likely you'll want to ignore @filepath{*.html} and other file types that are frequently regenerated by the project server. But if you have isolated static files — for instance, a @filepath{index.html} that doesn't have source associated with it — they'll be ignored too. You can cure this problem by appending the null extension to these static files, so they'll be tracked in your source system without actually being source files.

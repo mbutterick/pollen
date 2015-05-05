@@ -1,6 +1,6 @@
 #lang scribble/manual
 
-@(require scribble/eval pollen/cache pollen/world (for-label racket (except-in pollen #%module-begin) pollen/render xml pollen/pagetree sugar txexpr))
+@(require scribble/eval pollen/cache pollen/world (for-label racket (except-in pollen #%module-begin) pollen/render xml pollen/pagetree sugar/coerce txexpr))
 
 @(define my-eval (make-base-eval))
 @(my-eval `(require pollen pollen/template xml))
@@ -11,7 +11,7 @@
 
 Convenience functions for templates. These are automatically imported into the @racket[eval] environment when rendering with a template (see @racket[render]).
 
-This module also provides everything from @racket[sugar/coerce/value].
+This module also provides everything from @racketmodname[sugar/coerce].
 
 @defproc[
 (->html
