@@ -350,10 +350,11 @@
       [(list (? block-txexpr? bxs) ...) bxs] ; leave a series of block xexprs alone
       [else (list (make-txexpr tag empty elems))])) ; otherwise wrap in p tag
   
-  (let ([elements (prep-paragraph-flow elements)]) 
-    (if (ormap my-paragraph-break? elements) ; need this condition to prevent infinite recursion
-        ;; use append-map rather than map to permit return of multiple elements
-        (append-map wrap-paragraph (filter-split elements my-paragraph-break?)) ; split into ¶¶
+  (let ([elements (prep-paragraph-flow elements)])
+    (define explicit-or-implicit-paragraph-break? (λ(x) (or (my-paragraph-break? x) (block-txexpr? x))))
+    (if (ormap explicit-or-implicit-paragraph-break? elements) ; need this condition to prevent infinite recursion
+        ;; use append-map on wrap-paragraph rather than map to permit return of multiple elements
+        (append-map wrap-paragraph (append-map (λ(es) (filter-split es my-paragraph-break?)) (slicef elements block-txexpr?))) ; split into ¶¶, using both implied and explicit paragraph breaks
         (if force-paragraph
             (append-map wrap-paragraph (slicef elements block-txexpr?)) ; upconverts non-block elements to paragraphs
             elements))))                

@@ -330,26 +330,44 @@ Within @racket[_tagged-xexpr-elements], convert occurrences of @racket[_linebrea
 [#:linebreak-proc linebreak-proc (txexpr-elements? . -> . txexpr-elements?) detect-linebreaks]
 [#:force? force-paragraph? boolean? #f])
 txexpr-elements?]
-Find paragraphs within @racket[_elements] (as denoted by @racket[_paragraph-sep]) and wrap them with @racket[_paragraph-tag]. Also handle linebreaks using @racket[detect-linebreaks].
+Find paragraphs within @racket[_elements] and wrap them with @racket[_paragraph-tag]. Also handle linebreaks using @racket[detect-linebreaks].
 
-If @racket[_element] is already a @racket[block-txexpr?], it will not be wrapped as a paragraph (because in that case, the wrapping would be superfluous). Thus, as a consequence, if @racket[_paragraph-sep] occurs between two blocks, it will be ignored (as in the example below using two sequential @racket['div] blocks.) 
+What counts as a paragraph? Any @racket[_elements] that are either a) explicitly set apart with @racket[_paragraph-sep], or b) adjacent to a @racket[block-txexpr?] (in which case the paragraph-ness is implied).
+
+@examples[#:eval my-eval
+(detect-paragraphs '("Explicit para" "\n\n" "Explicit para"))
+(detect-paragraphs '("Explicit para" "\n\n" "Explicit para" "\n" "Explicit line"))
+(detect-paragraphs '("Implied para" (div "Block") "Implied para"))
+]
+
+If @racket[_element] is already a block, it will not be wrapped as a paragraph (because in that case, the wrapping would be superfluous). Thus, as a consequence, if @racket[_paragraph-sep] occurs between two blocks, it will be ignored (as in the example below using two sequential @racket[div] blocks.) Likewise, @racket[_paragraph-sep] will also be ignored if it occurs between a block and a non-block (because a paragraph break is already implied).
+
+@examples[#:eval my-eval
+(code:comment @#,t{The explicit "\n\n" makes no difference in these cases})
+(detect-paragraphs '((div "First block") "\n\n" (div "Second block")))
+(detect-paragraphs '((div "First block") (div "Second block")))
+(detect-paragraphs '("Para" "\n\n" (div "Block")))
+(detect-paragraphs '("Para" (div "Block")))
+]
 
 The @racket[_paragraph-tag] argument sets the tag used to wrap paragraphs. 
 
+@examples[#:eval my-eval
+(detect-paragraphs '("First para" "\n\n" "Second para") #:tag 'ns:p)
+]
+
 The @racket[_linebreak-proc] argument allows you to use a different linebreaking procedure other than the usual @racket[detect-linebreaks].
 
-The @racket[#:force?] option will wrap a paragraph tag around @racket[_elements], even if no paragraph break is found. If any @racket[_element] is already a @racket[block-txexpr?], it is skipped, but the remaining sequences of non-block @racket[_elements] are wrapped. The @racket[#:force?] option is useful for when you want to guarantee that you get a list of blocks.
-
 @examples[#:eval my-eval
-(detect-paragraphs '("First para" "\n\n" "Second para"))
-(detect-paragraphs '("First para" "\n\n" "Second para" "\n" "Second line"))
-(detect-paragraphs '("First para" "\n\n" (div "Second block")))
-(detect-paragraphs '((div "First block") "\n\n" (div "Second block")))
-(detect-paragraphs '("First para" "\n\n" "Second para") #:tag 'ns:p)
 (detect-paragraphs '("First para" "\n\n" "Second para" "\n" "Second line")
 #:linebreak-proc (λ(x) (detect-linebreaks x #:insert '(newline))))
-(detect-paragraphs '("First" (span "para") (div "Block") "Second para") 
-#:force? #t)
+]
+
+The @racket[#:force?] option will wrap a paragraph tag around @racket[_elements], even if no explicit or implicit paragraph breaks are found. The @racket[#:force?] option is useful for when you want to guarantee that you always get a list of blocks.
+
+@examples[#:eval my-eval
+(detect-paragraphs '("This" (span "will not be") "a paragraph"))
+(detect-paragraphs '("But this" (span "will be") "a paragraph") #:force? #t)
 ]
 
 @defproc[
