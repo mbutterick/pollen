@@ -20,4 +20,4 @@ Then, from the command line, install Pollen:
 @commandline{raco pkg install pollen}
 
 After that, you can update the package from the command line:
-@commandline{raco pkg update pollen}
+@commandline{raco pkg update --update-deps pollen}
