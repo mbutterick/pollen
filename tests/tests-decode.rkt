@@ -54,6 +54,18 @@
 (check-equal? (detect-paragraphs '("foo" "\n\n" (div "bar") "\n\n" (div "zam")))
               '((p "foo") (div "bar") (div "zam")))
 
+(check-equal? (detect-paragraphs '("foo")) '("foo"))
+(check-equal? (detect-paragraphs '("foo") #:force? #t) '((p "foo")))
+(check-equal? (detect-paragraphs '((div "foo"))) '((div "foo")))
+(check-equal? (detect-paragraphs '((div "foo")) #:force? #t) '((div "foo")))
+(check-equal? (detect-paragraphs '("foo" (div "bar"))) '("foo" (div "bar")))
+(check-equal? (detect-paragraphs '("foo" (div "bar")) #:force? #t) '((p "foo") (div "bar")))
+(check-equal? (detect-paragraphs '("foo" (div "bar") "zam")) '("foo" (div "bar") "zam"))
+(check-equal? (detect-paragraphs '("foo" (span "zing") (div "bar") "zam")) '("foo" (span "zing") (div "bar") "zam"))
+(check-equal? (detect-paragraphs '("foo" (span "zing") (div "bar") "zam") #:force? #t) '((p "foo" (span "zing")) (div "bar") (p "zam")))
+
+
+
 (check-equal? (merge-newlines '(p "\n" "foo" "\n" "\n" "bar" (em "\n" "\n" "\n"))) 
               '(p "\n" "foo" "\n\n" "bar" (em "\n\n\n")))
 

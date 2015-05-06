@@ -69,16 +69,16 @@
 
 
 (define+provide/contract (decode-elements elements
-                                 #:txexpr-tag-proc [txexpr-tag-proc (λ(x)x)]
-                                 #:txexpr-attrs-proc [txexpr-attrs-proc (λ(x)x)]
-                                 #:txexpr-elements-proc [txexpr-elements-proc (λ(x)x)]
-                                 #:block-txexpr-proc [block-txexpr-proc (λ(x)x)]
-                                 #:inline-txexpr-proc [inline-txexpr-proc (λ(x)x)]
-                                 #:string-proc [string-proc (λ(x)x)]
-                                 #:symbol-proc [symbol-proc (λ(x)x)]
-                                 #:valid-char-proc [valid-char-proc (λ(x)x)]
-                                 #:cdata-proc [cdata-proc (λ(x)x)]
-                                 #:exclude-tags [excluded-tags '()])
+                                          #:txexpr-tag-proc [txexpr-tag-proc (λ(x)x)]
+                                          #:txexpr-attrs-proc [txexpr-attrs-proc (λ(x)x)]
+                                          #:txexpr-elements-proc [txexpr-elements-proc (λ(x)x)]
+                                          #:block-txexpr-proc [block-txexpr-proc (λ(x)x)]
+                                          #:inline-txexpr-proc [inline-txexpr-proc (λ(x)x)]
+                                          #:string-proc [string-proc (λ(x)x)]
+                                          #:symbol-proc [symbol-proc (λ(x)x)]
+                                          #:valid-char-proc [valid-char-proc (λ(x)x)]
+                                          #:cdata-proc [cdata-proc (λ(x)x)]
+                                          #:exclude-tags [excluded-tags '()])
   ((txexpr-elements?)  
    (#:txexpr-tag-proc (txexpr-tag? . -> . txexpr-tag?)
                       #:txexpr-attrs-proc (txexpr-attrs? . -> . txexpr-attrs?)
@@ -94,17 +94,17 @@
   (define temp-tag (gensym "temp-tag"))
   (define decode-result (decode `(temp-tag ,@elements)
                                 #:txexpr-tag-proc txexpr-tag-proc
-                                 #:txexpr-attrs-proc txexpr-attrs-proc
-                                 #:txexpr-elements-proc txexpr-elements-proc
-                                 #:block-txexpr-proc block-txexpr-proc
-                                 #:inline-txexpr-proc inline-txexpr-proc
-                                 #:string-proc string-proc
-                                 #:symbol-proc symbol-proc
-                                 #:valid-char-proc valid-char-proc
-                                 #:cdata-proc cdata-proc
-                                 #:exclude-tags excluded-tags))
+                                #:txexpr-attrs-proc txexpr-attrs-proc
+                                #:txexpr-elements-proc txexpr-elements-proc
+                                #:block-txexpr-proc block-txexpr-proc
+                                #:inline-txexpr-proc inline-txexpr-proc
+                                #:string-proc string-proc
+                                #:symbol-proc symbol-proc
+                                #:valid-char-proc valid-char-proc
+                                #:cdata-proc cdata-proc
+                                #:exclude-tags excluded-tags))
   (get-elements decode-result))
-  
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -334,23 +334,26 @@
 ;; todo: unit tests
 (define+provide/contract (detect-paragraphs elements #:tag [tag 'p]
                                             #:separator [sep world:paragraph-separator]
-                                            #:linebreak-proc [linebreak-proc detect-linebreaks])
-  ((txexpr-elements?) (#:tag symbol? #:separator string? #:linebreak-proc (txexpr-elements? . -> . txexpr-elements?)) 
+                                            #:linebreak-proc [linebreak-proc detect-linebreaks]
+                                            #:force? [force-paragraph #f])
+  ((txexpr-elements?) (#:tag symbol? #:separator string? #:linebreak-proc (txexpr-elements? . -> . txexpr-elements?) #:force? boolean?) 
                       . ->* . txexpr-elements?)
   
   ;; prepare elements for paragraph testing
-  (define (prep-paragraph-flow xc)
-    (linebreak-proc (merge-newlines (trimf xc whitespace?))))
+  (define (prep-paragraph-flow elems)
+    (linebreak-proc (merge-newlines (trimf elems whitespace?))))
   
   (define my-paragraph-break? (λ(x) (and (paragraph-break? x #:separator sep) #t)))
   
-  (define (wrap-paragraph xc) 
-    (match xc
+  (define (wrap-paragraph elems) 
+    (match elems
       [(list (? block-txexpr? bxs) ...) bxs] ; leave a series of block xexprs alone
-      [else (list (make-txexpr tag empty xc))])) ; otherwise wrap in p tag
+      [else (list (make-txexpr tag empty elems))])) ; otherwise wrap in p tag
   
   (let ([elements (prep-paragraph-flow elements)]) 
     (if (ormap my-paragraph-break? elements) ; need this condition to prevent infinite recursion
         ;; use append-map rather than map to permit return of multiple elements
         (append-map wrap-paragraph (filter-split elements my-paragraph-break?)) ; split into ¶¶
-        elements)))                
+        (if force-paragraph
+            (append-map wrap-paragraph (slicef elements block-txexpr?)) ; upconverts non-block elements to paragraphs
+            elements))))                

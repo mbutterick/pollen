@@ -327,7 +327,8 @@ Within @racket[_tagged-xexpr-elements], convert occurrences of @racket[_linebrea
 [elements txexpr-elements?]
 [#:separator paragraph-sep string? world:paragraph-separator]
 [#:tag paragraph-tag symbol? 'p]
-[#:linebreak-proc linebreak-proc (txexpr-elements? . -> . txexpr-elements?) detect-linebreaks])
+[#:linebreak-proc linebreak-proc (txexpr-elements? . -> . txexpr-elements?) detect-linebreaks]
+[#:force? force-paragraph? boolean? #f])
 txexpr-elements?]
 Find paragraphs within @racket[_elements] (as denoted by @racket[_paragraph-sep]) and wrap them with @racket[_paragraph-tag]. Also handle linebreaks using @racket[detect-linebreaks].
 
@@ -337,6 +338,8 @@ The @racket[_paragraph-tag] argument sets the tag used to wrap paragraphs.
 
 The @racket[_linebreak-proc] argument allows you to use a different linebreaking procedure other than the usual @racket[detect-linebreaks].
 
+The @racket[#:force?] option will wrap a paragraph tag around @racket[_elements], even if no paragraph break is found. If any @racket[_element] is already a @racket[block-txexpr?], it is skipped, but the remaining sequences of non-block @racket[_elements] are wrapped. The @racket[#:force?] option is useful for when you want to guarantee that you get a list of blocks.
+
 @examples[#:eval my-eval
 (detect-paragraphs '("First para" "\n\n" "Second para"))
 (detect-paragraphs '("First para" "\n\n" "Second para" "\n" "Second line"))
@@ -345,6 +348,8 @@ The @racket[_linebreak-proc] argument allows you to use a different linebreaking
 (detect-paragraphs '("First para" "\n\n" "Second para") #:tag 'ns:p)
 (detect-paragraphs '("First para" "\n\n" "Second para" "\n" "Second line")
 #:linebreak-proc (λ(x) (detect-linebreaks x #:insert '(newline))))
+(detect-paragraphs '("First" (span "para") (div "Block") "Second para") 
+#:force? #t)
 ]
 
 @defproc[
