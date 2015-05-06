@@ -342,18 +342,15 @@
   (define (prep-paragraph-flow xc)
     (linebreak-proc (merge-newlines (trimf xc whitespace?))))
   
-  
   (define my-paragraph-break? (λ(x) (and (paragraph-break? x #:separator sep) #t)))
   
   (define (wrap-paragraph xc) 
     (match xc
-      [(list (? block-txexpr? bx)) bx] ; leave a single block xexpr alone
-      [else (make-txexpr tag empty xc)])) ; otherwise wrap in p tag
-  
+      [(list (? block-txexpr? bxs) ...) bxs] ; leave a series of block xexprs alone
+      [else (list (make-txexpr tag empty xc))])) ; otherwise wrap in p tag
   
   (let ([elements (prep-paragraph-flow elements)]) 
     (if (ormap my-paragraph-break? elements) ; need this condition to prevent infinite recursion
-        (map wrap-paragraph (filter-split elements my-paragraph-break?)) ; split into ¶¶
-        elements)))
-
-
+        ;; use append-map rather than map to permit return of multiple elements
+        (append-map wrap-paragraph (filter-split elements my-paragraph-break?)) ; split into ¶¶
+        elements)))                

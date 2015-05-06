@@ -36,8 +36,23 @@
 (check-equal? (detect-linebreaks '("foo" "moo" "bar") #:insert "moo") '("foo" "moo" "bar"))
 (check-equal? (detect-linebreaks '("foo" "\n\n" "bar")) '("foo" "\n\n" "bar"))
 
-
-
+(check-equal? (detect-paragraphs '("First para" "\n\n" "Second para"))
+              '((p "First para") (p "Second para")))
+(check-equal? (detect-paragraphs '("First para" "\n\n" "Second para" "\n" "Second line"))
+              '((p "First para") (p "Second para" (br) "Second line")))
+(check-equal? (detect-paragraphs '("First para" "\n\n" (div "Second block")))
+              '((p "First para") (div "Second block")))
+(check-equal? (detect-paragraphs '((div "First block") "\n\n" (div "Second block")))
+              '((div "First block") (div "Second block")))
+(check-equal? (detect-paragraphs '("First para" "\n\n" "Second para") #:tag 'ns:p)
+              '((ns:p "First para") (ns:p "Second para")))
+(check-equal? (detect-paragraphs '("First para" "\n\n" "Second para" "\n" "Second line")
+                                 #:linebreak-proc (λ(x) (detect-linebreaks x #:insert '(newline))))
+              '((p "First para") (p "Second para" (newline) "Second line")))
+(check-equal? (detect-paragraphs '("foo" "\n\n" (div "bar") (div "zam")))
+              '((p "foo") (div "bar") (div "zam")))
+(check-equal? (detect-paragraphs '("foo" "\n\n" (div "bar") "\n\n" (div "zam")))
+              '((p "foo") (div "bar") (div "zam")))
 
 (check-equal? (merge-newlines '(p "\n" "foo" "\n" "\n" "bar" (em "\n" "\n" "\n"))) 
               '(p "\n" "foo" "\n\n" "bar" (em "\n\n\n")))
