@@ -32,7 +32,8 @@
                                  #:symbol-proc [symbol-proc (λ(x)x)]
                                  #:valid-char-proc [valid-char-proc (λ(x)x)]
                                  #:cdata-proc [cdata-proc (λ(x)x)]
-                                 #:exclude-tags [excluded-tags '()])
+                                 #:exclude-tags [excluded-tags '()]
+                                 #:exclude-attrs [excluded-attrs '()])
   ((xexpr/c)  
    (#:txexpr-tag-proc (txexpr-tag? . -> . txexpr-tag?)
                       #:txexpr-attrs-proc (txexpr-attrs? . -> . txexpr-attrs?)
@@ -43,13 +44,14 @@
                       #:symbol-proc (symbol? . -> . xexpr?)
                       #:valid-char-proc (valid-char? . -> . xexpr?)
                       #:cdata-proc (cdata? . -> . xexpr?)
-                      #:exclude-tags symbols?) . ->* . txexpr?)
+                      #:exclude-tags (listof txexpr-tag?)
+                      #:exclude-attrs txexpr-attrs?) . ->* . txexpr?)
   
   
   (let loop ([x txexpr])
     (cond
       [(txexpr? x) (let-values([(tag attrs elements) (txexpr->values x)]) 
-                     (if (member tag excluded-tags)    
+                     (if (or (member tag excluded-tags) (ormap (λ(attr) (member attr excluded-attrs)) attrs)) 
                          x ; because it's excluded
                          ;; we apply processing here rather than do recursive descent on the pieces
                          ;; because if we send them back through loop, certain element types are ambiguous
@@ -78,7 +80,8 @@
                                           #:symbol-proc [symbol-proc (λ(x)x)]
                                           #:valid-char-proc [valid-char-proc (λ(x)x)]
                                           #:cdata-proc [cdata-proc (λ(x)x)]
-                                          #:exclude-tags [excluded-tags '()])
+                                          #:exclude-tags [excluded-tags '()]
+                                          #:exclude-attrs [excluded-attrs '()])
   ((txexpr-elements?)  
    (#:txexpr-tag-proc (txexpr-tag? . -> . txexpr-tag?)
                       #:txexpr-attrs-proc (txexpr-attrs? . -> . txexpr-attrs?)
@@ -89,7 +92,8 @@
                       #:symbol-proc (symbol? . -> . xexpr?)
                       #:valid-char-proc (valid-char? . -> . xexpr?)
                       #:cdata-proc (cdata? . -> . xexpr?)
-                      #:exclude-tags symbols?) . ->* . txexpr-elements?)
+                      #:exclude-tags (listof txexpr-tag?)
+                      #:exclude-attrs txexpr-attrs?) . ->* . txexpr-elements?)
   
   (define temp-tag (gensym "temp-tag"))
   (define decode-result (decode `(temp-tag ,@elements)
@@ -102,7 +106,8 @@
                                 #:symbol-proc symbol-proc
                                 #:valid-char-proc valid-char-proc
                                 #:cdata-proc cdata-proc
-                                #:exclude-tags excluded-tags))
+                                #:exclude-tags excluded-tags
+                                #:exclude-attrs excluded-attrs))
   (get-elements decode-result))
 
 

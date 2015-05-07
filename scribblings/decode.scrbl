@@ -34,7 +34,8 @@ Another example is conversion of output into a particular data format. Most Poll
 [#:symbol-proc symbol-proc (symbol? . -> . xexpr?) (λ(sym) sym)]
 [#:valid-char-proc valid-char-proc (valid-char? . -> . xexpr?) (λ(vc) vc)]
 [#:cdata-proc cdata-proc (cdata? . -> . xexpr?) (λ(cdata) cdata)]
-[#:exclude-tags tags-to-exclude (listof symbol?) null]
+[#:exclude-tags tags-to-exclude (listof txexpr-tag?) null]
+[#:exclude-attrs attrs-to-exclude txexpr-attrs? null]
 )
 txexpr?]
 Recursively process a @racket[_tagged-xexpr], usually the one exported from a Pollen source file as @racket[doc]. 
@@ -156,12 +157,12 @@ The @racket[_string-proc], @racket[_symbol-proc], @racket[_valid-char-proc], and
 
 
 
-Finally, the @racket[_tags-to-exclude] argument is a list of tags that will be exempted from decoding. Though you could get the same result by testing the input within the individual decoding functions, that's tedious and potentially slower.
+The @racket[_tags-to-exclude] argument is a list of tags that will be exempted from decoding. Though you could get the same result by testing the input within the individual decoding functions, that's tedious and potentially slower.
 
 @examples[#:eval my-eval
 (define tx '(p "I really think" (em "italics") "should be lowercase."))
-(decode tx #:string-proc (λ(s) (string-upcase s)))
-(decode tx #:string-proc (λ(s) (string-upcase s)) #:exclude-tags '(em))
+(decode tx #:string-proc string-upcase)
+(decode tx #:string-proc string-upcase #:exclude-tags '(em))
 ]
 
 The @racket[_tags-to-exclude] argument is useful if you're decoding source that's destined to become HTML. According to the HTML spec, material within a @racket[<style>] or @racket[<script>] block needs to be preserved literally. In this example, if the CSS and JavaScript blocks are capitalized, they won't work. So exclude @racket['(style script)], and problem solved.
@@ -170,11 +171,17 @@ The @racket[_tags-to-exclude] argument is useful if you're decoding source that'
 (define tx '(body (h1 [[class "Red"]] "Let's visit Planet Telex.") 
 (style [[type "text/css"]] ".Red {color: green;}")
 (script [[type "text/javascript"]] "var area = h * w;")))
-(decode tx #:string-proc (λ(s) (string-upcase s)))
-(decode tx #:string-proc (λ(s) (string-upcase s)) 
-#:exclude-tags '(style script))
+(decode tx #:string-proc string-upcase)
+(decode tx #:string-proc string-upcase #:exclude-tags '(style script))
 ]
 
+Finally, the @racket[_attrs-to-exclude] argument works the same way as @racket[_tags-to-exclude], but instead of excluding an element based on its tag, it excludes based on whether the element has a matching attribute/value pair.
+
+@examples[#:eval my-eval
+(define tx '(p (span "No attrs") (span ((id "foo")) "One attr")))
+(decode tx #:string-proc string-upcase)
+(decode tx #:string-proc string-upcase #:exclude-attrs '((id "foo")))
+]
 
 @defproc[
 (decode-elements
@@ -188,7 +195,8 @@ The @racket[_tags-to-exclude] argument is useful if you're decoding source that'
 [#:symbol-proc symbol-proc (symbol? . -> . xexpr?) (λ(sym) sym)]
 [#:valid-char-proc valid-char-proc (valid-char? . -> . xexpr?) (λ(vc) vc)]
 [#:cdata-proc cdata-proc (cdata? . -> . xexpr?) (λ(cdata) cdata)]
-[#:exclude-tags tags-to-exclude (listof symbol?) null]
+[#:exclude-tags tags-to-exclude (listof txexpr-tag?) null]
+[#:exclude-attrs attrs-to-exclude txexpr-attrs? null]
 )
 txexpr-elements?]
 Identical to @racket[decode], but takes @racket[txexpr-elements?] as input rather than a whole tagged X-expression, and likewise returns @racket[txexpr-elements?] rather than a tagged X-expression. A convenience variant for use inside tag functions.
