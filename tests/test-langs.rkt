@@ -1,6 +1,5 @@
 #lang racket/base
-(require rackunit racket/port racket/system racket/runtime-path)
-
+(require rackunit racket/port racket/system racket/runtime-path compiler/find-exe)
 
 (module test-default pollen
   "hello world")
@@ -31,17 +30,23 @@
 (require (prefix-in ptree: 'test-ptree))
 (check-equal? ptree:doc '(pagetree-root (index (brother sister))))
 
-(define (run path)
-  (define cmd-string (format "racket ~a" path))
-  (with-output-to-string (λ() (system cmd-string))))
 
+;; define-runtime-path only allowed at top level
 (define-runtime-path test.ptree "test.ptree")
-(check-equal? (run test.ptree) "'(pagetree-root test ====)")
 (define-runtime-path test.html.pm "test.html.pm")
-(check-equal? (run test.html.pm) "'(root \"test\" \"\\n\" \"====\")")
 (define-runtime-path test.html.pmd "test.html.pmd")
-(check-equal? (run test.html.pmd) "'(root (h1 ((id \"test\")) \"test\"))")
 (define-runtime-path test.html.pp "test.html.pp")
-(check-equal? (run test.html.pp) "test\n====")
 (define-runtime-path test.no-ext "test.no-ext")
-(check-equal? (run test.no-ext) "test\n====")
+
+
+;; `find-exe` avoids reliance on $PATH of the host system
+(define racket-path (find-exe))
+(when racket-path
+  (define (run path)
+    (define cmd-string (format "~a ~a" racket-path path))
+    (with-output-to-string (λ() (system cmd-string))))
+  (check-equal? (run test.ptree) "'(pagetree-root test ====)")
+  (check-equal? (run test.html.pm) "'(root \"test\" \"\\n\" \"====\")")
+  (check-equal? (run test.html.pmd) "'(root (h1 ((id \"test\")) \"test\"))")
+  (check-equal? (run test.html.pp) "test\n====")
+  (check-equal? (run test.no-ext) "test\n===="))
