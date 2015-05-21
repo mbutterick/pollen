@@ -31,15 +31,10 @@
       [else (reverse acc)])))
 
 (define (split-meta-elements x) ; pull metas out of doc and put them into meta-elements accumulator
-  (define meta-elements empty)
-  (define (extract-meta-elements x)
-    (cond
-      [(list? x) (define-values (new-metas rest) (partition meta-element? x))
-                 (set! meta-elements (append (filter nontrivial-meta-element? new-metas) meta-elements)) ; trivial metas are discarded
-                 (map extract-meta-elements rest)]
-      [else x]))
-  (define thing-without-meta-elements (extract-meta-elements x))
-  (values thing-without-meta-elements (append-map explode-meta-element meta-elements)))
+  (define-values (thing-without-meta-elements meta-elements) (splitf-txexpr x meta-element?))
+  ;; trivial metas are discarded
+  (define exploded-meta-elements (append-map explode-meta-element (filter nontrivial-meta-element? meta-elements)))
+  (values thing-without-meta-elements exploded-meta-elements))
 
 (define (split-metas-to-hash x)
   (define-values (doc-without-metas meta-elements) (split-meta-elements x))
@@ -56,3 +51,9 @@
   (values doc-without-metas metas))
 
 
+(module+ test
+  (require rackunit)
+  (define x '(root (meta ((foo "bar"))) "hello" (p (meta ((foo "zam"))) (meta) "there")))
+  (define-values (doc-without-metas metahash) (split-metas-to-hash x))
+  (check-equal? doc-without-metas '(root "hello" (p "there")))
+  (check-equal? (hash-ref metahash 'foo) "zam"))
