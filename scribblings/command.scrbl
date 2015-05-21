@@ -474,7 +474,7 @@ When you mark a meta like this, two things happen. First, when you run the file,
 '(some-tag ((key "value")) "Another normal tag")
 }
 
-@margin-note{If your @code{meta} includes a text argument between curly braces — or any other arguments aside from the initial key–value pair — they will be ignored.}
+@margin-note{If your @code{meta} includes a text argument between curly braces, it will be ignored.}
 
 Second, the meta is collected into a hash table that is exported with the name @code{metas}. To see this hash table, run the file above in DrRacket, then move to the interactions window and type @exec{metas} at the prompt:
 
@@ -503,7 +503,7 @@ When you run this code, the result will be the same as before, but this time the
 '#hash((dog . "Roxy") (here-path . "nowhere"))
 }
 
-It doesn't matter how many metas you put in a source file or where you put them. They'll all be extracted and put into the @code{metas} hash table. The order of the metas is not preserved (because order is not preserved in a hash table). But if you have two metas with the same key, the later one will supersede the earlier one:
+It doesn't matter how many metas you put in a source file, or where you put them. They'll all be extracted into the @code{metas} hash table. The order of the metas is not preserved (because order is not preserved in a hash table). But if you have two metas with the same key, the later one will supersede the earlier one:
 
 @codeblock{
 #lang pollen
@@ -521,6 +521,20 @@ Though there are two metas named @racket['dog], only the second one persists:
 '#hash((dog . "Lex") (here-path . "unsaved-editor167056"))
 }
 
+You're allowed to put multiple keys and values within a single @code{meta} tag. As above, later keys supersede earlier ones.
+
+@codeblock{
+#lang pollen
+
+◊some-tag['key: "value"]{Normal tag}
+◊meta['dog: "Roxy" 'lion: "P22" 'dog: "Lex"]
+◊some-tag['key: "value"]{Another normal tag}
+}
+
+@terminal{
+> metas
+'#hash((dog . "Lex") (here-path . "unsaved-editor167056") (lion . "P22"))
+}
 
 @;--------------------------------------------------------------------
 @subsubsection{Inserting a comment}
