@@ -1,6 +1,6 @@
 #lang scribble/manual
 
-@(require "mb-tools.rkt" scribble/eval pollen/world (for-label racket pollen/world))
+@(require "mb-tools.rkt" scribble/eval pollen/world (for-label (except-in racket ...) pollen/world))
 
 @(define my-eval (make-base-eval))
 @(my-eval `(require pollen pollen/file))
@@ -47,7 +47,7 @@ Displays a list of available commands.
 
 @section{@racket[raco pollen start]}
 
-Starts the project server from the current directory using the default port, which is the value of the parameter @racket[world:current-server-port] (by default, port @(format "~a" world:default-port)).
+Start the project server from the current directory using the default port, which is the value of the parameter @racket[world:current-server-port] (by default, port @(format "~a" world:default-port)).
 
 This command can be invoked with two optional arguments.
 
@@ -69,13 +69,13 @@ If you want to start in the current directory but with a different port, use @li
 
 @section{@racket[raco pollen render]}
 
-Renders all preprocessor source files and then all pagetree files found in the current directory. If no pagetree files are found, all source files will be rendered.
+Render all preprocessor source files and then all pagetree files found in the current directory. If none of these files are found, a pagetree will be generated for the directory (which will include all source files) and then rendered.
 
 This command can be invoked with extra arguments.
 
-@racket[raco pollen render _directory] will render the preprocessor source files and pagetree files in the specified directory.
+@racket[raco pollen render _directory] will perform the render described above, but in the specified directory.
 
-Alternatively, the command can take a variable number of path arguments. @racket[raco pollen render _path...] will render only the paths specified in @racket[_path...]. Consistent with the usual command-line idiom, this can be a single path, a list of paths, or a pattern:
+Alternatively, the command can take a variable number of path arguments. @racket[raco pollen render _path ...] will render only the paths specified in @racket[_path ...]. Consistent with the usual command-line idiom, this can be a single path, a list of paths, or a pattern:
 
 @terminal{
 > raco pollen render foo.html.pm
@@ -85,7 +85,7 @@ Alternatively, the command can take a variable number of path arguments. @racket
 
 @section{@racket[raco pollen clone]}
 
-Makes a copy of the project directory on the desktop, and removes any source files or other Pollen-related files.
+Make a copy of the project directory on the desktop, and remove any source files or other Pollen-related files. (This function is pretty lame, and I invite suggestions for improvement.)
 
 @racket[raco pollen clone _source-dir] will clone source from @racket[_source-dir] onto the desktop.
 

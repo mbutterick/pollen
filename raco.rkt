@@ -6,12 +6,11 @@
 (define-for-syntax args (current-command-line-arguments))
 (define-for-syntax arg-command-name (with-handlers ([exn:fail? (λ(exn) #f)]) (vector-ref args 0)))
 
-
 (define-for-syntax first-arg-or-current-dir
   (with-handlers ([exn:fail? (λ(exn) (current-directory))])
     ;; incoming path argument is handled as described in
     ;; docs for current-directory
-    (path->complete-path (simplify-path (cleanse-path (string->path (vector-ref args 1)))))))
+    (very-nice-path (vector-ref args 1))))
 
 (define-for-syntax rest-args
   (with-handlers ([exn:fail? (λ(exn) #f)])
@@ -35,7 +34,7 @@
                      [("test" "xyzzy") (handle-test)]
                      [(#f "help") (handle-help)]
                      [("start") (handle-start (path->directory-path first-arg-or-current-dir) port-arg)]
-                     [("render") (handle-render first-arg-or-current-dir rest-args)]
+                     [("render") (handle-render (cons first-arg-or-current-dir (map very-nice-path (cdr (vector->list (current-command-line-arguments))))))]
                      [("clone") (handle-clone first-arg-or-current-dir rest-args)]
                      [else (handle-else arg-command-name)]))))
 

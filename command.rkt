@@ -1,6 +1,9 @@
 #lang racket/base
-(require pollen/world)
+(require pollen/world sugar/coerce)
 (provide (all-defined-out))
+
+(define (very-nice-path x)
+  (path->complete-path (simplify-path (cleanse-path (->path x)))))
 
 (define (handle-test)
   `(displayln "raco pollen is installed correctly"))
@@ -15,25 +18,35 @@ render [dir] [dest]   render project in dir (default is current dir)
 render filename       render filename only (can be source or output name)
 clone                 copy project to desktop without source files" ,(world:current-server-port))))
 
-(define (handle-render dir-or-path rest-args)  
-  `(begin 
-     (require pollen/render pollen/world pollen/file sugar pollen/pagetree racket/list)
+
+(define (handle-render path-args)
+  `(begin
+     (require pollen/render pollen/world pollen/file sugar pollen/pagetree racket/list pollen/command racket/string)
      (parameterize ([current-directory (world:current-project-root)])
-       (define dir-or-path ,dir-or-path)
-       (apply render-batch (map ->complete-path (if (not (directory-exists? dir-or-path))
-                                                    (begin
-                                                      (displayln (format "Rendering ~a" dir-or-path)) 
-                                                      (cons dir-or-path ',rest-args))
-                                                    (let ([dir dir-or-path]) ; now we know it's a dir
-                                                      (displayln (format "Rendering preproc & pagetree files in directory ~a" dir))
-                                                      (define preprocs (filter preproc-source? (directory-list dir)))
-                                                      (define static-pagetrees (filter pagetree-source? (directory-list dir)))
-                                                      ;; if there are no static pagetrees, use make-project-pagetree
-                                                      ;; (which will synthesize a pagetree if needed, which includes all sources)
-                                                      (define pagetrees (if (empty? static-pagetrees)
-                                                                            (list (make-project-pagetree dir))
-                                                                            static-pagetrees))
-                                                      (append* preprocs pagetrees))))))))
+       (define path-args ',path-args)
+       (define first-arg (car path-args))
+       (if (directory-exists? first-arg)
+           (let ([dir first-arg]) ; now we know it's a dir
+             (parameterize ([current-directory dir]
+                            [world:current-project-root dir])
+               (define preprocs (filter preproc-source? (directory-list dir)))
+               (define static-pagetrees (filter pagetree-source? (directory-list dir)))
+               ;; if there are no static pagetrees, use make-project-pagetree
+               ;; (which will synthesize a pagetree if needed, which includes all sources)
+               (define preprocs-and-static-pagetrees (append preprocs static-pagetrees))
+               (define batch-to-render
+                 (map very-nice-path
+                      (cond
+                        [(empty? preprocs-and-static-pagetrees)
+                         (displayln (format "Rendering generated pagetree for directory ~a" dir))
+                         (cdr (make-project-pagetree dir))]
+                        [else
+                         (displayln (format "Rendering preproc & pagetree files in directory ~a" dir))
+                         preprocs-and-static-pagetrees])))
+               (apply render-batch batch-to-render)))
+           (begin ; first arg is a file
+             (displayln (format "Rendering ~a" (string-join (map ->string path-args) " "))) 
+             (apply render-batch path-args))))))
 
 
 (define (handle-start directory [port #f])
