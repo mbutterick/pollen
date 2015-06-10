@@ -222,7 +222,7 @@
 ;; default route
 (define (route-default req)  
   (logger req)
-  (define force (equal? (get-query-value (request-uri req) 'force) "true"))
+  (define force (->boolean (get-query-value (request-uri req) 'force)))
   (render-from-source-or-output-path (req->path req) #:force force)
   (next-dispatcher))
 
