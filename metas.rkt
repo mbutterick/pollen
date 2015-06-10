@@ -31,6 +31,8 @@
       [else (reverse acc)])))
 
 (define (split-meta-elements x) ; pull metas out of doc and put them into meta-elements accumulator
+  (when (not (txexpr? x))
+    (error 'split-meta-elements "Not a txexpr: ~v" x))
   (define-values (thing-without-meta-elements meta-elements) (splitf-txexpr x meta-element?))
   ;; trivial metas are discarded
   (define exploded-meta-elements (append-map explode-meta-element (filter nontrivial-meta-element? meta-elements)))
