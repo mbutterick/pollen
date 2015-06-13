@@ -17,10 +17,18 @@
 
 (define+provide/contract (select key value-source)
   (coerce/symbol? (or/c hash? txexpr? pagenode? pathish?) . -> . (or/c #f txexpr-element?))
-  (define metas-result (and (not (txexpr? value-source)) (select-from-metas key value-source)))
-  (or metas-result
-      (let ([doc-result (select-from-doc key value-source)])
-        (and doc-result (car doc-result)))))
+  ;; of value-source is specfically 'metas or 'doc,
+  ;; restrict the search to there.
+  ;; otherwise look in metas, then in doc for key
+  (define (do-doc-result)
+    (define doc-result (select-from-doc key value-source))
+     (and doc-result (car doc-result)))  
+  (cond
+    [(or (hash? value-source) (equal? value-source world:meta-pollen-export)) (select-from-metas key value-source)]
+    [(equal? value-source world:main-pollen-export) (do-doc-result)]
+    [else
+     (define metas-result (and (not (txexpr? value-source)) (select-from-metas key value-source)))
+     (or metas-result (do-doc-result))]))
 
 
 (define+provide/contract (select* key value-source)
@@ -75,10 +83,10 @@
 
 (define+provide/contract (->html x #:tag [tag #f] #:attrs [attrs #f] #:splice [splice? #f])
   ((xexpr?) (#:tag (or/c #f txexpr-tag?) #:attrs (or/c #f txexpr-attrs?) #:splice boolean?) . ->* . string?)
-
+  
   (when (and (not (txexpr? x)) attrs (not tag))
-      (error '->html "can't use attribute list '~a without a #:tag argument" attrs))
-      
+    (error '->html "can't use attribute list '~a without a #:tag argument" attrs))
+  
   (if (or tag (txexpr? x))
       (let ()
         (define html-tag (or tag (get-tag x)))
