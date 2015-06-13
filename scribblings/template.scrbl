@@ -119,7 +119,7 @@ Look up the value of @racket[_key] in @racket[_meta-source]. The @racket[_meta-s
 (select-from-doc
 [key symbolish?]
 [doc-source (or/c txexpr? pagenodeish? pathish?)])
-(or/c #f txexpr-element?)]
+(or/c #f (listof txexpr-element?))]
 Look up the value of @racket[_key] in @racket[_doc-source]. The @racket[_doc-source] argument can be either be a @code{doc} (i.e., a @racket[txexpr]) or a @racket[pagenode?], from which doc is pulled. If no value exists for @racket[_key], you get @racket[#f].
 
 @examples[#:eval my-eval
