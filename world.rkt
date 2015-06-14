@@ -59,4 +59,4 @@
 
 (define check-directory-requires-in-render? (make-parameter #t))
 
-(define clone-directory-name "clone")
+(define publish-directory-name "publish")

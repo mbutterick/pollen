@@ -22,7 +22,7 @@ Now you're getting to the good stuff. In this tutorial, you'll use Pollen to pub
 
 @item{Using @racket[decode] with Pollen markup}
 
-@;item{@exec{raco pollen render} and @exec{raco pollen clone}}
+@;item{@exec{raco pollen render} and @exec{raco pollen publish}}
 
 
 ]

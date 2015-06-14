@@ -83,15 +83,15 @@ Alternatively, the command can take a variable number of path arguments. @racket
 > raco pollen render *.html.pm}
 
 
-@section{@racket[raco pollen clone]}
+@section{@racket[raco pollen publish]}
 
-Make a copy of the project directory on the desktop, and remove any source files or other Pollen-related files. (This function is pretty lame, and I invite suggestions for improvement.)
+Make a copy of the project directory on the desktop, but without any source files or other Pollen-related files. (This function is pretty lame, and I invite suggestions for improvement.)
 
-@racket[raco pollen clone _source-dir] will clone source from @racket[_source-dir] onto the desktop.
+@racket[raco pollen publish _project-dir] will publish the project in @racket[_project-dir] onto the desktop in a folder called @racket[publish]. @bold{Warning}: if @racket[publish] already exists on the desktop, it will be overwritten.
 
-@racket[raco pollen clone _source-dir _dest-dir] will clone source from @racket[_source-dir] to @racket[_dest-dir] rather than the desktop. 
+@racket[raco pollen publish _project-dir _dest-dir] will publish the project in @racket[_project-dir] to @racket[_dest-dir] rather than the desktop. @bold{Warning}: if @racket[_dest-dir] already exists, it will be overwritten by the newly published directory.
 
-If you're already in the project directory and want to clone somewhere other than the desktop, use @racket[raco pollen clone _. _dest-dir].
+If you're already in your project directory and want to publish somewhere other than the desktop, use @racket[raco pollen publish _. _dest-dir].
 
 
 

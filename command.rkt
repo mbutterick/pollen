@@ -10,13 +10,15 @@
 
 (define (handle-help)
   `(displayln (format "Pollen commands:
-help                  show this message
-start  [dir] [port]   starts project server in dir (default is current dir) 
+help                   show this message
+start   [dir] [port]   starts project server in dir (default is current dir) 
                           (default port is ~a)
-render [dir] [dest]   render project in dir (default is current dir) 
+render  [dir] [dest]   render project in dir (default is current dir) 
                           to dest (default is desktop)
-render filename       render filename only (can be source or output name)
-clone                 copy project to desktop without source files" ,(world:current-server-port))))
+render filename        render filename only (can be source or output name)
+publish                copy project to desktop without source files
+publish [dir] [dest]   copy project in dir to dest without source files
+                          (warning: overwrites existing dest dir)" ,(world:current-server-port))))
 
 
 (define (handle-render path-args)
@@ -59,10 +61,10 @@ clone                 copy project to desktop without source files" ,(world:curr
            (start-server)))))
 
 
-(define (handle-clone directory rest-args)
+(define (handle-publish directory rest-args)
   (define target-path (or 
                        (and rest-args (not (null? rest-args)) (path->complete-path (string->path (car rest-args))))
-                       (build-path (find-system-path 'desk-dir) (string->path world:clone-directory-name))))
+                       (build-path (find-system-path 'desk-dir) (string->path world:publish-directory-name))))
   
   `(begin
      (require racket/file pollen/file racket/list)
@@ -76,14 +78,16 @@ clone                 copy project to desktop without source files" ,(world:curr
               (andmap equal? prefix (take xs (length prefix)))))
        ((explode-path possible-subdir) . has-prefix? . (explode-path possible-superdir)))
      (define source-dir (simplify-path ,directory))
-     (when (not (directory-exists? source-dir)) (error 'clone (format "source directory ~a does not exist" source-dir)))
+     (when (not (directory-exists? source-dir)) (error 'publish (format "source directory ~a does not exist" source-dir)))
      (define target-dir (simplify-path ,target-path))
-     (when (source-dir . contains-directory? . target-dir) (error 'clone "aborted because target directory for cloning (~a) can't be inside source directory (~a)" target-dir source-dir))
-     (displayln "Cloning ...")
+     (when (source-dir . contains-directory? . target-dir) (error 'publish "aborted because target directory for publishing (~a) can't be inside source directory (~a)" target-dir source-dir))
+     (when (target-dir . contains-directory? . source-dir) (error 'publish "aborted because target directory for publishing (~a) can't contain source directory (~a)" target-dir source-dir))
+     (when (equal? target-dir (current-directory)) (error 'publish "aborted because target directory for publishing (~a) can't be the same as current directory (~a)" target-dir (current-directory)))
+     (displayln "publishing ...")
      (when (directory-exists? target-dir) (delete-directory/files target-dir))
      (copy-directory/files source-dir target-dir)
      (for-each delete-it (find-files pollen-related-file? target-dir))
-     (displayln (format "Completed to ~a" target-dir))))
+     (displayln (format "completed to ~a" target-dir))))
 
 (define (handle-else command)
   `(if (regexp-match #rx"(shit|fuck)" ,command)
