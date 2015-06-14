@@ -61,10 +61,10 @@ publish [dir] [dest]   copy project in dir to dest without source files
            (start-server)))))
 
 
-(define (handle-publish directory rest-args)
+(define (handle-publish directory rest-args arg-command-name)
   (define target-path (or 
                        (and rest-args (not (null? rest-args)) (path->complete-path (string->path (car rest-args))))
-                       (build-path (find-system-path 'desk-dir) (string->path world:publish-directory-name))))
+                       (build-path (find-system-path 'desk-dir) (string->path (if (equal? arg-command-name "clone") "clone" world:publish-directory-name)))))
   
   `(begin
      (require racket/file pollen/file racket/list)
