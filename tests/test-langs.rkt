@@ -32,11 +32,11 @@
 
 
 ;; define-runtime-path only allowed at top level
-(define-runtime-path test.ptree "test.ptree")
-(define-runtime-path test.html.pm "test.html.pm")
-(define-runtime-path test.html.pmd "test.html.pmd")
-(define-runtime-path test.html.pp "test.html.pp")
-(define-runtime-path test.no-ext "test.no-ext")
+(define-runtime-path test.ptree "../test-support/test.ptree")
+(define-runtime-path test.html.pm "../test-support/test.html.pm")
+(define-runtime-path test.html.pmd "../test-support/test.html.pmd")
+(define-runtime-path test.html.pp "../test-support/test.html.pp")
+(define-runtime-path test.no-ext "../test-support/test.no-ext")
 
 
 ;; `find-exe` avoids reliance on $PATH of the host system

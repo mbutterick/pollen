@@ -10,6 +10,17 @@
   (->boolean (and (symbol? x) (with-handlers ([exn:fail? (λ(e) #f)])
                                 (not (whitespace/nbsp? (->string x)))))))
 
+(module-test-external
+ (check-false (pagenode? "foo-bar"))
+ (check-false (pagenode? "Foo_Bar_0123"))
+ (check-true (pagenode? 'foo-bar))
+ (check-false (pagenode? "foo-bar.p"))
+ (check-false (pagenode? "/Users/MB/foo-bar"))
+ (check-false (pagenode? #f))
+ (check-false (pagenode? ""))
+ (check-false (pagenode? " ")))
+
+
 (define+provide (pagenodes? x)
   (and (list? x) (andmap pagenode? x)))
 
@@ -46,6 +57,12 @@
   (with-handlers ([exn:fail? (λ(e) #f)]) 
     (->boolean (validate-pagetree x))))
 
+(module-test-external
+ (check-true (pagetree? '(foo)))
+ (check-true (pagetree? '(foo (hee))))
+ (check-true (pagetree? '(foo (hee (uncle foo)))))
+ (check-false (pagetree? '(foo (hee hee (uncle foo))))))
+
 
 (define+provide/contract (directory->pagetree dir)
   (coerce/path? . -> . pagetree?)
@@ -80,6 +97,14 @@
              (ormap (λ(x) (parent pagenode x)) (filter list? pt))))))
 
 
+(module-test-external
+ (define test-pagetree `(pagetree-main foo bar (one (two three))))
+ (check-equal? (parent 'three test-pagetree) 'two)
+ (check-equal? (parent "three" test-pagetree) 'two)
+ (check-false (parent #f test-pagetree))
+ (check-false (parent 'nonexistent-name test-pagetree)))
+
+
 (define+provide/contract (children p [pt (current-pagetree)])
   (((or/c #f pagenodeish?)) (pagetree?) . ->* . (or/c #f pagenodes?))  
   (and pt p 
@@ -88,10 +113,26 @@
              (map (λ(x) (if (list? x) (car x) x)) (cdr pt))
              (ormap (λ(x) (children pagenode x)) (filter list? pt))))))
 
+(module-test-external
+ (define test-pagetree `(pagetree-main foo bar (one (two three))))
+ (check-equal? (children 'one test-pagetree) '(two))
+ (check-equal? (children 'two test-pagetree) '(three))
+ (check-false (children 'three test-pagetree))
+ (check-false (children #f test-pagetree))
+ (check-false (children 'fooburger test-pagetree)))
+
 
 (define+provide/contract (siblings pnish [pt (current-pagetree)])
   (((or/c #f pagenodeish?)) (pagetree?) . ->* . (or/c #f pagenodes?))  
   (children (parent pnish pt) pt))
+
+(module-test-external
+ (define test-pagetree `(pagetree-main foo bar (one (two three))))
+ (check-equal? (siblings 'one test-pagetree) '(foo bar one))
+ (check-equal? (siblings 'foo test-pagetree) '(foo bar one))
+ (check-equal? (siblings 'two test-pagetree) '(two))
+ (check-false (siblings #f test-pagetree))
+ (check-false (siblings 'invalid-key test-pagetree)))
 
 
 ;; flatten tree to sequence
@@ -99,6 +140,10 @@
   (pagetree? . -> . pagenodes?)
   ; use cdr to get rid of root tag at front
   (cdr (flatten pt))) 
+
+(module-test-external
+ (define test-pagetree `(pagetree-main foo bar (one (two three))))
+ (check-equal? (pagetree->list test-pagetree) '(foo bar one two three)))
 
 
 (define (adjacents side pnish [pt (current-pagetree)])
@@ -113,6 +158,12 @@
   (((or/c #f pagenodeish?)) (pagetree?) . ->* . (or/c #f pagenodes?))
   (adjacents 'left pnish pt))
 
+(module-test-external
+ (define test-pagetree `(pagetree-main foo bar (one (two three))))
+ (check-equal? (previous* 'one test-pagetree) '(foo bar))
+ (check-equal? (previous* 'three test-pagetree) '(foo bar one two))
+ (check-false (previous* 'foo test-pagetree)))
+
 
 (define+provide/contract (next* pnish [pt (current-pagetree)]) 
   (((or/c #f pagenodeish?)) (pagetree?) . ->* . (or/c #f pagenodes?))
@@ -124,11 +175,26 @@
   (let ([result (previous* pnish pt)])
     (and result (last result))))
 
+(module-test-external
+ (define test-pagetree `(pagetree-main foo bar (one (two three))))
+ (check-equal? (previous 'one test-pagetree) 'bar)
+ (check-equal? (previous 'three test-pagetree) 'two)
+ (check-false (previous 'foo test-pagetree)))
+
+
+
 
 (define+provide/contract (next pnish [pt (current-pagetree)])
   (((or/c #f pagenodeish?)) (pagetree?) . ->* . (or/c #f pagenode?))
   (let ([result (next* pnish pt)])
     (and result (first result))))
+
+(module-test-external
+ (define test-pagetree `(pagetree-main foo bar (one (two three))))
+ (check-equal? (next 'foo test-pagetree) 'bar)
+ (check-equal? (next 'one test-pagetree) 'two)
+ (check-false (next 'three test-pagetree)))
+
 
 
 (define/contract+provide (path->pagenode path)

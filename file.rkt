@@ -2,7 +2,7 @@
 (require (for-syntax racket/base racket/syntax))
 (require racket/contract racket/path)
 (require (only-in racket/path filename-extension))
-(require "world.rkt" sugar)
+(require "world.rkt" sugar/define sugar/file sugar/string sugar/coerce sugar/test)
 
 ;; for files like svg that are not source in pollen terms,
 ;; but have a textual representation separate from their display.
@@ -10,7 +10,11 @@
   (any/c . -> . coerce/boolean?)
   (define sourceish-extensions (list "svg"))
   (with-handlers ([exn:fail? (λ(e) #f)])
-    ((get-ext x) . in? . sourceish-extensions)))
+    (member (get-ext x) sourceish-extensions)))
+
+(module-test-external
+ (check-true (sourceish? "foo.svg"))
+ (check-false (sourceish? "foo.gif")))
 
 
 ;; compare directories by their exploded path elements,
@@ -19,6 +23,9 @@
   (coerce/path? coerce/path? . -> . coerce/boolean?)
   (equal? (explode-path dirx) (explode-path diry)))
 
+(module-test-external
+ (check-true (directories-equal? "/Users/MB/foo" "/Users/MB/foo/"))
+ (check-false (directories-equal? "/Users/MB/foo" "Users/MB/foo")))
 
 
 ;; helper function for pagetree
@@ -88,11 +95,45 @@
 
 
 (make-source-utility-functions preproc)
+
+(module-test-external
+ (require sugar/coerce)
+ (check-true (preproc-source? "foo.pp"))
+ (check-false (preproc-source? "foo.bar"))
+ (check-false (preproc-source? #f))
+ (check-equal? (->preproc-source-path (->path "foo.pp")) (->path "foo.pp"))
+ (check-equal? (->preproc-source-path (->path "foo.html")) (->path "foo.html.pp"))
+ (check-equal? (->preproc-source-path "foo") (->path "foo.pp"))
+ (check-equal? (->preproc-source-path 'foo) (->path "foo.pp")))
+
 (make-source-utility-functions null)
+
 (make-source-utility-functions pagetree)
+(module-test-external
+ (require pollen/world)
+ (check-true (pagetree-source? (format "foo.~a" world:pagetree-source-ext)))
+ (check-false (pagetree-source? (format "~a.foo" world:pagetree-source-ext)))
+ (check-false (pagetree-source? #f)))
+
 (make-source-utility-functions markup)
+(module-test-external
+ (require sugar/coerce)
+ (check-true (markup-source? "foo.pm"))
+ (check-false (markup-source? "foo.p"))
+ (check-false (markup-source? #f))
+ (check-equal? (->markup-source-path (->path "foo.pm")) (->path "foo.pm"))
+ (check-equal? (->markup-source-path (->path "foo.html")) (->path "foo.html.pm"))
+ (check-equal? (->markup-source-path "foo") (->path "foo.pm"))
+ (check-equal? (->markup-source-path 'foo) (->path "foo.pm")))
+
 (make-source-utility-functions markdown)
+
 (make-source-utility-functions template)
+(module-test-external
+ (check-true (template-source? "foo.html.pt"))
+ (check-false (template-source? "foo.html"))
+ (check-false (template-source? #f)))
+
 (make-source-utility-functions scribble)
 
 
@@ -108,6 +149,14 @@
     [(scribble-source? x) (add-ext (remove-ext x) 'html)]
     [else x]))
 
+(module-test-external
+ (require sugar/coerce)
+ (check-equal? (->output-path (->path "foo.pmap")) (->path "foo.pmap"))
+ (check-equal? (->output-path "foo.html") (->path "foo.html"))
+ (check-equal? (->output-path 'foo.html.p) (->path "foo.html"))
+ (check-equal? (->output-path (->path "/Users/mb/git/foo.html.p")) (->path "/Users/mb/git/foo.html"))
+ (check-equal? (->output-path "foo.xml.p") (->path "foo.xml"))
+ (check-equal? (->output-path 'foo.barml.p) (->path "foo.barml")))
 
 (define+provide/contract (project-files-with-ext ext)
   (coerce/symbol? . -> . complete-paths?)

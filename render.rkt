@@ -1,6 +1,7 @@
 #lang racket/base
 (require racket/file racket/rerequire racket/path racket/match)
-(require sugar "file.rkt" "cache.rkt" "world.rkt" "debug.rkt" "pagetree.rkt" "project.rkt" "template.rkt")
+(require sugar/coerce sugar/test sugar/define sugar/container sugar/file sugar/len)
+(require "file.rkt" "cache.rkt" "world.rkt" "debug.rkt" "pagetree.rkt" "project.rkt" "template.rkt")
 
 
 ;; when you want to generate everything fresh, 
@@ -13,6 +14,8 @@
 ;; and lists of modification times as values.
 (define modification-date-hash #f)
 (reset-modification-dates)
+(module-test-internal
+ (check-pred hash? modification-date-hash))
 
 ;; using internal contracts to provide some extra safety (negligible performance hit)
 
@@ -29,10 +32,22 @@
   (valid-path-args? . -> . valid-path-args?)
   paths) ; for now, this does nothing; maybe later, it will do more
 
+(module-test-internal
+ (require racket/runtime-path)
+ (define-runtime-path sample-dir "test-support/samples")
+ (define samples (parameterize ([current-directory sample-dir])
+                   (map path->complete-path (directory-list "."))))
+ (define-values (sample-01 sample-02 sample-03) (apply values samples))
+ (check-equal? (make-mod-dates-key samples) samples))
+
 
 (define/contract (path->mod-date-value path)
   ((or/c #f complete-path?) . -> . (or/c #f integer?))
   (and path (file-exists? path) (file-or-directory-modify-seconds path)))
+
+(module-test-internal
+ (check-false (path->mod-date-value (path->complete-path "garbage-path.zzz")))
+ (check-equal? (path->mod-date-value sample-01) (file-or-directory-modify-seconds sample-01)))
 
 
 (define/contract (store-render-in-modification-dates . rest-paths)
@@ -40,12 +55,21 @@
   (define key (make-mod-dates-key rest-paths))
   (hash-set! modification-date-hash key (map path->mod-date-value key)))
 
+(module-test-internal
+ (check-equal? (store-render-in-modification-dates sample-01 sample-02 sample-03) (void))
+ (check-true (hash-has-key? modification-date-hash (list sample-01 sample-02 sample-03))))
+
 
 (define/contract (modification-date-expired? . rest-paths)
   (() #:rest valid-path-args? . ->* . boolean?)
   (define key (make-mod-dates-key rest-paths))
   (or (not (key . in? . modification-date-hash))  ; no stored mod date
       (not (equal? (map path->mod-date-value key) (get modification-date-hash key))))) ; data has changed
+
+(module-test-internal
+ (check-true (modification-date-expired? sample-01)) ; because key hasn't been stored
+ (check-false (apply modification-date-expired? samples))) ; because files weren't changed
+
 
 (define (list-of-pathish? x) (and (list? x) (andmap pathish? x)))
 
