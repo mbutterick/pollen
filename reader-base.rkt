@@ -66,5 +66,11 @@
     (define (get-info in mod line col pos)
       (λ (key default)
         (case key
+          [(color-lexer)
+           (define make-scribble-inside-lexer2
+             (dynamic-require 'syntax-color/scribble-lexer 'make-scribble-inside-lexer (λ () #f)))
+           (cond [make-scribble-inside-lexer2
+                  (make-scribble-inside-lexer2 #:command-char #\◊)]
+                 [else default])]
           [else default])))
     (provide (rename-out [custom-read read] [custom-read-syntax read-syntax]) get-info)))

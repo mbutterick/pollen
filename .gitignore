@@ -1,5 +1,6 @@
 # for Racket
 compiled/
+*~
 
 # for Mac OS X
 .DS_Store
