@@ -1,6 +1,6 @@
 #lang scribble/manual
 
-@(require scribble/eval pollen/cache pollen/world (for-label racket (except-in pollen #%module-begin) pollen/render txexpr xml pollen/pagetree sugar/coerce))
+@(require scribble/eval pollen/cache pollen/world (for-label racket (except-in pollen #%module-begin) pollen/render txexpr xml pollen/pagetree sugar/coerce pollen/template))
 
 @(define my-eval (make-base-eval))
 @(my-eval `(require pollen pollen/template xml))
@@ -88,7 +88,11 @@ Be careful not to pass existing HTML strings into this function, because the ang
 (or/c #f (listof txexpr-element?))]
 
 )]
-Find matches for @racket[_key] in @racket[_value-source], first by looking in its @code{metas} (using @racket[select-from-metas]) and then by looking in its @code{doc} (using @racket[select-from-doc]). With @racket[select], you get the first result; with @racket[select*], you get them all. In both cases, you get @racket[#f] if there are no matches.
+Find matches for @racket[_key] in @racket[_value-source]. The @racket[_value-source] can be 1) a hashtable of @racket[metas], 2) a tagged X-expression representing a @racket[doc], or 3) a pagenode or path that identifies a source file that provides @racket[metas] and @racket[doc]. In that case, first look for @racket[_key] in @code{metas} (using @racket[select-from-metas]) and then in @code{doc} (using @racket[select-from-doc]). 
+
+With @racket[select], you get the first result; with @racket[select*], you get them all. 
+
+In both cases, you get @racket[#f] if there are no matches.
 
 
 
@@ -98,7 +102,7 @@ Find matches for @racket[_key] in @racket[_value-source], first by looking in it
 [key symbolish?]
 [meta-source (or/c hash? pagenodeish? pathish?)])
 (or/c #f txexpr-element?)]
-Look up the value of @racket[_key] in @racket[_meta-source]. The @racket[_meta-source] argument can be either a set of metas (i.e., a @racket[hash]) or a @racket[pagenode?], from which metas are pulled. If no value exists for @racket[_key], you get @racket[#f].
+Look up the value of @racket[_key] in @racket[_meta-source]. The @racket[_meta-source] argument can be either 1) a hashtable representing @racket[metas] or 2) a pagenode or source path that identifies a source file that provides @racket[metas]. If no value exists for @racket[_key], you get @racket[#f].
 
 @examples[#:eval my-eval
 (module ice-cream pollen/markup
@@ -120,7 +124,7 @@ Look up the value of @racket[_key] in @racket[_meta-source]. The @racket[_meta-s
 [key symbolish?]
 [doc-source (or/c txexpr? pagenodeish? pathish?)])
 (or/c #f (listof txexpr-element?))]
-Look up the value of @racket[_key] in @racket[_doc-source]. The @racket[_doc-source] argument can be either be a @code{doc} (i.e., a @racket[txexpr]) or a @racket[pagenode?], from which doc is pulled. If no value exists for @racket[_key], you get @racket[#f].
+Look up the value of @racket[_key] in @racket[_doc-source]. The @racket[_doc-source] argument can be either 1) a tagged X-expression representing a @racket[doc] or 2) a pagenode or source path that identifies a source file that provides @racket[doc]. If no value exists for @racket[_key], you get @racket[#f].
 
 @examples[#:eval my-eval
 (module gelato pollen/markup
