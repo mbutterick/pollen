@@ -41,12 +41,14 @@
   (check-true (trivial-meta-element? '(meta "bar"))))
 
 
-
+;; strictly speaking, this predicate isn't necessary (implied by txexpr-ness)
+;; but it produces a helpful error
 (define (valid-meta-attr? x)
   (or (and (list? x) (symbol? (first x)) (string? (second x)))
       (error 'is-meta-element? "error: meta must be a symbol / string pair, instead got: ~v" x)))
 
-
+;; all metas are converted into "atomic meta" format
+;; which is '(meta (key value ...))
 (define (make-atomic-meta key . values)
   `(meta (,key ,@values)))
 
@@ -54,16 +56,16 @@
 (define (explode-meta-element me)
   ;; convert a meta with multiple key/value pairs into multiple metas with a single txexpr element
   ;; only gets nontrivial metas to start.
-  (let loop ([me me][acc empty])
+  (let loop ([me (make-txexpr (get-tag me) (get-attrs me) (filter txexpr? (get-elements me)))][acc empty])
     (cond
       [(not (trivial-meta-element? me)) ; meta might become trivial during loop
        (cond
          [(has-meta-attrs me) ; might have txexpr elements, so preserve them
           (define attrs (get-attrs me))
-          (loop `(meta ,(cdr attrs) ,@(get-elements me)) (cons (apply make-atomic-meta (car attrs)) acc))]
+          (loop (make-txexpr 'meta (cdr attrs) (get-elements me)) (cons (apply make-atomic-meta (car attrs)) acc))]
          [else ; has txexpr elements, but not meta-attrs
-          (define txexpr-elements (filter txexpr? (get-elements me)))
-          (loop `(meta () ,@(cdr txexpr-elements)) (cons (apply make-atomic-meta (car txexpr-elements)) acc))])]
+          (define txexpr-elements (get-elements me)) ; elements were filtered for txexpr at loop entry
+          (loop (make-txexpr 'meta null (cdr txexpr-elements)) (cons (apply make-atomic-meta (car txexpr-elements)) acc))])]
       [else (reverse acc)])))
 
 
