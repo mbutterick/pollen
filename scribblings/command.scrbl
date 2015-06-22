@@ -450,23 +450,22 @@ The value of edge is ◊|edge| pixels}
 @;--------------------------------------------------------------------
 @subsubsection{Inserting metas}
 
-@italic{Metas} are key–value pairs embedded in a source file that are not included in the main output when the source is run, and collected into a separate hash table. 
+@italic{Metas} are key–value pairs embedded in a source file that are not included in the main output when the source is compiled. Rather, they're gathered and exported as a separate hash table called, unsurprisingly, @racket[metas]. This hashtable is a good place to store information about the document that you might want to use later (for instance, a list of topic categories that the document belongs to).
 
-Metas are not a foundational abstraction. They're just a convenience — a place to store arbitrary pieces of information that you might want to use later. 
+@margin-note{Pollen occasionally uses metas internally. For instance, the @racket[get-template-for] function will look in the metas of a source file to see if a template is explicitly specified. The @racket[pollen/template] module also contains functions for working with metas, such as @racket[select-from-metas].}
 
-@margin-note{Pollen occasionally uses metas. For instance, the @racket[get-template-for] function will look in the metas of a source file to see if a template is explicitly specified. The @racket[pollen/template] module also contains functions for working with metas, such as @racket[select-from-metas].}
-
-To insert a meta, use the standard command syntax for inserting a tag with an attribute pair, but use the special @code{meta} name:
+To make a meta, you create a tag with the special @code{meta} name. Then you have two choices: you can either embed the key-value pair as an attribute, or as a tagged X-expression within the meta (using the key as the tag, and the value as the body):
 
 @codeblock{
 #lang pollen
 
-◊some-tag['key: "value"]{Normal tag}
 ◊meta['dog: "Roxy"]
+◊some-tag['key: "value"]{Normal tag}
+◊meta{◊cat{Chopper}}
 ◊some-tag['key: "value"]{Another normal tag}
 }
 
-When you mark a meta like this, two things happen. First, when you run the file, the meta is removed from the result:
+When you run a source file with metas in it, two things happen. First, the metas are removed from the output:
 
 @repl-output{
 '(some-tag ((key "value")) "Normal tag")
@@ -474,67 +473,109 @@ When you mark a meta like this, two things happen. First, when you run the file,
 '(some-tag ((key "value")) "Another normal tag")
 }
 
-@margin-note{If your @code{meta} includes a text argument between curly braces, it will be ignored.}
 
-Second, the meta is collected into a hash table that is exported with the name @code{metas}. To see this hash table, run the file above in DrRacket, then move to the interactions window and type @exec{metas} at the prompt:
+Second, the metas are collected into a hash table that is exported with the name @code{metas}. To see this hash table, run the file above in DrRacket, then switch to the interactions window and type @exec{metas} at the prompt:
 
 @terminal{
 > metas
-'#hash((here-path . "unsaved-editor167056") (dog . "Roxy"))
+'#hash((dog . "Roxy") (cat . "Chopper") (here-path . "unsaved-editor"))
 }
 
-The only key that's automatically defined in every meta table is @code{here-path}, which is the absolute path to the source file. (Here, because the file hasn't been saved, you'll see the @code{unsaved-editor...} name instead.) 
+The only key that's automatically defined in every meta table is @code{here-path}, which is the absolute path to the source file. (In this case, because the file hasn't been saved, you'll see the @code{unsaved-editor} name instead.) 
 
 Still, you can override this too:
 
 @codeblock{
 #lang pollen
 
-◊some-tag['key: "value"]{Normal tag}
 ◊meta['dog: "Roxy"]
+◊some-tag['key: "value"]{Normal tag}
+◊meta{◊cat{Chopper}}
 ◊some-tag['key: "value"]{Another normal tag}
-◊meta['here-path: "nowhere"]
+◊meta['here-path: "tesseract"]
 }
 
 When you run this code, the result will be the same as before, but this time the metas will be different:
 
 @terminal{
 > metas
-'#hash((dog . "Roxy") (here-path . "nowhere"))
+'#hash((dog . "Roxy") (cat . "Chopper") (here-path . "tesseract"))
 }
 
-It doesn't matter how many metas you put in a source file, or where you put them. They'll all be extracted into the @code{metas} hash table. The order of the metas is not preserved (because order is not preserved in a hash table). But if you have two metas with the same key, the later one will supersede the earlier one:
+
+It doesn't matter how many metas you put in a source file, nor where you put them. They'll all be extracted into the @code{metas} hash table. The order of the metas is not preserved (because order is not preserved in a hash table). But if you have two metas with the same key, the later one will supersede the earlier one:
 
 @codeblock{
 #lang pollen
-
-◊some-tag['key: "value"]{Normal tag}
 ◊meta['dog: "Roxy"]
-◊some-tag['key: "value"]{Another normal tag}
-◊meta['dog: "Lex"]
+◊meta{◊dog{Lex}}
 }
 
-Though there are two metas named @racket['dog], only the second one persists:
+In this case, though there are two metas named @racket[dog] (and they use different forms) only the second one persists:
 
 @terminal{
 > metas
-'#hash((dog . "Lex") (here-path . "unsaved-editor167056"))
+'#hash((dog . "Lex") (here-path . "unsaved-editor"))
 }
 
-You're allowed to put multiple keys and values within a single @code{meta} tag. As above, later keys supersede earlier ones.
+You can put multiple keys and values within a single @code{meta} tag, and you can mix them between attributes and elements. As above, later keys supersede earlier ones.
 
 @codeblock{
 #lang pollen
-
-◊some-tag['key: "value"]{Normal tag}
-◊meta['dog: "Roxy" 'lion: "P22" 'dog: "Lex"]
-◊some-tag['key: "value"]{Another normal tag}
+◊meta['dog: "Roxy" 'lion: "P22"]{◊dog{Lex}}
 }
 
 @terminal{
 > metas
-'#hash((dog . "Lex") (here-path . "unsaved-editor167056") (lion . "P22"))
+'#hash((dog . "Lex") (here-path . "unsaved-editor") (lion . "P22"))
 }
+
+Should you store your metas as attributes or elements? That's up to you, but elements are more flexible. When your key-value pair is stored as an attribute, your value has to be a string (because that's the only datatype an attribute can hold). Whereas when your key-value pair is stored as an element, you have two extra possiblilites. 
+
+First, the value can be any X-expression. For instance, this code uses an @racket[img] tag as the meta value:
+
+@codeblock{
+#lang pollen
+◊meta['dog: "Roxy"]
+◊meta{◊dog{◊img['src: "lex.gif"]}}
+}
+
+@terminal{
+> metas
+'#hash((dog . (img ((src "roxy.gif")))) (here-path . "unsaved-editor"))
+}
+
+Second, if you use an element, the value can be either a single value or a list or values:
+
+@codeblock{
+#lang pollen
+◊meta['dog: "Roxy"]
+◊meta{◊categories['brindles 'boxers 'working-dogs]}
+}
+
+@terminal{
+> metas
+'#hash((dog . "Roxy") (here-path . "unsaved-editor") (categories . (brindles boxers working-dogs)))
+}
+
+Be aware that if you put things inside a @racket[meta] tag that don't qualify as key-value pairs, Pollen will just discard them. So don't be surprised when this:
+
+@codeblock{
+#lang pollen
+◊meta['dog: "Roxy"]{This text will be ignored}
+◊meta[◊cat{Chopper}]{As will this text}
+}
+
+Gets treated as if you wrote it this way:
+
+@codeblock{
+#lang pollen
+◊meta['dog: "Roxy"]
+◊meta[◊cat{Chopper}]
+}
+
+
+
 
 @;--------------------------------------------------------------------
 @subsubsection{Inserting a comment}

@@ -36,6 +36,7 @@
 
 (define main-pollen-export 'doc) ; don't forget to change fallback template too
 (define meta-pollen-export 'metas)
+(define meta-tag-name 'meta)
 
 (define directory-require "directory-require.rkt")
 
