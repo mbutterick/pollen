@@ -34,13 +34,15 @@ A parameter that determines whether the @racket[world:directory-require] file is
 
 @section{Settable values}
 
-These values can be changed by overriding them in your @racket["directory-require.rkt"] source file. Within this file, create a submodule called @racket[config]. (More about @secref["submodules" #:doc '(lib "scribblings/guide/guide.scrbl")].) Then within this submodule, use @racket[define] to make variable with the same name as the one in @racket[pollen/world], but without the @racket[world:] prefix. Assign it whatever value you like. Repeat as needed. When Pollen runs, these definitions will supersede those in @racket[pollen/world].
+These values can be changed by overriding them in your @racket["directory-require.rkt"] source file. Within this file, @seclink["submodules" #:doc '(lib "scribblings/guide/guide.scrbl")]{create a submodule} called @racket[config]. Then within this submodule, use @racket[define] to make a variable with the same name as the one in @racket[pollen/world], but without the @racket[world:] prefix. Assign it whatever value you like. Repeat as needed. When Pollen runs, these definitions will supersede those in @racket[pollen/world].
 
 For instance, suppose you wanted the main export of every Pollen source file to be called @racket[van-halen] rather than @racket[doc], the extension of Pollen markup files to be @racket[.rock] rather than @racket[.pm], and the command character to be @litchar{🎸} instead of @litchar{◊}. Your @racket["directory-require.rkt"] would look like this:
 
 @fileblock["directory-require.rkt" 
 @codeblock{
 #lang racket/base
+
+;; ... the usual definitions and tag functions ...
 
 (module config racket/base
   (provide (all-defined-out))
@@ -64,11 +66,11 @@ Determines the default HTTP port for the project server. Initialized to @racket[
 
 @defoverridable[meta-export symbol?]{The meta hashtable exported from a compiled Pollen source file. Initialized to @racket[metas].}
 
-@defoverridable[world:meta-tag-name symbol?]{Name of the tag used to mark metas within Pollen source.}
+@defoverridable[meta-tag-name symbol?]{Name of the tag used to mark metas within Pollen source.}
 
-@defoverridable[world:directory-require string?]{File implicitly required into every Pollen source file from its directory. Initialized to @filepath{directory-require.rkt}.}
+@defoverridable[directory-require string?]{File implicitly required into every Pollen source file from its directory. Initialized to @filepath{directory-require.rkt}.}
 
-@defoverridable[world:server-extras-dir string?]{Name of directory where server support files live. Initialized to @tt{server-extras}.}
+@defoverridable[server-extras-dir string?]{Name of directory where server support files live. Initialized to @tt{server-extras}.}
 
 
 
@@ -113,9 +115,9 @@ File extensions for Pollen source files, initialized to the following values:
 @defoverridable[template-meta-key symbol?]{Meta key used to store a template name for that particular source file. Initialized to @racket['template].}
 
 @deftogether[(
-@(defoverridable world:newline string?)
-@(defoverridable world:linebreak-separator string?)
-@(defoverridable world:paragraph-separator string?)
+@(defoverridable newline string?)
+@(defoverridable linebreak-separator string?)
+@(defoverridable paragraph-separator string?)
 )]    
 Default separators used in decoding. The first two are initialized to @racket["\n"]; the third to @racket["\n\n"].
 
