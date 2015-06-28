@@ -1,18 +1,41 @@
 #lang racket/base
+(require (for-syntax racket/base racket/syntax))
 (require racket/runtime-path)
 
 (provide (prefix-out world: (all-defined-out)))
 
-(define pollen-version "0.001")
+(define current-project-root (make-parameter (current-directory)))
 
-(define preproc-source-ext 'pp)
-(define markup-source-ext 'pm)
-(define markdown-source-ext 'pmd)
-(define null-source-ext 'p)
-(define pagetree-source-ext 'ptree)
-(define template-source-ext 'pt)
-(define scribble-source-ext 'scrbl)
+(define directory-require "directory-require.rkt")
+(define (get-path-to-override) 
+  (build-path (current-project-root) directory-require))
 
+;; parameters should not be made settable.
+(define-syntax (define-settable stx)
+  (syntax-case stx ()
+    [(_ name default-value)
+     (with-syntax ([base-name (format-id stx "~a" #'name)]
+                   [local:name (format-id stx "local:~a" #'name)]
+                   [get-name (format-id stx "get-~a" #'name)]
+                   [fail-thunk-name (format-id stx "fail-thunk-~a" #'name)] )
+       #'(begin
+           (define base-name default-value)
+           (define fail-thunk-name (λ _ base-name))
+           (define get-name (λ _ (with-handlers ([exn:fail? fail-thunk-name])
+                                     (dynamic-require (get-path-to-override) 'local:name fail-thunk-name))))))]))
+                                     
+
+(define-settable pollen-version "0.001")
+
+(define-settable preproc-source-ext 'pp)
+(define-settable markup-source-ext 'pm)
+(define-settable markdown-source-ext 'pmd)
+(define-settable null-source-ext 'p)
+(define-settable pagetree-source-ext 'ptree)
+(define-settable template-source-ext 'pt)
+(define-settable scribble-source-ext 'scrbl)
+
+;; these are deliberately not settable because they're just internal signalers, no effect on external interface
 (define mode-auto 'auto)
 (define mode-preproc 'pre)
 (define mode-markup 'markup)
@@ -20,44 +43,40 @@
 (define mode-pagetree 'ptree)
 (define mode-template 'template)
 
-(define cache-filename "pollen.cache")
+(define-settable cache-filename "pollen.cache")
 
-(define decodable-extensions (list markup-source-ext pagetree-source-ext))
+(define-settable decodable-extensions (list (get-markup-source-ext) (get-pagetree-source-ext)))
 
-(define default-pagetree "index.ptree")
-(define pagetree-root-node 'pagetree-root)
+(define-settable default-pagetree (format "index.~a" (get-pagetree-source-ext)))
+(define-settable pagetree-root-node 'pagetree-root)
 
-(define command-marker #\◊)
-(define template-command-marker #\∂)
+(define-settable command-char #\◊)
+(define-settable template-command-char #\∂)
 
-(define default-template-prefix "template")
-(define fallback-template-prefix "fallback")
-(define template-meta-key "template")
+(define-settable default-template-prefix "template")
+(define-settable fallback-template-prefix "fallback")
+(define-settable template-meta-key "template")
 
-(define main-pollen-export 'doc) ; don't forget to change fallback template too
-(define meta-pollen-export 'metas)
-(define meta-tag-name 'meta)
+(define-settable main-export 'doc) ; don't forget to change fallback template too
+(define-settable meta-export 'metas)
+(define-settable meta-tag-name 'meta)
 
-(define directory-require "directory-require.rkt")
+(define-settable newline "\n")
+(define-settable linebreak-separator (get-newline))
+(define-settable paragraph-separator "\n\n")
 
-(define newline "\n")
-(define linebreak-separator newline)
-(define paragraph-separator "\n\n")
-
-(define paths-excluded-from-dashboard
-  (map string->path (list "poldash.css" "compiled")))
+(define-settable paths-excluded-from-dashboard (map string->path (list "poldash.css" "compiled")))
 
 
-(define current-project-root (make-parameter (current-directory)))
+(define-settable default-port 8080)
 
-(define default-port 8080)
-(define current-server-port (make-parameter default-port))
+(define current-server-port (make-parameter (get-default-port)))
 
-(define dashboard-css "poldash.css")
+(define-settable dashboard-css "poldash.css")
 
 (define-runtime-path server-extras-dir "server-extras")
 (define current-server-extras-path (make-parameter server-extras-dir))
 
 (define check-directory-requires-in-render? (make-parameter #t))
 
-(define publish-directory-name "publish")
+(define-settable publish-directory-name "publish")

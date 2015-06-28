@@ -9,7 +9,7 @@
 
 @defmodule[pollen/cache]
 
-The slowest part of a @racket[render] is parsing and decoding the source file. Often, previewing a single source file necessarily means decoding others (for instance templates, or other source files that are linked into the main source file). But usually, only one source file is changing at a time. Therefore, Pollen stores copies of the exports of source files — namely, whatever is stored in @code[(format "~a" world:main-pollen-export)] and @code[(format "~a" world:meta-pollen-export)] — in the cache so they can be reused.
+The slowest part of a @racket[render] is parsing and decoding the source file. Often, previewing a single source file necessarily means decoding others (for instance templates, or other source files that are linked into the main source file). But usually, only one source file is changing at a time. Therefore, Pollen stores copies of the exports of source files — namely, whatever is stored in @code[(format "~a" world:main-export)] and @code[(format "~a" world:meta-export)] — in the cache so they can be reused.
 
 @defparam[current-cache hash hash?]{A parameter that refers to the current cache. It is initialized with @racket[make-cache].
 

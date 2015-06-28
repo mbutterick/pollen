@@ -9,7 +9,7 @@
 
 
 (define (possible-meta-element? x)
-  (and (txexpr? x) (equal? world:meta-tag-name (get-tag x))))
+  (and (txexpr? x) (equal? (world:get-meta-tag-name) (get-tag x))))
 
 
 (define (trivial-meta-element? x)
@@ -47,10 +47,11 @@
   (or (and (list? x) (symbol? (first x)) (string? (second x)))
       (error 'is-meta-element? "error: meta must be a symbol / string pair, instead got: ~v" x)))
 
+
 ;; all metas are converted into "atomic meta" format
 ;; which is '(meta (key value ...))
 (define (make-atomic-meta key . values)
-  `(meta (,key ,@values)))
+  `(,(world:get-meta-tag-name) (,key ,@values)))
 
 
 (define (explode-meta-element me)
@@ -62,10 +63,10 @@
        (cond
          [(has-meta-attrs me) ; might have txexpr elements, so preserve them
           (define attrs (get-attrs me))
-          (loop (make-txexpr 'meta (cdr attrs) (get-elements me)) (cons (apply make-atomic-meta (car attrs)) acc))]
+          (loop (make-txexpr (world:get-meta-tag-name) (cdr attrs) (get-elements me)) (cons (apply make-atomic-meta (car attrs)) acc))]
          [else ; has txexpr elements, but not meta-attrs
           (define txexpr-elements (get-elements me)) ; elements were filtered for txexpr at loop entry
-          (loop (make-txexpr 'meta null (cdr txexpr-elements)) (cons (apply make-atomic-meta (car txexpr-elements)) acc))])]
+          (loop (make-txexpr (world:get-meta-tag-name) null (cdr txexpr-elements)) (cons (apply make-atomic-meta (car txexpr-elements)) acc))])]
       [else (reverse acc)])))
 
 

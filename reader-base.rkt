@@ -14,9 +14,9 @@
   (λ (path-string p)
     (define read-inner (make-at-reader 
                         #:command-char (if (or (equal? reader-mode world:mode-template) 
-                                               (and (string? path-string) (regexp-match (pregexp (format "\\.~a$" world:template-source-ext)) path-string)))
-                                           world:template-command-marker
-                                           world:command-marker)
+                                               (and (string? path-string) (regexp-match (pregexp (format "\\.~a$" (world:get-template-source-ext))) path-string)))
+                                           (world:get-template-command-char)
+                                           (world:get-command-char))
                         #:syntax? #t 
                         #:inside? #t))
     (define file-contents (read-inner path-string p))
@@ -33,9 +33,9 @@
                               (let* ([file-ext-pattern (pregexp "\\w+$")]
                                      [here-ext (string->symbol (car (regexp-match file-ext-pattern reader-here-path)))])
                                 (cond
-                                  [(equal? here-ext world:pagetree-source-ext) world:mode-pagetree]
-                                  [(equal? here-ext world:markup-source-ext) world:mode-markup]
-                                  [(equal? here-ext world:markdown-source-ext) world:mode-markdown]
+                                  [(equal? here-ext (world:get-pagetree-source-ext)) world:mode-pagetree]
+                                  [(equal? here-ext (world:get-markup-source-ext)) world:mode-markup]
+                                  [(equal? here-ext (world:get-markdown-source-ext)) world:mode-markdown]
                                   [else world:mode-preproc]))
                               reader-mode))
                         ;; change names of exports for local use
@@ -52,9 +52,9 @@
                       (module+ main
                         (require txexpr racket/string)
                         (if (or (equal? inner:parser-mode world:mode-preproc) (equal? inner:parser-mode world:mode-template))
-                            (display doc)
+                            (display ,(world:get-main-export))
                             (print (with-handlers ([exn:fail? (λ(exn) ((error '|pollen markup error| (string-join (cdr (string-split (exn-message exn) ": ")) ": "))))])
-     (validate-txexpr doc))))))
+     (validate-txexpr ,(world:get-main-export)))))))
                    file-contents)))
 
 

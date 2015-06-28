@@ -56,3 +56,15 @@
       #'(begin
           (define-runtime-path id name)
           (image id xs ...)))]))
+
+
+(require (for-syntax racket/syntax))
+(define-syntax (defoverridable stx)
+  (syntax-case stx ()
+    [(_ name predicate? desc ...)
+     (with-syntax ([world:name (format-id stx "world:~a" #'name)]
+                   [world:get-name (format-id stx "world:get-~a" #'name)]
+                   [local:name (format-id stx "local:~a" #'name)])
+       #'(deftogether ((defthing world:name predicate?)
+                       (defproc (world:get-name) predicate?))
+           desc ...))]))

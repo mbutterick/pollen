@@ -24,8 +24,8 @@
     (define doc-result (select-from-doc key value-source))
     (and doc-result (car doc-result)))  
   (cond
-    [(or (hash? value-source) (equal? value-source world:meta-pollen-export)) (select-from-metas key value-source)]
-    [(equal? value-source world:main-pollen-export) (do-doc-result)]
+    [(or (hash? value-source) (equal? value-source (world:get-meta-export))) (select-from-metas key value-source)]
+    [(equal? value-source (world:get-main-export)) (do-doc-result)]
     [else
      (define metas-result (and (not (txexpr? value-source)) (select-from-metas key value-source)))
      (or metas-result (do-doc-result))]))
@@ -86,7 +86,7 @@
                                        [(pagenode? pagenode-or-path) (pagenode->path pagenode-or-path)]
                                        [else pagenode-or-path])))
   (if source-path
-      (cached-require source-path world:meta-pollen-export)
+      (cached-require source-path (world:get-meta-export))
       (error (format "get-metas: no source found for '~a' in directory ~a" pagenode-or-path (current-directory)))))
 
 
@@ -96,7 +96,7 @@
                                        [(pagenode? pagenode-or-path) (pagenode->path pagenode-or-path)]
                                        [else pagenode-or-path])))
   (if source-path
-      (cached-require source-path world:main-pollen-export)
+      (cached-require source-path (world:get-main-export))
       (error (format "get-doc: no source found for '~a' in directory ~a" pagenode-or-path (current-directory)))))
 
 

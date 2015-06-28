@@ -34,7 +34,7 @@
 
 (module-test-internal
  (require racket/runtime-path)
- (define-runtime-path sample-dir "test-support/samples")
+ (define-runtime-path sample-dir "test/data/samples")
  (define samples (parameterize ([current-directory sample-dir])
                    (map path->complete-path (directory-list "."))))
  (define-values (sample-01 sample-02 sample-03) (apply values samples))
@@ -89,7 +89,7 @@
   ((or/c pagetree? pathish?) . -> . void?)
   (define pagetree (if (pagetree? pagetree-or-path)
                        pagetree-or-path
-                       (cached-require pagetree-or-path world:main-pollen-export)))
+                       (cached-require pagetree-or-path (world:get-main-export))))
   (parameterize ([current-directory (world:current-project-root)])
     (for-each render-from-source-or-output-path (map ->complete-path (pagetree->list pagetree)))))
 
@@ -177,7 +177,7 @@
   (file-needed-rerequire? source-path) ; called for its reqrequire side effect only, so dynamic-require below isn't cached
   (time (parameterize ([current-directory (->complete-path source-dir)])
           ;; BTW this next action has side effects: scribble will copy in its core files if they don't exist.
-          ((dynamic-require 'scribble/render 'render) (list (dynamic-require source-path world:main-pollen-export)) (list source-path))))
+          ((dynamic-require 'scribble/render 'render) (list (dynamic-require source-path (world:get-main-export))) (list source-path))))
   (define result (file->string (->output-path source-path)))
   (delete-file (->output-path source-path)) ; because render promises the data, not the side effect
   result)
@@ -187,7 +187,7 @@
   (complete-path? . -> . (or/c string? bytes?))
   (match-define-values (source-dir _ _) (split-path source-path))
   (time (parameterize ([current-directory (->complete-path source-dir)])
-          (render-through-eval `(begin (require pollen/cache)(cached-require ,source-path ',world:main-pollen-export))))))
+          (render-through-eval `(begin (require pollen/cache)(cached-require ,source-path ',(world:get-main-export)))))))
 
 
 (define/contract (render-markup-or-markdown-source source-path [maybe-template-path #f]) 
@@ -200,14 +200,14 @@
        (require (for-syntax racket/base))
        (require pollen/include-template pollen/cache pollen/debug)
        ,(require-directory-require-files source-path) 
-       (let ([doc (cached-require ,(path->string source-path) ',world:main-pollen-export)]
-             [metas (cached-require ,(path->string source-path) ',world:meta-pollen-export)])
+       (let ([,(world:get-main-export) (cached-require ,(path->string source-path) ',(world:get-main-export))]
+             [,(world:get-meta-export) (cached-require ,(path->string source-path) ',(world:get-meta-export))])
          (local-require pollen/pagetree pollen/template pollen/top)
-         (define here (metas->here metas))
+         (define here (metas->here ,(world:get-meta-export)))
          (cond 
-           [(bytes? doc) doc] ; if doc is binary, just pass it through
+           [(bytes? ,(world:get-main-export)) ,(world:get-main-export)] ; if main export is binary, just pass it through
            [else
-            (include-template #:command-char ,world:command-marker (file ,(->string (find-relative-path source-dir template-path))))]))))
+            (include-template #:command-char ,(world:get-command-char) (file ,(->string (find-relative-path source-dir template-path))))]))))
   (time (parameterize ([current-directory source-dir]) ; because include-template wants to work relative to source location
           (render-through-eval expr-to-eval))))
 
@@ -227,12 +227,12 @@
                  (filter (λ(x) (->boolean x)) ; if any of the possibilities below are invalid, they return #f 
                          (list                     
                           (parameterize ([current-directory (world:current-project-root)])
-                            (let ([source-metas (cached-require source-path 'metas)])
-                              (and ((->symbol world:template-meta-key) . in? . source-metas)
-                                   (build-path source-dir (select-from-metas (->string world:template-meta-key) source-metas))))) ; path based on metas
+                            (let ([source-metas (cached-require source-path (world:get-meta-export))])
+                              (and ((->symbol (world:get-template-meta-key)) . in? . source-metas)
+                                   (build-path source-dir (select-from-metas (->string (world:get-template-meta-key)) source-metas))))) ; path based on metas
                           (and (filename-extension output-path) (build-path (world:current-project-root) 
-                                                                            (add-ext world:default-template-prefix (get-ext output-path))))))) ; path to default template
-          (and (filename-extension output-path) (build-path (world:current-server-extras-path) (add-ext world:fallback-template-prefix (get-ext output-path)))))))) ; fallback template
+                                                                            (add-ext (world:get-default-template-prefix) (get-ext output-path))))))) ; path to default template
+          (and (filename-extension output-path) (build-path (world:current-server-extras-path) (add-ext (world:get-fallback-template-prefix) (get-ext output-path)))))))) ; fallback template
 
 
 (define/contract (file-needed-rerequire? source-path)

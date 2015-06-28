@@ -35,6 +35,7 @@
                      [(#f "help") (handle-help)]
                      [("start") (handle-start (path->directory-path first-arg-or-current-dir) port-arg)]
                      [("render") (handle-render (cons first-arg-or-current-dir (map very-nice-path (cdr (vector->list (current-command-line-arguments))))))]
+                     [("version") (handle-version)]
                      [("clone" "publish") (handle-publish first-arg-or-current-dir rest-args arg-command-name)]
                      [else (handle-else arg-command-name)]))))
 

@@ -50,7 +50,7 @@
   (syntax-case stx ()
     [(_ stem)
      (let ([stem-datum (syntax->datum #'stem)])
-       (with-syntax ([file-ext (format-id stx "world:~a-source-ext" #'stem)]
+       (with-syntax ([world:get-stem-source-ext (format-id stx "world:get-~a-source-ext" #'stem)]
                      [stem-source? (format-id stx "~a-source?" #'stem)]
                      [get-stem-source (format-id stx "get-~a-source" #'stem)]
                      [has-stem-source? (format-id stx "has-~a-source?" #'stem)]
@@ -60,7 +60,7 @@
          #`(begin
              ;; does file have particular extension
              (define+provide (stem-source? x)
-               (->boolean (and (pathish? x) (has-ext? (->path x) file-ext))))
+               (->boolean (and (pathish? x) (has-ext? (->path x) (world:get-stem-source-ext)))))
              
              (define+provide (get-stem-source x)
                (and (pathish? x) 
@@ -82,9 +82,9 @@
                                   x 
                                   #,(if (equal? stem-datum 'scribble)
                                         #'(if (x . has-ext? . 'html) ; different logic for scribble sources
-                                              (add-ext (remove-ext* x) file-ext)
+                                              (add-ext (remove-ext* x) (world:get-stem-source-ext))
                                               #f)
-                                        #'(add-ext x file-ext))))
+                                        #'(add-ext x (world:get-stem-source-ext)))))
                (and result (->path result)))
              
              ;; coerce either a source or output file to both
@@ -111,8 +111,8 @@
 (make-source-utility-functions pagetree)
 (module-test-external
  (require pollen/world)
- (check-true (pagetree-source? (format "foo.~a" world:pagetree-source-ext)))
- (check-false (pagetree-source? (format "~a.foo" world:pagetree-source-ext)))
+ (check-true (pagetree-source? (format "foo.~a" (world:get-pagetree-source-ext))))
+ (check-false (pagetree-source? (format "~a.foo" (world:get-pagetree-source-ext))))
  (check-false (pagetree-source? #f)))
 
 (make-source-utility-functions markup)
@@ -177,7 +177,7 @@
        (or (ends-with? (path->string path) "compiled"))))
 
 (define+provide (cache-file? path)
-  (or (ends-with? (path->string path) world:cache-filename)))
+  (or (ends-with? (path->string path) (world:get-cache-filename))))
 
 
 (define+provide (pollen-related-file? file)

@@ -7,7 +7,7 @@
 (provide reset-cache current-cache make-cache cached-require cache-ref)
 
 (define (get-cache-file-path)
-  (build-path (world:current-project-root) world:cache-filename))
+  (build-path (world:current-project-root) (world:get-cache-filename)))
 
 (define (make-cache) 
   (define cache-file-path (get-cache-file-path))
@@ -37,16 +37,16 @@
   (hash-set! (current-cache) path (make-hash))
   (define cache-hash (cache-ref path))
   (hash-set! cache-hash 'mod-time (file-or-directory-modify-seconds path))
-  (hash-set! cache-hash world:main-pollen-export (dynamic-require path world:main-pollen-export))
-  (hash-set! cache-hash world:meta-pollen-export (dynamic-require path world:meta-pollen-export))
+  (hash-set! cache-hash (world:get-main-export) (dynamic-require path (world:get-main-export)))
+  (hash-set! cache-hash (world:get-meta-export) (dynamic-require path (world:get-meta-export)))
   (write-to-file (serialize (current-cache)) (get-cache-file-path) #:exists 'replace)
   (void))
 
 (define (cached-require path-string key)
-  (when (not (current-cache)) (error "cached-require: No cache set up."))
+  (when (not (current-cache)) (error 'cached-require "No cache set up."))
   
   (define path 
-    (with-handlers ([exn:fail? (λ(exn) (error (format "cached-require: ~a is not a valid path" path-string)))])
+    (with-handlers ([exn:fail? (λ(exn) (error 'cached-require (format "~a is not a valid path" path-string)))])
       (->complete-path path-string)))  
   
   (when (not (file-exists? path)) (error (format "cached-require: ~a does not exist" (path->string path))))

@@ -12,7 +12,7 @@
     (cond
       [(and p-breaks (txexpr? x) (equal? (car x) 'p) (apply string-append `("\n" ,@(map ->string (map loop (get-elements x))) "\n")))]
       [(txexpr? x) (apply string-append 
-                          (map ->string  `(,world:command-marker ,(get-tag x) 
+                          (map ->string  `(,(world:get-command-char) ,(get-tag x) 
                                                                  ,@(if (not (null? (get-attrs x))) `("[" ,(attrs->pollen (get-attrs x)) "]") null) 
                                                                  ,@(if (not (null? (get-elements x))) `("{" ,@(map loop (get-elements x)) "}" ) null))))]
       [(symbol? x) (loop (entity->integer x))]
