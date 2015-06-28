@@ -11,19 +11,19 @@
   (build-path (current-project-root) directory-require))
 
 ;; parameters should not be made settable.
+(define-for-syntax config-submodule-name 'config)
 (define-syntax (define-settable stx)
   (syntax-case stx ()
     [(_ name default-value)
      (with-syntax ([base-name (format-id stx "~a" #'name)]
-                   [local:name (format-id stx "local:~a" #'name)]
                    [get-name (format-id stx "get-~a" #'name)]
+                   [config-submodule (format-id stx "~a" config-submodule-name)]
                    [fail-thunk-name (format-id stx "fail-thunk-~a" #'name)] )
        #'(begin
            (define base-name default-value)
            (define fail-thunk-name (λ _ base-name))
            (define get-name (λ _ (with-handlers ([exn:fail? fail-thunk-name])
-                                     (dynamic-require (get-path-to-override) 'local:name fail-thunk-name))))))]))
-                                     
+                                    (dynamic-require `(submod ,(get-path-to-override) config-submodule) 'base-name fail-thunk-name))))))]))
 
 (define-settable pollen-version "0.001")
 

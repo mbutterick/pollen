@@ -32,26 +32,28 @@ A parameter that determines whether the @racket[world:directory-require] file is
 
 
 
-@section{Values that can be overwritten with @racket[local:]}
+@section{Settable values}
 
-These values can be changed by overriding them in your @racket["directory-require.rkt"] source file. Use @racket[define] to make a variable with the same name as the one in @racket[pollen/world], but with the prefix @racket[local:] instead of @racket[world:]. Assign it whatever value you like. When Pollen runs, these definitions will supersede those in @racket[pollen/world].
+These values can be changed by overriding them in your @racket["directory-require.rkt"] source file. Within this file, create a submodule called @racket[config]. (More about @secref["submodules" #:doc '(lib "scribblings/guide/guide.scrbl")].) Then within this submodule, use @racket[define] to make variable with the same name as the one in @racket[pollen/world], but without the @racket[world:] prefix. Assign it whatever value you like. Repeat as needed. When Pollen runs, these definitions will supersede those in @racket[pollen/world].
 
-For instance, suppose you wanted the main export of every Pollen source file to be called @racket[van-halen] rather than @racket[doc], the extension of Pollen markup files to be @racket[rock] rather than @racket[pm], and the command character to be @litchar{🎸} instead of @litchar{◊}. Your @racket["directory-require.rkt"] would include these defintions:
+For instance, suppose you wanted the main export of every Pollen source file to be called @racket[van-halen] rather than @racket[doc], the extension of Pollen markup files to be @racket[.rock] rather than @racket[.pm], and the command character to be @litchar{🎸} instead of @litchar{◊}. Your @racket["directory-require.rkt"] would look like this:
 
 @fileblock["directory-require.rkt" 
 @codeblock{
 #lang racket/base
-(provide (all-defined-out))
-(define local:main-export 'van-halen)
-(define local:markup-source-ext 'rock)
-(define local:command-char #\🎸)
+
+(module config racket/base
+  (provide (all-defined-out))
+  (define main-export 'van-halen)
+  (define markup-source-ext 'rock)
+  (define command-char #\🎸))
 }]
 
 Though any of the values below can be overridden, it may not always be wise to do so. For instance, if you redefined @racket[world:fallback-template-prefix], you would simply break the fallback-template mechanism, because it would look for files that don't exist. But we don't live in a nanny state, so you are entrusted to say what you mean and accept the consequences.
 
 Of course, you can restore the defaults simply by deleting these defined values from @racket["directory-require.rkt"].
 
-These overridable values also come with a corresponding @racket[get-] function that will return the @racket[local:] value if it exists, otherwise the @racket[world:] value. In the example above, @racket[world:command-char] would be @litchar{◊} no matter what, but @racket[world:get-command-char] would return @litchar{🎸}.
+These settable values also come with a corresponding @racket[get-] function that will return the @racket[config] value if it exists, otherwise the @racket[world:] value. In the example above, @racket[world:command-char] would be @litchar{◊} no matter what, but @racket[world:get-command-char] would return @litchar{🎸}.
 
 
 @defoverridable[default-port integer?]{
