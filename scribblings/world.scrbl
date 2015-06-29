@@ -55,7 +55,7 @@ Though any of the values below can be overridden, it may not always be wise to d
 
 Of course, you can restore the defaults simply by deleting these defined values from @racket["directory-require.rkt"].
 
-These settable values also come with a corresponding @racket[get-] function that will return the @racket[config] value if it exists, otherwise the @racket[world:] value. In the example above, @racket[world:command-char] would be @litchar{◊} no matter what, but @racket[world:get-command-char] would return @litchar{🎸}.
+These settable values are each equipped with a corresponding @racket[world:current-]@racket[_settable-value] function that will return the value loaded from the @racket[config] submodule (if @racket[_settable-value] was defined there), otherwise the default given by @racket[world:]@racket[_settable-value]. For instance, @racket[world:command-char] will always be @litchar{◊}, but in the example above, @racket[world:current-command-char] would return @litchar{🎸}. 
 
 
 @defoverridable[default-port integer?]{

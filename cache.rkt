@@ -7,7 +7,7 @@
 (provide reset-cache current-cache make-cache cached-require cache-ref)
 
 (define (get-cache-file-path)
-  (build-path (world:current-project-root) (world:get-cache-filename)))
+  (build-path (world:current-project-root) (world:current-cache-filename)))
 
 (define (make-cache) 
   (define cache-file-path (get-cache-file-path))
@@ -37,8 +37,8 @@
   (hash-set! (current-cache) path (make-hash))
   (define cache-hash (cache-ref path))
   (hash-set! cache-hash 'mod-time (file-or-directory-modify-seconds path))
-  (hash-set! cache-hash (world:get-main-export) (dynamic-require path (world:get-main-export)))
-  (hash-set! cache-hash (world:get-meta-export) (dynamic-require path (world:get-meta-export)))
+  (hash-set! cache-hash (world:current-main-export) (dynamic-require path (world:current-main-export)))
+  (hash-set! cache-hash (world:current-meta-export) (dynamic-require path (world:current-meta-export)))
   (write-to-file (serialize (current-cache)) (get-cache-file-path) #:exists 'replace)
   (void))
 

@@ -16,13 +16,13 @@
   (syntax-case stx ()
     [(_ name default-value)
      (with-syntax ([base-name (format-id stx "~a" #'name)]
-                   [get-name (format-id stx "get-~a" #'name)]
+                   [current-name (format-id stx "current-~a" #'name)]
                    [config-submodule (format-id stx "~a" config-submodule-name)]
                    [fail-thunk-name (format-id stx "fail-thunk-~a" #'name)] )
        #'(begin
            (define base-name default-value)
            (define fail-thunk-name (λ _ base-name))
-           (define get-name (λ _ (with-handlers ([exn:fail? fail-thunk-name])
+           (define current-name (λ _ (with-handlers ([exn:fail? fail-thunk-name])
                                     (dynamic-require `(submod ,(get-path-to-override) config-submodule) 'base-name fail-thunk-name))))))]))
 
 (define-settable pollen-version "0.001")
@@ -45,9 +45,9 @@
 
 (define-settable cache-filename "pollen.cache")
 
-(define-settable decodable-extensions (list (get-markup-source-ext) (get-pagetree-source-ext)))
+(define-settable decodable-extensions (list (current-markup-source-ext) (current-pagetree-source-ext)))
 
-(define-settable default-pagetree (format "index.~a" (get-pagetree-source-ext)))
+(define-settable default-pagetree (format "index.~a" (current-pagetree-source-ext)))
 (define-settable pagetree-root-node 'pagetree-root)
 
 (define-settable command-char #\◊)
@@ -62,7 +62,7 @@
 (define-settable meta-tag-name 'meta)
 
 (define-settable newline "\n")
-(define-settable linebreak-separator (get-newline))
+(define-settable linebreak-separator (current-newline))
 (define-settable paragraph-separator "\n\n")
 
 (define-settable paths-excluded-from-dashboard (map string->path (list "poldash.css" "compiled")))
@@ -70,7 +70,7 @@
 
 (define-settable default-port 8080)
 
-(define current-server-port (make-parameter (get-default-port)))
+(define current-server-port (make-parameter (current-default-port)))
 
 (define-settable dashboard-css "poldash.css")
 

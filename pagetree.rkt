@@ -38,7 +38,7 @@
 (define+provide/contract (decode-pagetree xs)
   (txexpr-elements? . -> . any/c) ; because pagetree is being explicitly validated
   (validate-pagetree 
-   (decode (cons (world:get-pagetree-root-node) xs)
+   (decode (cons (world:current-pagetree-root-node) xs)
            #:txexpr-elements-proc (λ(xs) (filter (compose1 not whitespace?) xs))
            #:string-proc string->symbol))) ; because faster than ->pagenode
 
@@ -85,8 +85,8 @@
 (define+provide/contract (make-project-pagetree project-dir)
   (pathish? . -> . pagetree?)
   (with-handlers ([exn:fail? (λ(exn) (directory->pagetree project-dir))])
-    (define pagetree-source (build-path project-dir (world:get-default-pagetree)))
-    (cached-require pagetree-source (world:get-main-export))))
+    (define pagetree-source (build-path project-dir (world:current-default-pagetree)))
+    (cached-require pagetree-source (world:current-main-export))))
 
 (define+provide/contract (parent pnish [pt (current-pagetree)])
   (((or/c #f pagenodeish?)) (pagetree?) . ->* . (or/c #f pagenode?)) 

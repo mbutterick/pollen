@@ -320,7 +320,7 @@ In @racket[_str], convert three hyphens to an em dash, and two hyphens to an en 
 @defproc[
 (detect-linebreaks
 [tagged-xexpr-elements txexpr-elements?]
-[#:separator linebreak-sep string? world:linebreak-separator]
+[#:separator linebreak-sep string? (world:current-linebreak-separator)]
 [#:insert linebreak xexpr? '(br)])
 txexpr-elements?]
 Within @racket[_tagged-xexpr-elements], convert occurrences of @racket[_linebreak-sep] (@racket["\n"] by default) to @racket[_linebreak], but only if @racket[_linebreak-sep] does not occur between blocks (see @racket[block-txexpr?]). Why? Because block-level elements automatically display on a new line, so adding @racket[_linebreak] would be superfluous. In that case, @racket[_linebreak-sep] just disappears.
@@ -333,7 +333,7 @@ Within @racket[_tagged-xexpr-elements], convert occurrences of @racket[_linebrea
 @defproc[
 (detect-paragraphs
 [elements txexpr-elements?]
-[#:separator paragraph-sep string? world:paragraph-separator]
+[#:separator paragraph-sep string? (world:current-paragraph-separator)]
 [#:tag paragraph-tag symbol? 'p]
 [#:linebreak-proc linebreak-proc (txexpr-elements? . -> . txexpr-elements?) detect-linebreaks]
 [#:force? force-paragraph? boolean? #f])

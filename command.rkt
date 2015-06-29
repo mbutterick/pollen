@@ -19,11 +19,11 @@ render filename        render filename only (can be source or output name)
 publish                copy project to desktop without source files
 publish [dir] [dest]   copy project in dir to dest without source files
                           (warning: overwrites existing dest dir)
-version                print the version (~a)" ,(world:current-server-port) ,(world:get-pollen-version))))
+version                print the version (~a)" ,(world:current-server-port) ,(world:current-pollen-version))))
 
 
 (define (handle-version)
-  `(displayln ,(world:get-pollen-version)))
+  `(displayln ,(world:current-pollen-version)))
 
 
 (define (handle-render path-args)
@@ -69,7 +69,7 @@ version                print the version (~a)" ,(world:current-server-port) ,(wo
 (define (handle-publish directory rest-args arg-command-name)
   (define target-path (or 
                        (and rest-args (not (null? rest-args)) (path->complete-path (string->path (car rest-args))))
-                       (build-path (find-system-path 'desk-dir) (string->path (if (equal? arg-command-name "clone") "clone" (world:get-publish-directory-name))))))
+                       (build-path (find-system-path 'desk-dir) (string->path (if (equal? arg-command-name "clone") "clone" (world:current-publish-directory-name))))))
   
   `(begin
      (require racket/file pollen/file racket/list)

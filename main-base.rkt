@@ -13,9 +13,9 @@
            (define-syntax (new-module-begin stx-arg)
              (syntax-case stx-arg ()
                [(_ body-exprs (... ...))
-                (with-syntax ([local-meta-tag-name (format-id stx-arg (symbol->string (world:get-meta-tag-name)))]
-                              [local-doc-export-name (format-id stx-arg (symbol->string (world:get-main-export)))]
-                              [local-metas-export-name (format-id stx-arg (symbol->string (world:get-meta-export)))])
+                (with-syntax ([local-meta-tag-name (format-id stx-arg (symbol->string (world:current-meta-tag-name)))]
+                              [local-doc-export-name (format-id stx-arg (symbol->string (world:current-main-export)))]
+                              [local-metas-export-name (format-id stx-arg (symbol->string (world:current-meta-export)))])
                   (syntax-protect
                    #'(#%module-begin
                       (module inner pollen/doclang-raw

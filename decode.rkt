@@ -280,7 +280,7 @@
 
 ;; turn the right items into <br> tags
 (define+provide/contract (detect-linebreaks xc 
-                                            #:separator [newline (world:get-linebreak-separator)]
+                                            #:separator [newline (world:current-linebreak-separator)]
                                             #:insert [linebreak '(br)])
   ((txexpr-elements?) (#:separator string? #:insert xexpr?) . ->* . txexpr-elements?)
   ;; todo: should this test be not block + not whitespace?
@@ -334,7 +334,7 @@
 
 
 ;; is x a paragraph break?
-(define+provide/contract (paragraph-break? x #:separator [sep (world:get-paragraph-separator)])
+(define+provide/contract (paragraph-break? x #:separator [sep (world:current-paragraph-separator)])
   ((any/c) (#:separator pregexp?) . ->* . coerce/boolean?)
   (define paragraph-pattern (pregexp (format "^~a+$" sep)))
   (and (string? x) (regexp-match paragraph-pattern x)))
@@ -342,7 +342,7 @@
 
 
 (define (newline? x)
-  (and (string? x) (equal? (world:get-newline) x)))
+  (and (string? x) (equal? (world:current-newline) x)))
 (define (not-newline? x)
   (not (newline? x)))
 
@@ -379,7 +379,7 @@
 ;; detect paragraphs
 ;; todo: unit tests
 (define+provide/contract (detect-paragraphs elements #:tag [tag 'p]
-                                            #:separator [sep (world:get-paragraph-separator)]
+                                            #:separator [sep (world:current-paragraph-separator)]
                                             #:linebreak-proc [linebreak-proc detect-linebreaks]
                                             #:force? [force-paragraph #f])
   ((txexpr-elements?) (#:tag symbol? #:separator string? #:linebreak-proc (txexpr-elements? . -> . txexpr-elements?) #:force? boolean?) 

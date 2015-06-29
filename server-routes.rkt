@@ -25,7 +25,7 @@
      (meta ([charset "UTF-8"]))
      (link ([rel "stylesheet"] 
             [type "text/css"] 
-            [href ,(format "/~a" (world:get-dashboard-css))])))
+            [href ,(format "/~a" (world:current-dashboard-css))])))
     (body
      ,content-xexpr (div ((id "pollen-logo"))))))
 
@@ -41,7 +41,7 @@
   (define client (request-client-ip req))
   (define localhost-client "::1")
   (define url-string (url->string (request-uri req)))
-  (message "request:" (string-replace url-string (world:get-default-pagetree) " dashboard")
+  (message "request:" (string-replace url-string (world:current-default-pagetree) " dashboard")
           (if (not (equal? client localhost-client)) (format "from ~a" client) "")))
 
 ;; pass string args to route, then
@@ -61,7 +61,7 @@
   ((complete-path?) (#:render boolean?) . ->* . txexpr?)
   (when wants-render (render-from-source-or-output-path path))
   (dynamic-rerequire path) ; stores module mod date; reloads if it's changed
-  (dynamic-require path (world:get-main-export)))
+  (dynamic-require path (world:current-main-export)))
 
 ;; todo: rewrite this test, obsolete since filename convention changed
 ;;(module+ test
@@ -160,7 +160,7 @@
     (define dirlinks (cons "/" (map (λ(ps) (format "/~a/" (apply build-path ps)))  
                                    (for/list ([i (in-range (length (cdr dirs)))])
                                      (take (cdr dirs) (add1 i))))))
-    `(tr (th ((colspan "3")) ,@(add-between (map (λ(dir dirlink) `(a ((href ,(format "~a~a" dirlink (world:get-default-pagetree)))) ,(->string dir))) dirs dirlinks) "/"))))
+    `(tr (th ((colspan "3")) ,@(add-between (map (λ(dir dirlink) `(a ((href ,(format "~a~a" dirlink (world:current-default-pagetree)))) ,(->string dir))) dirs dirlinks) "/"))))
   
   (define (make-path-row filename-path)
     (define filename (->string filename-path))
@@ -170,7 +170,7 @@
                (append (list                          
                         (cond ; main cell
                           [(directory-exists? (build-path dashboard-dir filename)) ; links subdir to its dashboard
-                           (cons (format "~a/~a" filename (world:get-default-pagetree)) (format "~a/" filename))]
+                           (cons (format "~a/~a" filename (world:current-default-pagetree)) (format "~a/" filename))]
                           [(and source (equal? (get-ext source) "scrbl")) 
                            (cons #f `(a ((href ,filename)) ,filename (span ((class "file-ext")) " (from " ,(->string (find-relative-path dashboard-dir source)) ")")))]
                           [source (cons #f `(a ((href ,filename)) ,filename (span ((class "file-ext")) "." ,(get-ext source))))]
@@ -186,12 +186,12 @@
                           [(pagetree-source? filename) empty-cell]
                           [else (cons (format "out/~a" filename) "out")]))))))
   
-  (define (ineligible-path? x) (member x (world:get-paths-excluded-from-dashboard)))  
+  (define (ineligible-path? x) (member x (world:current-paths-excluded-from-dashboard)))  
   
   (define project-paths 
     (filter-not ineligible-path? (map ->path (pagetree->list 
                                               (if (file-exists? dashboard-ptree)
-                                                 (cached-require (->path dashboard-ptree) (world:get-main-export))
+                                                 (cached-require (->path dashboard-ptree) (world:current-main-export))
                                                  (directory->pagetree dashboard-dir))))))
   
   (body-wrapper #:title (format "~a" dashboard-dir)
