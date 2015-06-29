@@ -63,6 +63,8 @@ Or, if you can find a better digital-publishing tool, use that. But I'm never go
 
 @include-section["module-reference.scrbl"]
 
+@include-section["more-help.scrbl"]
+
 @include-section["acknowledgments.scrbl"]
 
 @include-section["license.scrbl"]
