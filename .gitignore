@@ -21,3 +21,4 @@ scribblings/*.css
 !scribblings/mb.css
 scribblings/*.html
 scribblings/pollen/*
+doc/*
