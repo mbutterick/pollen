@@ -69,11 +69,22 @@
           (loop (make-txexpr (world:current-meta-tag-name) null (cdr txexpr-elements)) (cons (apply make-atomic-meta (car txexpr-elements)) acc))])]
       [else (reverse acc)])))
 
+(define (splitter x pred)
+  (define acc null)
+  (define leftover (let loop ([x x])
+                     (cond
+                       [(list? x) (define-values (pred-elements rest) (partition pred x))
+                                  (set! acc (append pred-elements acc))
+                                  (map loop rest)]
+                       [else x])))
+  (values leftover (reverse acc)))
+
 
 (define (split-meta-elements x) ; pull metas out of doc and put them into meta-elements accumulator
-  (when (not (txexpr? x))
-    (error 'split-meta-elements "Not a txexpr: ~v" x))
-  (define-values (thing-without-meta-elements meta-elements) (splitf-txexpr x meta-element?))
+  ;; watch out: x may not be a txexpr, because we are extracting metas before the pollen parser has finished its work
+  ;; for instance, floating-point numbers will eventually become strings, but here they're still numbers
+  ;; thus instead of split-txexpr, use a custom splitter
+  (define-values (thing-without-meta-elements meta-elements) (splitter x meta-element?))
   ;; trivial metas are discarded
   (define exploded-meta-elements (append-map explode-meta-element (filter nontrivial-meta-element? meta-elements)))
   (values thing-without-meta-elements exploded-meta-elements))
@@ -99,12 +110,13 @@
 
 (module+ test
   (require rackunit)
-  (let ([x '(root (meta ((foo "bar"))) "hello" (p (meta ((foo "zam"))) (meta) "there"))])
+  ;; 1.5 instead of "1.5" is deliberate: input may not yet be a true txexpr
+  (let ([x '(root (meta ((foo "bar"))) "hello" (p (meta ((foo "zam"))) (meta) "there" 1.5))])
     (define-values (doc-without-metas metahash) (split-metas-to-hash x))
-    (check-equal? doc-without-metas '(root "hello" (p "there")))
+    (check-equal? doc-without-metas '(root "hello" (p "there" 1.5)))
     (check-equal? (hash-ref metahash 'foo) "zam"))
   
-  (let ([x '(root (meta (foo "bar")) "hello" (p (meta (foo (zim "zam"))) (meta) "there"))])
+  (let ([x '(root (meta (foo "bar")) "hello" (p (meta (foo (zim "zam"))) (meta) "there" 1.5))])
     (define-values (doc-without-metas metahash) (split-metas-to-hash x))
-    (check-equal? doc-without-metas '(root "hello" (p "there")))
+    (check-equal? doc-without-metas '(root "hello" (p "there" 1.5)))
     (check-equal? (hash-ref metahash 'foo) '(zim "zam"))))
