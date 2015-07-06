@@ -4,6 +4,8 @@
 ;; The use of dynamic-require throughout this file is intentional:
 ;; this way, low-dependency raco commands (like "version") are faster.
 ;; Whereas with `require` or `local-require`, everything would have to be front-loaded.
+;; but ... maybe most of the latency is due to pollen/world environment checking.
+;; todo: investigate this
 
 (module+ raco
   (define command-name (with-handlers ([exn:fail? (λ _ #f)])
