@@ -60,6 +60,7 @@ version                print the version (~a)" (world:current-server-port) (worl
 
 (define (handle-render path-args)
   (parameterize ([current-directory (world:current-project-root)])
+    ((dynamic-require 'pollen/cache 'reset-cache))
     (define first-arg (car path-args))
     (if (directory-exists? first-arg)
         (let ([dir first-arg]) ; now we know it's a dir
