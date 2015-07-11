@@ -25,7 +25,8 @@
                  (with-handlers ([exn:fail? (λ _ #f)])
                    (string->number (vector-ref (current-command-line-arguments) 2))))
                (handle-start (path->directory-path (get-first-arg-or-current-dir)) port-arg)]
-    [("render") (handle-render (cons (get-first-arg-or-current-dir) (map very-nice-path (cdr (vector->list (current-command-line-arguments))))))]
+    ;; "second" arg is actually third in command line args, so use cddr not cdr
+    [("render") (handle-render (cons (get-first-arg-or-current-dir) (map very-nice-path (cddr (vector->list (current-command-line-arguments))))))]
     [("version") (handle-version)]
     [("clone" "publish") (define rest-args
                            (with-handlers ([exn:fail? (λ _ #f)])
