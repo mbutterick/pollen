@@ -1,4 +1,4 @@
-#lang scribble/manual
+  #lang scribble/manual
 
 @(require scribble/eval (for-label pollen/pygments pollen/decode plot pollen/world pollen/tag racket/base pollen/template txexpr racket/list racket/string))
 @(require "mb-tools.rkt")
@@ -94,3 +94,77 @@ for x in range(3):
 ]
 
 As above, I concede that it would be more convenient to have Pollen automatically drop the necessary incantations into the @tt{<head>} of your HTML. But as a matter of policy, I prefer to minimize magic behavior.
+
+
+
+@section{Math typesetting with MathJax}
+
+@link["http://www.mathjax.org"]{MathJax} is a JavaScript library that implements the math-typesetting algorithms of TeX. It's easy to add MathJax to a Pollen project, and then invoke it with Pollen command notation in your source files.
+
+@itemlist[#:style 'ordered
+
+@item{Download the @link["http://docs.mathjax.org/en/latest/start.html"]{MathJax} library if you want to run the library locally, without a network connection. You can also use the MathJax CDN and just link to the library across the network (I'll use this option in the example that follows).}
+
+@item{Add these lines to the @code{<head>} section of your @racket["template.html"] (or other template). First, the MathJax library itself:
+
+@repl-output{
+<script type="text/javascript"
+  src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+}
+
+Then, add any configuration options. For instance, this will activate the dollar sign as an inline-equation delimiter:
+
+@repl-output{
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$']]}});
+</script>
+}
+}
+
+@item{Make Pollen tag functions that add the delimiter characters and also a @tt{mathjax} wrapper tag that will trigger the JavaScript typesetting. For instance, suppose we wanted to denote inline equations with @code{◊${equation …}} and block equations with @code{◊$${equation …}}. Our tag functions could look like this:
+
+@codeblock{
+#lang pollen
+◊(define ($ . xs)
+  `(mathjax ,(apply string-append `("$" ,@"@"xs "$"))))
+◊(define ($$ . xs)
+  `(mathjax ,(apply string-append `("$$" ,@"@"xs "$$"))))
+}
+}
+]
+
+
+Putting it together, here's a minimal working example in two files (obviously in a larger project, you'd move those tag functions to a @racket["directory-require.rkt"] file):
+
+@fileblock["equation.html.pm"
+@codeblock{
+#lang pollen
+◊(define ($ . xs)
+  `(mathjax ,(apply string-append `("$" ,@"@"xs "$"))))
+◊(define ($$ . xs)
+  `(mathjax ,(apply string-append `("$$" ,@"@"xs "$$"))))
+
+◊h1{I wonder if ◊${2^{\aleph_\alpha} = \aleph_{\alpha+1}}?}
+}]
+
+
+
+@fileblock["template.html"
+@codeblock[#:keep-lang-line? #f]{
+#lang pollen
+<html>
+<head>
+<script type="text/javascript"
+src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$']]}});
+</script>
+</head>
+<body>
+◊(->html doc)
+</body>
+</html>
+}]
+
