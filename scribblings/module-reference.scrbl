@@ -8,6 +8,7 @@
 @include-section["decode.scrbl"]
 @include-section["file.scrbl"]
 @include-section["pagetree.scrbl"]
+@include-section["pygments.scrbl"]
 @include-section["render.scrbl"]
 @include-section["template.scrbl"]
 @include-section["tag.scrbl"]
