@@ -259,12 +259,17 @@ First, the two major similarities:
 
 And two major differences:
 
+
+@margin-note{Under the hood, a template is not a self-contained source file, but rather a fragment of source code that gets evaluated in the context of other code (namely, your textual content). Because of this, however, you can't use @racket[require] in a template to import external libraries, because @racket[require] can only be used in a self-contained source file. But there's a simple workaround — instead, use @racket[local-require], which does the same thing.}
+
+
 @itemlist[
 
-@item{There's @bold{no special template language} you need to learn, with magic syntax and whatnot. Instead, you can use all the same Pollen commands in a template that you can in authoring mode or preprocessor mode.}
+@item{There's @bold{no special template language} you need to learn, with magic syntax and whatnot. Instead, you can use all the same Pollen commands in a template that you can in authoring mode or preprocessor mode. (With one major exception — see the margin note.)}
 
 @item{Within a template, you have to @bold{explicitly convert} the X-expression to the target format. This is a feature, not a bug. By avoiding assumptions about the target format, Pollen templates can be used to generate any kind of file (even binary formats like PDF). But the cost of this flexibility is that you need to tell Pollen what you want.}
 ]
+
 
 To see how this works, let's return to the source file we started in the last section:
 
@@ -514,6 +519,7 @@ Can you add multiple dynamic style sheets? Yes.
 @(linebreak)Can you mix dynamic and static style sheets? Yes.
 @(linebreak)Can you add a dynamic JavaScript file? Yes.
 @(linebreak)You're getting the general idea, right? So let's move on.
+
 
 @section[#:tag-prefix "tutorial-2"]{Intermission}
 
