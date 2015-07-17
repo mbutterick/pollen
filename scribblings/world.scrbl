@@ -32,7 +32,7 @@ A parameter that determines whether the @racket[world:directory-require] file is
 
 
 
-@section{Settable values}
+@section[#:tag "settable-values"]{Settable values}
 
 These values can be changed by overriding them in your @racket["directory-require.rkt"] source file. Within this file, @seclink["submodules" #:doc '(lib "scribblings/guide/guide.scrbl")]{create a submodule} called @racket[config]. Then within this submodule, use @racket[define] to make a variable with the same name as the one in @racket[pollen/world], but without the @racket[world:] prefix. Assign it whatever value you like. Repeat as needed. When Pollen runs, these definitions will supersede those in @racket[pollen/world].
 

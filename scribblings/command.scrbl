@@ -19,7 +19,7 @@ Pollen uses a special character — the @italic{lozenge}, which looks like this:
 
 @section{The lozenge glyph (◊)}
 
-I chose the lozenge as the command marker because a) it appears in almost every font, b) it's barely used in ordinary typesetting, c) it's not used in any programming language that I know of, and d) its shape and color allow it to stand out easily in code without being distracting. 
+I chose the lozenge as the command character because a) it appears in almost every font, b) it's barely used in ordinary typesetting, c) it's not used in any programming language that I know of, and d) its shape and color allow it to stand out easily in code without being distracting. 
 
 Here's how you type it:
 
@@ -29,7 +29,7 @@ Here's how you type it:
 
 @bold{Ubuntu}: ctrl + shift + U, then 25CA
 
-Still, if you don't want to use the lozenge as your command marker, you can use something else. Set Pollen's @racket[world:command-marker] value to whatever character you want. 
+Still, if you don't want to use the lozenge as your command character, you can set Pollen's @racket[world:command-char] value to whatever character you want (see also @seclink["settable-values"]).
 
 @margin-note{Scribble uses the @"@" sign as a delimiter. It's not a bad choice if you only work with Racket files. But as you use Pollen to work on other kinds of text-based files that commonly contain @"@" signs — HTML pages especially — it gets cumbersome. So I changed it.}
 
