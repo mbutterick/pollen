@@ -12,9 +12,16 @@ env:
     - RACKET_VERSION=6.0
     - RACKET_VERSION=6.1
     - RACKET_VERSION=6.2
-#    - RACKET_VERSION=HEAD
+    - RACKET_VERSION=HEAD
 
+# You may want to test against certain versions of Racket, without
+# having them count against the overall success/failure.
 matrix:
+  allow_failures:
+    - env: RACKET_VERSION=HEAD
+  # Fast finish: Overall build result is determined as soon as any of
+  # its rows have failed, or, all of its rows that aren't allowed to
+  # fail have succeeded.
   fast_finish: true
 
 before_install:
