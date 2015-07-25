@@ -1,6 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base racket/syntax))
-(require racket/contract racket/path)
+(require racket/contract racket/path racket/match)
 (require (only-in racket/path filename-extension))
 (require "world.rkt" sugar/define sugar/file sugar/string sugar/coerce sugar/test)
 
@@ -46,6 +46,43 @@
                        (directory-list dir #:build? #t)))))
 
 
+(define+provide/contract (escape-last-ext x [escape-char (world:current-extension-escape-char)])
+  ((pathish?) (char?) . ->* . coerce/path?)
+  ;; if x has a file extension, reattach it with the escape char
+  (define current-ext (get-ext x))
+  (if current-ext
+      (format "~a~a~a" (->string (remove-ext x)) escape-char current-ext)
+      x))
+
+(module-test-external
+ (require sugar/coerce)
+ (check-equal? (escape-last-ext "foo") (->path "foo"))
+ (check-equal? (escape-last-ext "foo.html") (->path "foo!html"))
+ (check-equal? (escape-last-ext "foo.html" #\$) (->path "foo$html")))
+
+
+(define+provide/contract (unescape-ext x [escape-char (world:current-extension-escape-char)])
+  ((pathish?) (char?) . ->* . coerce/path?)
+  ;; if x has an escaped extension, unescape it.
+  (define xstr (->string x))
+  (define pat (regexp (format "(.*)[~a](.*)$" escape-char)))
+  (define results (regexp-match pat xstr))
+  (if results
+      (match-let ([(list _ filename ext) results])
+        (add-ext filename ext))
+      x))
+
+
+(module-test-external
+ (require sugar/coerce)
+ (check-equal? (unescape-ext "foo") (->path "foo"))
+ (check-equal? (unescape-ext "foo.html") (->path "foo.html"))
+ (check-equal? (unescape-ext "foo!html") (->path "foo.html"))
+ (check-equal? (unescape-ext "foo$html" #\$) (->path "foo.html"))
+ (check-equal? (unescape-ext "foo!bar!!html") (->path "foo!bar!.html"))
+ (check-equal? (unescape-ext "foo$bar$$html" #\$) (->path "foo$bar$.html")))
+
+
 (define-syntax (make-source-utility-functions stx)
   (syntax-case stx ()
     [(_ stem)
@@ -56,16 +93,18 @@
                      [has-stem-source? (format-id stx "has-~a-source?" #'stem)]
                      [has/is-stem-source? (format-id stx "has/is-~a-source?" #'stem)]
                      [->stem-source-path (format-id stx "->~a-source-path" #'stem)]
+                     [->stem-source-paths (format-id stx "->~a-source-paths" #'stem)]
                      [->stem-source+output-paths (format-id stx "->~a-source+output-paths" #'stem)])
          #`(begin
              ;; does file have particular extension
              (define+provide (stem-source? x)
                (->boolean (and (pathish? x) (has-ext? (->path x) (world:current-stem-source-ext)))))
              
+             ;; non-theoretical: want the first possible source that exists in the filesystem
              (define+provide (get-stem-source x)
                (and (pathish? x) 
-                    (let ([source-path (->stem-source-path (->path x))])
-                      (and source-path (file-exists? source-path) source-path))))
+                    (let ([source-paths (->stem-source-paths (->path x))])
+                      (and source-paths (ormap (λ(sp) (and (file-exists? sp) sp)) source-paths)))))
              
              ;; does the source-ified version of the file exist
              (define+provide (has-stem-source? x)
@@ -75,22 +114,32 @@
              (define+provide (has/is-stem-source? x)
                (->boolean (and (pathish? x) (ormap (λ(proc) (proc (->path x))) (list stem-source? has-stem-source?)))))
              
-             ;; add the file extension if it's not there
+             ;; get first possible source path (does not check filesystem)
              (define+provide/contract (->stem-source-path x)
                (pathish? . -> . (or/c #f path?))
-               (define result (if (stem-source? x) 
-                                  x 
-                                  #,(if (equal? stem-datum 'scribble)
-                                        #'(if (x . has-ext? . 'html) ; different logic for scribble sources
-                                              (add-ext (remove-ext* x) (world:current-stem-source-ext))
-                                              #f)
-                                        #'(add-ext x (world:current-stem-source-ext)))))
-               (and result (->path result)))
+               (define paths (->stem-source-paths x))
+               (and paths (car paths)))
+             
+             ;; get all possible source paths (does not check filesystem)
+             (define+provide/contract (->stem-source-paths x)
+               (pathish? . -> . (or/c #f (non-empty-listof path?)))
+               (define results (if (stem-source? x) 
+                                   (list x) ; already has the source extension
+                                   #,(if (eq? stem-datum 'scribble)
+                                         #'(if (x . has-ext? . 'html) ; different logic for scribble sources
+                                               (list (add-ext (remove-ext* x) (world:current-stem-source-ext)))
+                                               #f)
+                                         #'(list* (add-ext x (world:current-stem-source-ext))
+                                                  (if (get-ext x)
+                                                      (list (add-ext (escape-last-ext x) (world:current-stem-source-ext)))
+                                                      null)))))
+               (and results (map ->path results)))
              
              ;; coerce either a source or output file to both
              (define+provide/contract (->stem-source+output-paths path)
                (pathish? . -> . (values path? path?))
-               (values (->complete-path (->stem-source-path path))
+               ;; get the real source path if available, otherwise a theoretical path
+               (values (->complete-path (or (get-stem-source path) (->stem-source-path path)))
                        (->complete-path (->output-path path)))))))]))
 
 
@@ -101,6 +150,10 @@
  (check-true (preproc-source? "foo.pp"))
  (check-false (preproc-source? "foo.bar"))
  (check-false (preproc-source? #f))
+ (check-equal? (->preproc-source-paths (->path "foo.pp")) (list (->path "foo.pp")))
+ (check-equal? (->preproc-source-paths (->path "foo.html")) (list (->path "foo.html.pp") (->path "foo!html.pp")))
+ (check-equal? (->preproc-source-paths "foo") (list (->path "foo.pp")))
+ (check-equal? (->preproc-source-paths 'foo) (list (->path "foo.pp")))
  (check-equal? (->preproc-source-path (->path "foo.pp")) (->path "foo.pp"))
  (check-equal? (->preproc-source-path (->path "foo.html")) (->path "foo.html.pp"))
  (check-equal? (->preproc-source-path "foo") (->path "foo.pp"))
@@ -121,6 +174,10 @@
  (check-true (markup-source? "foo.pm"))
  (check-false (markup-source? "foo.p"))
  (check-false (markup-source? #f))
+ (check-equal? (->markup-source-paths (->path "foo.pm")) (list (->path "foo.pm")))
+ (check-equal? (->markup-source-paths (->path "foo.html")) (list (->path "foo.html.pm") (->path "foo!html.pm")))
+ (check-equal? (->markup-source-paths "foo") (list (->path "foo.pm")))
+ (check-equal? (->markup-source-paths 'foo) (list (->path "foo.pm")))
  (check-equal? (->markup-source-path (->path "foo.pm")) (->path "foo.pm"))
  (check-equal? (->markup-source-path (->path "foo.html")) (->path "foo.html.pm"))
  (check-equal? (->markup-source-path "foo") (->path "foo.pm"))
@@ -145,7 +202,7 @@
 (define+provide/contract (->output-path x)
   (coerce/path? . -> . coerce/path?)
   (cond
-    [(or (markup-source? x) (preproc-source? x) (null-source? x) (markdown-source? x) (template-source? x)) (remove-ext x)]
+    [(or (markup-source? x) (preproc-source? x) (null-source? x) (markdown-source? x) (template-source? x)) (unescape-ext (remove-ext x))]
     [(scribble-source? x) (add-ext (remove-ext x) 'html)]
     [else x]))
 
@@ -156,7 +213,12 @@
  (check-equal? (->output-path 'foo.html.p) (->path "foo.html"))
  (check-equal? (->output-path (->path "/Users/mb/git/foo.html.p")) (->path "/Users/mb/git/foo.html"))
  (check-equal? (->output-path "foo.xml.p") (->path "foo.xml"))
- (check-equal? (->output-path 'foo.barml.p) (->path "foo.barml")))
+ (check-equal? (->output-path 'foo.barml.p) (->path "foo.barml"))
+ 
+ (check-equal? (->output-path 'foo!html.p) (->path "foo.html"))
+ (check-equal? (->output-path (->path "/Users/mb/git/foo!html.p")) (->path "/Users/mb/git/foo.html"))
+ (check-equal? (->output-path "foo!xml.p") (->path "foo.xml"))
+ (check-equal? (->output-path 'foo!barml.p) (->path "foo.barml")))
 
 (define+provide/contract (project-files-with-ext ext)
   (coerce/symbol? . -> . complete-paths?)

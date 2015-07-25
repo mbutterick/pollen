@@ -173,7 +173,8 @@
                            (cons (format "~a/~a" filename (world:current-default-pagetree)) (format "~a/" filename))]
                           [(and source (equal? (get-ext source) "scrbl")) 
                            (cons #f `(a ((href ,filename)) ,filename (span ((class "file-ext")) " (from " ,(->string (find-relative-path dashboard-dir source)) ")")))]
-                          [source (cons #f `(a ((href ,filename)) ,filename (span ((class "file-ext")) "." ,(get-ext source))))]
+                          ;; use remove-ext because source may have escaped extension in it
+                          [source (cons #f `(a ((href ,filename)) ,(->string (remove-ext source)) (span ((class "file-ext")) "." ,(get-ext source))))]
                           [else   (cons filename filename)])
                         
                         (cond ; in cell

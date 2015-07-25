@@ -72,6 +72,8 @@ Determines the default HTTP port for the project server. Initialized to @racket[
 
 @defoverridable[server-extras-dir string?]{Name of directory where server support files live. Initialized to @tt{server-extras}.}
 
+@defoverridable[extension-escape-char char?]{Character for escaping output-file extensions within source-file names. Initialized to @racket[#\!].}
+
 
 
 

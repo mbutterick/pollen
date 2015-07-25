@@ -80,3 +80,5 @@
 (define check-directory-requires-in-render? (make-parameter #t))
 
 (define-settable publish-directory-name "publish")
+
+(define-settable extension-escape-char #\!)
