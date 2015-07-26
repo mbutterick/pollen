@@ -126,3 +126,7 @@ Default separators used in decoding. The first two are initialized to @racket["\
 @defoverridable[dashboard-css string?]{CSS file used for the dashboard. Initialized to @filepath{poldash.css}.}
 
 @defoverridable[paths-excluded-from-dashboard (listof path?)]{Paths not shown in the Pollen dashboard.}
+
+@defoverridable[compile-cache-active boolean?]{Whether the compile cache, which speeds up interactive sessions by saving compiled versions of Pollen source files, is active. Default is active (@racket[#t]).}
+
+@defoverridable[compile-cache-max-size exact-positive-integer?]{Maximum size of the compile cache. Default is five megabytes.}

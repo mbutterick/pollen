@@ -60,7 +60,6 @@ version                print the version (~a)" (world:current-server-port) (worl
 
 (define (handle-render path-args)
   (parameterize ([current-directory (world:current-project-root)])
-    ((dynamic-require 'pollen/cache 'reset-cache))
     (define first-arg (car path-args))
     (if (directory-exists? first-arg)
         (let ([dir first-arg]) ; now we know it's a dir
@@ -86,11 +85,12 @@ version                print the version (~a)" (world:current-server-port) (worl
           (apply (dynamic-require 'pollen/render 'render-batch) path-args)))))
 
 (define (handle-start directory [port #f])
-  (if (not (directory-exists? directory))
-      (error (format "~a is not a directory" directory))
-      (parameterize ([world:current-project-root directory]
-                     [world:current-server-port (or port world:default-port)])
-        ((dynamic-require 'pollen/server 'start-server)))))
+  (when (not (directory-exists? directory))
+    (error (format "~a is not a directory" directory)))
+  (parameterize ([world:current-project-root directory]
+                 [world:current-server-port (or port world:default-port)])
+    (displayln "Starting project server ...")
+    ((dynamic-require 'pollen/server 'start-server))))
 
 
 (define (handle-publish directory rest-args arg-command-name)

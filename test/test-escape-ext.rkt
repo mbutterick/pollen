@@ -4,6 +4,7 @@
 ;; define-runtime-path only allowed at top level
 (define-runtime-path test-dir "data/escape-ext")
 (define-runtime-path test-file "data/escape-ext/test$html.pp")
+(define-runtime-path result-file "data/escape-ext/test.html")
 
 ;; `find-exe` avoids reliance on $PATH of the host system
 (define racket-path (find-exe))
@@ -14,7 +15,6 @@
     ;; need to cd first to pick up directory require correctly
     (define cmd-string (format "cd '~a' ; '~a' pollen render '~a'" test-dir raco-path path))
     (with-output-to-string (λ() (system cmd-string))))
-  (define result-file (build-path test-dir "test.html"))
   (when (file-exists? result-file) (delete-file result-file))
   (render test-file)
   (check-true (file-exists? result-file))

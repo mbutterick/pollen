@@ -44,6 +44,7 @@
 (define mode-template 'template)
 
 (define-settable cache-filename "pollen.cache")
+(define-settable cache-dir-name "pollen-cache")
 
 (define-settable decodable-extensions (list (current-markup-source-ext) (current-pagetree-source-ext)))
 
@@ -82,3 +83,6 @@
 (define-settable publish-directory-name "publish")
 
 (define-settable extension-escape-char #\!)
+
+(define-settable compile-cache-active #t)
+(define-settable compile-cache-max-size (* 5 1024 1024)) ; = 5 megabytes

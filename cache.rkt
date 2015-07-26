@@ -1,58 +1,50 @@
 #lang racket/base
-(require racket/rerequire racket/serialize racket/file "world.rkt")
+(require racket/path racket/function racket/file file/cache sugar/coerce "project.rkt"  "world.rkt" racket/rerequire "debug.rkt")
 
 ;; The cache is a hash with paths as keys.
 ;; The cache values are also hashes, with key/value pairs for that path.
 
-(provide reset-cache current-cache make-cache cached-require cache-ref)
+(provide reset-cache cached-require path->key path->hash)
+(provide (all-from-out racket/rerequire))
 
-(define (get-cache-file-path)
-  (build-path (world:current-project-root) (world:current-cache-filename)))
+(define (get-cache-dir)
+  (build-path (world:current-project-root) (world:current-cache-dir-name)))
 
-(define (make-cache) 
-  (define cache-file-path (get-cache-file-path))
-  (if (file-exists? cache-file-path)
-      (deserialize (file->value cache-file-path))
-      (make-hash)))
-
-(define current-cache (make-parameter (make-cache)))
 
 (define (reset-cache)
-  (define cache-path (get-cache-file-path))
-  (when (file-exists? cache-path)
-    (delete-file cache-path))
-  (current-cache (make-cache)))
+  (cache-remove #f (get-cache-dir)))
 
-(define (->complete-path path-string)
-  (path->complete-path (if (string? path-string) (string->path path-string) path-string)))
 
-(define (cache-ref path-string)
-  (hash-ref (current-cache) (->complete-path path-string)))
+(define (path->key source-path [template-path #f])
+  ;; key is list of file + mod-time pairs
+  (define path-strings (map (compose1 ->string ->complete-path)
+                     (append (list source-path)
+                           (if template-path (list template-path) null)
+                           (or (get-directory-require-files source-path) null))))
+  (map cons path-strings (map file-or-directory-modify-seconds path-strings)))
 
-(define (cache-has-key? path)
-  (hash-has-key? (current-cache) path))
 
-(define (cache path)  
+(define (path->hash path)
   (dynamic-rerequire path)
-  (hash-set! (current-cache) path (make-hash))
-  (define cache-hash (cache-ref path))
-  (hash-set! cache-hash 'mod-time (file-or-directory-modify-seconds path))
-  (hash-set! cache-hash (world:current-main-export) (dynamic-require path (world:current-main-export)))
-  (hash-set! cache-hash (world:current-meta-export) (dynamic-require path (world:current-meta-export)))
-  (write-to-file (serialize (current-cache)) (get-cache-file-path) #:exists 'replace)
-  (void))
+  (hash (world:current-main-export) (dynamic-require path (world:current-main-export))
+         (world:current-meta-export) (dynamic-require path (world:current-meta-export))))
 
-(define (cached-require path-string key)
-  (when (not (current-cache)) (error 'cached-require "No cache set up."))
+
+(define (cached-require path-string subkey)
+  (define path (with-handlers ([exn:fail? (λ _ (error 'cached-require (format "~a is not a valid path" path-string)))])
+                 (->complete-path path-string)))
   
-  (define path 
-    (with-handlers ([exn:fail? (λ(exn) (error 'cached-require (format "~a is not a valid path" path-string)))])
-      (->complete-path path-string)))  
+  (when (not (file-exists? path))
+    (error (format "cached-require: ~a does not exist" path)))
   
-  (when (not (file-exists? path)) (error (format "cached-require: ~a does not exist" (path->string path))))
-  
-  (when (or (not (cache-has-key? path))
-            (> (file-or-directory-modify-seconds path) (hash-ref (cache-ref path) 'mod-time)))
-    (cache path))
-  
-  (hash-ref (cache-ref path) key))
+  (cond
+    [(world:current-compile-cache-active)
+     (define pickup-file (build-path (get-cache-dir) "pickup.rktd"))
+     (cache-file pickup-file #:exists-ok? #t
+                 (path->key path)
+                 (get-cache-dir)
+                 (λ _ (write-to-file (path->hash path) pickup-file #:exists 'replace))
+                 #:max-cache-size (world:current-compile-cache-max-size))
+     (hash-ref (file->value pickup-file) subkey)]
+    [else ; cache inactive
+     (dynamic-require path subkey)]))

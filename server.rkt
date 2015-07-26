@@ -28,8 +28,7 @@
   (message (format "Project dashboard is ~a/~a" server-name (world:current-default-pagetree)))
   (message "Ready to rock")
     
-  (parameterize ([error-print-width 1000]
-                 [current-cache (make-cache)])
+  (parameterize ([error-print-width 1000])
     (serve/servlet pollen-servlet
                    #:port (world:current-server-port)
                    #:listen-ip #f
