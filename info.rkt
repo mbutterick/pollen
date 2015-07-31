@@ -6,5 +6,5 @@
 (define update-implies '("txexpr" "sugar"))
 (define scribblings '(("scribblings/pollen.scrbl" (multi-page))))
 (define raco-commands '(("pollen" (submod pollen/command raco) "issue Pollen command" #f)))
-(define compile-omit-paths '("tests"))
-(define test-omit-paths '("tests/data"))
+(define compile-omit-paths '("tests" "tools"))
+(define test-omit-paths '("tests/data" "tools"))
