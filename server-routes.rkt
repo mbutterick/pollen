@@ -41,8 +41,9 @@
   (define client (request-client-ip req))
   (define localhost-client "::1")
   (define url-string (url->string (request-uri req)))
-  (message "request:" (string-replace url-string (world:current-default-pagetree) " dashboard")
-          (if (not (equal? client localhost-client)) (format "from ~a" client) "")))
+  (when (not (ends-with? url-string "favicon.ico"))
+    (message "request:" (string-replace url-string (world:current-default-pagetree) " dashboard")
+             (if (not (equal? client localhost-client)) (format "from ~a" client) ""))))
 
 ;; pass string args to route, then
 ;; package route into right format for web server
