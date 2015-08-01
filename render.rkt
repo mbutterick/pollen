@@ -1,21 +1,19 @@
 #lang racket/base
-(require racket/file racket/rerequire racket/path racket/match)
+(require racket/file racket/path racket/match)
 (require sugar/coerce sugar/test sugar/define sugar/container sugar/file sugar/len)
 (require "file.rkt" "cache.rkt" "world.rkt" "debug.rkt" "pagetree.rkt" "project.rkt" "template.rkt")
 
+;; used to track renders according to modification dates of component files
+(define mod-date-hash (make-hash))
 
 ;; when you want to generate everything fresh, 
 ;; but without having to #:force everything.
 ;; render functions will always go when no mod-date is found.
-(define (reset-modification-dates)
-  (set! modification-date-hash (make-hash)))
+(define (reset-mod-date-hash)
+  (set! mod-date-hash (make-hash)))
 
-;; mod-dates is a hash that takes lists of paths as keys,
-;; and lists of modification times as values.
-(define modification-date-hash #f)
-(reset-modification-dates)
 (module-test-internal
- (check-pred hash? modification-date-hash))
+ (check-pred hash? mod-date-hash))
 
 ;; using internal contracts to provide some extra safety (negligible performance hit)
 
@@ -28,17 +26,13 @@
   (and (list? x) (andmap valid-path-arg? x)))
 
 
-(define/contract (make-mod-dates-key paths)
-  (valid-path-args? . -> . valid-path-args?)
-  paths) ; for now, this does nothing; maybe later, it will do more
 
 (module-test-internal
  (require racket/runtime-path)
  (define-runtime-path sample-dir "test/data/samples")
  (define samples (parameterize ([current-directory sample-dir])
                    (map path->complete-path (directory-list "."))))
- (define-values (sample-01 sample-02 sample-03) (apply values samples))
- (check-equal? (make-mod-dates-key samples) samples))
+ (define-values (sample-01 sample-02 sample-03) (apply values samples)))
 
 
 (define/contract (path->mod-date-value path)
@@ -50,25 +44,17 @@
  (check-equal? (path->mod-date-value sample-01) (file-or-directory-modify-seconds sample-01)))
 
 
-(define/contract (store-render-in-modification-dates . rest-paths)
-  (() #:rest valid-path-args? . ->* . void?)
-  (define key (make-mod-dates-key rest-paths))
-  (hash-set! modification-date-hash key (map path->mod-date-value key)))
+;; each key for mod-date-hash is a list of file / mod-date pairs (using pollen/cache keymaking function)
+;; when a file is rendered, a new key is stored in the hash (with trivial value #t)
+;; after that, the hash-key-comparision routine intrinsic to hash lookup
+;; can be used to test whether a render is obsolete.
+;; create a new key with current files. If the key is in the hash, the render has happened.
+;; if not, a new render is needed.
+(define (update-mod-date-hash source-path template-path)
+  (hash-set! mod-date-hash (paths->key source-path template-path) #t))
 
-(module-test-internal
- (check-equal? (store-render-in-modification-dates sample-01 sample-02 sample-03) (void))
- (check-true (hash-has-key? modification-date-hash (list sample-01 sample-02 sample-03))))
-
-
-(define/contract (modification-date-expired? . rest-paths)
-  (() #:rest valid-path-args? . ->* . boolean?)
-  (define key (make-mod-dates-key rest-paths))
-  (or (not (key . in? . modification-date-hash))  ; no stored mod date
-      (not (equal? (map path->mod-date-value key) (get modification-date-hash key))))) ; data has changed
-
-(module-test-internal
- (check-true (modification-date-expired? sample-01)) ; because key hasn't been stored
- (check-false (apply modification-date-expired? samples))) ; because files weren't changed
+(define (mod-date-missing-or-changed? source-path template-path)
+  (not (hash-has-key? mod-date-hash (paths->key source-path template-path))))
 
 
 (define (list-of-pathish? x) (and (list? x) (andmap pathish? x)))
@@ -79,7 +65,7 @@
   ;; Because certain files will pass through multiple times (e.g., templates)
   ;; And with render, they would be rendered repeatedly.
   ;; Using reset-modification-dates is sort of like session control.
-  (reset-modification-dates) 
+  (reset-mod-date-hash) 
   (for-each (λ(x) ((if (pagetree-source? x)
                        render-pagetree
                        render-from-source-or-output-path) x)) xs))
@@ -122,16 +108,17 @@
     (begin
       (message "render: directory require files have changed. Resetting cache & file-modification table")
       (reset-cache) ; because stored data is obsolete
-      (reset-modification-dates))) ; because rendered files are obsolete
+      (reset-mod-date-hash))) ; because rendered files are obsolete
   requires-changed?)
 
 
 (define/contract (render-needed? source-path template-path output-path)
-  (complete-path? (or/c #f complete-path?) complete-path? . -> . boolean?)
-  (or (not (file-exists? output-path))
-      (modification-date-expired? source-path template-path)
-      (and (not (null-source? source-path)) (file-needed-rerequire? source-path))
-      (and (world:check-directory-requires-in-render?) (directory-requires-changed? source-path))))
+  (complete-path? (or/c #f complete-path?) complete-path? . -> . (or/c #f symbol?))
+  (or (and (not (file-exists? output-path)) 'file-missing)
+        (and (mod-date-missing-or-changed? source-path template-path) 'mod-key-missing-or-changed)
+        (and (not (null-source? source-path)) (file-needed-rerequire? source-path) 'file-needed-rerequire)
+        (and (world:check-directory-requires-in-render?) (directory-requires-changed? source-path) 'dir-requires-changed)))
+
 
 
 (define/contract+provide (render-to-file-if-needed source-path [template-path #f] [maybe-output-path #f] #:force [force #f])
@@ -160,8 +147,11 @@
       [else (error (format "render: no rendering function found for ~a" source-path))]))
   
   (message (format "render: ~a" (file-name-from-path source-path)))
-  (store-render-in-modification-dates source-path template-path) ; todo?: this may need to go after render
-  (apply render-proc (cons source-path (if template-path (list template-path) null))))
+  (define render-result (apply render-proc (cons source-path (if template-path (list template-path) null))))
+  ;; wait till last possible moment to store mod dates, because render-proc may also trigger its own subrenders
+  ;; e.g., of a template. 
+  (update-mod-date-hash source-path template-path) 
+  render-result)
 
 
 (define/contract (render-null-source source-path)
@@ -275,7 +265,6 @@
                                    racket/format
                                    racket/function
                                    racket/port 
-                                   racket/rerequire 
                                    racket/list
                                    racket/match
                                    racket/string

@@ -1,10 +1,10 @@
 #lang racket/base
-(require racket/path racket/function racket/file file/cache sugar/coerce "project.rkt"  "world.rkt" racket/rerequire "debug.rkt")
+(require racket/path racket/file file/cache sugar/coerce "project.rkt" "world.rkt" racket/rerequire "debug.rkt")
 
 ;; The cache is a hash with paths as keys.
 ;; The cache values are also hashes, with key/value pairs for that path.
 
-(provide reset-cache cached-require path->key path->hash)
+(provide reset-cache cached-require paths->key path->hash)
 (provide (all-from-out racket/rerequire))
 
 (define (get-cache-dir)
@@ -15,7 +15,7 @@
   (cache-remove #f (get-cache-dir)))
 
 
-(define (path->key source-path [template-path #f])
+(define (paths->key source-path [template-path #f])
   ;; key is list of file + mod-time pairs
   (define path-strings (map (compose1 ->string ->complete-path)
                      (append (list source-path)
@@ -41,7 +41,7 @@
     [(world:current-compile-cache-active)
      (define pickup-file (build-path (get-cache-dir) "pickup.rktd"))
      (cache-file pickup-file #:exists-ok? #t
-                 (path->key path)
+                 (paths->key path)
                  (get-cache-dir)
                  (λ _ (write-to-file (path->hash path) pickup-file #:exists 'replace))
                  #:max-cache-size (world:current-compile-cache-max-size))
