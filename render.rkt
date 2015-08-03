@@ -1,6 +1,6 @@
 #lang racket/base
 (require racket/file racket/path racket/match)
-(require sugar/coerce sugar/test sugar/define sugar/container sugar/file sugar/len)
+(require sugar/test sugar/define sugar/container sugar/file)
 (require "file.rkt" "cache.rkt" "world.rkt" "debug.rkt" "pagetree.rkt" "project.rkt" "template.rkt" "rerequire.rkt")
 
 ;; used to track renders according to modification dates of component files
@@ -100,25 +100,14 @@
   (file-proc source-or-output-path))
 
 
-(define (directory-requires-changed? source-path)
-  (define directory-require-files (get-directory-require-files source-path))
-  (define rerequire-results (and directory-require-files (map file-needed-rerequire? directory-require-files)))
-  (define requires-changed? (and rerequire-results (ormap (λ(x) x) rerequire-results)))
-  (when requires-changed?
-    (begin
-      (message "render: directory require files have changed. Resetting cache & file-modification table")
-      (reset-cache) ; because stored data is obsolete
-      (reset-mod-date-hash))) ; because rendered files are obsolete
-  requires-changed?)
-
-
 (define/contract (render-needed? source-path template-path output-path)
   (complete-path? (or/c #f complete-path?) complete-path? . -> . (or/c #f symbol?))
-  (or (and (not (file-exists? output-path)) 'file-missing)
-        (and (mod-date-missing-or-changed? source-path template-path) 'mod-key-missing-or-changed)
-        (and (not (null-source? source-path)) (file-needed-rerequire? source-path) 'file-needed-rerequire)
-        (and (world:check-directory-requires-in-render?) (directory-requires-changed? source-path) 'dir-requires-changed)))
-
+  ;; return symbol rather than boolean for extra debugging information
+  (cond
+    [(not (file-exists? output-path)) 'file-missing]
+    [(mod-date-missing-or-changed? source-path template-path) 'mod-key-missing-or-changed]
+    [(file-needed-rerequire? source-path) 'file-needed-rerequire]
+    [else #f]))
 
 
 (define/contract+provide (render-to-file-if-needed source-path [template-path #f] [maybe-output-path #f] #:force [force #f])
@@ -164,10 +153,11 @@
 (define/contract (render-scribble-source source-path)
   (complete-path? . -> . string?)
   (match-define-values (source-dir _ _) (split-path source-path))
-  (file-needed-rerequire? source-path) ; called for its reqrequire side effect only, so dynamic-require below isn't cached
+  (file-needed-rerequire? source-path)
+  (define scribble-render (dynamic-require 'scribble/render 'render))
   (time (parameterize ([current-directory (->complete-path source-dir)])
           ;; BTW this next action has side effects: scribble will copy in its core files if they don't exist.
-          ((dynamic-require 'scribble/render 'render) (list (dynamic-require source-path (world:current-main-export))) (list source-path))))
+          (scribble-render (list (dynamic-require source-path 'doc)) (list source-path))))
   (define result (file->string (->output-path source-path)))
   (delete-file (->output-path source-path)) ; because render promises the data, not the side effect
   result)
@@ -217,8 +207,8 @@
                  (filter (λ(x) (->boolean x)) ; if any of the possibilities below are invalid, they return #f 
                          (list                     
                           (let ([source-metas (cached-require source-path (world:current-meta-export))])
-                              (and ((->symbol (world:current-template-meta-key)) . in? . source-metas)
-                                   (build-path source-dir (select-from-metas (->string (world:current-template-meta-key)) source-metas)))) ; path based on metas
+                            (and (hash-has-key? source-metas (->symbol (world:current-template-meta-key)))
+                                 (build-path source-dir (select-from-metas (->string (world:current-template-meta-key)) source-metas)))) ; path based on metas
                           (and (filename-extension output-path) (build-path (world:current-project-root) 
                                                                             (add-ext (world:current-default-template-prefix) (get-ext output-path))))))) ; path to default template
           (and (filename-extension output-path) (build-path (world:current-server-extras-path) (add-ext (world:current-fallback-template-prefix) (get-ext output-path)))))))) ; fallback template
@@ -226,8 +216,9 @@
 
 (define/contract (file-needed-rerequire? source-path)
   (complete-path? . -> . boolean?)
-  ;; if the file needed to be reloaded, the dependency list will be > 0
-  (> (len (dynamic-rerequire source-path)) 0))
+  (and (not (null-source? source-path)) ; null sources can't be compiled
+       ;; if the file needed to be reloaded, the dependency list will be > 0
+       (> (length (dynamic-rerequire source-path)) 0)))
 
 
 ;; set up namespace for module caching
