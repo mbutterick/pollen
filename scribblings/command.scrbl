@@ -770,7 +770,7 @@ the expected number of arguments does not match the given number
    "\n"
    "chastened"}
  
-The answer is to use a @italic{rest argument} in the function, which takes the ``rest'' of the arguments — however many there may be — and combines them into a single @racket[list]. If we rewrite   @code{jejune} with a rest argument, we can fix the problem:
+The answer is to use a @italic{rest argument} in the function, which takes the ``rest'' of the arguments — however many there may be — and combines them into a single @racket[list]. If we rewrite  @code{jejune} with a rest argument, we can fix the problem:
 
 @codeblock|{
 #lang pollen
@@ -783,6 +783,56 @@ The answer is to use a @italic{rest argument} in the function, which takes the `
 @repl-output{'(jejune "Deeply" "\n" "chastened")}
 
 
+@section{Embedding character entities}
+
+XML and HTML support @italic{character entities}, a way of encoding Unicode characters with a name or number. For instance, in HTML, the copyright symbol @litchar{©} can be encoded by name as @tt{&copy;} or by number as @tt{&#169;}.
+
+Entities originated as a way of embedding Unicode characters in an ASCII data stream. Pollen and Racket, however, support Unicode directly. So does every major web browser (though your document may need a Unicode character-set declaration to trigger it). So usually, your best bet is insert Unicode characters directly into your source rather than use entities.
+
+But if you really need entities, here's what to do. Pollen treats everything as text by default, so you can't insert entities merely by typing them, because they'll just be converted to text:
+
+@codeblock|{
+#lang pollen
+◊div{copy
+     169}
+}|
+
+@repl-output{'(div "copy" "\n" "169")}
+
+Instead, named entities are handled as @secref["symbols" #:doc '(lib "scribblings/guide/guide.scrbl")] and numeric entities are, unsurprisingly, @secref["numbers" #:doc '(lib "scribblings/guide/guide.scrbl")]. So you can use the @racket[string->symbol] and @racket[string->number] functions to convert your entity input:
+
+@codeblock|{
+#lang pollen
+◊div{◊string->symbol{copy}
+     ◊string->number{169}}
+}|
+
+@repl-output{'(div copy "\n" 169)}
+
+Notice that in the output, there are no more quote marks around @tt{copy} and @tt{169}, indicating that they're not strings. When you pass this result to a converter like @racket[->html], the entities will be escaped correctly:
+
+@codeblock|{
+#lang pollen
+◊(require pollen/template)
+
+◊->html{◊div{copy 169}}
+
+◊->html{◊div{◊string->symbol{copy} ◊string->number{169}}}
+}|
+
+@repl-output{<div>copy 169</div>
+
+<div>&copy; &#169;</div>}
+
+For numeric entities, you can also use a four-digit Unicode hex number by prefacing it with @litchar{#x}, which is the standard Racket prefix for a hex number:
+
+@codeblock|{
+#lang pollen
+◊div{◊string->number{169}
+     ◊string->number{#x00a9}}
+}|
+
+@repl-output{'(div 169 "\n" 169)}
 
 @section{Further reading}
 
