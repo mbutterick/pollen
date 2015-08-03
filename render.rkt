@@ -198,7 +198,7 @@
            [(bytes? ,(world:current-main-export)) ,(world:current-main-export)] ; if main export is binary, just pass it through
            [else
             (include-template #:command-char ,(world:current-command-char) (file ,(->string (find-relative-path source-dir template-path))))]))))
-  (time (parameterize ([current-directory source-dir]) ; because include-template wants to work relative to source location
+  (time (parameterize ([current-directory (->complete-path source-dir)]) ; because include-template wants to work relative to source location
           (render-through-eval expr-to-eval))))
 
 
@@ -216,10 +216,9 @@
           (ormap (λ(p) (if (ormap file-exists? (list p (->template-source-path p) (->preproc-source-path p) (->null-source-path p))) p #f)) 
                  (filter (λ(x) (->boolean x)) ; if any of the possibilities below are invalid, they return #f 
                          (list                     
-                          (parameterize ([current-directory (world:current-project-root)])
-                            (let ([source-metas (cached-require source-path (world:current-meta-export))])
+                          (let ([source-metas (cached-require source-path (world:current-meta-export))])
                               (and ((->symbol (world:current-template-meta-key)) . in? . source-metas)
-                                   (build-path source-dir (select-from-metas (->string (world:current-template-meta-key)) source-metas))))) ; path based on metas
+                                   (build-path source-dir (select-from-metas (->string (world:current-template-meta-key)) source-metas)))) ; path based on metas
                           (and (filename-extension output-path) (build-path (world:current-project-root) 
                                                                             (add-ext (world:current-default-template-prefix) (get-ext output-path))))))) ; path to default template
           (and (filename-extension output-path) (build-path (world:current-server-extras-path) (add-ext (world:current-fallback-template-prefix) (get-ext output-path)))))))) ; fallback template
