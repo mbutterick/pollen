@@ -1,5 +1,5 @@
 #lang racket/base
-(require racket/file racket/path racket/match)
+(require racket/file racket/rerequire racket/path racket/match)
 (require sugar/coerce sugar/test sugar/define sugar/container sugar/file sugar/len)
 (require "file.rkt" "cache.rkt" "world.rkt" "debug.rkt" "pagetree.rkt" "project.rkt" "template.rkt")
 
