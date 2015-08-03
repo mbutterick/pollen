@@ -834,6 +834,8 @@ For numeric entities, you can also use a four-digit Unicode hex number by prefac
 
 @repl-output{'(div 169 "\n" 169)}
 
+Of course, you don't need to use @racket[string->symbol] and @racket[string->number] directly in your source. You can also define tag functions that generate entities. The key point is that to be treated as an entity, the return value must be a symbol or number, rather than a string.
+
 @section{Further reading}
 
 The Pollen language is a variant of Racket's own text-processing language, called Scribble. Thus, most things that can be done with Scribble syntax can also be done with Pollen syntax. For the sake of clarity & brevity, I've only shown you the highlights here. But if you want the full story, see @secref["reader" #:doc '(lib "scribblings/scribble/scribble.scrbl")] in the Scribble documentation.
