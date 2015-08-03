@@ -1,7 +1,7 @@
 #lang racket/base
-(require racket/file racket/rerequire racket/path racket/match)
+(require racket/file racket/path racket/match)
 (require sugar/coerce sugar/test sugar/define sugar/container sugar/file sugar/len)
-(require "file.rkt" "cache.rkt" "world.rkt" "debug.rkt" "pagetree.rkt" "project.rkt" "template.rkt")
+(require "file.rkt" "cache.rkt" "world.rkt" "debug.rkt" "pagetree.rkt" "project.rkt" "template.rkt" "rerequire.rkt")
 
 ;; used to track renders according to modification dates of component files
 (define mod-date-hash (make-hash))
@@ -227,15 +227,8 @@
 
 (define/contract (file-needed-rerequire? source-path)
   (complete-path? . -> . boolean?)
-  (define-values (source-dir source-name _) (split-path source-path))
-  ;; use dynamic-rerequire now to force render for cached-require later,
-  ;; otherwise the source file will get cached by compiler
-  (define port-for-catching-file-info (open-output-string))
-  (parameterize ([current-directory source-dir]
-                 [current-error-port port-for-catching-file-info])
-    (dynamic-rerequire source-path))
-  ;; if the file needed to be reloaded, there will be a message in the port
-  (> (len (get-output-string port-for-catching-file-info)) 0))
+  ;; if the file needed to be reloaded, the dependency list will be > 0
+  (> (len (dynamic-rerequire source-path)) 0))
 
 
 ;; set up namespace for module caching
@@ -277,6 +270,7 @@
                                    pollen/main
                                    pollen/reader-base
                                    pollen/pagetree
+                                   pollen/rerequire
                                    pollen/tag
                                    pollen/template
                                    pollen/world

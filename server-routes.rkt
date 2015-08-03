@@ -1,11 +1,11 @@
 #lang racket/base
-(require racket/list racket/contract racket/rerequire racket/file racket/format xml racket/match racket/set racket/string racket/promise racket/path)
+(require racket/list racket/contract racket/file racket/format xml racket/match racket/set racket/string racket/promise racket/path)
 (require web-server/http/xexpr web-server/dispatchers/dispatch)
 (require net/url)
 (require web-server/http/request-structs)
 (require web-server/http/response-structs)
 (require 2htdp/image)
-(require "world.rkt" "render.rkt" sugar txexpr "file.rkt" "debug.rkt" "pagetree.rkt" "cache.rkt")
+(require "world.rkt" "render.rkt" sugar txexpr "file.rkt" "debug.rkt" "pagetree.rkt" "cache.rkt" "rerequire.rkt")
 
 (module+ test (require rackunit))
 
