@@ -205,10 +205,12 @@
          (or ; Build the possible paths and use the first one that either exists, or has existing source (template, preproc, or null)
           (ormap (λ(p) (if (ormap file-exists? (list p (->template-source-path p) (->preproc-source-path p) (->null-source-path p))) p #f)) 
                  (filter (λ(x) (->boolean x)) ; if any of the possibilities below are invalid, they return #f 
-                         (list                     
+                         (list
+                          ;; this op touches the cache so set up current-directory correctly
+                          (parameterize ([current-directory (world:current-project-root)])
                           (let ([source-metas (cached-require source-path (world:current-meta-export))])
                             (and (hash-has-key? source-metas (->symbol (world:current-template-meta-key)))
-                                 (build-path source-dir (select-from-metas (->string (world:current-template-meta-key)) source-metas)))) ; path based on metas
+                                 (build-path source-dir (select-from-metas (->string (world:current-template-meta-key)) source-metas))))) ; path based on metas
                           (and (filename-extension output-path) (build-path (world:current-project-root) 
                                                                             (add-ext (world:current-default-template-prefix) (get-ext output-path))))))) ; path to default template
           (and (filename-extension output-path) (build-path (world:current-server-extras-path) (add-ext (world:current-fallback-template-prefix) (get-ext output-path)))))))) ; fallback template
