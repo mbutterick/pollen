@@ -18,7 +18,7 @@ Instead, use a pagetree. A @italic{pagetree} is a simple abstraction for definin
 Pagetrees can be flat or hierarchical. A flat pagetree is just a @seclink["Lists__Iteration__and_Recursion"
 #:doc '(lib "scribblings/guide/guide.scrbl")]{list} of pagenodes. A hierarchical pagetree can also contain recursively nested lists of pagenodes. But you needn't pay attention to this distinction, as the pagetree functions don't care which kind you use. Neither do I.
 
-Pagetrees surface throughout the Pollen system. They're primarily used for navigation — for instance, calculating ``previous,'' ``next,'' or ``up'' links for a given page. A special pagetree, @racketfont{index.ptree}, is used by the project server to order the files in a dashboard. Pagetrees can also be used to define batches of files for certain operations, for instance @secref["raco_pollen_render" #:doc '(lib "pollen/scribblings/pollen.scrbl")]. You might find other uses for them too.
+Pagetrees surface throughout the Pollen system. They're primarily used for navigation — for instance, calculating ``previous,'' ``next,'' or ``up'' links for a given page. A special pagetree, @filepath{index.ptree}, is used by the project server to order the files in a dashboard. Pagetrees can also be used to define batches of files for certain operations, for instance @secref["raco_pollen_render" #:doc '(lib "pollen/scribblings/pollen.scrbl")]. You might find other uses for them too.
 
 
 
@@ -103,7 +103,7 @@ conclusion.html
 
 @section{Making pagetrees by hand}
 
-Experienced programmers may want to know that because a pagetree is just an X-expression, you can synthesize a pagetree using any Pollen or Racket tools for making X-expressions. For example, here's some Racket code that generates the same pagetree as the @racketfont{flat.ptree} source file above:
+Experienced programmers may want to know that because a pagetree is just an X-expression, you can synthesize a pagetree using any Pollen or Racket tools for making X-expressions. For example, here's some Racket code that generates the same pagetree as the @filepath{flat.ptree} source file above:
 
 @fileblock["make-flat-ptree.rkt" @codeblock{
 #lang racket
@@ -116,13 +116,22 @@ Experienced programmers may want to know that because a pagetree is just an X-ex
 
 Note that you need to take more care when building a pagetree by hand. Pagenodes are symbols, not strings, thus the use of @racket[string->symbol] is mandatory. One benefit of using a pagetree source file is that it takes care of this housekeeping for you.
 
+@section{The automatic pagetree}
+
+In situations where Pollen needs a pagetree but can't find one, it will automatically synthesize a pagetree from a listing of files in the directory. This arises most frequently when @secref["Using_the_dashboard" #:doc '(lib "pollen/scribblings/pollen.scrbl")] in a directory that doesn't contain an explicit @filepath{index.ptree}. This way, you can get going with a project without having to stop for @racketfont{.ptree} housekeeping.
+
+As usual, convenience has a cost. Pollen doesn't know anything about which files in your directory are relevant to the project, so it includes all of them. For instance, if you start your project server on an OS X desktop, you'll see things like @filepath{Thumbs.db} and @filepath{desktop.ini}. 
+
+Also, though you can use pagetree-navigation functions like @racket[next] or @racket[siblings] with an automatic pagetree, the results of these functions are apt to include irrelevant files. So if you need to do pagetree navigation, that's probably the point where you want to start using an explicit pagetree.
+
+
 @section{Using pagetrees for navigation}
 
 Typically you'll call the pagetree-navigation functions from inside templates, using the special variable @racket[here] as the starting point. For more on this technique, see @secref["Pagetree_navigation" #:tag-prefixes '( "tutorial-2")].
 
-@section{Using @racketfont{index.ptree} in the dashboard}
+@section{Using @filepath{index.ptree} in the dashboard}
 
-When you're using the project server to view the files in a directory, the server will first look for a file called @racketfont{index.ptree}. If it finds this pagetree file, it will use it to build the dashboard. If not, then it will synthesize a pagetree using a directory listing. For more on this technique, see @secref["Using_the_dashboard" #:doc '(lib "pollen/scribblings/pollen.scrbl")].
+When you're using the project server to view the files in a directory, the server will first look for a file called @filepath{index.ptree}. If it finds this pagetree file, it will use it to build the dashboard. If not, then it will synthesize a pagetree using a directory listing. For more on this technique, see @secref["Using_the_dashboard" #:doc '(lib "pollen/scribblings/pollen.scrbl")].
 
 @section{Using pagetrees with @exec{raco pollen render}}
 
