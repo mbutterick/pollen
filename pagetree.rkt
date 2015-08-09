@@ -76,9 +76,16 @@
     (define (sort-names xs) (sort xs #:key ->string string<?))
     ;; put subdirs in list ahead of files (so they appear at the top)
     (append (sort-names subdirectories) (sort-names pagetree-sources) (sort-names other-files)))
+
+  ;; in general we don't filter the directory list for the automatic pagetree.
+  ;; this can be annoying sometimes but it's consistent with the policy of avoiding magic behavior.
+  ;; certain files (leading dot) will be ignored by `directory-list` anyhow.
+  ;; we will, however, ignore Pollen's cache files, because those shouldn't be project-manipulated.
+  (define (not-pollen-cache? path)
+    (not (member (->string path) world:cache-names)))
   
   (if (directory-exists? dir )
-      (decode-pagetree (map ->symbol (unique-sorted-output-paths (directory-list dir))))
+      (decode-pagetree (map ->symbol (unique-sorted-output-paths (filter not-pollen-cache? (directory-list dir)))))
       (error (format "directory->pagetree: directory ~a doesn't exist" dir)))) 
 
 ;; Try loading from pagetree file, or failing that, synthesize pagetree.

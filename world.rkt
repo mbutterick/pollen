@@ -45,6 +45,7 @@
 
 (define-settable cache-filename "pollen.cache")
 (define-settable cache-dir-name "pollen-cache")
+(define cache-names (list (current-cache-filename) (current-cache-dir-name)))
 
 (define-settable decodable-extensions (list (current-markup-source-ext) (current-pagetree-source-ext)))
 
