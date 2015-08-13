@@ -68,6 +68,8 @@ Render multiple @racket[_source-paths] in one go. This can be faster than @racke
 [(render-pagetree [pagetree-source pathish?]) void?])]
 Using @racket[_pagetree], or a pagetree loaded from @racket[_pagetree-source], render the pages in that pagetree using @racket[render-batch].
 
+Note that @racket[_pagetree] or @racket[_pagetree_source] is used strictly as a list of files to render. It is not used, for instance, as the navigational pagetree for the rendered files.
+
 @defproc[
 (get-template-for
 [source-path complete-path?])
