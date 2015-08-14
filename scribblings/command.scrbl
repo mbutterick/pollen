@@ -35,6 +35,70 @@ Still, if you don't want to use the lozenge as your command character, you can s
 
 But don't knock the lozenge till you try it. 
 
+@subsection{Lozenge helpers}
+
+
+@subsubsection{AHK script}
+
+Courtesy of @link["https://github.com/maphew"]{Matt Wilkie}: ``Here's a working AHK script to have double-tap backtick send the lozenge character. It took way more time than I want to think about, once started I couldn't let go.''
+
+@fileblock["tick-tick-lozenge.ahk"]{
+@foreign-code{
+;
+; Double-tap backtick sends Pollen command character (◊)
+; For some reason I needed to use Unicode 'U+25CA' 
+; instead of the standard alt-code '9674'
+;
+; Adapted from http://ahkscript.org/docs/commands/SetTimer.htm
+; and http://www.autohotkey.com/board/topic/145507-how-to-use-double-tap-backtick-with-pass-through/
+;
+#EscapeChar \
+$`::
+if winc_presses > 0 
+    {winc_presses += 1
+    return
+    }
+
+winc_presses = 1
+SetTimer, TheKey, 250 ; Wait for more presses, in milliseconds
+return
+
+TheKey:
+    SetTimer, TheKey, off
+    if winc_presses = 1 ; The key was pressed once.
+        {Send `
+        }
+    else if winc_presses = 2 ; The key was pressed twice.
+        {Send {U+25CA}
+        }
+
+; Regardless of which action above was triggered, reset the count to
+; prepare for the next series of presses:
+winc_presses = 0
+return}}
+
+
+@subsubsection{Emacs script}
+
+Courtesy of @link["https://github.com/lerichard95"]{Richard Le}: ``If you're using Emacs, I tried to write a tiny function that inserts the lozenge character. I chose M-\ because that's the key for the lambda character in DrRacket.''
+
+@foreign-code{
+;; Put this in your Emacs .init file:
+;; enable lozenge for Pollen
+;; ◊◊◊◊◊◊◊◊◊◊◊◊◊
+;; 'mule-unicode part from
+;; https://lists.gnu.org/archive/html//emacs-devel/2005-03/msg01187.html
+(defun insert-lozenge ()
+  "inserts the lozenge character for use with Pollen"
+  ;; enables function through M-x
+  (interactive)
+  ;; insert the proper character
+  (insert (make-char
+           'mule-unicode-2500-33ff 34 42)))
+
+;; Bind key to M-\ a la DrRacket for lambda
+(global-set-key "\M-\\" 'insert-lozenge)}
+
 @;--------------------------------------------------------------------
 @section{The two command modes: text mode & Racket mode}
 

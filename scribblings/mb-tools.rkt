@@ -35,7 +35,8 @@
 (define (errorblock . args)
   (nested (racketerror (racketfont* (convert-newlines args)))))
 
-
+(define (foreign-code . args)
+  (compound-paragraph (style "foreign-code" (list (css-style-addition mb-css) (alt-tag "div"))) (list (apply verbatim args))))
 
 (define (terminal . args)
   (compound-paragraph (style "terminal" (list (css-style-addition mb-css) (alt-tag "div"))) (list (apply verbatim args))))
