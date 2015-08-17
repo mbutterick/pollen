@@ -1,5 +1,5 @@
 #lang racket/base
-(require pollen/world)
+(require pollen/world pollen/render racket/file racket/path sugar/coerce pollen/file pollen/pagetree racket/string racket/list)
 
 ;; The use of dynamic-require throughout this file is intentional:
 ;; this way, low-dependency raco commands (like "version") are faster.
@@ -14,7 +14,7 @@
 
 (define (dispatch command-name)
   (define (get-first-arg-or-current-dir)
-    ((dynamic-require 'racket/path 'normalize-path)
+    (normalize-path
      (with-handlers ([exn:fail? (λ(exn) (current-directory))])
        ;; incoming path argument is handled as described in docs for current-directory
        (very-nice-path (vector-ref (current-command-line-arguments) 1)))))
@@ -35,7 +35,7 @@
     [else (handle-unknown command-name)]))
 
 (define (very-nice-path x)
-  (path->complete-path (simplify-path (cleanse-path ((dynamic-require 'sugar/coerce '->path) x)))))
+  (path->complete-path (simplify-path (cleanse-path (->path x)))))
 
 (define (handle-test)
   (displayln "raco pollen is installed correctly"))
@@ -65,8 +65,8 @@ version                print the version (~a)" (world:current-server-port) (worl
         (let ([dir first-arg]) ; now we know it's a dir
           (parameterize ([current-directory dir]
                          [world:current-project-root dir])
-            (define preprocs (filter (dynamic-require 'pollen/file 'preproc-source?) (directory-list dir)))
-            (define static-pagetrees (filter (dynamic-require 'pollen/file 'pagetree-source?) (directory-list dir)))
+            (define preprocs (filter preproc-source? (directory-list dir)))
+            (define static-pagetrees (filter pagetree-source? (directory-list dir)))
             ;; if there are no static pagetrees, use make-project-pagetree
             ;; (which will synthesize a pagetree if needed, which includes all sources)
             (define preprocs-and-static-pagetrees (append preprocs static-pagetrees))
@@ -75,14 +75,14 @@ version                print the version (~a)" (world:current-server-port) (worl
                    (cond
                      [(null? preprocs-and-static-pagetrees)
                       (displayln (format "Rendering generated pagetree for directory ~a" dir))
-                      (cdr ((dynamic-require 'pollen/pagetree 'make-project-pagetree) dir))]
+                      (cdr (make-project-pagetree dir))]
                      [else
                       (displayln (format "Rendering preproc & pagetree files in directory ~a" dir))
                       preprocs-and-static-pagetrees])))
-            (apply (dynamic-require 'pollen/render 'render-batch) batch-to-render)))
+            (apply render-batch batch-to-render)))
         (begin ; first arg is a file
-          (displayln (format "Rendering ~a" ((dynamic-require 'racket/string 'string-join) (map (dynamic-require 'sugar/coerce '->string) path-args) " "))) 
-          (apply (dynamic-require 'pollen/render 'render-batch) path-args)))))
+          (displayln (format "Rendering ~a" (string-join (map ->string path-args) " ")))
+          (apply render-batch path-args)))))
 
 (define (handle-start directory [port #f])
   (when (not (directory-exists? directory))
@@ -101,13 +101,13 @@ version                print the version (~a)" (world:current-server-port) (worl
   
   (define (delete-it path)
     (cond
-      [(directory-exists? path) ((dynamic-require 'racket/file 'delete-directory/files) path)]
+      [(directory-exists? path) (delete-directory/files path)]
       [(file-exists? path) (delete-file path)]))
   
   (define (contains-directory? possible-superdir possible-subdir)
     (define (has-prefix? xs prefix)
       (and (>= (length xs) (length prefix))
-           (andmap equal? prefix ((dynamic-require 'racket/list 'take) xs (length prefix)))))
+           (andmap equal? prefix (take xs (length prefix)))))
     ((explode-path possible-subdir) . has-prefix? . (explode-path possible-superdir)))
   
   (define source-dir (simplify-path directory))
@@ -122,9 +122,9 @@ version                print the version (~a)" (world:current-server-port) (worl
     (error 'publish "aborted because target directory for publishing (~a) can't be the same as current directory (~a)" target-dir (current-directory)))
   (displayln "publishing ...")
   (when (directory-exists? target-dir)
-    ((dynamic-require 'racket/file 'delete-directory/files) target-dir))
-  ((dynamic-require 'racket/file 'copy-directory/files) source-dir target-dir)
-  (for-each delete-it ((dynamic-require 'racket/file 'find-files) (dynamic-require 'pollen/file 'pollen-related-file?) target-dir))
+    (delete-directory/files target-dir))
+  (copy-directory/files source-dir target-dir)
+  (for-each delete-it (find-files pollen-related-file? target-dir))
   (displayln (format "completed to ~a" target-dir)))
 
 (define (handle-unknown command)
