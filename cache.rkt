@@ -21,10 +21,14 @@
                         (if template-path (list template-path) null)
                         (or (get-directory-require-files source-path) null)))
   (define project-root (world:current-project-root))
+  ;; can't use relative paths for cache keys because source files include `here-path` which is absolute.
+  ;; problem is that cache could appear valid on another filesystem (based on relative pathnames & mod dates)
+  ;; but would actually be invalid (because the `here-path` names are wrong).
   (map (λ(ps) (define cp (->complete-path ps))
-         (cons (path->string (find-relative-path project-root cp)) (file-or-directory-modify-seconds cp))) path-strings))
+         (cons (path->string cp) (file-or-directory-modify-seconds cp))) path-strings))
 
-
+(define (key->source-path key)
+  (car (car key)))
 
 (define (update-directory-requires source-path)
   (define directory-require-files (get-directory-require-files source-path))
@@ -43,6 +47,8 @@
 
 (define ram-cache (make-hash))
 
+
+(require sugar/debug)
 (define (cached-require path-string subkey)  
   (define path (with-handlers ([exn:fail? (λ _ (error 'cached-require (format "~a is not a valid path" path-string)))])
                  (->complete-path path-string)))
@@ -53,14 +59,17 @@
   (cond
     [(world:current-compile-cache-active)
      (define key (paths->key path))
-     (define pickup-file (build-path cache-dir "pickup.rktd"))
+     ;; use multiple pickup files to avoid locking issues.
+     ;; pickup-file hierarchy just mirrors the project hierarchy.
+     (define dest-file (build-path cache-dir (path->string (find-relative-path (world:current-project-root) (string->path (format "~a.rktd" (key->source-path key)))))))
+     (make-parent-directory* dest-file)
      (hash-ref (hash-ref! ram-cache key (λ _
-                                          (cache-file pickup-file
+                                          (cache-file dest-file
                                                       #:exists-ok? #t
                                                       key
                                                       cache-dir
-                                                      (λ _ (write-to-file (path->hash path) pickup-file #:exists 'replace))
+                                                      (λ _ (write-to-file (path->hash path) dest-file #:exists 'replace))
                                                       #:max-cache-size (world:current-compile-cache-max-size))
-                                          (file->value pickup-file))) subkey)]
+                                          (file->value dest-file))) subkey)]
     [else (parameterize ([current-namespace (make-base-namespace)])
             (dynamic-require path subkey))]))

@@ -86,4 +86,4 @@
 (define-settable extension-escape-char #\!)
 
 (define-settable compile-cache-active #t)
-(define-settable compile-cache-max-size (* 5 1024 1024)) ; = 5 megabytes
+(define-settable compile-cache-max-size (* 10 1024 1024)) ; = 10 megabytes
