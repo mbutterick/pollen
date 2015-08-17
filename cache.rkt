@@ -18,8 +18,8 @@
 (define (paths->key source-path [template-path #f])
   ;; key is list of file + mod-time pairs
   (define path-strings (append (list source-path)
-                        (if template-path (list template-path) null)
-                        (or (get-directory-require-files source-path) null)))
+                               (if template-path (list template-path) null)
+                               (or (get-directory-require-files source-path) null)))
   (define project-root (world:current-project-root))
   ;; can't use relative paths for cache keys because source files include `here-path` which is absolute.
   ;; problem is that cache could appear valid on another filesystem (based on relative pathnames & mod dates)
@@ -45,10 +45,26 @@
           (world:current-meta-export) (dynamic-require path (world:current-meta-export)))))
 
 
+;; include this from 6.2 for compatibility back to 6.0 (formerly `make-parent-directory*`)
+(define (make-parent-directory p)
+  (unless (path-string? p)
+    (raise-argument-error 'make-parent-directory "path-string?" p))
+  
+  (define (make-directory* dir)
+    (let-values ([(base name dir?) (split-path dir)])
+      (when (and (path? base) (not (directory-exists? base)))
+        (make-directory* base))
+      (unless (directory-exists? dir)
+        (with-handlers ([exn:fail:filesystem:exists? void])
+          (make-directory dir)))))
+  
+  (define-values (base name dir?) (split-path p))
+  (when (path? base)
+      (make-directory* base)))
+
+
 (define ram-cache (make-hash))
 
-
-(require sugar/debug)
 (define (cached-require path-string subkey)  
   (define path (with-handlers ([exn:fail? (λ _ (error 'cached-require (format "~a is not a valid path" path-string)))])
                  (->complete-path path-string)))
@@ -62,7 +78,7 @@
      ;; use multiple pickup files to avoid locking issues.
      ;; pickup-file hierarchy just mirrors the project hierarchy.
      (define dest-file (build-path cache-dir (path->string (find-relative-path (world:current-project-root) (string->path (format "~a.rktd" (key->source-path key)))))))
-     (make-parent-directory* dest-file)
+     (make-parent-directory dest-file)
      (hash-ref (hash-ref! ram-cache key (λ _
                                           (cache-file dest-file
                                                       #:exists-ok? #t
