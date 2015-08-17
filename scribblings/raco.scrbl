@@ -93,6 +93,10 @@ Make a copy of the project directory on the desktop, but without any source file
 
 If you're already in your project directory and want to publish somewhere other than the desktop, use @racket[raco pollen publish _. _dest-dir].
 
+@section{@racket[raco pollen reset]}
+
+Resets Pollen's compile cache. Resetting does not delete the compile cache, but rather just zeroes out the cache database. On the next run, obsolete cache files will be deleted.
+
 @section{@racket[raco pollen version]}
 
 Would you believe this prints the Pollen version number.

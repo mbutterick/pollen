@@ -28,6 +28,7 @@
     ;; "second" arg is actually third in command line args, so use cddr not cdr
     [("render") (handle-render (cons (get-first-arg-or-current-dir) (map very-nice-path (cddr (vector->list (current-command-line-arguments))))))]
     [("version") (handle-version)]
+    [("reset") (handle-reset)]
     [("clone" "publish") (define rest-args
                            (with-handlers ([exn:fail? (λ _ #f)])
                              (cddr (vector->list (current-command-line-arguments)))))
@@ -51,11 +52,17 @@ render filename        render filename only (can be source or output name)
 publish                copy project to desktop without source files
 publish [dir] [dest]   copy project in dir to dest without source files
                           (warning: overwrites existing dest dir)
+reset                  reset compile cache
 version                print the version (~a)" (world:current-server-port) (world:current-pollen-version))))
 
 
 (define (handle-version)
   (displayln (world:current-pollen-version)))
+
+(define (handle-reset)
+  (display "Resetting cache ...")
+  ((dynamic-require 'pollen/cache 'reset-cache))
+  (displayln " done"))
 
 
 (define (handle-render path-args)
