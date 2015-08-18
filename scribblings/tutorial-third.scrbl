@@ -469,7 +469,7 @@ expected: 1
   given: 3
 }
 
-The error arises because the @racket[em] function is getting three arguments — @code{"RacketCon " "BOOM" " year"} — but has been defined to only accept one argument, @racket[word]. This is the ``arity mismatch.''
+The error arises because the @racket[em] function is getting three arguments — @code{"RacketCon " '(strong "this") " year"} — but has been defined to only accept one argument, @racket[word]. This is the ``arity mismatch.''
 
 To fix this, it's better to get in the habit of writing tag functions that accept an indefinite number of input values. You do this by defining your function with a @italic{@seclink["contracts-rest-args" #:doc '(lib "scribblings/guide/guide.scrbl")]{rest argument}} (as in, ``give me the rest of the input values.'') To use a rest argument, put it last in your list of input arguments, and add a period @litchar{.} before:
 
