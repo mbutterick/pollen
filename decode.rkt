@@ -91,7 +91,7 @@
  (require racket/list txexpr racket/function)
  (define (doubler x) (list x x)) 
  (check-equal? (decode #:txexpr-elements-proc identity '(p "foo")) '(p "foo"))
- ;; can't use doubler on txexpr-elements because it eneds a list, not list of lists
+ ;; can't use doubler on txexpr-elements because it needs a list, not list of lists
  (check-equal? (decode #:txexpr-elements-proc (λ(elems) (append elems elems)) '(p "foo")) '(p "foo" "foo"))
  (check-equal? (decode #:block-txexpr-proc identity '(p "foo")) '(p "foo"))
  (check-equal? (decode #:block-txexpr-proc doubler '(p "foo")) (list '(p "foo") '(p "foo")))
