@@ -22,19 +22,14 @@
 
 (define decode-proc-output-contract (or/c xexpr? (non-empty-listof xexpr?)))
 
-(define multiple-entity-signal (gensym "multiple-entity"))
 
 (define (->list/tx x)
   ;; same as ->list but catches special case of single txexpr,
   ;; which is itself a list, but in this case should be wrapped into a list,
   ;; for use with append-map.
-  (cond
-    ;; use multiple-entity-signal to distinguish list of entities from txexprs
-    ;; ambiguous example '(copy copy)
-    ;; but with signal, it's '(multiple-entity-signal copy copy)
-    [(and (pair? x) (eq? (car x) multiple-entity-signal)) (cdr x)]
-    [(txexpr? x) (list x)]
-    [else (->list x)]))
+  (if (txexpr? x)
+      (list x)
+      (->list x)))
 
 
 ;; decoder wireframe
@@ -76,14 +71,7 @@
                                 block-txexpr-proc
                                 inline-txexpr-proc) decoded-txexpr))))]
       [(string? x) (string-proc x)]
-      [(or (symbol? x) (valid-char? x))
-       (define result (entity-proc x))
-       (if (list? result)
-           ;; add a signal to list of multiple entities to avoid downstream ambiguity with txexpr
-           ;; for instance '(copy copy) is a list of entities, but also a txexpr
-           ;; stick a signal on the front, which will be picked up later
-           (cons multiple-entity-signal result)
-           result)]
+      [(or (symbol? x) (valid-char? x)) (entity-proc x)]
       [(cdata? x) (cdata-proc x)]
       [else (error "decode: can't decode" x)])))
 
@@ -103,7 +91,10 @@
  (check-equal? (decode #:entity-proc identity '(p 42)) '(p 42))
  (check-equal? (decode #:entity-proc doubler '(p 42)) '(p 42 42))
  (check-equal? (decode #:entity-proc identity '(p amp)) '(p amp))
- (check-equal? (decode #:entity-proc doubler '(p amp)) '(p amp amp))
+ ;; next text doesn't work because list of symbol elements is ambiguous with tagged X-expression
+ ;; is there a general patch for this? maybe, but for now it's better to not patch selectively
+ ;; otherwise ambiguous expressions will have erratic misbehavior (instead of merely consistent misbehavior)
+ ;;(check-equal? (decode #:entity-proc doubler '(p amp)) '(p amp amp))
  (check-equal? (decode-elements #:string-proc identity '("foo")) '("foo"))
  (check-equal? (decode-elements #:string-proc doubler '("foo")) '("foo" "foo")))
 
