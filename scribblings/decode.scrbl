@@ -36,7 +36,7 @@ Another example is conversion of output into a particular data format. Most Poll
 [#:exclude-tags tags-to-exclude (listof txexpr-tag?) null]
 [#:exclude-attrs attrs-to-exclude txexpr-attrs? null]
 )
-txexpr?]
+(or/c xexpr/c (non-empty-listof xexpr/c))]
 Recursively process a @racket[_tagged-xexpr], usually the one exported from a Pollen source file as @racket[doc]. 
 
 This function doesn't do much on its own. Rather, it provides the hooks upon which harder-working functions can be hung. 
@@ -231,7 +231,7 @@ Finally, the @racket[_attrs-to-exclude] argument works the same way as @racket[_
 [#:exclude-tags tags-to-exclude (listof txexpr-tag?) null]
 [#:exclude-attrs attrs-to-exclude txexpr-attrs? null]
 )
-txexpr-elements?]
+(or/c xexpr/c (non-empty-listof xexpr/c))]
 Identical to @racket[decode], but takes @racket[txexpr-elements?] as input rather than a whole tagged X-expression, and likewise returns @racket[txexpr-elements?] rather than a tagged X-expression. A convenience variant for use inside tag functions.
 
 @section{Block}
