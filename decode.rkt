@@ -1,5 +1,5 @@
 #lang racket/base
-(require xml txexpr sugar racket/match racket/list (prefix-in html: pollen/html) sugar/test)
+(require xml txexpr racket/string racket/match racket/list (prefix-in html: pollen/html) sugar/list sugar/container sugar/len sugar/define sugar/coerce sugar/test)
 (require "debug.rkt" "world.rkt")
 
 
@@ -20,17 +20,32 @@
           [(or (list? x) (hash? x) (vector? x)) (format "~v" x)] ; ok to convert datatypes
           [else (error)])))) ; but things like procedures should throw an error
 
+(define decode-proc-output-contract (or/c xexpr? (non-empty-listof xexpr?)))
+
+(define multiple-entity-signal (gensym "multiple-entity"))
+
+(define (->list/tx x)
+  ;; same as ->list but catches special case of single txexpr,
+  ;; which is itself a list, but in this case should be wrapped into a list,
+  ;; for use with append-map.
+  (cond
+    ;; use multiple-entity-signal to distinguish list of entities from txexprs
+    ;; ambiguous example '(copy copy)
+    ;; but with signal, it's '(multiple-entity-signal copy copy)
+    [(and (pair? x) (eq? (car x) multiple-entity-signal)) (cdr x)]
+    [(txexpr? x) (list x)]
+    [else (->list x)]))
+
 
 ;; decoder wireframe
-(define+provide/contract (decode txexpr
+(define+provide/contract (decode tx-in
                                  #:txexpr-tag-proc [txexpr-tag-proc (λ(x)x)]
                                  #:txexpr-attrs-proc [txexpr-attrs-proc (λ(x)x)]
                                  #:txexpr-elements-proc [txexpr-elements-proc (λ(x)x)]
                                  #:block-txexpr-proc [block-txexpr-proc (λ(x)x)]
                                  #:inline-txexpr-proc [inline-txexpr-proc (λ(x)x)]
                                  #:string-proc [string-proc (λ(x)x)]
-                                 #:symbol-proc [symbol-proc (λ(x)x)]
-                                 #:valid-char-proc [valid-char-proc (λ(x)x)]
+                                 #:entity-proc [entity-proc (λ(x)x)]
                                  #:cdata-proc [cdata-proc (λ(x)x)]
                                  #:exclude-tags [excluded-tags '()]
                                  #:exclude-attrs [excluded-attrs '()])
@@ -38,17 +53,14 @@
    (#:txexpr-tag-proc (txexpr-tag? . -> . txexpr-tag?)
                       #:txexpr-attrs-proc (txexpr-attrs? . -> . txexpr-attrs?)
                       #:txexpr-elements-proc (txexpr-elements? . -> . txexpr-elements?)
-                      #:block-txexpr-proc (block-txexpr? . -> . xexpr?)
-                      #:inline-txexpr-proc (txexpr? . -> . xexpr?)
-                      #:string-proc (string? . -> . xexpr?)
-                      #:symbol-proc (symbol? . -> . xexpr?)
-                      #:valid-char-proc (valid-char? . -> . xexpr?)
-                      #:cdata-proc (cdata? . -> . xexpr?)
+                      #:block-txexpr-proc (block-txexpr? . -> . decode-proc-output-contract)
+                      #:inline-txexpr-proc (txexpr? . -> . decode-proc-output-contract)
+                      #:string-proc (string? . -> . decode-proc-output-contract)
+                      #:entity-proc ((or/c symbol? valid-char?) . -> . decode-proc-output-contract)
+                      #:cdata-proc (cdata? . -> . decode-proc-output-contract)
                       #:exclude-tags (listof txexpr-tag?)
                       #:exclude-attrs txexpr-attrs?) . ->* . txexpr?)
-  
-  
-  (let loop ([x txexpr])
+  (let loop ([x tx-in])
     (cond
       [(txexpr? x) (let-values([(tag attrs elements) (txexpr->values x)]) 
                      (if (or (member tag excluded-tags) (ormap (λ(attr) (member attr excluded-attrs)) attrs)) 
@@ -59,17 +71,43 @@
                          (let ([decoded-txexpr 
                                 (apply make-txexpr (list (txexpr-tag-proc tag) 
                                                          (txexpr-attrs-proc attrs) 
-                                                         (map loop (txexpr-elements-proc elements))))])
+                                                         (txexpr-elements-proc (append-map (compose1 ->list/tx loop) elements))))])
                            ((if (block-txexpr? decoded-txexpr)
                                 block-txexpr-proc
                                 inline-txexpr-proc) decoded-txexpr))))]
       [(string? x) (string-proc x)]
-      [(symbol? x) (symbol-proc x)]
-      [(valid-char? x) (valid-char-proc x)]
+      [(or (symbol? x) (valid-char? x))
+       (define result (entity-proc x))
+       (if (list? result)
+           ;; add a signal to list of multiple entities to avoid downstream ambiguity with txexpr
+           ;; for instance '(copy copy) is a list of entities, but also a txexpr
+           ;; stick a signal on the front, which will be picked up later
+           (cons multiple-entity-signal result)
+           result)]
       [(cdata? x) (cdata-proc x)]
       [else (error "decode: can't decode" x)])))
 
+(module-test-external
+ (require racket/list txexpr racket/function)
+ (define (doubler x) (list x x)) 
+ (check-equal? (decode #:txexpr-elements-proc identity '(p "foo")) '(p "foo"))
+ ;; can't use doubler on txexpr-elements because it eneds a list, not list of lists
+ (check-equal? (decode #:txexpr-elements-proc (λ(elems) (append elems elems)) '(p "foo")) '(p "foo" "foo"))
+ (check-equal? (decode #:block-txexpr-proc identity '(p "foo")) '(p "foo"))
+ (check-equal? (decode #:block-txexpr-proc doubler '(p "foo")) (list '(p "foo") '(p "foo")))
+ (check-equal? (decode #:inline-txexpr-proc identity '(p (span "foo"))) '(p (span "foo")))
+ (check-equal? (decode #:inline-txexpr-proc doubler '(p (span "foo"))) '(p (span "foo") (span "foo")))
+ (check-equal? (decode #:string-proc identity '(p (span "foo"))) '(p (span "foo")))
+ (check-equal? (decode #:string-proc doubler '(p (span "foo"))) '(p (span "foo" "foo")))
+ (check-equal? (decode #:entity-proc identity '(p (span "foo" 'amp))) '(p (span "foo" 'amp)))
+ (check-equal? (decode #:entity-proc identity '(p 42)) '(p 42))
+ (check-equal? (decode #:entity-proc doubler '(p 42)) '(p 42 42))
+ (check-equal? (decode #:entity-proc identity '(p amp)) '(p amp))
+ (check-equal? (decode #:entity-proc doubler '(p amp)) '(p amp amp))
+ (check-equal? (decode-elements #:string-proc identity '("foo")) '("foo"))
+ (check-equal? (decode-elements #:string-proc doubler '("foo")) '("foo" "foo")))
 
+;; it would be nice to not repeat this, but with all the keywords, it's simpler to repeat than do a macro
 (define+provide/contract (decode-elements elements
                                           #:txexpr-tag-proc [txexpr-tag-proc (λ(x)x)]
                                           #:txexpr-attrs-proc [txexpr-attrs-proc (λ(x)x)]
@@ -77,8 +115,7 @@
                                           #:block-txexpr-proc [block-txexpr-proc (λ(x)x)]
                                           #:inline-txexpr-proc [inline-txexpr-proc (λ(x)x)]
                                           #:string-proc [string-proc (λ(x)x)]
-                                          #:symbol-proc [symbol-proc (λ(x)x)]
-                                          #:valid-char-proc [valid-char-proc (λ(x)x)]
+                                          #:entity-proc [entity-proc (λ(x)x)]
                                           #:cdata-proc [cdata-proc (λ(x)x)]
                                           #:exclude-tags [excluded-tags '()]
                                           #:exclude-attrs [excluded-attrs '()])
@@ -86,14 +123,13 @@
    (#:txexpr-tag-proc (txexpr-tag? . -> . txexpr-tag?)
                       #:txexpr-attrs-proc (txexpr-attrs? . -> . txexpr-attrs?)
                       #:txexpr-elements-proc (txexpr-elements? . -> . txexpr-elements?)
-                      #:block-txexpr-proc (block-txexpr? . -> . xexpr?)
-                      #:inline-txexpr-proc (txexpr? . -> . xexpr?)
-                      #:string-proc (string? . -> . xexpr?)
-                      #:symbol-proc (symbol? . -> . xexpr?)
-                      #:valid-char-proc (valid-char? . -> . xexpr?)
-                      #:cdata-proc (cdata? . -> . xexpr?)
+                      #:block-txexpr-proc (block-txexpr? . -> . decode-proc-output-contract)
+                      #:inline-txexpr-proc (txexpr? . -> . decode-proc-output-contract)
+                      #:string-proc (string? . -> . decode-proc-output-contract)
+                      #:entity-proc ((or/c symbol? valid-char?) . -> . decode-proc-output-contract)
+                      #:cdata-proc (cdata? . -> . decode-proc-output-contract)
                       #:exclude-tags (listof txexpr-tag?)
-                      #:exclude-attrs txexpr-attrs?) . ->* . txexpr-elements?)
+                      #:exclude-attrs txexpr-attrs?) . ->* . txexpr?)
   
   (define temp-tag (gensym "temp-tag"))
   (define decode-result (decode `(temp-tag ,@elements)
@@ -103,8 +139,7 @@
                                 #:block-txexpr-proc block-txexpr-proc
                                 #:inline-txexpr-proc inline-txexpr-proc
                                 #:string-proc string-proc
-                                #:symbol-proc symbol-proc
-                                #:valid-char-proc valid-char-proc
+                                #:entity-proc entity-proc
                                 #:cdata-proc cdata-proc
                                 #:exclude-tags excluded-tags
                                 #:exclude-attrs excluded-attrs))
