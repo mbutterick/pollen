@@ -20,13 +20,6 @@
           [(or (list? x) (hash? x) (vector? x)) (format "~v" x)] ; ok to convert datatypes
           [else (error)])))) ; but things like procedures should throw an error
 
-(define (->list/tx x)
-  ;; same as ->list but catches special case of single txexpr,
-  ;; which is itself a list, but in this case should be wrapped into a list,
-  ;; for use with append-map.
-  (if (txexpr? x)
-      (list x)
-      (->list x)))
 
 ;; decoder wireframe
 (define+provide/contract (decode txexpr
@@ -65,11 +58,8 @@
                          ;; e.g., ((p "foo")) tests out as both txexpr-attrs and txexpr-elements
                          (let ([decoded-txexpr 
                                 (apply make-txexpr (list (txexpr-tag-proc tag) 
-                                                         (txexpr-attrs-proc attrs)
-                                                         ;; append-map allows "splicing" behavior,
-                                                         ;; meaning decoder procedures can return a single value
-                                                         ;; or multiple values.
-                                                         (append-map (compose1 ->list/tx loop) (txexpr-elements-proc elements))))])
+                                                         (txexpr-attrs-proc attrs) 
+                                                         (map loop (txexpr-elements-proc elements))))])
                            ((if (block-txexpr? decoded-txexpr)
                                 block-txexpr-proc
                                 inline-txexpr-proc) decoded-txexpr))))]
