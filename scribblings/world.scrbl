@@ -130,3 +130,5 @@ Default separators used in decoding. The first two are initialized to @racket["\
 @defoverridable[compile-cache-active boolean?]{Whether the compile cache, which speeds up interactive sessions by saving compiled versions of Pollen source files, is active. Default is active (@racket[#t]).}
 
 @defoverridable[compile-cache-max-size exact-positive-integer?]{Maximum size of the compile cache. Default is 10 megabytes.}
+
+@defoverridable[unpublished-path? (path? . -> . boolean?)]{Predicate that determines whether a path is omitted from @secref{raco_pollen_publish} operations. If the predicate is @racket[#t], then the path is omitted. The default, therefore, is @racket[#f].}

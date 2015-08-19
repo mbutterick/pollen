@@ -238,10 +238,11 @@
   (and (directory-exists? path) 
        (or (ends-with? (path->string path) "compiled"))))
 
+
 (define+provide (cache-file? path)
-  (or (ends-with? (path->string path) (world:current-cache-filename))))
+  (ormap (λ(cache-name) (ends-with? (path->string path) cache-name)) world:cache-names))
 
-
+(require sugar/debug)
 (define+provide (pollen-related-file? file)
   (ormap (λ(proc) (proc file)) (list
                                 preproc-source? 
@@ -253,4 +254,5 @@
                                 null-source?
                                 racket-source?
                                 magic-directory?
-                                cache-file?)))
+                                cache-file?
+                                (world:current-unpublished-path?))))

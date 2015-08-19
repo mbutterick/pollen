@@ -131,7 +131,8 @@ version                print the version (~a)" (world:current-server-port) (worl
   (when (directory-exists? target-dir)
     (delete-directory/files target-dir))
   (copy-directory/files source-dir target-dir)
-  (for-each delete-it (find-files pollen-related-file? target-dir))
+  (parameterize ([world:current-project-root (current-directory)])
+    (for-each delete-it (find-files pollen-related-file? target-dir)))
   (displayln (format "completed to ~a" target-dir)))
 
 (define (handle-unknown command)
