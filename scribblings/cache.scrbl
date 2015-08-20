@@ -19,7 +19,7 @@ The slowest part of a @racket[render] is parsing and decoding the source file. O
 (or/c txexpr? hash? integer?)]
 Similar to @racket[(dynamic-require _source-path _key)], except that it first tries to retrieve the requested value out of the cache. If it's not there, or out of date, @racket[dynamic-require] is used to update the value.
 
-The only keys supported are @racket['doc] and @racket['metas].
+The only keys supported are @racket[doc] and @racket[metas] (or more precisely, the values of @racket[world:current-main-export] and @racket[world:current-meta-export], which default to @racket[doc] and @racket[metas]).
 
 If you want the speed benefit of the cache, you should @bold{always} use @racket[cached-require] to get data from Pollen source files. That doesn't mean you can't still use functions like @racket[require], @racket[local-require], and @racket[dynamic-require]. They'll just be slower.
 

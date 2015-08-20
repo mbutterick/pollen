@@ -594,6 +594,58 @@ The @racket[metas] submodule is useful because it gives you access to the @racke
 
 
 @;--------------------------------------------------------------------
+@subsubsection{Retrieving metas}
+
+The @racket[metas] hashtable is available immediately within the body of your source file. You can use @racket[hash-ref] to get values out of @racket[metas].
+
+@codeblock{
+#lang pollen
+◊(define-meta dog "Roxy")
+◊(hash-ref metas 'dog)
+}
+
+@terminal{
+Roxy
+}
+
+
+Because the metas are collected first, you can actually invoke a meta before you define it:
+
+@codeblock{
+#lang pollen
+◊(hash-ref metas 'dog)
+◊(define-meta dog "Roxy")
+◊(define-meta dog "Spooky")
+}
+
+@terminal{
+Spooky
+}
+
+This can be useful for setting up fields that you want to include in @racket[metas] but also have visible in the body of a document, like a title.
+
+@codeblock{
+#lang pollen/markup
+◊(define-meta title "The Amazing Truth")
+◊h1{◊(hash-ref metas 'title)}
+}
+
+The result of this file will be:
+
+@terminal{
+'(root (h1 "The Amazing Truth"))
+}
+
+And the metas:
+@terminal{
+> metas
+'#hash((title . "The Amazing Truth") (here-path . "unsaved-editor"))
+}
+You cannot, however, use @racket[hash-set!] or other similar functions, because @racket[metas] is an immutable hash.
+
+
+
+@;--------------------------------------------------------------------
 @subsubsection{Inserting a comment}
 
 Two options.

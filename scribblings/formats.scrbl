@@ -40,9 +40,13 @@ There are no undefined commands in Pollen. If a command has not already been def
 
 By default, every Pollen source file exports two identifiers, which you can access by using the source file with @racket[require]:
 
-@racket[doc] contains the output of the file. The type of output depends on the source format (documented below).
+The main export, @racket[doc], contains the output of the file. The type of output depends on the source format (documented below).
 
-@racket[metas] is a hash of key–value pairs with extra information that is extracted from the source. These @racket[metas] will always contain the key @racket['here-path], which returns a string representation of the full path to the source file. Beyond that, the only @racket[metas] are the ones that are specified within the source file (see the source formats below for more detail on how to specify metas).
+The second export, @racket[metas], is a hashtable of key–value pairs with extra information that is extracted from the source. These @racket[metas] will always contain the key @racket['here-path], which returns a string representation of the full path to the source file. Beyond that, the only @racket[metas] are the ones that are specified within the source file (see the source formats below for more detail on how to specify metas).
+
+Pollen source files also make the @racket[metas] hashtable available through a submodule, also called @racket[metas]. So rather than importing a source file with @racket[(require "source.html.pm")], you would @racket[(require (submod "source.html.pm" metas))]. Accessing the metas this way avoids fully compiling the source file, and thus will usually be faster.
+
+The names @racket[doc] and @racket[metas] can be changed for a project by overriding @racket[world:main-export] and @racket[world:meta-export].
 
 @margin-note{The Pollen rendering system relies on these two identifiers, but otherwise doesn't care how they're generated. Meaning, the code inside your Pollen source file could be @tt{#lang racket} or @tt{#lang whatever}. As long as you manually @racket[provide] those two identifiers and follow the usual file-naming convention, your source file will be usable.}
 
