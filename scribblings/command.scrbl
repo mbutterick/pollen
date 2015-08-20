@@ -518,14 +518,14 @@ The value of edge is ◊|edge| pixels}
 
 @margin-note{Pollen occasionally uses metas internally. For instance, the @racket[get-template-for] function will look in the metas of a source file to see if a template is explicitly specified. The @racket[pollen/template] module also contains functions for working with metas, such as @racket[select-from-metas].}
 
-To make a meta, you create a tag with the special @code{meta} name. Then you have two choices: you can either embed the key-value pair as an attribute, or as a tagged X-expression within the meta (using the key as the tag, and the value as the body):
+To make a meta, you create a tag with the special @code{define-meta} name. Then you have two choices: you can either embed the key-value pair as an attribute, or as a tagged X-expression within the meta (using the key as the tag, and the value as the body):
 
 @codeblock{
 #lang pollen
 
-◊meta['dog: "Roxy"]
+◊define-meta[dog]{Roxy} ; text-mode syntax
 ◊some-tag['key: "value"]{Normal tag}
-◊meta{◊cat{Chopper}}
+◊(define-meta cat "Chopper") ; equivalent Racket-mode syntax
 ◊some-tag['key: "value"]{Another normal tag}
 }
 
@@ -552,11 +552,11 @@ Still, you can override this too:
 @codeblock{
 #lang pollen
 
-◊meta['dog: "Roxy"]
+◊define-meta[dog]{Roxy}
 ◊some-tag['key: "value"]{Normal tag}
-◊meta{◊cat{Chopper}}
+◊(define-meta cat "Chopper")
 ◊some-tag['key: "value"]{Another normal tag}
-◊meta['here-path: "tesseract"]
+◊(define-meta here-path "tesseract")
 }
 
 When you run this code, the result will be the same as before, but this time the metas will be different:
@@ -571,8 +571,8 @@ It doesn't matter how many metas you put in a source file, nor where you put the
 
 @codeblock{
 #lang pollen
-◊meta['dog: "Roxy"]
-◊meta{◊dog{Lex}}
+◊define-meta[dog]{Roxy}
+◊(define-meta dog "Lex")
 }
 
 In this case, though there are two metas named @racket[dog] (and they use different forms) only the second one persists:
@@ -582,63 +582,15 @@ In this case, though there are two metas named @racket[dog] (and they use differ
 '#hash((dog . "Lex") (here-path . "unsaved-editor"))
 }
 
-You can put multiple keys and values within a single @code{meta} tag, and you can mix them between attributes and elements. As above, later keys supersede earlier ones.
+@bold{Pro tip}: the @racket[metas] hashtable is available when you import a Pollen source file in the usual way, but it's also made available through a submodule called, unsurprisingly, @racket[metas].
 
 @codeblock{
-#lang pollen
-◊meta['dog: "Roxy" 'lion: "P22"]{◊dog{Lex}}
+#lang racket/base
+(require "pollen-source.rkt") ; doc and metas and everything else
+(require (submod "pollen-source.rkt" metas)) ; just metas
 }
 
-@terminal{
-> metas
-'#hash((dog . "Lex") (here-path . "unsaved-editor") (lion . "P22"))
-}
-
-Should you store your metas as attributes or elements? That's up to you, but elements are more flexible. When your key-value pair is stored as an attribute, your value has to be a string (because that's the only datatype an attribute can hold). Whereas when your key-value pair is stored as an element, you have two extra possiblilites. 
-
-First, the value can be any X-expression. For instance, this code uses an @racket[img] tag as the meta value:
-
-@codeblock{
-#lang pollen
-◊meta['dog: "Roxy"]
-◊meta{◊dog{◊img['src: "lex.gif"]}}
-}
-
-@terminal{
-> metas
-'#hash((dog . (img ((src "roxy.gif")))) (here-path . "unsaved-editor"))
-}
-
-Second, if you use an element, the value can be either a single value or a list or values:
-
-@codeblock{
-#lang pollen
-◊meta['dog: "Roxy"]
-◊meta{◊categories['brindles 'boxers 'working-dogs]}
-}
-
-@terminal{
-> metas
-'#hash((dog . "Roxy") (here-path . "unsaved-editor") (categories . (brindles boxers working-dogs)))
-}
-
-Be aware that if you put things inside a @racket[meta] tag that don't qualify as key-value pairs, Pollen will just discard them. So don't be surprised when this:
-
-@codeblock{
-#lang pollen
-◊meta['dog: "Roxy"]{This text will be ignored}
-◊meta[◊cat{Chopper}]{As will this text}
-}
-
-Gets treated as if you wrote it this way:
-
-@codeblock{
-#lang pollen
-◊meta['dog: "Roxy"]
-◊meta[◊cat{Chopper}]
-}
-
-
+The @racket[metas] submodule is useful because it gives you access to the @racket[metas] hashtable @italic{without} compiling the rest of the file. So if you need to collect metas from a set of source files — for instance, page titles (for a table of contents) or categories — getting the metas through the submodule is likely to be faster.
 
 
 @;--------------------------------------------------------------------

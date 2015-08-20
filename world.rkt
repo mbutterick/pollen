@@ -62,6 +62,7 @@
 (define-settable main-export 'doc) ; don't forget to change fallback template too
 (define-settable meta-export 'metas)
 (define-settable meta-tag-name 'meta)
+(define-settable define-meta-name 'define-meta)
 
 (define-settable newline "\n")
 (define-settable linebreak-separator (current-newline))

@@ -39,7 +39,7 @@
     (check-equal? (run test.html.pmdover) "'(rootover (h1 ((id \"test\")) \"test\"))")
     (check-equal? (run test.html.ppover) "test\n====")
 (check-equal? (run test-cmd.html.ppover) "2")
-    (check-equal? (dynamic-require test-exports.html.ppover 'docover) "\n2")
+    (check-equal? (dynamic-require test-exports.html.ppover 'docover) "2")
     (check-equal? (hash-ref (dynamic-require test-exports.html.ppover 'metasover) 'dog) "Roxy")
     (check-equal? (dynamic-require test-require.html.pmover 'docover) '(rootover "foobar"))
     (check-equal? (with-output-to-string (λ _ (system (format "'~a' pollen version" path-to-raco)))) "42\n")))

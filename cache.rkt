@@ -27,6 +27,9 @@
   (map (λ(ps) (define cp (->complete-path ps))
          (cons (path->string cp) (file-or-directory-modify-seconds cp))) path-strings))
 
+(define (key->source-path-key key)
+  (list (car key)))
+
 (define (key->source-path key)
   (car (car key)))
 
@@ -35,15 +38,16 @@
   (and directory-require-files (map dynamic-rerequire directory-require-files))
   (void))
 
+(require sugar/debug)
 
-(define (path->hash path)
+(define (path->hash path subkey)
   (dynamic-rerequire path)
   ;; new namespace forces dynamic-require to re-instantiate 'path'
   ;; otherwise it gets cached in current namespace.
   (parameterize ([current-namespace (make-base-namespace)])
-    (hash (world:current-main-export) (dynamic-require path (world:current-main-export))
-          (world:current-meta-export) (dynamic-require path (world:current-meta-export)))))
-
+    (hash subkey (dynamic-require (if (eq? subkey (world:current-meta-export))
+                                      `(submod ,path ,subkey) ; use metas submodule for speed
+                                      path) subkey))))
 
 ;; include this from 6.2 for compatibility back to 6.0 (formerly `make-parent-directory*`)
 (define (make-parent-directory p)
@@ -60,7 +64,7 @@
   
   (define-values (base name dir?) (split-path p))
   (when (path? base)
-      (make-directory* base)))
+    (make-directory* base)))
 
 
 (define ram-cache (make-hash))
@@ -74,17 +78,20 @@
   
   (cond
     [(world:current-compile-cache-active)
-     (define key (paths->key path))
+     (define key (let ([possible-key (paths->key path)])
+                   (if (eq? subkey (world:current-meta-export))
+                       (key->source-path-key possible-key)
+                       possible-key)))
      ;; use multiple pickup files to avoid locking issues.
      ;; pickup-file hierarchy just mirrors the project hierarchy.
-     (define dest-file (build-path cache-dir (path->string (find-relative-path (world:current-project-root) (string->path (format "~a.rktd" (key->source-path key)))))))
+     (define dest-file (build-path cache-dir (path->string (find-relative-path (world:current-project-root) (string->path (format "~a#~a.rktd" (key->source-path key) subkey))))))
      (make-parent-directory dest-file)
      (hash-ref (hash-ref! ram-cache key (λ _
                                           (cache-file dest-file
                                                       #:exists-ok? #t
                                                       key
                                                       cache-dir
-                                                      (λ _ (write-to-file (path->hash path) dest-file #:exists 'replace))
+                                                      (λ _ (write-to-file (path->hash path subkey) dest-file #:exists 'replace))
                                                       #:max-cache-size (world:current-compile-cache-max-size))
                                           (file->value dest-file))) subkey)]
     [else (parameterize ([current-namespace (make-base-namespace)])

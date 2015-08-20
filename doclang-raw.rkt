@@ -10,9 +10,12 @@
 
 (define-syntax (*module-begin stx)
   (syntax-case stx ()
-    [(_ id post-process exprs . body)
-     #'(#%module-begin
-        (doc-begin id post-process exprs . body))]))
+    [(_ . body)
+     (with-syntax ([id #'doc-raw]
+                   [post-process #'(λ(x) x)]
+                   [exprs #'()])
+       #'(#%module-begin
+          (doc-begin id post-process exprs . body)))]))
 
 (define-syntax (doc-begin stx)
   (syntax-case stx ()
@@ -49,14 +52,14 @@
                  (and (identifier? #'id)
                       (ormap (lambda (kw) (free-identifier=? #'id kw))
                              (syntax->list #'(require
-                                              provide
-                                              define-values
-                                              define-syntaxes
-                                              begin-for-syntax
-                                              module
-                                              module*
-                                              #%require
-                                              #%provide))))
+                                               provide
+                                               define-values
+                                               define-syntaxes
+                                               begin-for-syntax
+                                               module
+                                               module*
+                                               #%require
+                                               #%provide))))
                  #`(begin #,expanded (doc-begin m-id post-process exprs . body))]
                 [_else
                  #`(doc-begin m-id post-process 
