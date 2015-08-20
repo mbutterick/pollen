@@ -9,7 +9,8 @@
 
 
 (define (split-metas tree)
-  (define (meta-matcher x) (and (pair? x) (eq? (car x) (world:current-define-meta-name))))
+  (define (meta-matcher x) ; meta has form (define-meta key value)
+    (and (list? x) (>= (length x) 3) (eq? (first x) (world:current-define-meta-name))))
   (define matches empty)
   (define rest
     (let loop ([x tree])
@@ -22,7 +23,8 @@
          (set! matches (append new-matches matches))
          (map loop rest)]
         [else x])))
-  (values matches rest))
+  (let ([meta-key second][meta-value third])
+    (values (map meta-key matches) (map meta-value matches) rest)))
 
 
 (define (make-custom-read-syntax reader-mode)
@@ -36,7 +38,7 @@
                         #:syntax? #t 
                         #:inside? #t))
     (define source-stx (read-inner path-string p))
-    (define-values (meta-matches meta-free-file-data) (split-metas (syntax->datum source-stx)))
+    (define-values (meta-keys meta-values meta-free-file-data) (split-metas (syntax->datum source-stx)))
     (define reader-here-path (cond
                                [(symbol? path-string) (symbol->string path-string)]
                                [(equal? path-string "unsaved editor") path-string]
@@ -51,10 +53,10 @@
                                                          [else world:mode-preproc])])
                               auto-computed-mode)
                             reader-mode))
-    (define meta-keys (cons 'here-path (map second meta-matches)))
-    (define meta-values (cons reader-here-path (map third meta-matches)))
-    (with-syntax ([(KEY ...) (datum->syntax source-stx meta-keys)]
-                  [(VALUE ...) (datum->syntax source-stx meta-values)])
+    (define meta-keys-plus-here (cons (world:current-here-path-key) meta-keys)) ; here-path at front so it can be overridden
+    (define meta-values-plus-here (cons reader-here-path meta-values))
+    (with-syntax ([(KEY ...) (datum->syntax source-stx meta-keys-plus-here)]
+                  [(VALUE ...) (datum->syntax source-stx meta-values-plus-here)])
       (syntax-property
        (replace-context source-stx
                         #`(module runtime-wrapper racket/base

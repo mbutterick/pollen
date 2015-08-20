@@ -8,7 +8,7 @@
 
 (define/contract+provide (metas->here metas)
   (hash? . -> . pagenode?)
-  (path->pagenode (or (select-from-metas 'here-path metas) 'unknown)))
+  (path->pagenode (or (select-from-metas (world:current-here-path-key) metas) 'unknown)))
 
 
 (define (pagenode->path pagenode)

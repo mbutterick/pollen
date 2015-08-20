@@ -90,3 +90,5 @@
 (define-settable compile-cache-max-size (* 10 1024 1024)) ; = 10 megabytes
 
 (define-settable unpublished-path? (λ(path) #f))
+
+(define-settable here-path-key 'here-path)
