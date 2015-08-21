@@ -21,8 +21,8 @@
               (require INNER 'inner) ; import inner twice: INNER for external use, 'inner for internal
               
               (define DOC
-                (let* ([parser-mode-defined? (procedure? inner:parser-mode)] ; if not defined, #%top makes it a procedure
-                       [parser-mode (if parser-mode-defined?
+                (let* ([parser-mode-undefined? (procedure? inner:parser-mode)] ; if undefined, #%top makes it a procedure
+                       [parser-mode (if parser-mode-undefined?
                                         MODE-ARG
                                         inner:parser-mode)]
                        [proc (cond
