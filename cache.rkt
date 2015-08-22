@@ -38,15 +38,8 @@
   (and directory-require-files (map dynamic-rerequire directory-require-files))
   (void))
 
-(require sugar/debug)
-
 ;; set up namespace for module caching
-(module caching-module racket/base
-  (define-namespace-anchor caching-module-nsa)
-  (provide caching-module-nsa))
-(require 'caching-module)
-(define caching-module-ns (namespace-anchor->namespace caching-module-nsa))
-
+(define-caching-ns caching-module-ns)
 (define cached-module-names '(xml
                               racket/bool
                               racket/class
@@ -76,7 +69,7 @@
                               sugar
                               txexpr))
 
-(apply load-in-namespace caching-module-ns cached-module-names)
+
 
 (define (path->hash path subkey)
   (dynamic-rerequire path)

@@ -224,12 +224,7 @@
 
 
 ;; set up namespace for module caching
-(module caching-module racket/base
-  (define-namespace-anchor caching-module-nsa)
-  (provide caching-module-nsa))
-(require 'caching-module)
-(define caching-module-ns (namespace-anchor->namespace caching-module-nsa))
-
+(define-caching-ns caching-module-ns)
 (define cached-module-names '(xml
                                    racket/bool
                                    racket/class
