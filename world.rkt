@@ -6,7 +6,7 @@
 
 (define current-project-root (make-parameter (current-directory)))
 
-(define directory-require "directory-require.rkt")
+(define directory-require "pollen.rkt")
 (define (get-path-to-override) 
   (build-path (current-project-root) directory-require))
 
@@ -79,8 +79,6 @@
 
 (define-runtime-path server-extras-dir "server-extras")
 (define current-server-extras-path (make-parameter server-extras-dir))
-
-(define check-directory-requires-in-render? (make-parameter #t))
 
 (define-settable publish-directory-name "publish")
 

@@ -59,9 +59,9 @@ Any value or function that is defined within the source file using @racket[defin
 @bold{How is this different from Racket?} In Racket, you must explicitly @racket[provide] any values you want to export. Unlike Racket, every Pollen source file impliedly uses @racket[(provide (all-defined-out))].
 
 
-@subsection{The @filepath{directory-require.rkt} file}
+@subsection{The @filepath{pollen.rkt} file}
 
-If a file called @filepath{directory-require.rkt} exists in the same directory with a source file, or in a parent directory of that source file, it's automatically imported when the source file is compiled.
+If a file called @filepath{pollen.rkt} exists in the same directory with a source file, or in a parent directory of that source file, it's automatically imported when the source file is compiled.
 
 @bold{How is this different from Racket?} In Racket, you must explicitly import files using @racket[require].
 

@@ -27,7 +27,7 @@ I used @link["http://pygments.org/"]{Pygments} for syntax highlighting in @link[
 
 @item{Make sure you have @code{pygments} already installed. @link["http://pygments.org/download/"]{Instructions here.} Pretty easy — for instance, on my OS X machine, I was able to get it done by doing @code{easy_install pygments} at the command line.}
 
-@item{The @racketmodname[pollen/pygments] helper module provides a function called @racket[highlight]. To make @racket[highlight] available in your source file, you can either add the line @code{◊(require pollen/pygments)} to the source file itself, or put it in @racket["directory-require.rkt"] and @racket[provide] it from there.}
+@item{The @racketmodname[pollen/pygments] helper module provides a function called @racket[highlight]. To make @racket[highlight] available in your source file, you can either add the line @code{◊(require pollen/pygments)} to the source file itself, or put it in @racket["pollen.rkt"] and @racket[provide] it from there.}
 
 @item{To invoke Pygments, use @racket[highlight] by providing a language name like @racket['python] in the brackets (note quote mark at front of name) and then the code you want highlighted between curly braces.
 
@@ -135,7 +135,7 @@ Then, add any configuration options. For instance, this will activate the dollar
 ]
 
 
-Putting it together, here's a minimal working example in two files (obviously in a larger project, you'd move those tag functions to a @racket["directory-require.rkt"] file):
+Putting it together, here's a minimal working example in two files (obviously in a larger project, you'd move those tag functions to a @racket["pollen.rkt"] file):
 
 @fileblock["equation.html.pm"
 @codeblock{

@@ -18,7 +18,7 @@ Now you're getting to the good stuff. In this tutorial, you'll use Pollen to pub
 
 @item{Attaching behavior to tag functions}
 
-@item{the @filepath{directory-require.rkt} file}
+@item{the @filepath{pollen.rkt} file}
 
 @item{Using @racket[decode] with Pollen markup}
 
@@ -644,23 +644,23 @@ And get this output:
 @repl-output{'(root "A list of integers: " "0 1 2 3 4")}
 
 
-@subsection[#:tag-prefix "tutorial-3"]{Using the @filepath{directory-require.rkt} file}
+@subsection[#:tag-prefix "tutorial-3"]{Using the @filepath{pollen.rkt} file}
 
 @(noskip-note)
 
-As you get more comfortable attaching behavior to tags using tag functions, you'll likely want to create some functions that can be shared between multiple source files. The @filepath{directory-require.rkt} file is a special file that is automatically imported by Pollen source files in the same directory (including within subdirectories). So every function and value provided by @filepath{directory-require.rkt} can be used in these Pollen files.
+As you get more comfortable attaching behavior to tags using tag functions, you'll likely want to create some functions that can be shared between multiple source files. The @filepath{pollen.rkt} file is a special file that is automatically imported by Pollen source files in the same directory (including within subdirectories). So every function and value provided by @filepath{pollen.rkt} can be used in these Pollen files.
 
-First, using this file is not mandatory. You can always import functions and values from another file using @racket[require] (as seen in the previous section). The @filepath{directory-require.rkt} is just meant to cure the tedium of importing the same file into every Pollen source file in your project. In a small project, not much tedium; in a large project, more.
+First, using this file is not mandatory. You can always import functions and values from another file using @racket[require] (as seen in the previous section). The @filepath{pollen.rkt} is just meant to cure the tedium of importing the same file into every Pollen source file in your project. In a small project, not much tedium; in a large project, more.
 
-Second, notice from the @filepath{.rkt} suffix that @filepath{directory-require.rkt} is a source file containing Racket code, not Pollen code. This is the default because while Pollen is better for text-driven source files, Racket is better for code-driven source files.
+Second, notice from the @filepath{.rkt} suffix that @filepath{pollen.rkt} is a source file containing Racket code, not Pollen code. This is the default because while Pollen is better for text-driven source files, Racket is better for code-driven source files.
 
-Third, the @filepath{directory-} prefix represents the minimum scope for the file, not the maximum. Pollen source files nested in subdirectories will look for a @filepath{directory-require.rkt} in their own directory first. But if they can't find it, they'll look in the parent directory, then the next parent directory, and so on. Thus, by default, a @filepath{directory-require.rkt} in the root folder of a project will apply to all the source files in the project. But when you add a new @filepath{directory-require.rkt} to a subdirectory, it will apply to all files in that subdirectory and below.
+Third, the @filepath{directory-} prefix represents the minimum scope for the file, not the maximum. Pollen source files nested in subdirectories will look for a @filepath{pollen.rkt} in their own directory first. But if they can't find it, they'll look in the parent directory, then the next parent directory, and so on. Thus, by default, a @filepath{pollen.rkt} in the root folder of a project will apply to all the source files in the project. But when you add a new @filepath{pollen.rkt} to a subdirectory, it will apply to all files in that subdirectory and below.
 
-@margin-note{Though a subdirectory-specific @filepath{directory-require.rkt} will supersede the one in the enclosing directory, you can still use @racket[(require "../directory-require.rkt")] to pull in definitions from above, and @racket[provide] to propagate them into the current subdirectory. For instance, @racket[(provide (all-from-out "../directory-require.rkt"))] will re-export everything from the parent directory.}
+@margin-note{Though a subdirectory-specific @filepath{pollen.rkt} will supersede the one in the enclosing directory, you can still use @racket[(require "../pollen.rkt")] to pull in definitions from above, and @racket[provide] to propagate them into the current subdirectory. For instance, @racket[(provide (all-from-out "../pollen.rkt"))] will re-export everything from the parent directory.}
 
-Let's see how this works in practice. In the same directory as @filepath{article.html.pm}, create a new @filepath{directory-require.rkt} file as follows:
+Let's see how this works in practice. In the same directory as @filepath{article.html.pm}, create a new @filepath{pollen.rkt} file as follows:
 
-@fileblock["directory-require.rkt" @codeblock{
+@fileblock["pollen.rkt" @codeblock{
 #lang racket
 (define author "Trevor Goodchild")
 (provide author)
@@ -692,11 +692,11 @@ Run this, and you'll get:
 
 @repl-output{'(root "The author is really " "Trevor Goodchild" "?")}
 
-That's all there is to it. Everything provided by @filepath{directory-require.rkt} is automatically available within each Pollen source file.
+That's all there is to it. Everything provided by @filepath{pollen.rkt} is automatically available within each Pollen source file.
 
 You can include functions, including tag functions, the same way. For instance, add a function for @racket[em]:
 
-@fileblock["directory-require.rkt" @codeblock{
+@fileblock["pollen.rkt" @codeblock{
 #lang racket
 (define author "Trevor Goodchild")
 (define (em . parts) `(extra (big ,@"@"parts)))
@@ -844,9 +844,9 @@ The second paragraph --- isn't it great.
 }
 
 
-Of course, in practice you wouldn't put your decoding function in a single source file. You'd make it available to all your source files by putting it in @filepath{directory-require.rkt}. So let's do that now:
+Of course, in practice you wouldn't put your decoding function in a single source file. You'd make it available to all your source files by putting it in @filepath{pollen.rkt}. So let's do that now:
 
-@fileblock["directory-require.rkt" @codeblock{
+@fileblock["pollen.rkt" @codeblock{
 #lang racket
 (require pollen/decode txexpr)
 (define (root . elements)
@@ -881,7 +881,7 @@ Let's upgrade our decoder to take of those. Once again, we'll get lucky, because
 
 This time, however, we're going to attach them to another part of @racket[decode-elements]. Smart-quote and smart-dash conversion only needs to look at the strings within the X-expression. So instead of attaching these functions to the @racket[#:txexpr-elements-proc] argument of @racket[decode-elements], we'll attach them to @racket[#:string-proc], which lets us specify a function to apply to strings:
 
-@fileblock["directory-require.rkt" @codeblock{
+@fileblock["pollen.rkt" @codeblock{
 #lang racket/base
 (require pollen/decode txexpr)
 (define (root . elements)
@@ -917,13 +917,13 @@ It also provides a recipe you can adapt for your own projects, whether small or 
 
 As we go through the ingredients, I'll review the purpose of each. Save these files into a single project directory with the project server running.
 
-@subsection[#:tag-prefix "tutorial-3"]{The @filepath{directory-require.rkt} file}
+@subsection[#:tag-prefix "tutorial-3"]{The @filepath{pollen.rkt} file}
 
-This file provides functions that are available to all Pollen source files in the same directory. It's written in standard Racket. The @filepath{directory-require.rkt} file is optional — without it, your tags will just be treated as default tag functions. But you'll probably find it a convenient way to make tag functions available within your project, including a @racket[decode] function attached to @code{root}.
+This file provides functions that are available to all Pollen source files in the same directory. It's written in standard Racket. The @filepath{pollen.rkt} file is optional — without it, your tags will just be treated as default tag functions. But you'll probably find it a convenient way to make tag functions available within your project, including a @racket[decode] function attached to @code{root}.
 
-Here, we'll use the @filepath{directory-require.rkt} we devised in the previous section to set up decoding for our source files:
+Here, we'll use the @filepath{pollen.rkt} we devised in the previous section to set up decoding for our source files:
 
-@fileblock["directory-require.rkt" @codeblock{
+@fileblock["pollen.rkt" @codeblock{
 #lang racket/base
 (require pollen/decode txexpr)
 (define (root . elements)
@@ -983,7 +983,7 @@ Our template file above refers to a CSS file called @filepath{styles.css}. When 
 
 Or, if you make a preprocessor source file called @filepath{styles.css.pp}, it will be dynamically rendered into the requested @filepath{styles.css} file. The preprocessor will operate on any file with the @filepath{.pp} extension — so a preprocessor source called @filepath{filename.ext.pp} will be rendered into @filepath{filename.ext}. (The corollary is that preprocessor functionality can be added to @italic{any} kind of text-based file.)
 
-Preprocessor source files, like authoring source files, get access to everything in @filepath{directory-require.rkt}, so you can share common functions and variables.
+Preprocessor source files, like authoring source files, get access to everything in @filepath{pollen.rkt}, so you can share common functions and variables.
 
 Let's use an improved version of the dynamic CSS file we made in the first tutorial.
 
@@ -1093,13 +1093,13 @@ Now visit the project server and view @filepath{burial.html}, which should look 
 
 @image/rp["burial.png" #:scale 0.8]
 
-Click the navigational links at the top to move between pages. You're encouraged to change the source files, the style sheet, the template, or @filepath{directory-require.rkt}, and see how these changes immediately affect the page rendering in the project server. (You can also change the sequence of the pages in @filepath{index.ptree}, but in that case, you'll need to restart the project server to see the change.)
+Click the navigational links at the top to move between pages. You're encouraged to change the source files, the style sheet, the template, or @filepath{pollen.rkt}, and see how these changes immediately affect the page rendering in the project server. (You can also change the sequence of the pages in @filepath{index.ptree}, but in that case, you'll need to restart the project server to see the change.)
 
 This page isn't a miracle of web design, but it shows you in one example:
 
 @itemlist[
 
-@item{Pollen markup being decoded — paragraph breaks, linebreaks, smart quotes, smart dashes — with a @racket[decode] function attached to the @code{root} node by @filepath{directory-require.rkt};}
+@item{Pollen markup being decoded — paragraph breaks, linebreaks, smart quotes, smart dashes — with a @racket[decode] function attached to the @code{root} node by @filepath{pollen.rkt};}
 
 @item{A dynamically-generated CSS file that computes positions for CSS elements using numerical values set up with @racket[define], and mathematical conversions thereof;}
 

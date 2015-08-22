@@ -26,19 +26,14 @@ A parameter that holds the root directory of the current project (e.g., the dire
 A parameter that reports the path to the directory of support files for the project server. Initialized to @racket[#f], but set to a proper value when the server runs.}
 
 
-@defparam[world:check-directory-requires-in-render? check? boolean?]{
-A parameter that determines whether the @racket[world:directory-require] file is checked for changes on every pass through @racket[render]. (Can be faster to turn this off if you don't need it.) Initialized to @racket[#t].}
-
-
-
 
 @section[#:tag "settable-values"]{Settable values}
 
-These values can be changed by overriding them in your @racket["directory-require.rkt"] source file. Within this file, @seclink["submodules" #:doc '(lib "scribblings/guide/guide.scrbl")]{create a submodule} called @racket[config]. Then within this submodule, use @racket[define] to make a variable with the same name as the one in @racket[pollen/world], but without the @racket[world:] prefix. Assign it whatever value you like. Repeat as needed. When Pollen runs, these definitions will supersede those in @racket[pollen/world].
+These values can be changed by overriding them in your @racket["pollen.rkt"] source file. Within this file, @seclink["submodules" #:doc '(lib "scribblings/guide/guide.scrbl")]{create a submodule} called @racket[config]. Then within this submodule, use @racket[define] to make a variable with the same name as the one in @racket[pollen/world], but without the @racket[world:] prefix. Assign it whatever value you like. Repeat as needed. When Pollen runs, these definitions will supersede those in @racket[pollen/world].
 
-For instance, suppose you wanted the main export of every Pollen source file to be called @racket[van-halen] rather than @racket[doc], the extension of Pollen markup files to be @racket[.rock] rather than @racket[.pm], and the command character to be @litchar{🎸} instead of @litchar{◊}. Your @racket["directory-require.rkt"] would look like this:
+For instance, suppose you wanted the main export of every Pollen source file to be called @racket[van-halen] rather than @racket[doc], the extension of Pollen markup files to be @racket[.rock] rather than @racket[.pm], and the command character to be @litchar{🎸} instead of @litchar{◊}. Your @racket["pollen.rkt"] would look like this:
 
-@fileblock["directory-require.rkt" 
+@fileblock["pollen.rkt" 
 @codeblock{
 #lang racket/base
 
@@ -53,7 +48,7 @@ For instance, suppose you wanted the main export of every Pollen source file to 
 
 Though any of the values below can be overridden, it may not always be wise to do so. For instance, if you redefined @racket[world:fallback-template-prefix], you would simply break the fallback-template mechanism, because it would look for files that don't exist. But we don't live in a nanny state, so you are entrusted to say what you mean and accept the consequences.
 
-Of course, you can restore the defaults simply by deleting these defined values from @racket["directory-require.rkt"].
+Of course, you can restore the defaults simply by deleting these defined values from @racket["pollen.rkt"].
 
 These settable values are each equipped with a corresponding @racket[world:current-]@racket[_settable-value] function that will return the value loaded from the @racket[config] submodule (if @racket[_settable-value] was defined there), otherwise the default given by @racket[world:]@racket[_settable-value]. For instance, @racket[world:command-char] will always be @litchar{◊}, but in the example above, @racket[world:current-command-char] would return @litchar{🎸}. 
 
