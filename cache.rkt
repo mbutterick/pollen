@@ -15,23 +15,23 @@
   (cache-remove #f cache-dir))
 
 
-(define (paths->key source-path [template-path #f])
-  ;; key is list of file + mod-time pairs
+(define (paths->key source-path [template-path #f] #:subkey [subkey #f])
+  ;; key is list of file + mod-time pairs, use #f for missing
   (define path-strings (append (list source-path)
-                               (if template-path (list template-path) null)
-                               (or (get-directory-require-files source-path) null)))
-  (define project-root (world:current-project-root))
+                               (if (eq? subkey (world:current-meta-export))
+                                   null ; metas only depend on source-path
+                                   (append (list template-path) ; is either path or #f
+                                           (->list (get-directory-require-files source-path))))))
   ;; can't use relative paths for cache keys because source files include `here-path` which is absolute.
   ;; problem is that cache could appear valid on another filesystem (based on relative pathnames & mod dates)
   ;; but would actually be invalid (because the `here-path` names are wrong).
-  (map (λ(ps) (define cp (->complete-path ps))
-         (cons (path->string cp) (file-or-directory-modify-seconds cp))) path-strings))
-
-(define (key->source-path-key key)
-  (list (car key)))
+  (define path+mod-time-pairs
+    (map (λ(ps) (and ps (let ([cp (->complete-path ps)])
+                          (cons (path->string cp) (file-or-directory-modify-seconds cp))))) path-strings))
+  (cons subkey path+mod-time-pairs))
 
 (define (key->source-path key)
-  (car (car key)))
+  (car (cadr key)))
 
 (define (update-directory-requires source-path)
   (define directory-require-files (get-directory-require-files source-path))
@@ -78,10 +78,7 @@
   
   (cond
     [(world:current-compile-cache-active)
-     (define key (let ([possible-key (paths->key path)])
-                   (if (eq? subkey (world:current-meta-export))
-                       (key->source-path-key possible-key)
-                       possible-key)))
+     (define key (paths->key path #:subkey subkey))
      ;; use multiple pickup files to avoid locking issues.
      ;; pickup-file hierarchy just mirrors the project hierarchy.
      (define dest-file (build-path cache-dir (path->string (find-relative-path (world:current-project-root) (string->path (format "~a#~a.rktd" (key->source-path key) subkey))))))
