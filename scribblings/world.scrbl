@@ -68,8 +68,6 @@ Determines the default HTTP port for the project server. Initialized to @racket[
 
 @defoverridable[meta-tag-name symbol?]{Name of the tag used to mark metas within Pollen source.}
 
-@defoverridable[directory-require string?]{File implicitly required into every Pollen source file from its directory. Initialized to @filepath{directory-require.rkt}.}
-
 @defoverridable[server-extras-dir string?]{Name of directory where server support files live. Initialized to @tt{server-extras}.}
 
 @defoverridable[extension-escape-char char?]{Character for escaping output-file extensions within source-file names. Initialized to @racket[#\!].}

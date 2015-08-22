@@ -654,9 +654,9 @@ First, using this file is not mandatory. You can always import functions and val
 
 Second, notice from the @filepath{.rkt} suffix that @filepath{directory-require.rkt} is a source file containing Racket code, not Pollen code. This is the default because while Pollen is better for text-driven source files, Racket is better for code-driven source files. Still, the choice is yours: the name of this file can be changed by resetting the @racket[world:directory-require] value.
 
-Third, notice from the @filepath{directory-} prefix that @filepath{directory-require.rkt} is only used by Pollen source files @italic{in the same directory}. So if your project has source files nested inside a subdirectory, you'll need to explicitly create another @filepath{directory-require.rkt} there and share the functions & values as needed.
+Third, the @filepath{directory-} prefix represents the minimum scope for the file, not the maximum. Pollen source files nested in subdirectories will look for a @filepath{directory-require.rkt} in their own directory first. But if they can't find it, they'll look in the parent directory, then the next parent directory, and so on. Thus, by default, a @filepath{directory-require.rkt} in the root folder of a project will apply to all the source files in the project. But when you add a new @filepath{directory-require.rkt} to a subdirectory, it will apply to all files underneath.
 
-@margin-note{``Why not make this file visible throughout a project, rather than just a directory?'' Good idea, but I couldn't figure out how to do it without creating finicky new dependencies. If you have a better idea, I'm open to it.}
+@margin-note{Though a subdirectory-specific @filepath{directory-require.rkt} will supersede the one in the enclosing directory, you can still use @racket[(require "../directory-require.rkt")] to pull in definitions from above, and @racket[provide] to propagate them into the current subdirectory. For instance, @racket[(provide (all-from-out "../directory-require.rkt"))] will re-export everything.}
 
 Let's see how this works in practice. In the same directory as @filepath{article.html.pm}, create a new @filepath{directory-require.rkt} file as follows:
 
