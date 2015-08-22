@@ -228,20 +228,15 @@
   (define-namespace-anchor caching-module-nsa)
   (provide caching-module-nsa))
 (require 'caching-module)
+(define caching-module-ns (namespace-anchor->namespace caching-module-nsa))
 
-;; (car (current-eval-namespace-cache)) = namespace containing cached modules
-;; (cdr (current-eval-namespace-cache)) = list of cached modules
-(define current-eval-namespace-cache (make-parameter (cons (namespace-anchor->namespace caching-module-nsa) '())))
+(define (load-in-namespace to-ns . module-names)
+  (for-each (λ(mn) (eval `(require ,mn) to-ns)) module-names))
 
-(define/contract+provide (add-module-to-current-eval-cache module-name)
-  (symbol? . -> . void?)
-  (define cache-ns (car (current-eval-namespace-cache)))
-  (define cached-modules (cdr (current-eval-namespace-cache)))
-  (when (not (member module-name cached-modules))
-    (eval `(require ,module-name) cache-ns)
-    (current-eval-namespace-cache (cons cache-ns (cons module-name cached-modules)))))
+(define (copy-from-namespace from-ns to-ns . module-names)
+  (for-each (λ(mn) (namespace-attach-module from-ns mn to-ns)) module-names))
 
-(define initial-modules-to-cache '(xml
+(define cached-module-names '(xml
                                    racket/bool
                                    racket/class
                                    racket/contract 
@@ -270,16 +265,12 @@
                                    sugar
                                    txexpr))
 
-
-(for-each add-module-to-current-eval-cache initial-modules-to-cache)
-
+(apply load-in-namespace caching-module-ns cached-module-names)
 
 (define/contract (render-through-eval expr-to-eval)
   (list? . -> . (or/c string? bytes?))
-  (define cache-ns (car (current-eval-namespace-cache)))
-  (define cached-modules (cdr (current-eval-namespace-cache)))
   (parameterize ([current-namespace (make-base-namespace)]
                  [current-output-port (current-error-port)]
                  [current-pagetree (make-project-pagetree (world:current-project-root))])
-    (for-each (λ(mod-name) (namespace-attach-module cache-ns mod-name)) cached-modules)   
+    (apply copy-from-namespace caching-module-ns (current-namespace) cached-module-names)   
     (eval expr-to-eval (current-namespace))))

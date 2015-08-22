@@ -40,11 +40,56 @@
 
 (require sugar/debug)
 
+;; set up namespace for module caching
+(module caching-module racket/base
+  (define-namespace-anchor caching-module-nsa)
+  (provide caching-module-nsa))
+(require 'caching-module)
+(define caching-module-ns (namespace-anchor->namespace caching-module-nsa))
+
+(define (load-in-namespace to-ns . module-names)
+  (for-each (λ(mn) (eval `(require ,mn) to-ns)) module-names))
+
+(define (copy-from-namespace from-ns to-ns . module-names)
+  (for-each (λ(mn) (namespace-attach-module from-ns mn to-ns)) module-names))
+
+(define cached-module-names '(xml
+                              racket/bool
+                              racket/class
+                              racket/contract 
+                              racket/draw
+                              racket/file
+                              racket/format
+                              racket/function
+                              racket/port 
+                              racket/list
+                              racket/match
+                              racket/string
+                              racket/syntax
+                              ;pollen/cache ;; causes loading cycle
+                              pollen/debug
+                              pollen/decode
+                              pollen/file
+                              pollen/include-template
+                              ;pollen/main ;; causes loading cycle
+                              pollen/reader-base
+                              ;pollen/pagetree ;; causes loading cycle
+                              pollen/rerequire
+                              pollen/tag
+                              ;pollen/template ;; causes loading cycle
+                              pollen/world
+                              pollen/project
+                              sugar
+                              txexpr))
+
+(apply load-in-namespace caching-module-ns cached-module-names)
+
 (define (path->hash path subkey)
   (dynamic-rerequire path)
   ;; new namespace forces dynamic-require to re-instantiate 'path'
   ;; otherwise it gets cached in current namespace.
   (parameterize ([current-namespace (make-base-namespace)])
+    (apply copy-from-namespace caching-module-ns (current-namespace) cached-module-names)
     (hash subkey (dynamic-require (if (eq? subkey (world:current-meta-export))
                                       `(submod ,path ,subkey) ; use metas submodule for speed
                                       path) subkey))))
