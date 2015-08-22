@@ -1,7 +1,7 @@
 #lang racket/base
 (require racket/file racket/path racket/match)
 (require sugar/test sugar/define sugar/container sugar/file)
-(require "file.rkt" "cache.rkt" "world.rkt" "debug.rkt" "pagetree.rkt" "project.rkt" "template.rkt" "rerequire.rkt")
+(require "file.rkt" "cache.rkt" "world.rkt" "debug.rkt" "pagetree.rkt" "project.rkt" "template.rkt" "rerequire.rkt" "cache-ns.rkt")
 
 ;; used to track renders according to modification dates of component files
 (define mod-date-hash (make-hash))
@@ -229,12 +229,6 @@
   (provide caching-module-nsa))
 (require 'caching-module)
 (define caching-module-ns (namespace-anchor->namespace caching-module-nsa))
-
-(define (load-in-namespace to-ns . module-names)
-  (for-each (λ(mn) (eval `(require ,mn) to-ns)) module-names))
-
-(define (copy-from-namespace from-ns to-ns . module-names)
-  (for-each (λ(mn) (namespace-attach-module from-ns mn to-ns)) module-names))
 
 (define cached-module-names '(xml
                                    racket/bool

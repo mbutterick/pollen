@@ -1,5 +1,5 @@
 #lang racket/base
-(require racket/path racket/file file/cache sugar/coerce "project.rkt" "world.rkt" "rerequire.rkt")
+(require racket/path racket/file file/cache sugar/coerce "project.rkt" "world.rkt" "rerequire.rkt" "cache-ns.rkt")
 
 ;; The cache is a hash with paths as keys.
 ;; The cache values are also hashes, with key/value pairs for that path.
@@ -46,12 +46,6 @@
   (provide caching-module-nsa))
 (require 'caching-module)
 (define caching-module-ns (namespace-anchor->namespace caching-module-nsa))
-
-(define (load-in-namespace to-ns . module-names)
-  (for-each (λ(mn) (eval `(require ,mn) to-ns)) module-names))
-
-(define (copy-from-namespace from-ns to-ns . module-names)
-  (for-each (λ(mn) (namespace-attach-module from-ns mn to-ns)) module-names))
 
 (define cached-module-names '(xml
                               racket/bool
