@@ -112,7 +112,7 @@ Now here's a third: the Pollen project server. To start the project server, retu
 After a moment, you'll see the startup message:
 
 @terminal{
-Welcome to Pollen 0.001 (Racket 6.0.0.5)
+Welcome to Pollen 0.001 (Racket @(version))
 Project root is /path/to/your/directory
 Project server is http://localhost:8080 (Ctrl-C to exit)
 Project dashboard is http://localhost:8080/index.ptree
