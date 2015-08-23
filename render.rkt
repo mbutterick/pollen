@@ -1,6 +1,6 @@
 #lang racket/base
-(require racket/file racket/path racket/match)
-(require sugar/test sugar/define sugar/container sugar/file)
+(require racket/file racket/path racket/match compiler/cm)
+(require sugar/test sugar/define sugar/file)
 (require "file.rkt" "cache.rkt" "world.rkt" "debug.rkt" "pagetree.rkt" "project.rkt" "template.rkt" "rerequire.rkt" "cache-ns.rkt")
 
 ;; used to track renders according to modification dates of component files
@@ -152,10 +152,15 @@
 
 (define/contract (render-scribble-source source-path)
   (complete-path? . -> . string?)
-  (match-define-values (source-dir _ _) (split-path source-path))
+  (match-define-values (source-dir source-filename _) (split-path source-path))
   (file-needed-rerequire? source-path)
   (define scribble-render (dynamic-require 'scribble/render 'render))
   (time (parameterize ([current-directory (->complete-path source-dir)])
+          ;; if there's a compiled zo file for the Scribble file,
+          ;; (as is usually the case in existing packages)
+          ;; it will foul up the render
+          ;; so recompile first to avoid "can't redefine a constant" errors.
+          (managed-compile-zo source-path)
           ;; BTW this next action has side effects: scribble will copy in its core files if they don't exist.
           (scribble-render (list (dynamic-require source-path 'doc)) (list source-path))))
   (define result (file->string (->output-path source-path)))
