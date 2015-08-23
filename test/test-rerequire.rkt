@@ -9,7 +9,7 @@
 (define-runtime-path template.txt "data/rerequire/template.txt")
 (define-runtime-path markup.txt.pm "data/rerequire/markup.txt.pm")
 (define-runtime-path markup.txt "data/rerequire/markup.txt")
-
+(define-runtime-path pollen-cache "data/rerequire/pollen-cache")
 
 (copy-file markup.txt.pm pre.txt.pp #t)
 
@@ -39,4 +39,4 @@
 (delete-file pre.txt)
 (delete-file markup.txt)
 
-(delete-directory/files (build-path (current-directory) "pollen-cache"))
+(delete-directory/files pollen-cache)
