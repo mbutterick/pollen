@@ -82,7 +82,7 @@
 
 (define-settable publish-directory-name "publish")
 
-(define-settable extension-escape-char #\!)
+(define-settable extension-escape-char #\_)
 
 (define-settable compile-cache-active #t)
 (define-settable compile-cache-max-size (* 10 1024 1024)) ; = 10 megabytes

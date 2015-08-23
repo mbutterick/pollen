@@ -163,9 +163,9 @@ This can be useful you're managing your project with git. Most likely you'll wan
 
 Pollen relies extensively on the convention of naming source files by adding a source extension to an output-file name. So the Pollen markup source for @filepath{index.html} would be @filepath{index.html.pm}. 
 
-This convention occasionally flummoxes other programs that assume a file can only have one extension. If you run into such a situation, you can  @italic{escape} the output-file extension using the @racket[world:extension-escape-char], which defaults to @litchar{!}. 
+This convention occasionally flummoxes other programs that assume a file can only have one extension. If you run into such a situation, you can  @italic{escape} the output-file extension using the @racket[world:extension-escape-char], which defaults to the underscore @litchar{_}. 
 
-So instead of @filepath{index.html.pm}, your source-file name would be @filepath{index!html.pm}. When this source file is rendered, it will automatically be converted into @filepath{index.html} (meaning, the escaped extension will be converted into a normal file extension).
+So instead of @filepath{index.html.pm}, your source-file name would be @filepath{index_html.pm}. When this source file is rendered, it will automatically be converted into @filepath{index.html} (meaning, the escaped extension will be converted into a normal file extension).
 
 This alternative-naming scheme is automatically enabled in every project. You can also set the escape character on a per-project basis (see @racket[world:current-extension-escape-char]). Pollen will let you choose any character, but of course it would be unwise to pick one with special meaning in your filesystem (for instance, @litchar{/}).
 
