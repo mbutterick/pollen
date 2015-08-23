@@ -16,6 +16,8 @@
            (define name (namespace-anchor->namespace nsa))
            (require-in-namespace name mods)))]))
 
+
+;; `namespace-require mod` = (eval '(require mod) namespace)
 (define (require-in-namespace ns module-names)
   (parameterize ([current-namespace ns])
     (for-each (λ(mod-name) (namespace-require mod-name)) module-names)))
