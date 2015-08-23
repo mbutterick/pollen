@@ -178,16 +178,17 @@
   (define expr-to-eval 
     `(begin 
        (require (for-syntax racket/base))
-       (require pollen/include-template pollen/cache pollen/debug)
-       ,(require-directory-require-files source-path) 
-       (let ([,(world:current-main-export) (cached-require ,(path->string source-path) ',(world:current-main-export))]
-             [,(world:current-meta-export) (cached-require ,(path->string source-path) ',(world:current-meta-export))])
-         (local-require pollen/pagetree pollen/template pollen/top)
-         (define here (metas->here ,(world:current-meta-export)))
-         (cond 
-           [(bytes? ,(world:current-main-export)) ,(world:current-main-export)] ; if main export is binary, just pass it through
-           [else
-            (include-template #:command-char ,(world:current-command-char) (file ,(->string (find-relative-path source-dir template-path))))]))))
+       (require pollen/include-template pollen/cache pollen/debug pollen/pagetree)
+       ,(require-directory-require-files source-path)
+       (parameterize ([current-pagetree (make-project-pagetree ,(world:current-project-root))])
+         (let ([,(world:current-main-export) (cached-require ,(path->string source-path) ',(world:current-main-export))]
+               [,(world:current-meta-export) (cached-require ,(path->string source-path) ',(world:current-meta-export))])
+           (local-require pollen/template pollen/top)
+           (define here (metas->here ,(world:current-meta-export)))
+           (cond 
+             [(bytes? ,(world:current-main-export)) ,(world:current-main-export)] ; if main export is binary, just pass it through
+             [else
+              (include-template #:command-char ,(world:current-command-char) (file ,(->string (find-relative-path source-dir template-path))))])))))
   (time (parameterize ([current-directory (->complete-path source-dir)]) ; because include-template wants to work relative to source location
           (render-through-eval expr-to-eval))))
 
@@ -208,9 +209,9 @@
                          (list
                           ;; this op touches the cache so set up current-directory correctly
                           (parameterize ([current-directory (world:current-project-root)])
-                          (let ([source-metas (cached-require source-path (world:current-meta-export))])
-                            (and (hash-has-key? source-metas (->symbol (world:current-template-meta-key)))
-                                 (build-path source-dir (select-from-metas (->string (world:current-template-meta-key)) source-metas))))) ; path based on metas
+                            (let ([source-metas (cached-require source-path (world:current-meta-export))])
+                              (and (hash-has-key? source-metas (->symbol (world:current-template-meta-key)))
+                                   (build-path source-dir (select-from-metas (->string (world:current-template-meta-key)) source-metas))))) ; path based on metas
                           (and (filename-extension output-path) (build-path (world:current-project-root) 
                                                                             (add-ext (world:current-default-template-prefix) (get-ext output-path))))))) ; path to default template
           (and (filename-extension output-path) (build-path (world:current-server-extras-path) (add-ext (world:current-fallback-template-prefix) (get-ext output-path)))))))) ; fallback template
@@ -223,43 +224,8 @@
        (> (length (dynamic-rerequire source-path)) 0)))
 
 
-;; set up namespace for module caching
-(define-caching-ns caching-module-ns)
-(define cached-module-names '(xml
-                                   racket/bool
-                                   racket/class
-                                   racket/contract 
-                                   racket/draw
-                                   racket/file
-                                   racket/format
-                                   racket/function
-                                   racket/port 
-                                   racket/list
-                                   racket/match
-                                   racket/string
-                                   racket/syntax
-                                   pollen/cache
-                                   pollen/debug
-                                   pollen/decode
-                                   pollen/file
-                                   pollen/include-template
-                                   pollen/main
-                                   pollen/reader-base
-                                   pollen/pagetree
-                                   pollen/rerequire
-                                   pollen/tag
-                                   pollen/template
-                                   pollen/world
-                                   pollen/project
-                                   sugar
-                                   txexpr))
-
-(apply load-in-namespace caching-module-ns cached-module-names)
-
 (define/contract (render-through-eval expr-to-eval)
   (list? . -> . (or/c string? bytes?))
   (parameterize ([current-namespace (make-base-namespace)]
-                 [current-output-port (current-error-port)]
-                 [current-pagetree (make-project-pagetree (world:current-project-root))])
-    (apply copy-from-namespace caching-module-ns (current-namespace) cached-module-names)   
-    (eval expr-to-eval (current-namespace))))
+                 [current-output-port (current-error-port)])
+    (eval expr-to-eval)))

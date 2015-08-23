@@ -1,5 +1,5 @@
 #lang racket/base
-(require racket/path racket/file file/cache sugar/coerce "project.rkt" "world.rkt" "rerequire.rkt" "cache-ns.rkt")
+(require racket/path racket/file file/cache sugar/coerce "project.rkt" "world.rkt" "rerequire.rkt" "cache-ns.rkt" "debug.rkt")
 
 ;; The cache is a hash with paths as keys.
 ;; The cache values are also hashes, with key/value pairs for that path.
@@ -38,48 +38,17 @@
   (and directory-require-files (map dynamic-rerequire directory-require-files))
   (void))
 
-;; set up namespace for module caching
-(define-caching-ns caching-module-ns)
-(define cached-module-names '(xml
-                              racket/bool
-                              racket/class
-                              racket/contract 
-                              racket/draw
-                              racket/file
-                              racket/format
-                              racket/function
-                              racket/port 
-                              racket/list
-                              racket/match
-                              racket/string
-                              racket/syntax
-                              ;pollen/cache ;; causes loading cycle
-                              pollen/debug
-                              pollen/decode
-                              pollen/file
-                              pollen/include-template
-                              ;pollen/main ;; causes loading cycle
-                              pollen/reader-base
-                              ;pollen/pagetree ;; causes loading cycle
-                              pollen/rerequire
-                              pollen/tag
-                              ;pollen/template ;; causes loading cycle
-                              pollen/world
-                              pollen/project
-                              sugar
-                              txexpr))
-
-
 
 (define (path->hash path subkey)
-  (dynamic-rerequire path)
   ;; new namespace forces dynamic-require to re-instantiate 'path'
   ;; otherwise it gets cached in current namespace.
-  (parameterize ([current-namespace (make-base-namespace)])
-    (apply copy-from-namespace caching-module-ns (current-namespace) cached-module-names)
-    (hash subkey (dynamic-require (if (eq? subkey (world:current-meta-export))
-                                      `(submod ,path ,subkey) ; use metas submodule for speed
-                                      path) subkey))))
+  (define kvs
+    (let ([meta-key (world:current-meta-export)])
+      (parameterize ([current-namespace (make-base-namespace)])
+        (if (eq? subkey meta-key)
+            (list meta-key (dynamic-require (list 'submod path 'metas) meta-key))
+            (list subkey (dynamic-require path subkey) meta-key (dynamic-require path meta-key))))))
+  (apply hash kvs))
 
 ;; include this from 6.2 for compatibility back to 6.0 (formerly `make-parent-directory*`)
 (define (make-parent-directory p)
@@ -120,7 +89,9 @@
                                                       #:exists-ok? #t
                                                       key
                                                       cache-dir
-                                                      (λ _ (write-to-file (path->hash path subkey) dest-file #:exists 'replace))
+                                                      (λ _
+                                                        (message (format "caching: ~a from ~a" subkey (find-relative-path (current-directory) path)))
+                                                        (write-to-file (path->hash path subkey) dest-file #:exists 'replace))
                                                       #:max-cache-size (world:current-compile-cache-max-size))
                                           (file->value dest-file))) subkey)]
     [else (parameterize ([current-namespace (make-base-namespace)])
