@@ -57,7 +57,7 @@
 (module-test-external
  (require sugar/coerce)
  (check-equal? (escape-last-ext "foo") (->path "foo"))
- (check-equal? (escape-last-ext "foo.html") (->path "foo!html"))
+ (check-equal? (escape-last-ext "foo.html") (->path "foo_html"))
  (check-equal? (escape-last-ext "foo.html" #\$) (->path "foo$html")))
 
 
@@ -77,9 +77,9 @@
  (require sugar/coerce)
  (check-equal? (unescape-ext "foo") (->path "foo"))
  (check-equal? (unescape-ext "foo.html") (->path "foo.html"))
- (check-equal? (unescape-ext "foo!html") (->path "foo.html"))
+ (check-equal? (unescape-ext "foo_html") (->path "foo.html"))
  (check-equal? (unescape-ext "foo$html" #\$) (->path "foo.html"))
- (check-equal? (unescape-ext "foo!bar!!html") (->path "foo!bar!.html"))
+ (check-equal? (unescape-ext "foo_bar__html") (->path "foo_bar_.html"))
  (check-equal? (unescape-ext "foo$bar$$html" #\$) (->path "foo$bar$.html")))
 
 
@@ -151,7 +151,7 @@
  (check-false (preproc-source? "foo.bar"))
  (check-false (preproc-source? #f))
  (check-equal? (->preproc-source-paths (->path "foo.pp")) (list (->path "foo.pp")))
- (check-equal? (->preproc-source-paths (->path "foo.html")) (list (->path "foo.html.pp") (->path "foo!html.pp")))
+ (check-equal? (->preproc-source-paths (->path "foo.html")) (list (->path "foo.html.pp") (->path "foo_html.pp")))
  (check-equal? (->preproc-source-paths "foo") (list (->path "foo.pp")))
  (check-equal? (->preproc-source-paths 'foo) (list (->path "foo.pp")))
  (check-equal? (->preproc-source-path (->path "foo.pp")) (->path "foo.pp"))
@@ -175,7 +175,7 @@
  (check-false (markup-source? "foo.p"))
  (check-false (markup-source? #f))
  (check-equal? (->markup-source-paths (->path "foo.pm")) (list (->path "foo.pm")))
- (check-equal? (->markup-source-paths (->path "foo.html")) (list (->path "foo.html.pm") (->path "foo!html.pm")))
+ (check-equal? (->markup-source-paths (->path "foo.html")) (list (->path "foo.html.pm") (->path "foo_html.pm")))
  (check-equal? (->markup-source-paths "foo") (list (->path "foo.pm")))
  (check-equal? (->markup-source-paths 'foo) (list (->path "foo.pm")))
  (check-equal? (->markup-source-path (->path "foo.pm")) (->path "foo.pm"))
@@ -215,10 +215,10 @@
  (check-equal? (->output-path "foo.xml.p") (->path "foo.xml"))
  (check-equal? (->output-path 'foo.barml.p) (->path "foo.barml"))
  
- (check-equal? (->output-path 'foo!html.p) (->path "foo.html"))
- (check-equal? (->output-path (->path "/Users/mb/git/foo!html.p")) (->path "/Users/mb/git/foo.html"))
- (check-equal? (->output-path "foo!xml.p") (->path "foo.xml"))
- (check-equal? (->output-path 'foo!barml.p) (->path "foo.barml")))
+ (check-equal? (->output-path 'foo_html.p) (->path "foo.html"))
+ (check-equal? (->output-path (->path "/Users/mb/git/foo_html.p")) (->path "/Users/mb/git/foo.html"))
+ (check-equal? (->output-path "foo_xml.p") (->path "foo.xml"))
+ (check-equal? (->output-path 'foo_barml.p) (->path "foo.barml")))
 
 (define+provide/contract (project-files-with-ext ext)
   (coerce/symbol? . -> . complete-paths?)
