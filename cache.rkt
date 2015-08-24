@@ -15,40 +15,40 @@
   (cache-remove #f cache-dir))
 
 
-(define (paths->key source-path [template-path #f] #:subkey [subkey #f])
+(define (paths->key source-path [template-path #f])
   ;; key is list of file + mod-time pairs, use #f for missing
   (define path-strings (append (list source-path)
-                               (if (eq? subkey (world:current-meta-export))
-                                   null ; metas only depend on source-path
-                                   (append (list template-path) ; is either path or #f
-                                           (->list (get-directory-require-files source-path))))))
+                               (append (list template-path) ; is either path or #f
+                                       (->list (get-directory-require-files source-path))))) ; is either list of files or (list #f)
   ;; can't use relative paths for cache keys because source files include `here-path` which is absolute.
   ;; problem is that cache could appear valid on another filesystem (based on relative pathnames & mod dates)
   ;; but would actually be invalid (because the `here-path` names are wrong).
   (define path+mod-time-pairs
     (map (λ(ps) (and ps (let ([cp (->complete-path ps)])
                           (cons (path->string cp) (file-or-directory-modify-seconds cp))))) path-strings))
-  (cons subkey path+mod-time-pairs))
+  path+mod-time-pairs)
 
 (define (key->source-path key)
-  (car (cadr key)))
-
+  (car (car key)))
 (define (update-directory-requires source-path)
   (define directory-require-files (get-directory-require-files source-path))
   (and directory-require-files (map dynamic-rerequire directory-require-files))
   (void))
 
 
-(define (path->hash path subkey)
+(define (path->hash path)
   ;; new namespace forces dynamic-require to re-instantiate 'path'
   ;; otherwise it gets cached in current namespace.
-  (define kvs
-    (let ([meta-key (world:current-meta-export)])
-      (parameterize ([current-namespace (make-base-namespace)])
-        (if (eq? subkey meta-key)
-            (list meta-key (dynamic-require (list 'submod path 'metas) meta-key))
-            (list subkey (dynamic-require path subkey) meta-key (dynamic-require path meta-key))))))
-  (apply hash kvs))
+  (apply hash
+         (let ([doc-key (world:current-main-export)]
+               [meta-key (world:current-meta-export)])
+           (parameterize ([current-namespace (make-base-namespace)])
+             ;; I monkeyed around with using the metas submodule to pull out the metas (for speed)
+             ;; but in practice most files get their doc requested too.
+             ;; so it's just simpler to get both at once and be done with it.
+             ;; the savings of avoiding two cache fetches at the outset outweighs
+             ;; the benefit of not reloading doc when you just need metas.
+             (list doc-key (dynamic-require path doc-key) meta-key (dynamic-require path meta-key))))))
 
 ;; include this from 6.2 for compatibility back to 6.0 (formerly `make-parent-directory*`)
 (define (make-parent-directory p)
@@ -79,10 +79,10 @@
   
   (cond
     [(world:current-compile-cache-active)
-     (define key (paths->key path #:subkey subkey))
+     (define key (paths->key path))
      ;; use multiple pickup files to avoid locking issues.
      ;; pickup-file hierarchy just mirrors the project hierarchy.
-     (define dest-file (build-path cache-dir (path->string (find-relative-path (world:current-project-root) (string->path (format "~a#~a.rktd" (key->source-path key) subkey))))))
+     (define dest-file (build-path cache-dir (path->string (find-relative-path (world:current-project-root) (string->path (format "~a.rktd" (key->source-path key)))))))
      (make-parent-directory dest-file)
      (hash-ref (hash-ref! ram-cache key (λ _
                                           (cache-file dest-file
@@ -90,7 +90,7 @@
                                                       key
                                                       cache-dir
                                                       (λ _
-                                                        (write-to-file (path->hash path subkey) dest-file #:exists 'replace))
+                                                        (write-to-file (path->hash path) dest-file #:exists 'replace))
                                                       #:max-cache-size (world:current-compile-cache-max-size))
                                           (file->value dest-file))) subkey)]
     [else (parameterize ([current-namespace (make-base-namespace)])
