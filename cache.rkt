@@ -90,7 +90,6 @@
                                                       key
                                                       cache-dir
                                                       (λ _
-                                                        (message (format "caching: ~a from ~a" subkey (find-relative-path (current-directory) path)))
                                                         (write-to-file (path->hash path subkey) dest-file #:exists 'replace))
                                                       #:max-cache-size (world:current-compile-cache-max-size))
                                           (file->value dest-file))) subkey)]
