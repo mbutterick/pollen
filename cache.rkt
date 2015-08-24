@@ -7,12 +7,12 @@
 (provide reset-cache cached-require paths->key)
 
 
-(define cache-dir
+(define (get-cache-dir)
   (build-path (world:current-project-root) (world:current-cache-dir-name)))
 
 
 (define (reset-cache)
-  (cache-remove #f cache-dir))
+  (cache-remove #f (get-cache-dir)))
 
 
 (define (paths->key source-path [template-path #f])
@@ -80,9 +80,10 @@
   (cond
     [(world:current-compile-cache-active)
      (define key (paths->key path))
-     ;; use multiple pickup files to avoid locking issues.
+     (define cache-dir (get-cache-dir))
      ;; pickup-file hierarchy just mirrors the project hierarchy.
-     (define dest-file (build-path cache-dir (path->string (find-relative-path (world:current-project-root) (string->path (format "~a.rktd" (key->source-path key)))))))
+     (define relative-path-within-project (find-relative-path (world:current-project-root) path))
+     (define dest-file (build-path cache-dir (format "~a.rktd" relative-path-within-project)))
      (make-parent-directory dest-file)
      (hash-ref (hash-ref! ram-cache key (λ _
                                           (cache-file dest-file
