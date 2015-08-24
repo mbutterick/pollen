@@ -55,28 +55,34 @@
                             reader-mode))
     (define meta-keys-plus-here (cons (world:current-here-path-key) meta-keys)) ; here-path at front so it can be overridden
     (define meta-values-plus-here (cons reader-here-path meta-values))
-    (with-syntax* ([(KEY ...) (datum->syntax source-stx meta-keys-plus-here)]
-                   [(VALUE ...) (datum->syntax source-stx meta-values-plus-here)]
-                   [KVS #'(append (list 'KEY VALUE) ...)])
+    (with-syntax ([(KEY ...) (datum->syntax source-stx meta-keys-plus-here)]
+                  [(VALUE ...) (datum->syntax source-stx meta-values-plus-here)]
+                  [METAS (format-id source-stx "~a" (world:current-meta-export))]
+                  [META-MOD (format-symbol "~a" (world:current-meta-export))]
+                  [POLLEN-MOD (format-symbol "~a" 'pollen-lang-module)]
+                  [DOC (format-id source-stx "~a" (world:current-main-export))]
+                  [PARSER-MODE-VALUE (format-symbol "~a" parser-mode)]
+                  [DIRECTORY-REQUIRES (datum->syntax source-stx (require+provide-directory-require-files path-string))]
+                  [(SOURCE-LINE ...) (datum->syntax source-stx meta-free-file-data)])
       (syntax-property
-       (datum->syntax source-stx
-                      `(module runtime-wrapper racket/base
-                         (module metas racket/base
-                           (provide (all-defined-out))
-                           (define ,(world:current-meta-export) (apply hash ,(syntax->datum #'KVS))))
-                         
-                         (module pollen-lang-module pollen
-                           (define parser-mode ',parser-mode) ; change names of exports for local use, to avoid conflicts
-                           (provide (except-out (all-defined-out) parser-mode)
-                                    (prefix-out inner: parser-mode))
-                           ,(require+provide-directory-require-files path-string)
-                           (require (submod ".." ".." metas)) ; get metas from adjacent submodule
-                           (provide (all-from-out (submod ".." ".." metas)))
-                           ,@meta-free-file-data)
-                         
-                         (require (submod pollen/runtime-config show) 'pollen-lang-module)
-                         (provide (all-from-out 'pollen-lang-module))
-                         (show ,(world:current-main-export) inner:parser-mode)) source-stx)
+       (replace-context source-stx
+                        #'(module runtime-wrapper racket/base
+                            (module META-MOD racket/base
+                              (provide (all-defined-out))
+                              (define METAS (apply hash (append (list 'KEY VALUE) ...))))
+                            
+                            (module POLLEN-MOD pollen
+                              (define parser-mode 'PARSER-MODE-VALUE)
+                              (provide (except-out (all-defined-out) parser-mode)
+                                       (prefix-out inner: parser-mode)) ; avoids conflicts with importing modules
+                              DIRECTORY-REQUIRES
+                              (require (submod ".." ".." META-MOD)) ; get metas from adjacent submodule
+                              (provide (all-from-out (submod ".." ".." META-MOD)))
+                              SOURCE-LINE ...)
+                            
+                            (require (submod pollen/runtime-config show) 'POLLEN-MOD)
+                            (provide (all-from-out 'POLLEN-MOD))
+                            (show DOC inner:parser-mode)))
        'module-language
        '#(pollen/language-info get-language-info #f)))))
 
