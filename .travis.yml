@@ -19,7 +19,7 @@ env:
 # having them count against the overall success/failure.
 matrix:
   allow_failures:
-    - env: RACKET_VERSION=HEAD
+    #- env: RACKET_VERSION=HEAD
   # Fast finish: Overall build result is determined as soon as any of
   # its rows have failed, or, all of its rows that aren't allowed to
   # fail have succeeded.
