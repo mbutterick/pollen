@@ -55,27 +55,28 @@
                             reader-mode))
     (define meta-keys-plus-here (cons (world:current-here-path-key) meta-keys)) ; here-path at front so it can be overridden
     (define meta-values-plus-here (cons reader-here-path meta-values))
-    (with-syntax ([(KEY ...) (datum->syntax source-stx meta-keys-plus-here)]
-                  [(VALUE ...) (datum->syntax source-stx meta-values-plus-here)])
+    (with-syntax* ([(KEY ...) (datum->syntax source-stx meta-keys-plus-here)]
+                   [(VALUE ...) (datum->syntax source-stx meta-values-plus-here)]
+                   [KVS #'(append (list 'KEY VALUE) ...)])
       (syntax-property
-       (replace-context source-stx
-                        #`(module runtime-wrapper racket/base
-                            (module metas racket/base
-                              (provide (all-defined-out))
-                              (define #,(world:current-meta-export) (apply hash (append (list 'KEY VALUE) ...))))
-                            
-                            (module pollen-lang-module pollen
-                              (define parser-mode '#,parser-mode) ; change names of exports for local use, to avoid conflicts
-                              (provide (except-out (all-defined-out) parser-mode)
-                                       (prefix-out inner: parser-mode)) 
-                              #,(require+provide-directory-require-files path-string)
-                              (require (submod ".." ".." metas)) ; get metas from adjacent submodule
-                              (provide (all-from-out (submod ".." ".." metas)))
-                              #,@meta-free-file-data)
-                            
-                            (require (submod pollen/runtime-config show) 'pollen-lang-module)
-                            (provide (all-from-out 'pollen-lang-module))
-                            (show #,(world:current-main-export) inner:parser-mode)))
+       (datum->syntax source-stx
+                      `(module runtime-wrapper racket/base
+                         (module metas racket/base
+                           (provide (all-defined-out))
+                           (define ,(world:current-meta-export) (apply hash ,(syntax->datum #'KVS))))
+                         
+                         (module pollen-lang-module pollen
+                           (define parser-mode ',parser-mode) ; change names of exports for local use, to avoid conflicts
+                           (provide (except-out (all-defined-out) parser-mode)
+                                    (prefix-out inner: parser-mode))
+                           ,(require+provide-directory-require-files path-string)
+                           (require (submod ".." ".." metas)) ; get metas from adjacent submodule
+                           (provide (all-from-out (submod ".." ".." metas)))
+                           ,@meta-free-file-data)
+                         
+                         (require (submod pollen/runtime-config show) 'pollen-lang-module)
+                         (provide (all-from-out 'pollen-lang-module))
+                         (show ,(world:current-main-export) inner:parser-mode)) source-stx)
        'module-language
        '#(pollen/language-info get-language-info #f)))))
 
