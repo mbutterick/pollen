@@ -8,3 +8,4 @@
 (define raco-commands '(("pollen" (submod pollen/command raco) "issue Pollen command" #f)))
 (define compile-omit-paths '("test" "tools"))
 (define test-omit-paths '("test/data" "tools"))
+(define module-suffixes '(#"pp" #"pm" #"pmd" #"ptree" #"p"))
