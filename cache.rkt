@@ -1,5 +1,5 @@
 #lang racket/base
-(require racket/path racket/file file/cache sugar/coerce "project.rkt" "world.rkt" "rerequire.rkt" "cache-ns.rkt" "debug.rkt")
+(require racket/path racket/file compiler/cm file/cache sugar/coerce "project.rkt" "world.rkt" "rerequire.rkt" "cache-ns.rkt" "debug.rkt")
 
 ;; The cache is a hash with paths as keys.
 ;; The cache values are also hashes, with key/value pairs for that path.
@@ -28,17 +28,17 @@
                           (cons (path->string cp) (file-or-directory-modify-seconds cp))))) path-strings))
   path+mod-time-pairs)
 
+
 (define (key->source-path key)
   (car (car key)))
-(define (update-directory-requires source-path)
-  (define directory-require-files (get-directory-require-files source-path))
-  (and directory-require-files (map dynamic-rerequire directory-require-files))
-  (void))
 
 
 (define (path->hash path)
   ;; new namespace forces dynamic-require to re-instantiate 'path'
   ;; otherwise it gets cached in current namespace.
+  (define drfs (get-directory-require-files path))
+  (for-each managed-compile-zo (or drfs null))
+  
   (apply hash
          (let ([doc-key (world:current-main-export)]
                [meta-key (world:current-meta-export)])
