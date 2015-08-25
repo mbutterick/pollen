@@ -193,6 +193,7 @@
            (cond 
              [(bytes? ,(world:current-main-export)) ,(world:current-main-export)] ; if main export is binary, just pass it through
              [else
+              ;; `include-template` is the slowest part of the operation (the eval itself is cheap)
               (include-template #:command-char ,(world:current-command-char) (file ,(->string (find-relative-path source-dir template-path))))])))))
   (time (parameterize ([current-directory (->complete-path source-dir)]) ; because include-template wants to work relative to source location
           (render-through-eval expr-to-eval))))
