@@ -7,8 +7,19 @@
 (define current-project-root (make-parameter (current-directory)))
 
 (define directory-require "pollen.rkt")
-(define (get-path-to-override) 
-  (build-path (current-project-root) directory-require))
+
+(define (get-path-to-override)
+  (define file-with-config-submodule directory-require)
+  (define (dirname path)
+    (let-values ([(dir name dir?) (split-path path)])
+      dir))  
+  (let loop ([dir (current-directory)][path file-with-config-submodule])
+    (and dir ; dir is #f when it hits the top of the filesystem
+         (let ([completed-path (path->complete-path path)]) 
+           (if (file-exists? completed-path)
+               (simplify-path completed-path)
+               (loop (dirname dir) (build-path 'up path)))))))
+
 
 ;; parameters should not be made settable.
 (define-for-syntax config-submodule-name 'config)
@@ -23,7 +34,7 @@
            (define base-name default-value)
            (define fail-thunk-name (λ _ base-name))
            (define current-name (λ _ (with-handlers ([exn:fail? fail-thunk-name])
-                                    (dynamic-require `(submod ,(get-path-to-override) config-submodule) 'base-name fail-thunk-name))))))]))
+                                       (dynamic-require `(submod ,(get-path-to-override) config-submodule) 'base-name fail-thunk-name))))))]))
 
 (define-settable pollen-version "0.001")
 

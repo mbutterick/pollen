@@ -17,7 +17,6 @@
      [((string-arg) ... (? pagetree-source?)) route-dashboard]
      [((string-arg) ... "in" (string-arg)) route-in]
      [((string-arg) ... "out" (string-arg)) route-out]
-     [((string-arg) ... "xexpr" (string-arg)) route-xexpr]
      [else route-default]))
   
   (message (format "Welcome to Pollen ~a" (world:current-pollen-version)) (format "(Racket ~a)" (version)))

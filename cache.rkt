@@ -12,7 +12,11 @@
 
 
 (define (reset-cache)
-  (cache-remove #f (get-cache-dir)))
+  (for ([path (in-directory)]
+        #:when (and (directory-exists? path)
+                    (equal? (path->string (car (reverse (explode-path path)))) (world:current-cache-dir-name))))
+       (message (format "removing cache directory: ~a" path))
+       (delete-directory/files path)))
 
 
 (define (paths->key source-path [template-path #f])

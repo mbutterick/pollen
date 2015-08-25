@@ -6,8 +6,7 @@
 ;; used to track renders according to modification dates of component files
 (define mod-date-hash (make-hash))
 
-;; when you want to generate everything fresh, 
-;; but without having to #:force everything.
+;; when you want to generate everything fresh. 
 ;; render functions will always go when no mod-date is found.
 (define (reset-mod-date-hash)
   (set! mod-date-hash (make-hash)))
@@ -80,13 +79,13 @@
     (for-each render-from-source-or-output-path (map ->complete-path (pagetree->list pagetree)))))
 
 
-(define/contract+provide (render-from-source-or-output-path so-pathish #:force [force #f])
-  ((pathish?) (#:force boolean?) . ->* . void?)
+(define/contract+provide (render-from-source-or-output-path so-pathish)
+  (pathish? . -> . void?)
   (let ([so-path (->complete-path so-pathish)])  ; so-path = source or output path (could be either) 
     (cond
       [(ormap (λ(test) (test so-path)) (list has/is-null-source? has/is-preproc-source? has/is-markup-source? has/is-scribble-source? has/is-markdown-source? has/is-template-source?)) 
        (let-values ([(source-path output-path) (->source+output-paths so-path)])
-         (render-to-file-if-needed source-path output-path #:force force))]
+         (render-to-file-if-needed source-path output-path))]
       [(pagetree-source? so-path) (render-pagetree so-path)]))
   (void))
 
@@ -106,15 +105,14 @@
   (cond
     [(not (file-exists? output-path)) 'file-missing]
     [(mod-date-missing-or-changed? source-path template-path) 'mod-key-missing-or-changed]
-    [(file-needed-rerequire? source-path) 'file-needed-rerequire]
     [else #f]))
 
 
-(define/contract+provide (render-to-file-if-needed source-path [template-path #f] [maybe-output-path #f] #:force [force #f])
-  ((complete-path?) ((or/c #f complete-path?) (or/c #f complete-path?) #:force boolean?) . ->* . void?)  
+(define/contract+provide (render-to-file-if-needed source-path [template-path #f] [maybe-output-path #f])
+  ((complete-path?) ((or/c #f complete-path?) (or/c #f complete-path?)) . ->* . void?)  
   (define output-path (or maybe-output-path (->output-path source-path)))
   (define template-path (get-template-for source-path))
-  (when (or force (render-needed? source-path template-path output-path))
+  (when (render-needed? source-path template-path output-path)
     (render-to-file source-path template-path output-path)))
 
 
@@ -153,7 +151,7 @@
 (define/contract (render-scribble-source source-path)
   (complete-path? . -> . string?)
   (match-define-values (source-dir source-filename _) (split-path source-path))
-  (file-needed-rerequire? source-path)
+  (dynamic-rerequire source-path) ; to suppress namespace caching by dynamic-require below
   (define scribble-render (dynamic-require 'scribble/render 'render))
   (time (parameterize ([current-directory (->complete-path source-dir)])
           ;; if there's a compiled zo file for the Scribble file,
@@ -222,12 +220,6 @@
                                                                             (add-ext (world:current-default-template-prefix) (get-ext output-path))))))) ; path to default template
           (and (filename-extension output-path) (build-path (world:current-server-extras-path) (add-ext (world:current-fallback-template-prefix) (get-ext output-path)))))))) ; fallback template
 
-
-(define/contract (file-needed-rerequire? source-path)
-  (complete-path? . -> . boolean?)
-  (and (not (null-source? source-path)) ; null sources can't be compiled
-       ;; if the file needed to be reloaded, the dependency list will be > 0
-       (> (length (dynamic-rerequire source-path)) 0)))
 
 
 (define/contract (render-through-eval expr-to-eval)

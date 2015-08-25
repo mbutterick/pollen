@@ -64,9 +64,8 @@ version                print the version (~a)" (world:current-server-port) (worl
   (displayln (world:current-pollen-version)))
 
 (define (handle-reset)
-  (display "Resetting cache ...")
-  ((dynamic-require 'pollen/cache 'reset-cache))
-  (displayln " done"))
+  (displayln "resetting cache ...")
+  ((dynamic-require 'pollen/cache 'reset-cache)))
 
 
 (define (handle-render path-args)
@@ -85,14 +84,14 @@ version                print the version (~a)" (world:current-server-port) (worl
               (map very-nice-path
                    (cond
                      [(null? preprocs-and-static-pagetrees)
-                      (displayln (format "Rendering generated pagetree for directory ~a" dir))
+                      (displayln (format "rendering generated pagetree for directory ~a" dir))
                       (cdr (make-project-pagetree dir))]
                      [else
-                      (displayln (format "Rendering preproc & pagetree files in directory ~a" dir))
+                      (displayln (format "rendering preproc & pagetree files in directory ~a" dir))
                       preprocs-and-static-pagetrees])))
             (apply render-batch batch-to-render)))
         (begin ; first arg is a file
-          (displayln (format "Rendering ~a" (string-join (map ->string path-args) " ")))
+          (displayln (format "rendering ~a" (string-join (map ->string path-args) " ")))
           (apply render-batch path-args)))))
 
 (define (handle-start directory [port #f])
@@ -100,7 +99,7 @@ version                print the version (~a)" (world:current-server-port) (worl
     (error (format "~a is not a directory" directory)))
   (parameterize ([world:current-project-root directory]
                  [world:current-server-port (or port world:default-port)])
-    (displayln "Starting project server ...")
+    (displayln "starting project server ...")
     ((dynamic-require 'pollen/server 'start-server))))
 
 

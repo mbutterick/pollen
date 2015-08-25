@@ -5,7 +5,7 @@
 (require web-server/http/request-structs)
 (require web-server/http/response-structs)
 (require 2htdp/image)
-(require "world.rkt" "render.rkt" sugar txexpr "file.rkt" "debug.rkt" "pagetree.rkt" "cache.rkt" "rerequire.rkt")
+(require "world.rkt" "render.rkt" sugar txexpr "file.rkt" "debug.rkt" "pagetree.rkt" "cache.rkt")
 
 (module+ test (require rackunit))
 
@@ -13,7 +13,7 @@
 ;;; separated out for ease of testing
 ;;; because it's tedious to start the server just to check a route.
 
-(provide route-dashboard route-xexpr route-default route-404 route-in route-out)
+(provide route-dashboard route-default route-404 route-in route-out)
 
 (define (response/xexpr+doctype xexpr)
   (response/xexpr #:preamble #"<!DOCTYPE html>" xexpr))
@@ -57,16 +57,6 @@
     (response/xexpr+doctype (route-proc path))))
 
 
-;; extract main xexpr from a path
-(define/contract (file->xexpr path #:render [wants-render #t])
-  ((complete-path?) (#:render boolean?) . ->* . txexpr?)
-  (when wants-render (render-from-source-or-output-path path))
-  (dynamic-rerequire path) ; stores module mod date; reloads if it's changed
-  (dynamic-require path (world:current-main-export)))
-
-;; todo: rewrite this test, obsolete since filename convention changed
-;;(module+ test
-;;  (check-equal? (file->xexpr (build-path (current-directory) "tests/server-routes/foo.p") #:render #f) '(root "\n" "foo")))
 
 ;; read contents of file to string
 ;; just file->string with a render option
@@ -224,8 +214,7 @@
 ;; default route
 (define (route-default req)  
   (logger req)
-  (define force (->boolean (get-query-value (request-uri req) 'force)))
-  (render-from-source-or-output-path (req->path req) #:force force)
+  (render-from-source-or-output-path (req->path req))
   (next-dispatcher))
 
 
@@ -235,12 +224,3 @@
   (define error-text (format "route-404: Can't find ~a" (->string (req->path req))))
   (message error-text)
   (response/xexpr+doctype `(html ,error-text)))
-
-
-
-;; server route that returns xexpr (before conversion to html)
-(define/contract (xexpr path)
-  (complete-path? . -> . xexpr?)
-  (format-as-code (~v (file->xexpr path))))
-
-(define route-xexpr (route-wrapper xexpr))

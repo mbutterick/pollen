@@ -1,5 +1,5 @@
 #lang at-exp racket/base
-(require rackunit racket/runtime-path pollen/render racket/file racket/system)
+(require rackunit racket/runtime-path pollen/render racket/file racket/system pollen/world)
 
 ;; define-runtime-path only allowed at top level
 (define-runtime-path rerequire-dir "data/rerequire")
@@ -14,14 +14,16 @@
 (copy-file markup.txt.pm pre.txt.pp #t)
 
 ;; test makes sure that file render changes after pollen.rkt changes
-(parameterize ([current-output-port (open-output-string)])
+(parameterize ([current-output-port (open-output-string)]
+               [current-directory rerequire-dir]
+               [world:current-project-root rerequire-dir])
   
   (display-to-file @string-append{#lang racket/base
  (provide id)
  (define (id) "first")} pollen.rkt #:exists 'replace)
   
   (render-to-file-if-needed markup.txt.pm)
-  (check-equal? (file->string markup.txt) "rootfirst")
+  (check-equal? (file->string markup.txt) "(root first)")
   (render-to-file-if-needed pre.txt.pp)
   (check-equal? (file->string pre.txt) "first")
   
@@ -31,7 +33,7 @@
  (define (id) "second")} pollen.rkt #:exists 'replace)
   
   (render-to-file-if-needed markup.txt.pm)
-  (check-equal? (file->string markup.txt) "rootsecond")
+  (check-equal? (file->string markup.txt) "(root second)")
   (render-to-file-if-needed pre.txt.pp)
   (check-equal? (file->string pre.txt) "second"))
 
