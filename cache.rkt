@@ -85,9 +85,8 @@
     [(world:current-compile-cache-active)
      (define key (paths->key path))
      (define cache-dir (get-cache-dir))
-     ;; pickup-file hierarchy just mirrors the project hierarchy.
-     (define relative-path-within-project (find-relative-path (world:current-project-root) path))
-     (define dest-file (build-path cache-dir (format "~a.rktd" relative-path-within-project)))
+     ;; cache-dir is also inside current-project-root. So there is a separate pollen-cache in each subdir.
+     (define dest-file (build-path cache-dir (format "~a.rktd" (find-relative-path (world:current-project-root) path))))
      (make-parent-directory dest-file)
      (hash-ref (hash-ref! ram-cache key (λ _
                                           (cache-file dest-file
