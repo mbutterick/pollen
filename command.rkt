@@ -26,7 +26,11 @@
                    (string->number (vector-ref (current-command-line-arguments) 2))))
                (handle-start (path->directory-path (get-first-arg-or-current-dir)) port-arg)]
     ;; "second" arg is actually third in command line args, so use cddr not cdr
-    [("render") (handle-render (cons (get-first-arg-or-current-dir) (map very-nice-path (cddr (vector->list (current-command-line-arguments))))))]
+    [("render") (handle-render (cons (get-first-arg-or-current-dir)
+                                     (let ([clargs (vector->list (current-command-line-arguments))])
+                                       (if (>= (length clargs) 3)
+                                           (map very-nice-path (cddr clargs))
+                                           null))))]
     [("version") (handle-version)]
     [("reset") (handle-reset)]
     [("clone" "publish") (define rest-args
