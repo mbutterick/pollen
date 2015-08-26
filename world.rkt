@@ -36,7 +36,7 @@
            (define current-name (λ _ (with-handlers ([exn:fail? fail-thunk-name])
                                        (dynamic-require `(submod ,(get-path-to-override) config-submodule) 'base-name fail-thunk-name))))))]))
 
-(define-settable pollen-version "0.001")
+(define-settable pollen-version "0.1508")
 
 (define-settable preproc-source-ext 'pp)
 (define-settable markup-source-ext 'pm)

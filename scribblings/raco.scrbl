@@ -13,14 +13,14 @@ Racket provides centralized command-line options through @exec{raco} (short for 
 
 Once you install Pollen, you can access the following Pollen-specific commands through @racket[raco] using the subcommand @exec{raco pollen}.
 
-@section{Making sure @racket[raco pollen] works}
+@section{Making sure @exec{raco pollen} works}
 
 Open a terminal window and type:
 
 @terminal{
 > raco pollen test}
 
-If @racket[raco pollen] is installed correctly, you'll see:
+If @exec{raco pollen} is installed correctly, you'll see:
 
 @terminal{raco pollen is installed correctly}
 
@@ -36,16 +36,16 @@ If your error is like this:
 
 You have a deeper problem with your Racket installation (often a misconfiguration of @code{PATH}).
 
-@section{@racket[raco pollen]}
+@section{@exec{raco pollen}}
 
-Same as @racket[raco pollen help].
+Same as @exec{raco pollen help}.
 
-@section{@racket[raco pollen help]}
+@section{@exec{raco pollen help}}
 
 Displays a list of available commands.
 
 
-@section{@racket[raco pollen start]}
+@section{@exec{raco pollen start}}
 
 Start the project server from the current directory using the default port, which is the value of the parameter @racket[world:current-server-port] (by default, port @(format "~a" world:default-port)).
 
@@ -67,7 +67,7 @@ If you want to start in the current directory but with a different port, use @li
 @terminal{
 > raco pollen start . 8088}
 
-@section{@racket[raco pollen render]}
+@section{@exec{raco pollen render}}
 
 Render all preprocessor source files and then all pagetree files found in the current directory. If none of these files are found, a pagetree will be generated for the directory (which will include all source files) and then rendered.
 
@@ -83,7 +83,7 @@ Alternatively, the command can take a variable number of path arguments. @racket
 > raco pollen render *.html.pm}
 
 
-@section{@racket[raco pollen publish]}
+@section{@exec{raco pollen publish}}
 
 Make a copy of the project directory on the desktop, but without any source files or other Pollen-related files. (This function is pretty lame, and I invite suggestions for improvement.)
 
@@ -93,11 +93,23 @@ Make a copy of the project directory on the desktop, but without any source file
 
 If you're already in your project directory and want to publish somewhere other than the desktop, use @racket[raco pollen publish _. _dest-dir].
 
-@section{@racket[raco pollen reset]}
+You can determine the files that get filtered out in a particular project by using @racket[world:current-unpublished-path?].
 
-Resets Pollen's compile cache. Resetting does not delete the compile cache, but rather just zeroes out the cache database. On the next run, obsolete cache files will be deleted.
 
-@section{@racket[raco pollen version]}
+@section{@exec{raco pollen setup}}
+
+Finds Pollen source files in the current directory, compiles them, and loads the results into the @seclink["Cache" #:doc '(lib "pollen/scribblings/pollen.scrbl")]. This will give you the snappiest performance during an interactive session with the project server. 
+
+Can also be invoked as @racket[raco pollen setup _directory], which will set up a different project @racket[_directory].
+
+
+@section{@exec{raco pollen reset}}
+
+Resets Pollen's @seclink["Cache" #:doc '(lib "pollen/scribblings/pollen.scrbl")] by deleting the cache directories.
+
+Can also be invoked as @racket[raco pollen reset _directory], which will reset a different project @racket[_directory].
+
+@section{@exec{raco pollen version}}
 
 Would you believe this prints the Pollen version number.
 

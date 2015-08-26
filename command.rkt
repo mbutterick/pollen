@@ -32,7 +32,8 @@
                                            (map very-nice-path (cddr clargs))
                                            null))))]
     [("version") (handle-version)]
-    [("reset") (handle-reset)]
+    [("reset") (handle-reset (get-first-arg-or-current-dir))]
+    [("setup") (handle-setup (get-first-arg-or-current-dir))]
     [("clone" "publish") (define rest-args
                            (with-handlers ([exn:fail? (λ _ #f)])
                              (cddr (vector->list (current-command-line-arguments)))))
@@ -56,16 +57,23 @@ render filename        render filename only (can be source or output name)
 publish                copy project to desktop without source files
 publish [dir] [dest]   copy project in dir to dest without source files
                           (warning: overwrites existing dest dir)
-reset                  reset compile cache
+setup                  preload cache
+reset                  reset cache
 version                print the version (~a)" (world:current-server-port) (world:current-pollen-version))))
 
 
 (define (handle-version)
   (displayln (world:current-pollen-version)))
 
-(define (handle-reset)
+
+(define (handle-reset directory-maybe)
   (displayln "resetting cache ...")
-  ((dynamic-require 'pollen/cache 'reset-cache)))
+  ((dynamic-require 'pollen/cache 'reset-cache) directory-maybe))
+
+
+(define (handle-setup directory-maybe)
+  (displayln "preheating cache ...")
+  ((dynamic-require 'pollen/cache 'preheat-cache) directory-maybe)) 
 
 
 (define (handle-render path-args)
@@ -94,16 +102,16 @@ version                print the version (~a)" (world:current-server-port) (worl
           (displayln (format "rendering ~a" (string-join (map ->string path-args) " ")))
           (apply render-batch path-args)))))
 
-(define (handle-start directory [port #f])
-  (when (not (directory-exists? directory))
-    (error (format "~a is not a directory" directory)))
-  (parameterize ([world:current-project-root directory]
+(define (handle-start directory-maybe [port #f])
+  (when (not (directory-exists? directory-maybe))
+    (error (format "~a is not a directory" directory-maybe)))
+  (parameterize ([world:current-project-root directory-maybe]
                  [world:current-server-port (or port world:default-port)])
     (displayln "starting project server ...")
     ((dynamic-require 'pollen/server 'start-server))))
 
 
-(define (handle-publish directory rest-args arg-command-name)
+(define (handle-publish directory-maybe rest-args arg-command-name)
   (define target-path
     (or 
      (and rest-args (not (null? rest-args)) (path->complete-path (string->path (car rest-args))))
@@ -120,7 +128,7 @@ version                print the version (~a)" (world:current-server-port) (worl
            (andmap equal? prefix (take xs (length prefix)))))
     ((explode-path possible-subdir) . has-prefix? . (explode-path possible-superdir)))
   
-  (define source-dir (simplify-path directory))
+  (define source-dir (simplify-path directory-maybe))
   (when (not (directory-exists? source-dir))
     (error 'publish (format "source directory ~a does not exist" source-dir)))
   (define target-dir (simplify-path target-path))
