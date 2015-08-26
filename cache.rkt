@@ -55,21 +55,20 @@
              (list doc-key (dynamic-require path doc-key) meta-key (dynamic-require path meta-key))))))
 
 ;; include this from 6.2 for compatibility back to 6.0 (formerly `make-parent-directory*`)
-(define (make-parent-directory p)
+(define (my-make-directory* dir)
+  (let-values ([(base name dir?) (split-path dir)])
+    (when (and (path? base) (not (directory-exists? base)))
+      (my-make-directory* base))
+    (unless (directory-exists? dir)
+      (with-handlers ([exn:fail:filesystem:exists? void])
+        (make-directory dir)))))
+
+(define (my-make-parent-directory* p)
   (unless (path-string? p)
     (raise-argument-error 'make-parent-directory "path-string?" p))
-  
-  (define (make-directory* dir)
-    (let-values ([(base name dir?) (split-path dir)])
-      (when (and (path? base) (not (directory-exists? base)))
-        (make-directory* base))
-      (unless (directory-exists? dir)
-        (with-handlers ([exn:fail:filesystem:exists? void])
-          (make-directory dir)))))
-  
   (define-values (base name dir?) (split-path p))
   (when (path? base)
-    (make-directory* base)))
+    (my-make-directory* base)))
 
 
 (define ram-cache (make-hash))
@@ -85,14 +84,16 @@
     [(world:current-compile-cache-active)
      (define key (paths->key path))
      (define cache-dir (get-cache-dir))
+     (define private-cache-dir (build-path cache-dir "private"))
      ;; cache-dir is also inside current-project-root. So there is a separate pollen-cache in each subdir.
      (define dest-file (build-path cache-dir (format "~a.rktd" (find-relative-path (world:current-project-root) path))))
-     (make-parent-directory dest-file)
+     (my-make-parent-directory* dest-file)
+     (my-make-directory* private-cache-dir)
      (hash-ref (hash-ref! ram-cache key (λ _
                                           (cache-file dest-file
                                                       #:exists-ok? #t
                                                       key
-                                                      cache-dir
+                                                      private-cache-dir
                                                       (λ _
                                                         (write-to-file (path->hash path) dest-file #:exists 'replace))
                                                       #:max-cache-size (world:current-compile-cache-max-size))
