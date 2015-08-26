@@ -107,7 +107,7 @@ version                print the version (~a)" (world:current-server-port) (worl
     (error (format "~a is not a directory" directory-maybe)))
   (parameterize ([world:current-project-root directory-maybe]
                  [world:current-server-port (or port world:default-port)])
-    (displayln "starting project server ...")
+    (displayln "Starting project server ...")
     ((dynamic-require 'pollen/server 'start-server))))
 
 
