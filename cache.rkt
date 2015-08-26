@@ -51,7 +51,7 @@
                      (define-values (path-dir path-name _) (split-path path))
                      (message (format "compiling: ~a" path-name))
                      ;; use #f to signal compile error. Otherwise allow errors to pass.
-                     (define result (with-handlers ([exn:fail? (λ _ (message "~a failed" path-name) #f)])
+                     (define result (with-handlers ([exn:fail? (λ _ (message ("compile failed: ~a" path-name)) #f)])
                                       (path->hash path)))
                      (place-channel-put ch result)))
     (place-channel-put p path)
