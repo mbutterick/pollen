@@ -135,7 +135,7 @@
               (list render-null-source render-preproc-source render-markup-or-markdown-source render-scribble-source render-markup-or-markdown-source render-preproc-source))] 
       [else (error (format "render: no rendering function found for ~a" source-path))]))
   
-  (message (format "render: ~a" (file-name-from-path source-path)))
+  (message (format "rendering: /~a" (find-relative-path (world:current-project-root) source-path)))
   (define render-result (apply render-proc (cons source-path (if template-path (list template-path) null))))
   ;; wait till last possible moment to store mod dates, because render-proc may also trigger its own subrenders
   ;; e.g., of a template. 
