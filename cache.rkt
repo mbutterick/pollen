@@ -144,9 +144,11 @@
   
   (when (not (file-exists? path))
     (error (format "cached-require: ~a does not exist" path)))
+
+  (define-values (path-dir path-name _) (split-path path))
   
   (cond
-    [(world:current-compile-cache-active)
+    [(world:current-compile-cache-active path-dir)
      (define key (paths->key path))
      (hash-ref (hash-ref! ram-cache key (λ _
                                           (cache-ref! key (λ _ (path->hash path))))) subkey)]

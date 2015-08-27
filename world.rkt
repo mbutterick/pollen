@@ -8,14 +8,17 @@
 
 (define directory-require "pollen.rkt")
 
-(define (get-path-to-override)
+(define (get-path-to-override [starting-dir (current-directory)])
+  ;; for now, let `path->complete-path` flag any argument errors (test here is redundant)
+  #;(when (or (not (path? starting-dir)) (not (directory-exists? starting-dir)))
+    (error 'get-path-to-override (format "~a is not a directory" starting-dir)))
   (define file-with-config-submodule directory-require)
   (define (dirname path)
     (let-values ([(dir name dir?) (split-path path)])
       dir))  
-  (let loop ([dir (current-directory)][path file-with-config-submodule])
+  (let loop ([dir starting-dir][path file-with-config-submodule])
     (and dir ; dir is #f when it hits the top of the filesystem
-         (let ([completed-path (path->complete-path path)]) 
+         (let ([completed-path (path->complete-path path starting-dir)])
            (if (file-exists? completed-path)
                (simplify-path completed-path)
                (loop (dirname dir) (build-path 'up path)))))))
@@ -33,8 +36,10 @@
        #'(begin
            (define base-name default-value)
            (define fail-thunk-name (λ _ base-name))
-           (define current-name (λ _ (with-handlers ([exn:fail? fail-thunk-name])
-                                       (dynamic-require `(submod ,(get-path-to-override) config-submodule) 'base-name fail-thunk-name))))))]))
+           ;; can take a dir argument that sets start point for (get-path-to-override) search.
+           (define current-name (λ get-path-args
+                                  (with-handlers ([exn:fail? fail-thunk-name])
+                                    (dynamic-require `(submod ,(apply get-path-to-override get-path-args) config-submodule) 'base-name fail-thunk-name))))))]))
 
 (define-settable pollen-version "0.1508")
 
@@ -96,6 +101,7 @@
 (define-settable extension-escape-char #\_)
 
 (define-settable compile-cache-active #t)
+(define-settable render-cache-active #t)
 (define-settable compile-cache-max-size (* 10 1024 1024)) ; = 10 megabytes
 
 (define-settable unpublished-path? (λ(path) #f))
