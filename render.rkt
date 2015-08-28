@@ -90,15 +90,6 @@
   (void))
 
 
-(define/contract (->source+output-paths source-or-output-path)
-  (complete-path? . -> . (values complete-path? complete-path?))
-  ;; file-proc returns two values, but ormap only wants one
-  (define file-proc (ormap (λ(test file-proc) (and (test source-or-output-path) file-proc))
-                           (list has/is-null-source? has/is-preproc-source? has/is-markup-source? has/is-scribble-source? has/is-markdown-source? has/is-template-source?)
-                           (list ->null-source+output-paths ->preproc-source+output-paths ->markup-source+output-paths ->scribble-source+output-paths ->markdown-source+output-paths ->template-source+output-paths)))
-  (file-proc source-or-output-path))
-
-
 (define/contract (render-needed? source-path template-path output-path)
   (complete-path? (or/c #f complete-path?) complete-path? . -> . (or/c #f symbol?))
   ;; return symbol rather than boolean for extra debugging information

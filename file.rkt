@@ -142,8 +142,17 @@
                (values (->complete-path (or (get-stem-source path) (->stem-source-path path)))
                        (->complete-path (->output-path path)))))))]))
 
-
 (make-source-utility-functions preproc)
+
+(define+provide/contract (->source+output-paths source-or-output-path)
+  (complete-path? . -> . (values complete-path? complete-path?))
+  ;; file-proc returns two values, but ormap only wants one
+  (define file-proc (ormap (λ(test file-proc) (and (test source-or-output-path) file-proc))
+                           (list has/is-null-source? has/is-preproc-source? has/is-markup-source? has/is-scribble-source? has/is-markdown-source? has/is-template-source?)
+                           (list ->null-source+output-paths ->preproc-source+output-paths ->markup-source+output-paths ->scribble-source+output-paths ->markdown-source+output-paths ->template-source+output-paths)))
+  (file-proc source-or-output-path))
+
+
 
 (module-test-external
  (require sugar/coerce)
@@ -242,7 +251,7 @@
 (define+provide (cache-file? path)
   (ormap (λ(cache-name) (ends-with? (path->string path) cache-name)) world:cache-names))
 
-(require sugar/debug)
+
 (define+provide (pollen-related-file? file)
   (ormap (λ(proc) (proc file)) (list
                                 preproc-source? 

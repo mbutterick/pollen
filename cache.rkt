@@ -72,7 +72,8 @@
 (define (paths->key source-path [template-path #f])
   ;; key is list of file + mod-time pairs, use #f for missing
   (define path-strings (append (list source-path)
-                               (append (list template-path) ; is either path or #f
+                               (append (list (and template-path (or (->source-path template-path) template-path))) ; if source-path exists, use that instead
+
                                        (->list (get-directory-require-files source-path))))) ; is either list of files or (list #f)
   ;; can't use relative paths for cache keys because source files include `here-path` which is absolute.
   ;; problem is that cache could appear valid on another filesystem (based on relative pathnames & mod dates)
