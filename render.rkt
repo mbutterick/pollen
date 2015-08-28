@@ -96,8 +96,7 @@
   (cond
     [(not (file-exists? output-path)) 'file-missing]
     [(mod-date-missing-or-changed? source-path template-path) 'mod-key-missing-or-changed]
-    [(let-values ([(source-dir source-name _) (split-path source-path)])
-       (not (world:current-render-cache-active source-dir))) 'render-cache-deactivated]
+    [(not (world:current-render-cache-active source-path)) 'render-cache-deactivated]
     [else #f]))
 
 

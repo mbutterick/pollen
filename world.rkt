@@ -8,14 +8,12 @@
 
 (define directory-require "pollen.rkt")
 
-(define (get-path-to-override [starting-dir (current-directory)])
-  ;; for now, let `path->complete-path` flag any argument errors (test here is redundant)
-  #;(when (or (not (path? starting-dir)) (not (directory-exists? starting-dir)))
-    (error 'get-path-to-override (format "~a is not a directory" starting-dir)))
+(define (get-path-to-override [file-or-dir (current-directory)])
   (define file-with-config-submodule directory-require)
   (define (dirname path)
     (let-values ([(dir name dir?) (split-path path)])
-      dir))  
+      dir))
+  (define starting-dir (if (directory-exists? file-or-dir) file-or-dir (dirname file-or-dir)))
   (let loop ([dir starting-dir][path file-with-config-submodule])
     (and dir ; dir is #f when it hits the top of the filesystem
          (let ([completed-path (path->complete-path path starting-dir)])
