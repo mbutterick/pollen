@@ -1,5 +1,5 @@
 #lang racket/base
-(require txexpr sugar/define) 
+(require txexpr sugar/define racket/string) 
 
 (define/contract+provide (make-default-tag-function . ids)
   (() #:rest txexpr-tags? . ->* . procedure?)
@@ -26,7 +26,7 @@
       
       `(,id ,@(if (equal? attrs null) null (list (reverse attrs))) ,@body)))
   
-  (apply compose1 (map make-one-tag ids)))
+  (procedure-rename (apply compose1 (map make-one-tag ids)) (string->symbol (format "pollen-tag:~a" (string-join (map symbol->string ids) "+")))))
 
 
 
