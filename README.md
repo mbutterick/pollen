@@ -10,7 +10,8 @@ Pollen gives you access to a full programming language (Racket) with a text-base
 * [Quick tour](http://pkg-build.racket-lang.org/doc/pollen/quick-tour.html)
 * [Pollen as a text preprocessor (for CSS, etc.)](http://pkg-build.racket-lang.org/doc/pollen/first-tutorial.html)
 * [Pollen for Markdown authoring](http://pkg-build.racket-lang.org/doc/pollen/second-tutorial.html)
-* [Pollen for XML-style authoring](http://pkg-build.racket-lang.org/doc/pollen/third-tutorial.html)
+* [Pollen for free-form markup authoring](http://pkg-build.racket-lang.org/doc/pollen/third-tutorial.html)
+* [Pollen for multiple-output publishing](http://pkg-build.racket-lang.org/doc/pollen/fourth-tutorial.html)
 * [Full docs](http://pkg-build.racket-lang.org/doc/pollen)
 
 
