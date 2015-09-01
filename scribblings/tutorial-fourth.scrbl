@@ -180,7 +180,7 @@ If you click on @filepath{cv.html.pm}, you'll see the same HTML output that you 
 @terminal{
 (root (h2 Brennan Huff) 
 
- Today is  Monday, August 31st, 2015 . I  (strong really)  want this job. 
+ Today is  @(date->string (current-date)) . I  (strong really)  want this job. 
 )}
 
 Don't panic. What we're seeing is the X-expression generated from the @filepath{cv.poly.pm} file, but formatted as plain text rather than HTML. It looks wrong because we haven't updated our project to handle plain-text output.
@@ -207,7 +207,7 @@ When you return to the project server and click on @filepath{cv.txt.pm}, you'll 
 @terminal{
 Brennan Huff
 
-Today is Monday, August 31st, 2015. I really want this job.}
+Today is @(date->string (current-date)). I really want this job.}
 
 So far, so good. We've got legible plain text. But we've completely lost our formatting. Let's fix that.
 
@@ -254,7 +254,7 @@ Now when we return to the project server and refresh @filepath{cv.txt.pm}, we se
 @terminal{
 BRENNAN HUFF
 
-Today is Monday, August 31st, 2015. I **really** want this job.}
+Today is @(date->string (current-date)). I **really** want this job.}
 
 By the way, the reason I included @racket[get-date] in this tutorial is to illustrate that not every function in a multi-output project necessarily needs to branch. (Static variables probably wouldn't either, though they could.) It produces a string, which is usable in either HTML or plain text. We just need to add branching to the tag functions that need context-specific behavior.
 
@@ -262,7 +262,7 @@ By the way, the reason I included @racket[get-date] in this tutorial is to illus
 
 @subsection{Adding support for LaTeX output}
 
-To add more output formats, we just repeat the same tasks: add a rendering target to our @racket[config] submodule, update any branching tag functions, and add a template for the new format. 
+To add more output formats, we just repeat the same fandango: add a rendering target to our @racket[config] submodule, update any branching tag functions, and add a template for the new format. 
 
 Let's see how fast we can add support for LaTeX output. Here's the updated @filepath{pollen.rkt}:
 
@@ -303,7 +303,7 @@ Then a @filepath{template.ltx}:
 \end{document}
 }|]
 
-Notice that all we did here was take our @filepath{template.txt} (which turned an X-expression into a string) and wrap it in the bare minimum LaTeX boilerplate. (Confidential to LaTeX fans: please don't write to complain about my rudimentary LaTeX. It's a tutorial. I trust you to do better.)
+Here, all we did was take our @filepath{template.txt} (which turned an X-expression into a string) and wrap it in the bare minimum LaTeX boilerplate. (Confidential to LaTeX fans: please don't write to complain about my rudimentary LaTeX. It's a tutorial. I trust you to do better.)
 
 Restart the project server to reify the changes to @racket[poly-targets]. When you restart, you'll see a link for @filepath{cv.ltx.pm}. Click it and you'll get this:
 
@@ -312,7 +312,7 @@ Restart the project server to reify the changes to @racket[poly-targets]. When y
 \begin{document}
 {\huge Brennan Huff}
 
-Today is Monday, August 31st, 2015. I {\bf really} want this job.
+Today is @(date->string (current-date)). I {\bf really} want this job.
 
 \end{document}}
 
@@ -356,7 +356,7 @@ First, we update @filepath{pollen.rkt}:
 
 You can see that we've simply added the @racket[pdf] extension in three places: in the list of @racket[poly-targets], and to the @racket[ltx] branches of our tag functions. (In a @racket[case] statement, putting multiple values in a branch means ``match any of these values.'') Easy.
 
-Not as easy: the template —
+The template, not as easy:
 
 
 @fileblock["template.pdf.p" @codeblock|{
@@ -378,7 +378,7 @@ Not as easy: the template —
     (error "pdflatex: rendering error"))
 }|]
 
-I know that only the serious nerds are still with me, but let's quickly narrate what's happening here.
+I know that only the serious nerds are still with me, but let's review what's happening here.
 
 First, we use @filepath{template.pdf.p} rather than @filepath{template.pdf} for our template name. This is the @seclink["Null___p_extension_"] in use. Operating systems assume that files with a @racket[pdf] extension contain binary data, not text. The @racket[p] extension just shields the file from this assumption. It will simply be converted to @filepath{template.pdf} on render.
 
