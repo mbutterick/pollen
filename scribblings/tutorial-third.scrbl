@@ -1113,8 +1113,5 @@ OK, that was a humongous tutorial. Congratulations on making it through.
 
 But your reward is that you now understand all the core concepts of the Pollen publishing system, including the most important ones: the flexibility of Pollen markup, and the connection between tags and functions.
 
-Armed with this knowledge, you have everything you need to start doing useful things with Pollen. I hope you enjoy using it as much as I've enjoyed making it!
-
-
 
 

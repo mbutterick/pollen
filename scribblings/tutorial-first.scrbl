@@ -151,7 +151,7 @@ the output name @filepath{poem.html}
 
 (If you want to name the file @filepath{something-else.html.pp}, be my guest. There's no special meaning associated with the prefix of a source file, only the suffixes.)
 
-@margin-note{You're welcome to change the name of your source files from the desktop. On Mac OS X and Windows, however, the desktop interface often hides file extensions, so check the properties of the file afterward to make sure you got the name you expected.}
+@margin-note{If your system or text editor gives you grief for having two file extensions, you can use the underscore (@litchar{_}) to join the inner extension. So instead of @filepath{poem.html.pp}, the file would be named @filepath{poem_html.pp}. This filename will work exactly the same way, and still result in @filepath{poem.html} when rendered.}
 
 In a convenient location (e.g., your home directory or the desktop) create a new directory for your project called @code{tutorial}. In this new directory, save your DrRacket file as @filepath{poem.html.pp}.
 

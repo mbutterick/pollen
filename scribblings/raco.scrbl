@@ -82,6 +82,20 @@ Alternatively, the command can take a variable number of path arguments. @racket
 > raco pollen render foo.html.pm bar.html.pm zam.css.pp
 > raco pollen render *.html.pm}
 
+Paths can also be specified as output rather than input paths, and the corresponding source paths will be discovered:
+
+@terminal{
+> raco pollen render foo.html
+> raco pollen render foo.html bar.html zam.css}
+
+The optional @exec{-t} or @exec{--target} switch specifies the render target for multi-output source files. If the target is omitted, the renderer will use whatever target appears first in @racket[(world:current-poly-targets)].
+
+@terminal{
+> raco pollen render -t pdf foo.poly.pm}
+
+See also @seclink["raco-pollen-render-poly"].
+
+@bold{Warning}: In all cases, the newly rendered output file will overwrite any previous output file.
 
 @section{@exec{raco pollen publish}}
 

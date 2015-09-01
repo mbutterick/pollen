@@ -1,5 +1,5 @@
 #lang racket/base
-(require pollen/world pollen/render racket/file racket/path sugar/coerce pollen/file pollen/pagetree racket/string racket/list)
+(require pollen/world pollen/render racket/file racket/path sugar/coerce pollen/file pollen/pagetree racket/string racket/list racket/vector racket/cmdline)
 
 ;; The use of dynamic-require throughout this file is intentional:
 ;; this way, low-dependency raco commands (like "version") are faster.
@@ -12,12 +12,18 @@
                          (vector-ref (current-command-line-arguments) 0)))
   (dispatch command-name))
 
+(define (get-first-arg-or-current-dir [clargs (current-command-line-arguments)])
+  (normalize-path
+   (with-handlers ([exn:fail? (λ(exn) (current-directory))])
+     ;; incoming path argument is handled as described in docs for current-directory
+     (very-nice-path (vector-ref clargs 1)))))
+
+(define-syntax-rule (polcom arg0 args ...)
+  (parameterize ([current-command-line-arguments (list->vector (map symbol->string (list 'arg0 'args ...)))])
+    (dispatch (with-handlers ([exn:fail? (λ _ #f)])
+                (vector-ref (current-command-line-arguments) 0)))))
+
 (define (dispatch command-name)
-  (define (get-first-arg-or-current-dir)
-    (normalize-path
-     (with-handlers ([exn:fail? (λ(exn) (current-directory))])
-       ;; incoming path argument is handled as described in docs for current-directory
-       (very-nice-path (vector-ref (current-command-line-arguments) 1)))))
   (case command-name
     [("test" "xyzzy") (handle-test)]
     [(#f "help") (handle-help)]
@@ -26,11 +32,7 @@
                    (string->number (vector-ref (current-command-line-arguments) 2))))
                (handle-start (path->directory-path (get-first-arg-or-current-dir)) port-arg)]
     ;; "second" arg is actually third in command line args, so use cddr not cdr
-    [("render") (handle-render (cons (get-first-arg-or-current-dir)
-                                     (let ([clargs (vector->list (current-command-line-arguments))])
-                                       (if (>= (length clargs) 3)
-                                           (map very-nice-path (cddr clargs))
-                                           null))))]
+    [("render") (handle-render)] ; render parses its own args from current-command-line-arguments
     [("version") (handle-version)]
     [("reset") (handle-reset (get-first-arg-or-current-dir))]
     [("setup") (handle-setup (get-first-arg-or-current-dir))]
@@ -76,8 +78,20 @@ version                print the version (~a)" (world:current-server-port) (worl
   ((dynamic-require 'pollen/cache 'preheat-cache) directory-maybe)) 
 
 
-(define (handle-render path-args)
-  (parameterize ([current-directory (world:current-project-root)])
+(define (handle-render)
+  (define render-target-wanted (make-parameter (world:current-poly-target)))
+  (define parsed-args (command-line #:program "raco pollen render"
+                                    #:argv (vector-drop (current-command-line-arguments) 1) ; snip the 'render' from the front
+                                    #:once-each
+                                    [("-t" "--target") target-arg "Render target for poly sources"
+                                                       (render-target-wanted (->symbol target-arg))]
+                                    #:args other-args
+                                    other-args))  
+  (define path-args (if (empty? parsed-args)
+                        (list (current-directory))
+                        parsed-args))
+  (parameterize ([current-directory (world:current-project-root)]
+                 [world:current-poly-target (render-target-wanted)])
     (define first-arg (car path-args))
     (if (directory-exists? first-arg)
         (let ([dir first-arg]) ; now we know it's a dir

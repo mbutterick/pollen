@@ -25,6 +25,8 @@ A parameter that holds the root directory of the current project (e.g., the dire
 @defparam[world:current-server-extras-path dir path?]{
 A parameter that reports the path to the directory of support files for the project server. Initialized to @racket[#f], but set to a proper value when the server runs.}
 
+@defparam[world:current-poly-target target symbol??]{
+A parameter that reports the current rendering target for @racket[poly] source files. Initialized to @racket['html].}
 
 
 @section[#:tag "settable-values"]{Settable values}
@@ -129,3 +131,9 @@ Default separators used in decoding. The first two are initialized to @racket["\
 @defoverridable[unpublished-path? (path? . -> . boolean?)]{Predicate that determines whether a path is omitted from @secref{raco_pollen_publish} operations. If the predicate is @racket[#t], then the path is omitted. The default, therefore, is @racket[#f].}
 
 @defoverridable[here-path-key symbol?]{Key used to store the absolute path of the current source file in its @racket[metas] hashtable. Default is @racket['here-path].}
+
+@defoverridable[poly-source-ext symbol?]{Extension that indicates a source file can target multiple output types. Default is @racket['poly].}
+
+
+@defoverridable[poly-targets (listof symbol?)]{List of symbols that denotes the possible targets of a @racket['poly] source file. Default is @racket['(html)].}
+

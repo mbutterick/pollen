@@ -779,7 +779,7 @@ barticle.html.pmd
 
 You also probably noticed that the files are in a different order than they were in the automatic pagetree: @filepath{carticle.html} is first, followed by @filepath{article.html} and then @filepath{barticle.html}. This too is deliberate, so we can see what happens with a differently ordered pagetree.
 
-Pagetrees don't change nearly as often as other source files, so as a performance optimization, the project server does @italic{not} dynamically reflect changes to pagetrees. To see the effect of this new pagetree on our project, you'll need to go to your terminal window and stop the project server with @onscreen{Ctrl+C}, and then restart it. Which will take all of three seconds.
+Pagetrees don't change as often as other source files, so as a performance optimization, the project server doesn't automatically reload pagetrees when they change. To trigger a reload of the pagetree, you have two options. You can either go to your terminal window and stop the project server with @onscreen{Ctrl+C}, and then restart it. Or, if you make a change to a source file that relies on the pagetree (in this case, one of the @filepath{pmd} source files), the pagetree will be reloaded.
 
 Now refresh @filepath{carticle.html}. You'll notice that the navigation links are different. You won't see a previous-page link — because @filepath{carticle.html} is now the first page in the pagetree — and the next page will show up as @filepath{article.html}. Click through to @filepath{article.html}, and you'll see the navigation likewise updated. Click through to @filepath{barticle.html}, and you'll see ...
 

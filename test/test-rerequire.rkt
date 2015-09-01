@@ -23,7 +23,7 @@
  (define (id) "first")} pollen.rkt #:exists 'replace)
   
   (render-to-file-if-needed markup.txt.pm)
-  (check-equal? (file->string markup.txt) "(root first)")
+  (check-equal? (file->string markup.txt) "first")
   (render-to-file-if-needed pre.txt.pp)
   (check-equal? (file->string pre.txt) "first")
   
@@ -33,7 +33,7 @@
  (define (id) "second")} pollen.rkt #:exists 'replace)
   
   (render-to-file-if-needed markup.txt.pm)
-  (check-equal? (file->string markup.txt) "(root second)")
+  (check-equal? (file->string markup.txt) "second")
   (render-to-file-if-needed pre.txt.pp)
   (check-equal? (file->string pre.txt) "second"))
 

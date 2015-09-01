@@ -13,11 +13,19 @@
     [(_ (~optional (~seq #:command-char command-char:expr)) p:expr)
      (quasisyntax/loc stx
        (let ([result (include/text #,@(if (attribute command-char)
-                                             (list #'#:command-char #'command-char)
-                                             empty)
-                                      p)])
-         (if (bytes? result) 
-             (with-output-to-bytes (λ () (write-bytes result))) 
-             (with-output-to-string (λ () (output result))))))]))
+                                          (list #'#:command-char #'command-char)
+                                          empty)
+                                   p)])
+         
+         (let ([result (cond
+                         [(bytes? result) result]
+                         ;; list of expressions with byte string in last place.
+                         ;; infer that user is trying to return a binary as the last value in a template,
+                         ;; and treat it as a single binary value.
+                         [(and (list? result) (bytes? (last result))) (last result)]
+                         [else result])])
+           (if (bytes? result) 
+               (with-output-to-bytes (λ () (write-bytes result))) 
+               (with-output-to-string (λ () (output result)))))))]))
 
 (provide include-template)

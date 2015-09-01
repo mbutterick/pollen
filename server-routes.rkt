@@ -33,7 +33,7 @@
 (define/contract (string->request u)
   (string? . -> . request?)
   (make-request #"GET" (string->url u) empty
-               (delay empty) #f "1.2.3.4" 80 "4.3.2.1"))
+                (delay empty) #f "1.2.3.4" 80 "4.3.2.1"))
 
 ;; print message to console about a request
 (define/contract (logger req)
@@ -84,8 +84,8 @@
     (p "filename =" ,(->string relative-path))
     (p "size = " ,(bytecount->string (file-size path)))
     ,@(when/splice (not (equal? (get-ext path) "svg"))
-                  `(p "width = " ,(->string (image-width img)) " " 
-                     "height = " ,(->string (image-height img))))
+                   `(p "width = " ,(->string (image-width img)) " " 
+                       "height = " ,(->string (image-height img))))
     (a ((href ,img-url)) (img ((style "width:100%;border:1px solid #eee")(src ,img-url))))))
 
 (require file/unzip)
@@ -140,58 +140,90 @@
     (match-define (cons href text) href+text) 
     (filter-not void? `(td ,(when text 
                               (if href 
-                                 `(a ((href ,href)) ,text)
-                                 text)))))
+                                  `(a ((href ,href)) ,text)
+                                  text)))))
   
   (define (make-parent-row)
     (define title (string-append "Project root" (if (equal? (world:current-project-root) dashboard-dir) (format " = ~a" dashboard-dir) "")))
     (define dirs (cons title (if (not (equal? (world:current-project-root) dashboard-dir))
-                                (explode-path (find-relative-path (world:current-project-root) dashboard-dir))
-                                null)))
+                                 (explode-path (find-relative-path (world:current-project-root) dashboard-dir))
+                                 null)))
     (define dirlinks (cons "/" (map (λ(ps) (format "/~a/" (apply build-path ps)))  
-                                   (for/list ([i (in-range (length (cdr dirs)))])
-                                     (take (cdr dirs) (add1 i))))))
+                                    (for/list ([i (in-range (length (cdr dirs)))])
+                                              (take (cdr dirs) (add1 i))))))
     `(tr (th ((colspan "3")) ,@(add-between (map (λ(dir dirlink) `(a ((href ,(format "~a~a" dirlink (world:current-default-pagetree)))) ,(->string dir))) dirs dirlinks) "/"))))
   
-  (define (make-path-row filename-path)
-    (define filename (->string filename-path))
-    (define possible-source (->source-path (build-path dashboard-dir filename-path)))
-    (define source (and possible-source (->string (find-relative-path dashboard-dir possible-source))))
+  (define (make-path-row filename source)
     `(tr ,@(map make-link-cell 
-               (append (list                          
-                        (cond ; main cell
-                          [(directory-exists? (build-path dashboard-dir filename)) ; links subdir to its dashboard
-                           (cons (format "~a/~a" filename (world:current-default-pagetree)) (format "~a/" filename))]
-                          [(and source (equal? (get-ext source) "scrbl")) 
-                           (cons #f `(a ((href ,filename)) ,filename (span ((class "file-ext")) " (from " ,(->string (find-relative-path dashboard-dir source)) ")")))]
-                          ;; use remove-ext because source may have escaped extension in it
-                          [source (cons #f `(a ((href ,filename)) ,(->string (remove-ext source)) (span ((class "file-ext")) "." ,(get-ext source))))]
-                          [else   (cons filename filename)])
-                        
-                        (cond ; in cell
-                          [source  (cons (format "in/~a" source) "in")]
-                          [(or (pagetree-source? filename) (sourceish? filename))  (cons (format "in/~a" filename) "in")]
-                          [else empty-cell])
-                        
-                        (cond ; out cell 
-                          [(directory-exists? (build-path dashboard-dir filename)) (cons #f #f)]
-                          [(pagetree-source? filename) empty-cell]
-                          [else (cons (format "out/~a" filename) "out")]))))))
+                (append (list                          
+                         (cond ; main cell
+                           [(directory-exists? (build-path dashboard-dir filename)) ; links subdir to its dashboard
+                            (cons (format "~a/~a" filename (world:current-default-pagetree)) (format "~a/" filename))]
+                           [(and source (equal? (get-ext source) "scrbl")) ; scribble source
+                            (cons #f `(a ((href ,filename)) ,filename (span ((class "file-ext")) " (from " ,(->string (find-relative-path dashboard-dir source)) ")")))]
+                           [source ; ordinary source. use remove-ext because source may have escaped extension in it
+                            (define source-first-ext (get-ext source))
+                            (define source-minus-ext (unescape-ext (remove-ext source)))
+                            (define source-second-ext (get-ext source-minus-ext))
+                            (cond ; multi source. expand to multiple output files.
+                              [(and source-second-ext (equal? source-second-ext (->string (world:current-poly-source-ext (->complete-path source)))))
+                               (define source-base (remove-ext source-minus-ext))
+                               (define output-names (map (λ(ext) (->string (add-ext source-base ext))) (world:current-poly-targets (->complete-path source))))
+                               (cons #f `(span ,@(map (λ(on) `(a ((href ,on)) ,on (span ((class "file-ext")) "." ,source-first-ext ,(format " (from ~a)" (->string (find-relative-path dashboard-dir source)))))) output-names)))]
+                              [else
+                               (define extra-row-string
+                               (if (equal? source-minus-ext (remove-ext source)) ; escaped and unescaped versions are equal
+                                   "" ; no extra string needed
+                                   (format " (from ~a)" (->string (find-relative-path dashboard-dir source)))))
+
+                               (cons #f `(a ((href ,filename)) ,(->string source-minus-ext) (span ((class "file-ext")) "." ,source-first-ext ,extra-row-string)))])]
+                           [else ; other non-source file
+                            (cons filename filename)])
+                         
+                         (cond ; 'in' cell
+                           [source  (cons (format "in/~a" source) "in")]
+                           [(or (pagetree-source? filename) (sourceish? filename))  (cons (format "in/~a" filename) "in")]
+                           [else empty-cell])
+                         
+                         (cond ; 'out' cell 
+                           [(directory-exists? (build-path dashboard-dir filename)) (cons #f #f)]
+                           [(pagetree-source? filename) empty-cell]
+                           [else (cons (format "out/~a" filename) "out")]))))))
   
   (define (ineligible-path? x) (member x (world:current-paths-excluded-from-dashboard)))  
   
   (define project-paths 
     (filter-not ineligible-path? (map ->path (pagetree->list 
-                                              (if (file-exists? dashboard-ptree)
-                                                 (cached-require (->path dashboard-ptree) (world:current-main-export))
-                                                 (directory->pagetree dashboard-dir))))))
+                                              (with-handlers ([exn:fail:contract? (λ _ (directory->pagetree dashboard-dir))])
+                                                (cached-require (->path dashboard-ptree) (world:current-main-export)))))))
   
   (body-wrapper #:title (format "~a" dashboard-dir)
-               `(table 
-                 ,@(cons (make-parent-row) 
-                        (if (not (null? project-paths))
-                           (map make-path-row project-paths)
-                           (list '(tr (td ((class "no-files")) "No files yet in this directory") (td) (td))))))))
+                `(table 
+                  ,@(cons (make-parent-row) 
+                          (cond
+                            [(not (null? project-paths))
+                             (define path-source-pairs
+                               (map
+                                (λ(p) (define source
+                                        (let ([possible-source (->source-path (build-path dashboard-dir p))])
+                                          (and possible-source (->string (find-relative-path dashboard-dir possible-source)))))
+                                  (cons p source))
+                                project-paths))
+                             
+                             (define-values (reversed-unique-path-source-pairs seen-paths) ; delete pairs with duplicate sources
+                               (for/fold ([psps empty][seen-source-paths empty])
+                                         ([psp (in-list path-source-pairs)])
+                                 (define source-path (cdr psp))
+                                 (if (and source-path (member source-path seen-source-paths))
+                                     (values psps seen-source-paths) ; skip the pair
+                                     (values (cons psp psps) (cons source-path seen-source-paths)))))
+                             
+                             (define unique-path-source-pairs (reverse reversed-unique-path-source-pairs))
+                             (define filenames (map (compose1 ->string car) unique-path-source-pairs))
+                             (define sources (map cdr unique-path-source-pairs))                             
+                             (parameterize ([current-directory dashboard-dir])
+                               (map make-path-row filenames sources))]
+                            [else (list '(tr (td ((class "no-files")) "No files yet in this directory") (td) (td)))])))))
 
 (define route-dashboard (route-wrapper dashboard))
 
@@ -208,8 +240,8 @@
   (define base (world:current-project-root))
   (define file (url->path (request-uri req)))
   (if (eq? (system-path-convention-type) 'windows)
-     (build-path base file) ; because url->path returns a relative path for 'windows
-     (reroot-path file base))) ; and a complete path for 'unix
+      (build-path base file) ; because url->path returns a relative path for 'windows
+      (reroot-path file base))) ; and a complete path for 'unix
 
 ;; default route
 (define (route-default req)  

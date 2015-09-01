@@ -91,7 +91,7 @@ As a publishing system, Pollen includes:
 
 @item{@bold{A programming language.} The Pollen language is a variant of Scribble, with specific dialects tailored to different kinds of source files. You don't need to use the programming features to do useful work, but they're available when you need them.}
 
-@item{@bold{A set of tools & libraries.} Pollen targets HTML output. So it includes a variety of tools that cure common HTML annoyances, including a CSS preprocessor.}
+@item{@bold{A set of tools & libraries.} Pollen can produce output in any format, but it's especially useful for markup-style formats like XML and HTML.}
 
 @item{@bold{A development environment.} Pollen works with the DrRacket IDE. It also includes a project web server so you can dynamically preview and revise your publication.}
 
