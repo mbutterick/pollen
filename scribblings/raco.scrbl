@@ -127,3 +127,27 @@ Can also be invoked as @racket[raco pollen reset _directory], which will reset a
 
 Would you believe this prints the Pollen version number.
 
+@section{The @exec{POLLEN} environment variable}
+
+Pollen recognizes a @exec{POLLEN} environment variable on the command line, which can be used to pass through any value you like. This value can be used within your project files with @racket[(getenv "POLLEN")], which if not set, returns @racket[#f]. Take this file, for instance:
+
+@fileblock["test.txt.pp" @codeblock{
+#lang pollen
+Result is ◊or[(getenv "POLLEN")]{nothing}
+}]
+
+The @exec{POLLEN} environment variable will change how it's rendered:
+
+@terminal{
+> raco pollen render test.txt ; cat test.txt
+rendering test.txt.pp
+rendering: /test.txt.pp as /test.txt
+Result is nothing
+
+> POLLEN=DEBUG raco pollen render test.txt ; cat test.txt
+rendering test.txt.pp
+rendering: /test.txt.pp as /test.txt
+Result is DEBUG
+
+}
+
