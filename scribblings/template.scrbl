@@ -79,13 +79,13 @@ Be careful not to pass existing HTML strings into this function, because the ang
 (select
 [key symbolish?]
 [value-source (or/c hash? txexpr? pagenode? pathish?)])
-(or/c #f txexpr-element?)]
+(or/c #f xexpr?)]
 
 @defproc[
 (select*
 [key symbolish?]
 [value-source (or/c hash? txexpr? pagenode? pathish?)])
-(or/c #f (listof txexpr-element?))]
+(or/c #f (listof xexpr?))]
 
 )]
 Find matches for @racket[_key] in @racket[_value-source]. The @racket[_value-source] can be 1) a hashtable of @racket[metas], 2) a tagged X-expression representing a @racket[doc], or 3) a pagenode or path that identifies a source file that provides @racket[metas] and @racket[doc]. In that case, first look for @racket[_key] in @code{metas} (using @racket[select-from-metas]) and then in @code{doc} (using @racket[select-from-doc]). 
@@ -101,7 +101,7 @@ In both cases, you get @racket[#f] if there are no matches.
 (select-from-metas
 [key symbolish?]
 [meta-source (or/c hash? pagenodeish? pathish?)])
-(or/c #f txexpr-element?)]
+(or/c #f xexpr?)]
 Look up the value of @racket[_key] in @racket[_meta-source]. The @racket[_meta-source] argument can be either 1) a hashtable representing @racket[metas] or 2) a pagenode or source path that identifies a source file that provides @racket[metas]. If no value exists for @racket[_key], you get @racket[#f].
 
 @examples[#:eval my-eval
@@ -123,7 +123,7 @@ Look up the value of @racket[_key] in @racket[_meta-source]. The @racket[_meta-s
 (select-from-doc
 [key symbolish?]
 [doc-source (or/c txexpr? pagenodeish? pathish?)])
-(or/c #f (listof txexpr-element?))]
+(or/c #f (listof xexpr?))]
 Look up the value of @racket[_key] in @racket[_doc-source]. The @racket[_doc-source] argument can be either 1) a tagged X-expression representing a @racket[doc] or 2) a pagenode or source path that identifies a source file that provides @racket[doc]. If no value exists for @racket[_key], you get @racket[#f].
 
 @examples[#:eval my-eval

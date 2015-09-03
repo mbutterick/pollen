@@ -174,7 +174,7 @@ For instance, earlier we saw how to double elements by using @racket[_txexpr-ele
 (print (decode tx #:inline-txexpr-proc doubler))
 ] 
 
-Caution: when returning list values, it's possible to trip over the unavoidable ambiguity between a @racket[txexpr?] and a list of @racket[txexpr-element?]s that happens to begin with a symbolic entity: 
+Caution: when returning list values, it's possible to trip over the unavoidable ambiguity between a @racket[txexpr?] and a list of @racket[xexpr?]s that happens to begin with a symbolic entity: 
 
 @examples[#:eval my-eval
 (code:comment @#,t{An ambiguous expression})
