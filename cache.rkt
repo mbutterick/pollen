@@ -79,14 +79,15 @@
   ;; problem is that cache could appear valid on another filesystem (based on relative pathnames & mod dates)
   ;; but would actually be invalid (because the `here-path` names are wrong).
   (define poly-flag (and (has-inner-poly-ext? source-path) (world:current-poly-target)))
+  (define pollen-env (getenv "POLLEN"))
   (define path+mod-time-pairs
     (map (λ(ps) (and ps (let ([cp (->complete-path ps)])
                           (cons (path->string cp) (file-or-directory-modify-seconds cp))))) path-strings))
-  (cons poly-flag path+mod-time-pairs))
+  (list* pollen-env poly-flag path+mod-time-pairs))
 
 
 (define (key->source-path key)
-  (car (cadr key)))
+  (car (caddr key)))
 
 
 (define-namespace-anchor anchor-to-this-namespace)
