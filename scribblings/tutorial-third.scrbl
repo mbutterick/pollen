@@ -364,6 +364,8 @@ Leading us to the Three Golden Rules of Pollen Tags:
 
 ]
 
+Corollary to rule #3: because a tag represents a single X-expression, a tag function must also return a single X-expression. If you want to return multiple elements, you'll need to wrap them in a new tag (thus grouping them into a single X-expression). (If you absolutely must splice multiple elements in place of a single X-expression, you'll need to use @racket[decode] rather than a tag function.)
+
 You've already seen the simplest kind of function in a Pollen document: the @seclink["Tags___tag_functions"]{default tag function}, which emulates the behavior of standard markup tags. 
 
  Let's revisit an earlier example, now with the help of the Golden Rules:
