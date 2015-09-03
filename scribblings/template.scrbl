@@ -79,7 +79,7 @@ Be careful not to pass existing HTML strings into this function, because the ang
 (select
 [key symbolish?]
 [value-source (or/c hash? txexpr? pagenode? pathish?)])
-(or/c #f txexpr-element? (listof txexpr-element?))]
+(or/c #f txexpr-element?)]
 
 @defproc[
 (select*
