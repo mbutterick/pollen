@@ -105,11 +105,18 @@
   (define paren-match (cadr matches))
   paren-match)
 
-(define+provide/contract (->html x #:tag [tag #f] #:attrs [attrs #f] #:splice [splice? #f])
-  ((xexpr?) (#:tag (or/c #f txexpr-tag?) #:attrs (or/c #f txexpr-attrs?) #:splice boolean?) . ->* . string?)
+(define placeholder-tag (gensym))
+
+(define+provide/contract (->html x-in #:tag [tag #f] #:attrs [attrs #f] #:splice [splice? #f])
+  (((or/c xexpr? (listof xexpr?))) (#:tag (or/c #f txexpr-tag?) #:attrs (or/c #f txexpr-attrs?) #:splice boolean?) . ->* . string?)
+
+  (define x (cond
+              [(txexpr? x-in) x-in]
+              [(list? x-in) (cons 'html x-in)]
+              [else x-in]))
   
   (when (and (not (txexpr? x)) attrs (not tag))
-    (error '->html "can't use attribute list '~a without a #:tag argument" attrs))
+    (raise-argument-error '->html (format "can't use attribute list ~v without a #:tag argument" attrs)))
   
   (if (or tag (txexpr? x))
       (let ()
@@ -117,7 +124,7 @@
         (define html-attrs (or attrs (and (txexpr? x) (get-attrs x)) null))
         (define html-elements (or (and (txexpr? x) (get-elements x)) (list x)))
         (define html (xexpr->html (make-txexpr html-tag html-attrs html-elements)))
-        (if splice?
+        (if (or splice? (and (list? x-in) (not (txexpr? x-in)) (not tag)))
             (trim-outer-tag html)
             html))
       (xexpr->html x)))
@@ -136,7 +143,12 @@
  (check-exn exn:fail? (λ() (->html #:attrs '((id "dale")) x) "hello")) ;; won't work without tag
  (check-equal? (->html #:splice #t x) "hello")
  (check-equal? (->html #:tag 'brennan #:attrs '((id "dale")) x) "<brennan id=\"dale\">hello</brennan>")
- (check-equal? (->html #:tag 'brennan #:attrs '((id "dale")) #:splice #t x) "hello"))
+ (check-equal? (->html #:tag 'brennan #:attrs '((id "dale")) #:splice #t x) "hello")
+
+ (define xs '("hello " (em "you") " " 42))
+ (check-equal? (->html xs) "hello <em>you</em> &#42;")
+ (check-equal? (->html #:splice #t xs) "hello <em>you</em> &#42;")
+ (check-equal? (->html #:tag 'div xs) "<div>hello <em>you</em> &#42;</div>"))
 
 (provide when/block)
 (define-syntax (when/block stx)

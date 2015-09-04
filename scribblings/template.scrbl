@@ -15,12 +15,12 @@ This module also provides everything from @racketmodname[sugar/coerce].
 
 @defproc[
 (->html
-[xexpr xexpr?]
+[xexpr-or-xexprs (or/c xexpr? (listof xexpr?))]
 [#:tag html-tag (or/c #f txexpr-tag?) #f]
 [#:attrs html-attrs (or/c #f txexpr-attrs?) #f]
 [#:splice splice-html? boolean? #f])
 string?]
-Convert @racket[_xexpr] to an HTML string. Similar to @racket[xexpr->string], but consistent with the HTML spec, text that appears within @code{script} or @code{style} blocks will not be escaped.
+Convert @racket[_xexpr-or-xexprs] to an HTML string. Similar to @racket[xexpr->string], but consistent with the HTML spec, text that appears within @code{script} or @code{style} blocks will not be escaped.
 
 @examples[#:eval my-eval
 (define tx '(root (script "3 > 2") "Why is 3 > 2?"))
@@ -28,7 +28,7 @@ Convert @racket[_xexpr] to an HTML string. Similar to @racket[xexpr->string], bu
 (->html tx)
 ]
 
-The optional keyword arguments @racket[_html-tag] and @racket[_html-attrs] let you set the outer tag and attributes for the generated HTML. If @racket[_xexpr] already has an outer tag or attributes, they will be replaced.
+The optional keyword arguments @racket[_html-tag] and @racket[_html-attrs] let you set the outer tag and attributes for the generated HTML. If @racket[_xexpr-or-xexprs] already has an outer tag or attributes, they will be replaced.
 
 @examples[#:eval my-eval
 (define tx '(root ((id "huff")) "Bunk beds"))
@@ -38,7 +38,7 @@ The optional keyword arguments @racket[_html-tag] and @racket[_html-attrs] let y
 (->html tx #:tag 'div #:attrs '((id "doback")))
 ]
 
-Whereas if @racket[_xexpr] has no tag or attributes, they will be added. If you supply attributes without a tag, you'll get an error.
+Whereas if @racket[_xexpr-or-xexprs] has no tag or attributes, they will be added. If you supply attributes without a tag, you'll get an error.
 
 @examples[#:eval my-eval
 (define x "Drum kit")
@@ -68,10 +68,21 @@ If the generated HTML has an outer tag, the @racket[_splice-html?] option will s
 Be careful not to pass existing HTML strings into this function, because the angle brackets will be escaped. Fine if that's what you want, but you probably don't.
 
 @examples[#:eval my-eval
-(define tx '(p "You did" (em "what?")))
+(define tx '(p "You did " (em "what?")))
 (->html tx)
 (->html (->html tx))
 ]
+
+As the input contract suggests, this function can take either a single @racket[xexpr?] or a list of @racket[xexpr?], with the expected results.
+
+@examples[#:eval my-eval
+(define tx '(p "You did " (em "what?")))
+(->html tx)
+(define txs '("You " "did " (em "what?")))
+(->html txs)
+(->html #:tag 'p txs)
+]
+
 
 @deftogether[(
 
