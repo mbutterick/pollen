@@ -4,7 +4,7 @@
 ;; The cache is a hash with paths as keys.
 ;; The cache values are also hashes, with key/value pairs for that path.
 
-(provide reset-cache preheat-cache cached-require paths->key)
+(provide reset-cache preheat-cache cached-require paths->key key->source-path)
 
 
 (define (reset-cache [starting-dir (world:current-project-root)])
@@ -82,13 +82,18 @@
   (define pollen-env (getenv "POLLEN"))
   (define path+mod-time-pairs
     (map (λ(ps) (and ps (let ([cp (->complete-path ps)])
-                          (cons (path->string cp) (file-or-directory-modify-seconds cp))))) path-strings))
+                          (cons (path->string cp) (with-handlers ([exn:fail? (λ _ 0)])
+                                                    (file-or-directory-modify-seconds cp)))))) path-strings))
   (list* pollen-env poly-flag path+mod-time-pairs))
 
 
 (define (key->source-path key)
   (car (caddr key)))
 
+(require sugar/test)
+(module-test-external
+ (define ps "/users/nobody/project/source.html.pm")
+ (check-equal? (key->source-path (paths->key ps)) ps))
 
 (define-namespace-anchor anchor-to-this-namespace)
 
