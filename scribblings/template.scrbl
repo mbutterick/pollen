@@ -105,6 +105,18 @@ With @racket[select], you get the first result; with @racket[select*], you get t
 
 In both cases, you get @racket[#f] if there are no matches.
 
+@examples[#:eval my-eval
+(module nut-butters pollen/markup
+'(div (question "Flavor?")
+  (answer "Cashew") (answer "Almond")))
+(code:comment @#,t{Import doc from 'nut-butters submodule})
+(require 'nut-butters)
+(select 'question  doc)
+(select 'answer  doc)
+(select* 'answer  doc)
+(select 'nonexistent-key doc)
+(select* 'nonexistent-key doc)
+]
 
 
 
@@ -116,13 +128,7 @@ In both cases, you get @racket[#f] if there are no matches.
 Look up the value of @racket[_key] in @racket[_meta-source]. The @racket[_meta-source] argument can be either 1) a hashtable representing @racket[metas] or 2) a pagenode or source path that identifies a source file that provides @racket[metas]. If no value exists for @racket[_key], you get @racket[#f].
 
 @examples[#:eval my-eval
-(module ice-cream pollen/markup
-'(div (question "Flavor?")
-  (answer "Chocolate chip") (answer "Maple walnut"))
-  '(meta ((template "sub.xml.pt")))
-  '(meta ((target "print"))))
-(code:comment @#,t{Import doc & metas from 'ice-cream submodule})
-(require 'ice-cream)
+(define metas (hash 'template "sub.xml.pp" 'target "print"))
 (select-from-metas 'template  metas)
 ('target . select-from-metas . metas)
 (select-from-metas 'nonexistent-key metas)
@@ -140,10 +146,8 @@ Look up the value of @racket[_key] in @racket[_doc-source]. The @racket[_doc-sou
 @examples[#:eval my-eval
 (module gelato pollen/markup
 '(div (question "Flavor?")
-  (answer "Nocciola") (answer "Pistachio"))
-  '(meta ((template "sub.xml.pt")))
-  '(meta ((target "print"))))
-(code:comment @#,t{Import doc & metas from 'gelato submodule})
+  (answer "Nocciola") (answer "Pistachio")))
+(code:comment @#,t{Import doc from 'gelato submodule})
 (require 'gelato)
 (select-from-doc 'question  doc)
 ('answer . select-from-doc . doc)

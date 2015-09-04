@@ -116,7 +116,7 @@
               [else x-in]))
   
   (when (and (not (txexpr? x)) attrs (not tag))
-    (raise-argument-error '->html (format "can't use attribute list ~v without a #:tag argument" attrs)))
+    (raise-argument-error '->html "can't use attribute list without a #:tag argument" tag))
   
   (if (or tag (txexpr? x))
       (let ()
