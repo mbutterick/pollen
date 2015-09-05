@@ -8,25 +8,6 @@
   (λ(p) (syntax->datum (custom-read-syntax-proc (object-name p) p))))
 
 
-(define (split-metas tree)
-  (define (meta-matcher x) ; meta has form (define-meta key value)
-    (and (list? x) (>= (length x) 3) (eq? (first x) (world:current-define-meta-name))))
-  (define matches empty)
-  (define rest
-    (let loop ([x tree])
-      (cond
-        [(meta-matcher x)
-         (set! matches (cons x matches))
-         (loop empty)]
-        [(list? x)
-         (define-values (new-matches rest) (partition meta-matcher x))
-         (set! matches (append new-matches matches))
-         (map loop rest)]
-        [else x])))
-  (let ([meta-key second][meta-value third])
-    (values (map meta-key matches) (map meta-value matches) rest)))
-
-
 (define (make-custom-read-syntax reader-mode)
   (λ (path-string p)
     (define read-inner (make-at-reader 
@@ -38,7 +19,6 @@
                         #:syntax? #t 
                         #:inside? #t))
     (define source-stx (read-inner path-string p))
-    (define-values (meta-keys meta-values meta-free-file-data) (split-metas (syntax->datum source-stx)))
     (define reader-here-path (cond
                                [(symbol? path-string) (symbol->string path-string)]
                                [(equal? path-string "unsaved editor") path-string]
@@ -53,34 +33,24 @@
                                                          [else world:mode-preproc])])
                               auto-computed-mode)
                             reader-mode))
-    (define meta-keys-plus-here (cons (world:current-here-path-key) meta-keys)) ; here-path at front so it can be overridden
-    (define meta-values-plus-here (cons reader-here-path meta-values))
     (define post-parser-syntax
-      (with-syntax ([(KEY ...) (datum->syntax source-stx meta-keys-plus-here)]
-                    [(VALUE ...) (datum->syntax source-stx meta-values-plus-here)]
-                    [METAS (format-id source-stx "~a" (world:current-meta-export))]
-                    [META-MOD (format-symbol "~a" (world:current-meta-export))]
+      (with-syntax ([HERE-KEY (format-id source-stx "~a" (world:current-here-path-key))]
+                    [HERE-PATH (datum->syntax source-stx reader-here-path)]
                     [POLLEN-MOD (format-symbol "~a" 'pollen-lang-module)]
-                    [DOC (format-id source-stx "~a" (world:current-main-export))]
                     [PARSER-MODE-VALUE (format-symbol "~a" parser-mode)]
                     [DIRECTORY-REQUIRES (datum->syntax source-stx (require+provide-directory-require-files path-string))]
-                    [(SOURCE-LINE ...) (datum->syntax source-stx meta-free-file-data)])
+                    [(SOURCE-LINE ...) source-stx]
+                    [DOC (format-id source-stx "~a" (world:current-main-export))])
         (replace-context
          source-stx
          #'(module runtime-wrapper racket/base
-             (module META-MOD racket/base
-               (provide (all-defined-out))
-               (define METAS (apply hash (append (list 'KEY VALUE) ...))))
-             
              (module POLLEN-MOD pollen
+               (define-meta HERE-KEY HERE-PATH) 
                (define parser-mode 'PARSER-MODE-VALUE)
                (provide (except-out (all-defined-out) parser-mode)
                         (prefix-out inner: parser-mode)) ; avoids conflicts with importing modules
                DIRECTORY-REQUIRES
-               (require (submod ".." ".." META-MOD)) ; get metas from adjacent submodule
-               (provide (all-from-out (submod ".." ".." META-MOD)))
                SOURCE-LINE ...)
-             
              (require (submod pollen/runtime-config show) 'POLLEN-MOD)
              (provide (all-from-out 'POLLEN-MOD))
              (show DOC inner:parser-mode)))))
