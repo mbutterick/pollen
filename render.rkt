@@ -229,8 +229,8 @@
     
     (define (get-default-template)
       (and output-path-ext
-           (build-path (world:current-project-root)
-                       (add-ext (world:current-default-template-prefix) output-path-ext))))
+           (let ([default-template-filename (add-ext (world:current-default-template-prefix) output-path-ext)])
+             (find-upward-from source-path default-template-filename))))
     
     (define (get-fallback-template)
       (and output-path-ext

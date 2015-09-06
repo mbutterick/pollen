@@ -10,6 +10,18 @@
   (define-values (dir name dir?) (split-path path))
   dir)
 
+
+(define+provide/contract (find-upward-from source-path filename-to-find)
+  (coerce/path? coerce/path? . -> . (or/c #f path?))
+    (parameterize ([current-directory (dirname (->complete-path source-path))])
+      (let loop ([dir (current-directory)][path filename-to-find])
+        (and dir ; dir is #f when it hits the top of the filesystem
+             (let ([completed-path (path->complete-path path)]) 
+               (if (file-exists? completed-path)
+                   (simplify-path completed-path)
+                   (loop (dirname dir) (build-path 'up path))))))))
+
+
 ;; for files like svg that are not source in pollen terms,
 ;; but have a textual representation separate from their display.
 (define+provide/contract (sourceish? x)

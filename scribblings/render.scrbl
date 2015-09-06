@@ -79,7 +79,7 @@ Find a template file for @racket[_source-path], with the following priority:
 
 @item{If the @racket[metas] for @racket[_source-path] have a key for @code[(format "~a" world:template-meta-key)], then use the value of this key.}
 
-@item{If this key doesn't exist, or if it points to a nonexistent file, look for a default template in the project directory with the name @code[(format "~a.[output extension]" world:default-template-prefix)]. Meaning, if @racket[_source-path] is @code[(format "intro.html.~a" world:markup-source-ext)], the output path would be @code["intro.html"], so the default template would be @code[(format "~a.html" world:default-template-prefix)].}
+@item{If this key doesn't exist, or refers to a nonexistent file, look for a default template with the name @code[(format "~a.[output extension]" world:default-template-prefix)]. Meaning, if @racket[_source-path] is @code[(format "intro.html.~a" world:markup-source-ext)], the output path would be @code["intro.html"], so the default template would be @code[(format "~a.html" world:default-template-prefix)]. Look for this default template in the same directory as the source file, and then search upwards within successive parent directories. (Corollary: a default template in the project root will apply to all files in the project unless overridden within a subdirectory.)}
 
 @item{If this file doesn't exist, use the fallback template as a last resort. (See @secref["Templates"
          #:tag-prefixes '("tutorial-2")
