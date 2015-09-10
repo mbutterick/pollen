@@ -80,7 +80,7 @@ Hello world: how are you on this fine summer day?
 
 @item{@bold{Commands start with ◊.} A simple rule: if a piece of text starts with @litchar{◊}, it's treated as a command; otherwise it's treated as ordinary text.}
 
-@item{@bold{Write commands in text mode or Racket mode.} Commands can use two equivalent notation systems: either Pollen's text-mode command syntax, or standard Racket syntax.}
+@item{@bold{Write commands in Pollen mode or Racket mode.} Commands can use two equivalent notation systems: either Pollen's text-oriented command syntax, or standard Racket syntax.}
 
 
 @item{@bold{Everything in Racket is in Pollen too.} Pollen isn't a watered-down ``template language.'' Racket is a fully provisioned programming language, and every Racket function is available in Pollen.}

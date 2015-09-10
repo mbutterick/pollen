@@ -420,9 +420,9 @@ This is now a valid HTML page.
 
 I mentioned that the preprocessor reads the file and handles any Pollen commands it finds. But our source file doesn't have any commands yet. Let's add some.
 
-Pollen commands can be embedded in your source file using one of two modes: @defterm{Racket mode} or @defterm{text mode}. We'll try text mode in a later tutorial. For now, we'll use Racket mode.
+Pollen commands can be embedded in your source file using one of two modes: @defterm{Racket mode} or @defterm{Pollen mode}. We'll try Pollen mode in a later tutorial. For now, we'll use Racket mode.
 
-To make a Racket-mode Pollen command, just take any Racket expression and put the lozenge character @litchar["◊"] in front of it. For instance, these are valid Racket expressions:
+To make a Racket-mode command, just take any Racket expression and put the lozenge character @litchar["◊"] in front of it. For instance, these are valid Racket expressions:
 
 @codeblock{
 #lang racket

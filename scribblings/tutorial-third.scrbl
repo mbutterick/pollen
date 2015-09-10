@@ -423,7 +423,7 @@ When you run this file, you indeed get:
 
 @repl-output{'(root "I want to attend " (em "RacketCon " "BOOM" " year"))}
 
-How does this work? First, although you can define a function in Pollen command syntax using either of @secref["The_two_command_modes__text_mode___Racket_mode"], it tends to be easier to use Racket mode. I wrote the first one in text mode. But for clarity, I'm going to switch to Racket mode (run this file and convince yourself it comes out the same):
+How does this work? First, although you can define a function using either of @secref["the-two-command-modes"], it tends to be easier to use Racket mode. I wrote the first one in Pollen mode. But for clarity, I'm going to switch to Racket mode (run this file and convince yourself it comes out the same):
 
 @fileblock["article.html.pm" @codeblock{
 #lang pollen

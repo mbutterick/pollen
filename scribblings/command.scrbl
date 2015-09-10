@@ -100,9 +100,9 @@ Courtesy of @link["https://github.com/lerichard95"]{Richard Le}: ``If you're usi
 (global-set-key "\M-\\" 'insert-lozenge)}
 
 @;--------------------------------------------------------------------
-@section{The two command modes: text mode & Racket mode}
+@section[#:tag "the-two-command-modes"]{The two command modes: Pollen mode & Racket mode}
 
-Pollen commands can be entered in one of two modes: @italic{text mode} or @italic{Racket mode}. Both modes start with a lozenge (@litchar["◊"]):
+Pollen commands can be entered in one of two modes: @italic{Pollen mode} or @italic{Racket mode}. Both modes start with a lozenge (@litchar["◊"]):
 
 @racketblock[
  @#,BNF-seq[@litchar["◊"] @nonterm{command name} @litchar{[} @nonterm{Racket arguments ...} @litchar{]} @litchar["{"] @nonterm{text argument} @litchar["}"]]
@@ -110,9 +110,9 @@ Pollen commands can be entered in one of two modes: @italic{text mode} or @itali
             @litchar{(} @nonterm{Racket expression} @litchar{)}]
 ]
 
-@bold{Text-mode commands}
+@bold{Pollen-mode commands}
 
-A text-mode command has the three possible parts after the @litchar["◊"]:
+A Pollen-mode command has the three possible parts after the @litchar["◊"]:
 
 @itemlist[
 @item{The @italic{command name} appears immediately after the @litchar["◊"]. Typically it's a short word.} 
@@ -127,7 +127,7 @@ Each of the three parts is optional. You can also nest commands within each othe
 @item{Whatever parts you use must always appear in the order above.}
 ]
 
-Here are a few examples of correct text-mode commands:
+Here are a few examples of correct Pollen-mode commands:
 
 @codeblock{
   #lang pollen
@@ -174,9 +174,9 @@ And in DrRacket, they produce the same output:
 
 Beyond that, there's not much to say about Racket mode — any valid expression you can write in Racket will also be a valid Racket-mode Pollen command.
 
-@bold{The relationship of text mode and Racket mode}
+@bold{The relationship of Pollen mode and Racket mode}
 
-Even if you don't plan to write a lot of Racket-mode commands, you should be aware that under the hood, Pollen is converting all commands in text mode to Racket mode. So a text-mode command that looks like this:
+Even if you don't plan to write a lot of Racket-mode commands, you should be aware that under the hood, Pollen is converting all commands in Pollen mode to Racket mode. So a Pollen-mode command that looks like this:
 
 @codeblock[#:keep-lang-line? #f]{
 #lang pollen
@@ -191,7 +191,7 @@ Is actually being turned into a Racket-mode command like this:
 (headline #:size 'enormous "Man Bites Dog!")
 }
 
-Thus a text-mode command is just an alternate way of writing a Racket-mode command. (More broadly, all of Pollen is just an alternate way of using Racket.)
+Thus a Pollen-mode command is just an alternate way of writing a Racket-mode command. (More broadly, all of Pollen is just an alternate way of using Racket.)
 
 The corollary is that you can always write Pollen commands using whichever mode is more convenient or readable. For instance, the earlier example, written in the Racket mode:
 
@@ -201,7 +201,7 @@ The corollary is that you can always write Pollen commands using whichever mode 
 ◊(format "~a #~a" song (* 3 3))
 }
 
-Can be rewritten using text mode:
+Can be rewritten using Pollen mode:
 
 @codeblock{
 #lang pollen
@@ -399,7 +399,7 @@ The value of foo is ◊foo
 
 Be careful — if you include arguments, even blank ones, Pollen will treat the command name as a function. This won't work, because a variable is not a function:
 
-@margin-note{To understand what happens here, recall the relationship between Pollen's command modes. The text-mode command @code{◊foo[]} becomes the Racket-mode command @code{(foo)}, which after variable substitution becomes @code{("bar")}. If you try to evaluate @code{("bar")} — e.g., in DrRacket — you'll get the same error.}
+@margin-note{To understand what happens here, recall the relationship between Pollen's command modes. The Pollen-mode command @code{◊foo[]} becomes the Racket-mode command @code{(foo)}, which after variable substitution becomes @code{("bar")}. If you try to evaluate @code{("bar")} — e.g., in DrRacket — you'll get the same error.}
 
 
 @codeblock|{
@@ -523,7 +523,7 @@ To make a meta, you create a tag with the special @code{define-meta} name. Then 
 @codeblock{
 #lang pollen
 
-◊define-meta[dog]{Roxy} ; text-mode syntax
+◊define-meta[dog]{Roxy} ; Pollen-mode syntax
 ◊some-tag['key: "value"]{Normal tag}
 ◊(define-meta cat "Chopper") ; equivalent Racket-mode syntax
 ◊some-tag['key: "value"]{Another normal tag}
@@ -678,7 +678,7 @@ Actually, it's all a comment now
 @;--------------------------------------------------------------------
 @subsection{The Racket arguments}
 
-The middle part of a text-mode Pollen command contains the @italic{Racket arguments} @litchar{[}between square brackets.@litchar{]} Most often, you'll see these used to pass extra information to commands that operate on text.
+The middle part of a Pollen-mode command contains the @italic{Racket arguments} @litchar{[}between square brackets.@litchar{]} Most often, you'll see these used to pass extra information to commands that operate on text.
 
 For instance, tag functions. Recall from before that any not-yet-defined command name in Pollen is treated as a tag function:
 
@@ -753,7 +753,7 @@ You can also use this area for @italic{keyword arguments}. Keyword arguments can
 @;--------------------------------------------------------------------
 @subsection{The text argument}
 
-The third part of a text-mode Pollen command is the text argument. The text argument @litchar{@"{"}appears between curly braces@litchar{@"}"}. It can contain any text you want. The text argument can also contain other Pollen commands with their own text arguments. And they can contain other Pollen commands ... and so on, all the way down.
+The third part of a Pollen-mode command is the text argument. The text argument @litchar{@"{"}appears between curly braces@litchar{@"}"}. It can contain any text you want. The text argument can also contain other Pollen commands with their own text arguments. And they can contain other Pollen commands ... and so on, all the way down.
 
 @codeblock|{
 #lang pollen

@@ -456,7 +456,7 @@ When you refresh the page in the project server, the page title will now appear 
 
 The page title will now be @onscreen{Deep Thought, by MB}.
 
-A couple notes on command syntax. We inserted the @racket[select] and @racket[->html] commands using Racket-mode syntax. We could also use text-mode syntax and write the commands this way:
+A couple notes on command syntax. We inserted the @racket[select] and @racket[->html] commands using Racket-mode syntax. We could also use Pollen-mode syntax and write the commands this way:
 
 @fileblock["template.html"
 @codeblock[#:keep-lang-line? #f]{
