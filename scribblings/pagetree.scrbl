@@ -116,6 +116,87 @@ Experienced programmers may want to know that because a pagetree is just an X-ex
 
 Note that you need to take more care when building a pagetree by hand. Pagenodes are symbols, not strings, thus the use of @racket[string->symbol] is mandatory. One benefit of using a pagetree source file is that it takes care of this housekeeping for you.
 
+@section{Nesting pagetrees}
+
+You can put other pagetrees within a pagetree. Since every pagetree is an X-expression, you can nest pagetrees as you would ordinary X-expressions. Suppose we have this pagetree:
+
+@fileblock["sub.ptree" @codeblock{
+#lang pollen
+three
+four
+}]
+
+And we want to add it to an existing pagetree:
+
+@fileblock["index.ptree" @codeblock{
+#lang pollen
+one
+two
+five
+six}]
+
+You can @racket[require] @filepath{sub.ptree} normally to import its @racket[doc]:
+
+@fileblock["index.ptree" @codeblock{
+#lang pollen
+◊(require "sub.ptree")
+one
+two
+◊doc
+five
+six}]
+
+And you'll get this:
+
+@repl-output{'(pagetree-root one two three four five six)}
+
+Pollen does one bit of housekeeping for you, which is that it automatically drops the root node of the imported pagetree, and splices the remaining nodes into the parent pagetree at the insertion point. Otherwise you'd get this, which is probably not what you wanted:
+
+@repl-output{'(pagetree-root one two (pagetree-root three four) five six)}
+
+But if you do want the imported pagetree under a subnode, just add a containing pagenode as usual:
+
+@fileblock["index.ptree" @codeblock{
+#lang pollen
+◊(require "sub.ptree")
+one
+two
+◊subtree{
+  ◊doc
+}
+five
+six}]
+
+Which will give you:
+
+@repl-output{'(pagetree-root one two (subtree three four) five six)}
+
+If you want to combine a number of pagetrees, @racket[require] can get cumbersome because you have to juggle multiple @racket[doc] imports (which can be done with @racket[prefix-in], but it's still juggling). Instead, you can use @racket[dynamic-require] to put each imported pagetree where you want it. 
+
+@fileblock["index.ptree" @codeblock{
+#lang pollen
+one
+two
+◊(dynamic-require "sub.ptree" 'doc)
+five
+six
+◊(dynamic-require "sub-two.ptree" 'doc)
+nine
+ten
+}]
+
+Nesting pagetrees won't circumvent the usual rule against duplicate pagenodes. So this pagetree, which tries to nest @filepath{sub.ptree} twice, won't work:
+
+@fileblock["index.ptree" @codeblock{
+#lang pollen
+one
+two
+◊(dynamic-require "sub.ptree" 'doc)
+◊(dynamic-require "sub.ptree" 'doc)
+five
+six
+}]
+
 @section{The automatic pagetree}
 
 In situations where Pollen needs a pagetree but can't find one, it will automatically synthesize a pagetree from a listing of files in the directory. This arises most frequently when @secref["Using_the_dashboard" #:doc '(lib "pollen/scribblings/pollen.scrbl")] in a directory that doesn't contain an explicit @filepath{index.ptree}. This way, you can get going with a project without having to stop for @racketfont{.ptree} housekeeping.

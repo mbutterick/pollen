@@ -10,9 +10,8 @@
 
 (define-syntax (*module-begin stx)
   (syntax-case stx ()
-    [(_ . body)
-     (with-syntax ([id #'doc-raw] ; name of the main export from doclang-raw
-                   [post-process #'(λ(x) x)]
+    [(_ id . body)
+     (with-syntax ([post-process #'(λ(x) x)]
                    [exprs #'()])
        #'(#%module-begin
           (doc-begin id post-process exprs . body)))]))

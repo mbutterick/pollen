@@ -37,9 +37,15 @@
 
 (define+provide/contract (decode-pagetree xs)
   (txexpr-elements? . -> . any/c) ; because pagetree is being explicitly validated
+  (define pt-root-tag (world:current-pagetree-root-node))
+  (define (splice-nested-pagetree xs)
+    (apply append (for/list ([x (in-list xs)])
+                            (if (and (txexpr? x) (eq? (get-tag x) pt-root-tag))
+                                (get-elements x)
+                                (list x)))))
   (validate-pagetree 
-   (decode (cons (world:current-pagetree-root-node) xs)
-           #:txexpr-elements-proc (λ(xs) (filter (compose1 not whitespace?) xs))
+   (decode (cons pt-root-tag xs)
+           #:txexpr-elements-proc (compose1 splice-nested-pagetree (λ(xs) (filter-not whitespace? xs))) 
            #:string-proc string->symbol))) ; because faster than ->pagenode
 
 
@@ -53,6 +59,7 @@
           x))))
 
 
+
 (define+provide (pagetree? x)
   (with-handlers ([exn:fail? (λ(e) #f)]) 
     (->boolean (validate-pagetree x))))
@@ -61,7 +68,9 @@
  (check-true (pagetree? '(foo)))
  (check-true (pagetree? '(foo (hee))))
  (check-true (pagetree? '(foo (hee (uncle foo)))))
- (check-false (pagetree? '(foo (hee hee (uncle foo))))))
+ (check-false (pagetree? '(foo (hee hee (uncle foo)))))
+ (check-equal? (decode-pagetree '(one two (pagetree-root three (pagetree-root four five) six) seven eight))
+               '(pagetree-root one two three four five six seven eight)))
 
 
 (define+provide/contract (directory->pagetree dir)
@@ -76,7 +85,7 @@
     (define (sort-names xs) (sort xs #:key ->string string<?))
     ;; put subdirs in list ahead of files (so they appear at the top)
     (append (sort-names subdirectories) (sort-names pagetree-sources) (sort-names other-files)))
-
+  
   ;; in general we don't filter the directory list for the automatic pagetree.
   ;; this can be annoying sometimes but it's consistent with the policy of avoiding magic behavior.
   ;; certain files (leading dot) will be ignored by `directory-list` anyhow.

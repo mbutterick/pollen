@@ -34,14 +34,16 @@
                          [(VALUE (... ...)) (datum->syntax #'(EXPR (... ...)) meta-values)]
                          [METAS (format-id #'(EXPR (... ...)) "~a" (world:current-meta-export))]
                          [META-MOD (format-symbol "~a" (world:current-meta-export))]
-                         [DOC (format-id #'(EXPR (... ...)) "~a" (world:current-main-export))])
+                         [DOC (format-id #'(EXPR (... ...)) "~a" (world:current-main-export))]
+                         [DOC-RAW (generate-temporary)]); prevents conflicts with other imported Pollen sources
              (replace-context #'(EXPR (... ...))
                               #'(#%module-begin
                                  (module META-MOD racket/base
                                    (provide (all-defined-out))
                                    (define METAS (apply hash (append (list 'KEY VALUE) (... ...)))))
                                  
-                                 (module inner pollen/doclang-raw ; exports result as doc-raw
+                                 (module inner pollen/doclang-raw
+                                   DOC-RAW ; positional arg for doclang-raw that sets name of export.
                                    (require pollen/top pollen/world)
                                    (provide #%top (all-defined-out) (all-from-out pollen/world))
                                    EXPR-WITHOUT-METAS (... ...))
@@ -58,6 +60,6 @@
                                                   [else ; for preprocessor output, just make a string
                                                    (λ xs (apply string-append (map to-string xs)))])]
                                           ;; drop leading newlines, as they're often the result of `defines` and `requires`
-                                          [doc-elements (dropf doc-raw (λ(ln) (equal? ln "\n")))])
+                                          [doc-elements (dropf DOC-RAW (λ(ln) (equal? ln "\n")))])
                                      (apply proc doc-elements)))
-                                 (provide DOC METAS (except-out (all-from-out 'inner) doc-raw #%top))))))])))) ; hide internal exports
+                                 (provide DOC METAS (except-out (all-from-out 'inner) DOC-RAW #%top))))))])))) ; hide internal exports

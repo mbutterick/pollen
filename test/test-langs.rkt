@@ -48,8 +48,7 @@
     (with-output-to-string (λ() (system cmd-string))))
   (check-equal? (run test.ptree) "'(pagetree-root test ====)")
     (check-equal? (run test.html.pm) @string-append{'(root "test" "\n" "====")})
-  ;; todo: this one's a little weird. Pollen-to-Pollen require prints the result of required file on import.
-  (check-equal? (run test-import.html.pm) @string-append{'(root "This is sample 01.")'(root "test" "\n" "====" "\n" (root "This is sample 01."))})
+  (check-equal? (run test-import.html.pm) @string-append{'(root "test" "\n" "====" "\n" (root "This is sample 01."))})
   (check-equal? (run test.html.pmd) "'(root (h1 ((id \"test\")) \"test\"))")
   (check-equal? (run test.html.pp) "test\n====")
   (check-equal? (run test.no-ext) "test\n===="))

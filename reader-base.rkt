@@ -36,7 +36,7 @@
     (define post-parser-syntax
       (with-syntax ([HERE-KEY (format-id source-stx "~a" (world:current-here-path-key))]
                     [HERE-PATH (datum->syntax source-stx reader-here-path)]
-                    [POLLEN-MOD (format-symbol "~a" 'pollen-lang-module)]
+                    [POLLEN-MOD (format-symbol "~a" (gensym))] ; prevents conflicts with other imported Pollen sources
                     [PARSER-MODE-VALUE (format-symbol "~a" parser-mode)]
                     [DIRECTORY-REQUIRES (datum->syntax source-stx (require+provide-directory-require-files path-string))]
                     [(SOURCE-LINE ...) source-stx]
@@ -53,10 +53,10 @@
                SOURCE-LINE ...)
              (require (submod pollen/runtime-config show) 'POLLEN-MOD)
              (provide (all-from-out 'POLLEN-MOD))
-             (show DOC inner:parser-mode)))))
+             (show DOC inner:parser-mode HERE-PATH))))) ; HERE-PATH acts as "local" runtime config
     (syntax-property post-parser-syntax
                      'module-language
-                     '#(pollen/language-info get-language-info #f))))
+                     `#(pollen/language-info get-language-info ,reader-here-path)))) ; reader-here-path acts as "top" runtime config
 
 
 (define-syntax-rule (define+provide-reader-in-mode mode)
