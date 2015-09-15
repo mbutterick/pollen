@@ -7,7 +7,7 @@
 @(my-eval `(require pollen pollen/decode pollen/template pollen/tag xml racket/list txexpr))
 
 
-@title[#:tag "fourth-tutorial"]{Fourth tutorial}
+@title[#:tag "fourth-tutorial"]{Fourth tutorial: multiple output targets}
 
 In previous tutorial projects, we've maintained a one-to-one relationship between source files and output files. In this tutorial, however, you'll learn how to generate output in multiple formats from a single Pollen source file. You'll learn about:
 

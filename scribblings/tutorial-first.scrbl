@@ -2,7 +2,7 @@
 
 @(require (for-label pollen/world racket) "mb-tools.rkt")
 
-@title[#:tag "first-tutorial"]{First tutorial}
+@title[#:tag "first-tutorial"]{First tutorial: the project server & preprocessor}
 
 In this tutorial, you'll use Pollen to make a single HTML page with a poem. You'll learn about:
 

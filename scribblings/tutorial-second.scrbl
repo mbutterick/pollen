@@ -4,7 +4,7 @@
 
 @(require "mb-tools.rkt")
 
-@title[#:tag "second-tutorial"]{Second tutorial}
+@title[#:tag "second-tutorial"]{Second tutorial: Markdown, templates, & pagetrees}
 
 In this tutorial, you'll use Pollen to publish a multiple-page article written in Markdown. You'll learn about:
 

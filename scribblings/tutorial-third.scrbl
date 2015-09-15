@@ -7,7 +7,7 @@
 @(my-eval `(require pollen pollen/decode pollen/template pollen/tag xml racket/list txexpr))
 
 
-@title[#:tag "third-tutorial"]{Third tutorial}
+@title[#:tag "third-tutorial"]{Third tutorial: Pollen markup & tag functions}
 
 Now you're getting to the good stuff. In this tutorial, you'll use Pollen to publish a multi-page article written in Pollen markup. You'll learn about:
 
