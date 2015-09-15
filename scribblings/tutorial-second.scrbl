@@ -26,7 +26,7 @@ If you want the shortest possible introduction to Pollen, try the @secref["quick
 
 @section[#:tag-prefix "tutorial-2"]{Prerequisites}
 
-I'll assume you've completed the @secref["first-tutorial"] and you understand how to create source files in DrRacket and view them in the project server. I won't be spelling out those tasks as I did before.
+I'll assume you've completed the @seclink["first-tutorial"]{first tutorial} and you understand how to create source files in DrRacket and view them in the project server. I won't be spelling out those tasks as I did before.
 
 @section{The case against Markdown}
 
@@ -57,7 +57,7 @@ The authoring-mode approach is better if you want to end up with something other
 
 @subsection{Using Markdown with the preprocessor}
 
-Because Markdown is a text-based format, you can use the Pollen preprocessor to add programmatic features to existing Markdown files. (See @secref["Working_with_the_preprocessor"] in the @secref["first-tutorial"] if you need a refresher.)
+Because Markdown is a text-based format, you can use the Pollen preprocessor to add programmatic features to existing Markdown files. (See @secref["Working_with_the_preprocessor"] in the @seclink["first-tutorial"]{first tutorial} if you need a refresher.)
 
 Suppose we have a Markdown file called @filepath{brennan.md} that we want to use with the preprocessor. Create this file in DrRacket, save it, and start the project server in that directory.
 
@@ -495,7 +495,7 @@ If you're a super web hotshot, you probably don't put your CSS selectors in the 
 
 Fans of hand-coded CSS, I trust you to take it from here: make your @filepath{styles.css} file, and enjoy the results.
 
-But folks who paid attention during the @secref["first-tutorial"] might be wondering ``Can we link to a dynamically generated @filepath{styles.css.pp} file?''
+But folks who paid attention during the @seclink["first-tutorial"]{first tutorial} might be wondering ``Can we link to a dynamically generated @filepath{styles.css.pp} file?''
 
 Yes, of course. Here's the rule of thumb: when you're making links between files — whether CSS, or HTML, or anything else — Pollen doesn't care whether the file is static or dynamic. You just refer to it by its ultimate name, in this case @filepath{styles.css}. If a static @filepath{styles.css} file exists, Pollen will use that. If it doesn't, Pollen will look for a source file it can use to make @filepath{styles.css}, and generate it on the spot. (You can also start with a static file, and change it to be dynamic later, and Pollen will do the right thing.)
 

@@ -44,7 +44,7 @@ Pollen is a DSL implemented in Racket. It is a close cousin of @other-doc['(lib 
 
 Moreover, Pollen is meant to be a small step away from Racket — you can think of it as a more convenient notation system for Racket code, similar to how Markdown is a more convenient notation for HTML. But unlike Markdown, which only lets you access a subset of HTML, anything that can be done in Racket can also be done in Pollen. 
 
-As you work more with Pollen, you'll pick up more about how Pollen corresponds to Racket (see @secref["reader"]) and easily be able to convert commands from one system to the other. In later tutorials, you'll see how larger Pollen projects are made out of both Pollen and Racket source files.
+As you work more with Pollen, you'll pick up more about how Pollen corresponds to Racket (see @secref["pollen-command-syntax"]) and easily be able to convert commands from one system to the other. In later tutorials, you'll see how larger Pollen projects are made out of both Pollen and Racket source files.
 
 But in smaller projects, like this one, you can just use Pollen.
 

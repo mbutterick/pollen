@@ -68,7 +68,7 @@ More will be said about X-expressions. But a couple advantages should be evident
 
 @section{Pollen command syntax}
 
-As mentioned above, a Pollen source file is not code with text embedded in it, but rather text with code embedded. (See @secref["reader"] for more.)
+As mentioned above, a Pollen source file is not code with text embedded in it, but rather text with code embedded. (See @secref["pollen-command-syntax"] for more.)
 
 @itemlist[
 

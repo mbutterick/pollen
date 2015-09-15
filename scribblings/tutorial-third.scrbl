@@ -31,7 +31,7 @@ If you want the shortest possible introduction to Pollen, try the @secref["quick
 
 @section[#:tag-prefix "tutorial-3"]{Prerequisites}
 
-I'll assume you've completed the @secref["second-tutorial"] and that you understand the principles of Pollen authoring mode — creating source files, converting them to X-expressions, and then combining them with templates to make output files. 
+I'll assume you've completed the @seclink["second-tutorial"]{second tutorial} and that you understand the principles of Pollen authoring mode — creating source files, converting them to X-expressions, and then combining them with templates to make output files. 
 
 Because now it's time to pick up the pace. You've learned how to do some handy things with Pollen. But we haven't yet exploited the full fusion of writing environment and programming language. I promised you that @secref["the-book-is-a-program"], right? So let's do some programming.
 
@@ -42,7 +42,7 @@ You can skip this section if XML holds no interest. But Pollen markup evolved ou
 
 @subsection{The XML problem}
 
-In the @secref["second-tutorial"], I made the case that Markdown is a limiting format for authors. Why? Markdown is essentially a notation system for HTML tags. As such, it has three problems: it's not semantic, it only covers a limited subset of HTML tags, and it can't be extended by an author. 
+In the @seclink["second-tutorial"]{second tutorial}, I made the case that Markdown is a limiting format for authors. Why? Markdown is essentially a notation system for HTML tags. As such, it has three problems: it's not semantic, it only covers a limited subset of HTML tags, and it can't be extended by an author. 
 
 These problems are partly limitations of HTML itself. And these limitations were meant to be cured by XML — the @italic{X} stands for @italic{extensible}. In principle, XML allows you to define whatever tags you like and use them in your document.
 
@@ -94,7 +94,7 @@ In so doing, Pollen markup becomes the source code of the book. Let's try it out
 
 @subsection{Creating a Pollen markup file}
 
-We're going to use Pollen markup to make a file that will ultimately be HTML. So consistent with the authoring-mode workflow we learned in the @secref["second-tutorial"], we'll start with our desired output filename, @filepath{article.html}, and then append the Pollen markup suffix, @filepath{.pm}.
+We're going to use Pollen markup to make a file that will ultimately be HTML. So consistent with the authoring-mode workflow we learned in the @seclink["second-tutorial"]{second tutorial}, we'll start with our desired output filename, @filepath{article.html}, and then append the Pollen markup suffix, @filepath{.pm}.
 
 In DrRacket, start a new file called @filepath{article.html.pm} like so (BTW you can use any sample text you like):
 
@@ -405,7 +405,6 @@ Sometimes this default behavior will suffice. But other times, you'll want to ch
 @item{… and anything else you like to do with a programming language.}
 ]
 
-@margin-note{Having invited you to gaze across these vistas, I apologize that my example here in this tutorial is necessarily tip-of-the-iceberg. I'll be adding a more detailed guide to writing Pollen functions, both simple and crafty.}
 
 How do you change the behavior of a tag? By 1) writing a new function and 2) giving it the name of the tag. Once you do this, this new behavior will automatically be invoked when you use the tag.
 
@@ -440,139 +439,19 @@ Let's run this file again, but go back to the Golden Rules to understand what ha
 
 This example is contrived, of course. But the basic idea — defining a function with the name of a tag — is the foundation of programmability in Pollen. @bold{If you get this, and the Golden Rules, you get everything.}
 
-@subsection{Notes for experienced programmers}
-
-Having said that, some of you are probably eager to hack around a bit. Let me chip off a few more cubes from the iceberg to help you on your way. (Everyone else, take five.)
-
-@subsubsection{Point of no @code{return}} If you've written functions in other programming languages, you might be accustomed to using a @code{return} statement to send a value back from the function. This doesn't exist in Pollen or Racket — the return value of any function is just the last expression evaluated. In the example below, @code{"BAP"} becomes the return value because it's in the last position, and @code{"BOOM"} is ignored:
-
-@fileblock["article.html.pm" @codeblock{
-#lang pollen
-
-◊(define (strong word) "BOOM" "BAP")
-
-I want to attend ◊em{RacketCon ◊strong{this} year}.}]
-
-@subsubsection{Multiple input values & rest arguments} Sometimes a tag will have only one word or string that becomes its input. More likely, however, it will have multiple values (this is inevitable with nested tags, because the results aren't concatenated). For instance, if we attach our function to @racket[em] rather than @racket[strong]:
-
-@fileblock["article.html.pm" @codeblock{
-#lang pollen
-
-◊(define (em word) "BOOM")
-
-I want to attend ◊em{RacketCon ◊strong{this} year}.}]
-
-Look what happens:
-
-@errorblock{
-em: arity mismatch;
-the expected number of arguments does not match the given number
-expected: 1
-  given: 3
-}
-
-The error arises because the @racket[em] function is getting three arguments — @code{"RacketCon " '(strong "this") " year"} — but has been defined to only accept one argument, @racket[word]. This is the ``arity mismatch.''
-
-To fix this, it's better to get in the habit of writing tag functions that accept an indefinite number of input values. You do this by defining your function with a @italic{@seclink["contracts-rest-args" #:doc '(lib "scribblings/guide/guide.scrbl")]{rest argument}} (as in, ``give me the rest of the input values.'') To use a rest argument, put it last in your list of input arguments, and add a period @litchar{.} before:
-
-@fileblock["article.html.pm" @codeblock{
-#lang pollen
-
-◊(define (em . parts) "BOOM")
-
-I want to attend ◊em{RacketCon ◊strong{this} year}.}]
-
-This time, the source file will run without an error, producing this:
-
-@repl-output{'(root "I want to attend " "BOOM" ".")}
-
-A rest argument like @racket[parts] is a @racket[list] of individual arguments. So if you want to unpack & process these arguments separately, you can use Racket's extensive list-processing functions (see @secref["pairs" #:doc '(lib "scribblings/guide/guide.scrbl")]). Also see @racket[quasiquote] below.
-
-@subsubsection{Returning an X-expression} Often, you won't use a tag function to replace a whole tag with a string — you'll replace it with a different tag, described by an X-expression, like so:
-
-@fileblock["article.html.pm" @codeblock{
-#lang pollen
-
-◊(define (em . parts) '(big "BOOM"))
-
-I want to attend ◊em{RacketCon ◊strong{this} year}.}]
-
-Which produces:
-
-@repl-output{'(root "I want to attend " (big "BOOM") ".")}
-
-The @racket[quote] mark @litchar{'} before the X-expression signals to Racket that you want to use what follows as a literal value.
-
-To build X-expressions that are more elaborate, you have two options.
-
-First is @racket[quasiquote]. Quasiquote works like quote, but starts with a backtick character @litchar{`}. What makes it ``quasi'' is that you can insert variables using the @racket[unquote] operator, which is a comma @litchar{,} or merge a list of values with the @racket[unquote-splicing] operator, which is a comma followed by an @"@" sign @litchar{,@"@"}.
-
-Let's adapt the example above to use @racket[quasiquote]. Suppose we want to take the @racket[parts] we get as input and put them inside a @racket[big] tag. This is easy to notate with @racket[quasiquote] and the @racket[unquote-splicing] operator, because @racket[parts] is a list:
-
-@fileblock["article.html.pm" @codeblock{
-#lang pollen
-
-◊(define (em . parts) `(big ,@"@"parts))
-
-I want to attend ◊em{RacketCon ◊strong{this} year}.}]
-
-Which produces this:
-
-@repl-output{'(root "I want to attend " (big "RacketCon " (strong "this") " year") ".")}
-
-Of course you can also nest X-expressions in your return value:
-
-@fileblock["article.html.pm" @codeblock{
-#lang pollen
-
-◊(define (em . parts) `(extra (big ,@"@"parts)))
-
-I want to attend ◊em{RacketCon ◊strong{this} year}.}]
-
-The second option for building X-expressions is to use the @other-doc['(lib "txexpr/scribblings/txexpr.scrbl")] library that's included with Pollen (see those docs for more information).
-
-@subsubsection{Using variables within strings} The usual way is to use the @racket[format] function:
-
-@racket[(format "String with variable: ~a" variable-name)]
-
-See the docs for @racket[format] and @racket[fprintf] for your options.
-
-Be careful if you're working with integers and X-expressions — a raw integer is treated as a character code, not an integer string. Using @racket[format] is essential:
-
-@examples[#:eval my-eval
-(->html '(div "A raw integer indicates a character code: " 42))
-(->html `(div "Use format to make it a string: " ,(format "~a" 42)))
-]
-
-@subsubsection{Parsing attributes}
-
-Detecting attributes in an argument list can be tricky because a) the tag may or may not have attributes, b) those attributes may be in standard or abbreviated syntax. For this reason, Pollen provides a @racket[split-attributes] function (in the @racket[pollen/tag] library) that you can use in custom tag functions to separate the attributes and elements:
-
-@fileblock["article.html.pm" @codeblock{
-#lang pollen
-
-◊(require pollen/tag)
-
-◊(define (em . parts) 
-  (define-values (attributes elements) (split-attributes parts))
-  `(extra ,attributes (big ,@"@"elements)))
-
-I want to attend ◊em['key: "value"]{RacketCon}.}]
-
-This will move the @racket[elements] inside the @racket[big] tag, and attach the @racket[attributes] to the @racket[extra] tag:
-
-@repl-output{'(root "I want to attend " (extra ((key "value")) (big "RacketCon")) ".")}
-
 
 @section[#:tag-prefix "tutorial-3"]{Intermission}
 
 That was a lot of heavy material. But it also covered the most essential idea in Pollen: that @bold{every tag is a function}. Congratulations on making it this far. 
+
+@margin-note{Experienced programmers might want to take a detour through @secref["programming-pollen"] to understand more about what's possible with tag functions.}
 
 The good news is that the rest of this tutorial will feel more relaxed, as we put these new principles to work. 
 
 Sorry that this tutorial is longer than the others, but truly — this is the stuff that makes Pollen different. If you're not feeling enthusiastic by now, you should @link["http://www.buzzfeed.com/search?q=puppies"]{bail out}. 
 
 Otherwise, get ready to rock.
+
 
 @section{Organizing functions}
 

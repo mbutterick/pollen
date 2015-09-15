@@ -10,7 +10,7 @@
 @(define (at-exp-racket)
    @racket[#, @hash-lang[] #, @racketmodname[at-exp] #, @racketidfont{racket}])
 
-@title[#:tag "reader"]{Pollen command syntax}
+@title[#:tag "pollen-command-syntax"]{Pollen command syntax}
 
 @section{The golden rule}
 

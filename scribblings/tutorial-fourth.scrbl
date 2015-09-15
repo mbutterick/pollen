@@ -29,7 +29,7 @@ If you want the shortest possible introduction to Pollen, try the @secref["quick
 
 @section[#:tag-prefix "tutorial-4"]{Prerequisites}
 
-I'll assume you've completed the @secref["third-tutorial"] and that you understand the principles of Pollen markup mode — creating source files, converting them to X-expressions, and then combining them with templates to make output files. 
+I'll assume you've completed the @seclink["third-tutorial"]{third tutorial} and that you understand the principles of Pollen markup mode — creating source files, converting them to X-expressions, and then combining them with templates to make output files. 
 
 I'll also assume that you're comfortable with @seclink["Attaching_behavior_to_tags"] with tag functions, and that you can read and write basic Racket functions. Most of this tutorial is programming — easy programming, but programming nonetheless.
 
