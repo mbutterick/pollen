@@ -63,6 +63,8 @@ Or, if you can find a better digital-publishing tool, use that. But I'm never go
 
 @include-section["command.scrbl"]
 
+@include-section["programming-pollen.scrbl"]
+
 @include-section["module-reference.scrbl"]
 
 @include-section["more-help.scrbl"]
