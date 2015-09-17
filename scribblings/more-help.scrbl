@@ -31,4 +31,4 @@ For general tips and how-to questions, use the @link["https://groups.google.com/
 
 @section{Can I see the source for Practical Typography?}
 
-Eventually. I'm working on tidying it up & adding comments so it's a worthy educational tool. In the meantime, the @secref["third-tutorial"] covers all the important techniques used in PT (the rest is mostly snazzy typography; read PT itself to learn about that).
+Eventually. I'm working on tidying it up & adding comments so it's a worthy educational tool. In the meantime, the @seclink["third-tutorial"]{third tutorial} covers all the important techniques used in PT (the rest is mostly snazzy typography; read PT itself to learn about that).
