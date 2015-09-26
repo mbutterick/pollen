@@ -45,10 +45,11 @@
                                  (module inner pollen/doclang-raw
                                    DOC-RAW ; positional arg for doclang-raw that sets name of export.
                                    (require pollen/top pollen/world)
-                                   (provide #%top (all-defined-out) (all-from-out pollen/world))
+                                   (require (submod ".." META-MOD))
+                                   (provide (all-defined-out) #%top (all-from-out pollen/world (submod ".." META-MOD)))
                                    EXPR-WITHOUT-METAS (... ...))
                                  
-                                 (require 'inner 'META-MOD)
+                                 (require 'inner)
                                  (define DOC
                                    (let* ([parser-mode-undefined? (procedure? inner:parser-mode)] ; if undefined, #%top makes it a procedure
                                           [parser-mode (if parser-mode-undefined? PARSER-MODE-ARG inner:parser-mode)]
