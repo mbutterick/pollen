@@ -172,10 +172,10 @@
                                (cons #f `(span ,@(map (λ(on) `(a ((href ,on)) ,on (span ((class "file-ext")) "." ,source-first-ext ,(format " (from ~a)" (->string (find-relative-path dashboard-dir source)))))) output-names)))]
                               [else
                                (define extra-row-string
-                               (if (equal? source-minus-ext (remove-ext source)) ; escaped and unescaped versions are equal
-                                   "" ; no extra string needed
-                                   (format " (from ~a)" (->string (find-relative-path dashboard-dir source)))))
-
+                                 (if (equal? source-minus-ext (remove-ext source)) ; escaped and unescaped versions are equal
+                                     "" ; no extra string needed
+                                     (format " (from ~a)" (->string (find-relative-path dashboard-dir source)))))
+                               
                                (cons #f `(a ((href ,filename)) ,(->string source-minus-ext) (span ((class "file-ext")) "." ,source-first-ext ,extra-row-string)))])]
                            [else ; other non-source file
                             (cons filename filename)])
@@ -253,6 +253,9 @@
 ;; 404 route
 (define/contract (route-404 req)
   (request? . -> . response?)
-  (define error-text (format "route-404: Can't find ~a" (->string (req->path req))))
-  (message error-text)
-  (response/xexpr+doctype `(html ,error-text)))
+  (define missing-path (->string (req->path req)))
+  (message (format "route-404: Can't find ~a" missing-path))
+  (response/xexpr+doctype
+   `(html 
+     (head (title "404 error") (link ((href "/error.css") (rel "stylesheet"))))
+     (body (div ((class "section")) (div ((class "title")) "404 error") (p ,(format "~v" missing-path) " was not found"))))))
