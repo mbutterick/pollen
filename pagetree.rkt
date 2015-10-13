@@ -163,11 +163,19 @@
 
 
 (define (adjacents side pnish [pt (current-pagetree)])
+  #;(symbol? pagenodeish? pagetree? . -> . pagenodes?)
   (and pt pnish
        (let* ([pagenode (->pagenode pnish)]
               [proc (if (equal? side 'left) takef takef-right)]
-              [result (proc (pagetree->list pt) (λ(x) (not (equal? pagenode x))))])
+              [pagetree-nodes (pagetree->list pt)]
+              [in-tree? (member pagenode pagetree-nodes)]
+              [result (and in-tree? (proc pagetree-nodes (λ(x) (not (equal? pagenode x)))))])
          (and (not (empty? result)) result))))
+
+(module-test-internal
+ (require rackunit)
+ (check-equal? (adjacents 'right 'one '(pagetree-index one two three)) '(two three))
+ (check-false (adjacents 'right 'node-not-in-pagetree '(pagetree-index one two three))))
 
 
 (define+provide/contract (previous* pnish [pt (current-pagetree)]) 
