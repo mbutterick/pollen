@@ -11,13 +11,16 @@
   dir)
 
 
-(define+provide/contract (find-upward-from source-path filename-to-find)
-  (coerce/path? coerce/path? . -> . (or/c #f path?))
-    (parameterize ([current-directory (dirname (->complete-path source-path))])
+(define+provide/contract (find-upward-from starting-path filename-to-find
+                                           [exists-proc file-exists?])
+  ;; use exists-proc to permit less strict matching.
+  ;; for instance, maybe it's ok to find the source for the path.
+  ((coerce/path? coerce/path?)((path? . -> . any/c)) . ->* . (or/c #f path?))
+    (parameterize ([current-directory (dirname (->complete-path starting-path))])
       (let loop ([dir (current-directory)][path filename-to-find])
         (and dir ; dir is #f when it hits the top of the filesystem
              (let ([completed-path (path->complete-path path)]) 
-               (if (file-exists? completed-path)
+               (if (exists-proc completed-path)
                    (simplify-path completed-path)
                    (loop (dirname dir) (build-path 'up path))))))))
 
