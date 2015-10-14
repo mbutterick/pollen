@@ -97,12 +97,19 @@
       (decode-pagetree (map ->symbol (unique-sorted-output-paths (filter not-pollen-cache? (directory-list dir)))))
       (error (format "directory->pagetree: directory ~a doesn't exist" dir)))) 
 
+
+(define+provide/contract (load-pagetree source-path)
+  (pathish? . -> . pagetree?)
+  (cached-require source-path (world:current-main-export)))
+
+
 ;; Try loading from pagetree file, or failing that, synthesize pagetree.
 (define+provide/contract (make-project-pagetree project-dir)
   (pathish? . -> . pagetree?)
   (with-handlers ([exn:fail? (λ(exn) (directory->pagetree project-dir))])
     (define pagetree-source (build-path project-dir (world:current-default-pagetree)))
-    (cached-require pagetree-source (world:current-main-export))))
+    (load-pagetree pagetree-source)))
+
 
 (define+provide/contract (parent pnish [pt (current-pagetree)])
   (((or/c #f pagenodeish?)) (pagetree?) . ->* . (or/c #f pagenode?)) 
@@ -220,10 +227,13 @@
  (check-false (next 'three test-pagetree)))
 
 
-
-(define/contract+provide (path->pagenode path)
-  (coerce/path? . -> . coerce/symbol?)
-  (->output-path (find-relative-path (world:current-project-root) (->complete-path path))))
+(define/contract+provide (path->pagenode path [starting-path (world:current-project-root)])
+  ((coerce/path?) (coerce/path?) . ->* . coerce/symbol?)
+  (define starting-dir
+    (if (directory-exists? starting-path)
+        starting-path
+        (get-enclosing-dir starting-path)))
+  (->output-path (find-relative-path (->complete-path starting-dir) (->complete-path path))))
 
 
 (define+provide/contract (in-pagetree? pnish [pt (current-pagetree)])

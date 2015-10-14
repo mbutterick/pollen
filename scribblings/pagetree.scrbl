@@ -416,6 +416,15 @@ Return the pagenode immediately after @racket[_p]. For @racket[next*], return al
 
 @subsection{Utilities}
 
+
+@defproc[
+(load-pagetree
+[pagetree-source pathish?])
+pagetree?
+]
+Load a pagetree from a @filepath{ptree} source file, namely @racket[_pagetree-source].
+
+
 @defproc[
 (pagetree->list
 [pagetree pagetree?])
@@ -433,7 +442,8 @@ Report whether @racket[_pagenode] is in @racket[_pagetree].
 
 @defproc[
 (path->pagenode
-[p pathish?])
+[p pathish?]
+[starting-path pathish? (world:current-project-root)])
 pagenode?
 ]
-Convert path @racket[_p] to a pagenode — meaning, make it relative to @racket[current-project-root], run it through @racket[->output-path], and convert it to a symbol. Does not tell you whether the resultant pagenode actually exists in the current pagetree (for that, use @racket[in-pagetree?]).
+Convert path @racket[_p] to a pagenode — meaning, make it relative to @racket[_starting-path], run it through @racket[->output-path], and convert it to a symbol. Does not tell you whether the resultant pagenode actually exists in the current pagetree (for that, use @racket[in-pagetree?]).
