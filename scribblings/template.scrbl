@@ -1,6 +1,6 @@
 #lang scribble/manual
 
-@(require scribble/eval pollen/cache pollen/world (for-label racket (except-in pollen #%module-begin) pollen/render txexpr xml pollen/pagetree sugar/coerce pollen/template))
+@(require scribble/eval pollen/cache pollen/world (for-label racket (except-in pollen #%module-begin) pollen/render txexpr xml pollen/pagetree sugar/coerce pollen/template pollen/world))
 
 @(define my-eval (make-base-eval))
 @(my-eval `(require pollen pollen/template xml))
@@ -105,6 +105,8 @@ With @racket[select], you get the first result; with @racket[select*], you get t
 
 In both cases, you get @racket[#f] if there are no matches.
 
+Note that if @racket[_value-source] is a relative path or pagenode, it is treated as being relative to @racket[world:current-project-root]. If that's not what you want, you'll need to convert it explicitly to a complete-path (e.g., with @racket[path->complete-path] or @racket[->complete-path]).
+
 @examples[#:eval my-eval
 (module nut-butters pollen/markup
 '(div (question "Flavor?")
@@ -125,7 +127,9 @@ In both cases, you get @racket[#f] if there are no matches.
 [key symbolish?]
 [meta-source (or/c hash? pagenodeish? pathish?)])
 (or/c #f xexpr?)]
-Look up the value of @racket[_key] in @racket[_meta-source]. The @racket[_meta-source] argument can be either 1) a hashtable representing @racket[metas] or 2) a pagenode or source path that identifies a source file that provides @racket[metas]. If no value exists for @racket[_key], you get @racket[#f].
+Look up the value of @racket[_key] in @racket[_meta-source]. The @racket[_meta-source] argument can be either 1) a hashtable representing @racket[metas] or 2) a pagenode or source path that identifies a source file that provides @racket[metas]. If no value exists for @racket[_key], you get @racket[#f]. 
+
+Note that if @racket[_meta-source] is a relative path or pagenode, it is treated as being relative to @racket[world:current-project-root]. If that's not what you want, you'll need to convert it explicitly to a complete-path (e.g., with @racket[path->complete-path] or @racket[->complete-path]).
 
 @examples[#:eval my-eval
 (define metas (hash 'template "sub.xml.pp" 'target "print"))
@@ -142,6 +146,8 @@ Look up the value of @racket[_key] in @racket[_meta-source]. The @racket[_meta-s
 [doc-source (or/c txexpr? pagenodeish? pathish?)])
 (or/c #f (listof xexpr?))]
 Look up the value of @racket[_key] in @racket[_doc-source]. The @racket[_doc-source] argument can be either 1) a tagged X-expression representing a @racket[doc] or 2) a pagenode or source path that identifies a source file that provides @racket[doc]. If no value exists for @racket[_key], you get @racket[#f].
+
+Note that if @racket[_doc-source] is a relative path or pagenode, it is treated as being relative to @racket[world:current-project-root]. If that's not what you want, you'll need to convert it explicitly to a complete-path (e.g., with @racket[path->complete-path] or @racket[->complete-path]).
 
 @examples[#:eval my-eval
 (module gelato pollen/markup
