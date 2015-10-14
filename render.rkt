@@ -30,7 +30,7 @@
  (require racket/runtime-path)
  (define-runtime-path sample-dir "test/data/samples")
  (define samples (parameterize ([current-directory sample-dir])
-                   (map path->complete-path (directory-list "."))))
+                   (map path->complete-path (filter (λ(name) (regexp-match "sample-" name)) (directory-list ".")))))
  (define-values (sample-01 sample-02 sample-03) (apply values samples)))
 
 
