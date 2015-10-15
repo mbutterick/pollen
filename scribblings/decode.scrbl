@@ -28,15 +28,15 @@ Another example is conversion of output into a particular data format. Most Poll
 [#:txexpr-tag-proc txexpr-tag-proc (txexpr-tag? . -> . txexpr-tag?) (λ(tag) tag)]
 [#:txexpr-attrs-proc txexpr-attrs-proc (txexpr-attrs? . -> . txexpr-attrs?) (λ(attrs) attrs)]
 [#:txexpr-elements-proc txexpr-elements-proc (txexpr-elements? . -> . txexpr-elements?) (λ(elements) elements)]
-[#:block-txexpr-proc block-txexpr-proc (block-txexpr? . -> . (or/c xexpr? (non-empty-listof xexpr?))) (λ(tx) tx)]
-[#:inline-txexpr-proc inline-txexpr-proc (txexpr? . -> . (or/c xexpr? (non-empty-listof xexpr?))) (λ(tx) tx)]
-[#:string-proc string-proc (string? . -> . (or/c xexpr? (non-empty-listof xexpr?))) (λ(str) str)]
-[#:entity-proc entity-proc ((or/c symbol? valid-char?) . -> . (or/c xexpr? (non-empty-listof xexpr?))) (λ(ent) ent)]
-[#:cdata-proc cdata-proc (cdata? . -> . (or/c xexpr? (non-empty-listof xexpr?))) (λ(cdata) cdata)]
+[#:block-txexpr-proc block-txexpr-proc (block-txexpr? . -> . (or/c xexpr? (listof xexpr?))) (λ(tx) tx)]
+[#:inline-txexpr-proc inline-txexpr-proc (txexpr? . -> . (or/c xexpr? (listof xexpr?))) (λ(tx) tx)]
+[#:string-proc string-proc (string? . -> . (or/c xexpr? (listof xexpr?))) (λ(str) str)]
+[#:entity-proc entity-proc ((or/c symbol? valid-char?) . -> . (or/c xexpr? (listof xexpr?))) (λ(ent) ent)]
+[#:cdata-proc cdata-proc (cdata? . -> . (or/c xexpr? (listof xexpr?))) (λ(cdata) cdata)]
 [#:exclude-tags tags-to-exclude (listof txexpr-tag?) null]
 [#:exclude-attrs attrs-to-exclude txexpr-attrs? null]
 )
-(or/c xexpr/c (non-empty-listof xexpr/c))]
+(or/c xexpr/c (listof xexpr/c))]
 Recursively process a @racket[_tagged-xexpr], usually the one exported from a Pollen source file as @racket[doc]. 
 
 This function doesn't do much on its own. Rather, it provides the hooks upon which harder-working functions can be hung. 
@@ -223,15 +223,15 @@ Finally, the @racket[_attrs-to-exclude] argument works the same way as @racket[_
 [#:txexpr-tag-proc txexpr-tag-proc (txexpr-tag? . -> . txexpr-tag?) (λ(tag) tag)]
 [#:txexpr-attrs-proc txexpr-attrs-proc (txexpr-attrs? . -> . txexpr-attrs?) (λ(attrs) attrs)]
 [#:txexpr-elements-proc txexpr-elements-proc (txexpr-elements? . -> . txexpr-elements?) (λ(elements) elements)]
-[#:block-txexpr-proc block-txexpr-proc (block-txexpr? . -> . (or/c xexpr? (non-empty-listof xexpr?))) (λ(tx) tx)]
-[#:inline-txexpr-proc inline-txexpr-proc (txexpr? . -> . (or/c xexpr? (non-empty-listof xexpr?))) (λ(tx) tx)]
-[#:string-proc string-proc (string? . -> . (or/c xexpr? (non-empty-listof xexpr?))) (λ(str) str)]
-[#:entity-proc entity-proc ((or/c symbol? valid-char?) . -> . (or/c xexpr? (non-empty-listof xexpr?))) (λ(ent) ent)]
-[#:cdata-proc cdata-proc (cdata? . -> . (or/c xexpr? (non-empty-listof xexpr?))) (λ(cdata) cdata)]
+[#:block-txexpr-proc block-txexpr-proc (block-txexpr? . -> . (or/c xexpr? (listof xexpr?))) (λ(tx) tx)]
+[#:inline-txexpr-proc inline-txexpr-proc (txexpr? . -> . (or/c xexpr? (listof xexpr?))) (λ(tx) tx)]
+[#:string-proc string-proc (string? . -> . (or/c xexpr? (listof xexpr?))) (λ(str) str)]
+[#:entity-proc entity-proc ((or/c symbol? valid-char?) . -> . (or/c xexpr? (listof xexpr?))) (λ(ent) ent)]
+[#:cdata-proc cdata-proc (cdata? . -> . (or/c xexpr? (listof xexpr?))) (λ(cdata) cdata)]
 [#:exclude-tags tags-to-exclude (listof txexpr-tag?) null]
 [#:exclude-attrs attrs-to-exclude txexpr-attrs? null]
 )
-(or/c xexpr/c (non-empty-listof xexpr/c))]
+(or/c xexpr/c (listof xexpr/c))]
 Identical to @racket[decode], but takes @racket[txexpr-elements?] as input rather than a whole tagged X-expression, and likewise returns @racket[txexpr-elements?] rather than a tagged X-expression. A convenience variant for use inside tag functions.
 
 @section{Block}

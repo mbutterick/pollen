@@ -20,7 +20,7 @@
           [(or (list? x) (hash? x) (vector? x)) (format "~v" x)] ; ok to convert datatypes
           [else (error)])))) ; but things like procedures should throw an error
 
-(define decode-proc-output-contract (or/c xexpr/c (non-empty-listof xexpr/c)))
+(define decode-proc-output-contract (or/c xexpr/c (listof xexpr/c)))
 
 
 (define (->list/tx x)
@@ -54,7 +54,7 @@
                       #:entity-proc ((or/c symbol? valid-char?) . -> . decode-proc-output-contract)
                       #:cdata-proc (cdata? . -> . decode-proc-output-contract)
                       #:exclude-tags (listof txexpr-tag?)
-                      #:exclude-attrs txexpr-attrs?) . ->* . (or/c xexpr/c (non-empty-listof xexpr/c)))
+                      #:exclude-attrs txexpr-attrs?) . ->* . (or/c xexpr/c (listof xexpr/c)))
   (let loop ([x tx-in])
     (cond
       [(txexpr? x) (let-values([(tag attrs elements) (txexpr->values x)]) 
@@ -120,7 +120,7 @@
                       #:entity-proc ((or/c symbol? valid-char?) . -> . decode-proc-output-contract)
                       #:cdata-proc (cdata? . -> . decode-proc-output-contract)
                       #:exclude-tags (listof txexpr-tag?)
-                      #:exclude-attrs txexpr-attrs?) . ->* . (or/c xexpr/c (non-empty-listof xexpr/c)))
+                      #:exclude-attrs txexpr-attrs?) . ->* . (or/c xexpr/c (listof xexpr/c)))
   
   (define temp-tag (gensym "temp-tag"))
   (define decode-result (decode `(temp-tag ,@elements)
