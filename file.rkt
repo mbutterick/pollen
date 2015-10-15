@@ -1,6 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base racket/syntax))
-(require racket/contract racket/path racket/match)
+(require racket/contract racket/path)
 (require (only-in racket/path filename-extension))
 (require "world.rkt" sugar/define sugar/file sugar/string sugar/coerce sugar/test)
 
@@ -16,13 +16,13 @@
   ;; use exists-proc to permit less strict matching.
   ;; for instance, maybe it's ok to find the source for the path.
   ((coerce/path? coerce/path?)((path? . -> . any/c)) . ->* . (or/c #f path?))
-    (parameterize ([current-directory (dirname (->complete-path starting-path))])
-      (let loop ([dir (current-directory)][path filename-to-find])
-        (and dir ; dir is #f when it hits the top of the filesystem
-             (let ([completed-path (path->complete-path path)]) 
-               (if (exists-proc completed-path)
-                   (simplify-path completed-path)
-                   (loop (dirname dir) (build-path 'up path))))))))
+  (parameterize ([current-directory (dirname (->complete-path starting-path))])
+    (let loop ([dir (current-directory)][path filename-to-find])
+      (and dir ; dir is #f when it hits the top of the filesystem
+           (let ([completed-path (path->complete-path path)]) 
+             (if (exists-proc completed-path)
+                 (simplify-path completed-path)
+                 (loop (dirname dir) (build-path 'up path))))))))
 
 
 ;; for files like svg that are not source in pollen terms,
@@ -81,24 +81,40 @@
  (check-equal? (escape-last-ext "foo.html") (->path "foo_html"))
  (check-equal? (escape-last-ext "foo.html" #\$) (->path "foo$html")))
 
-
+(define second cadr)
+(define third caddr)
+(define (last x) (car (reverse x)))
 (define+provide/contract (unescape-ext x [escape-char (world:current-extension-escape-char)])
-  ((pathish?) (char?) . ->* . coerce/path?)
+  ((coerce/string?) (char?) . ->* . coerce/path?)
   ;; if x has an escaped extension, unescape it.
-  (define xstr (->string x))
-  (define pat (regexp (format "(.*)[~a](.*)$" escape-char)))
-  (define results (regexp-match pat xstr))
-  (if results
-      (match-let ([(list _ filename ext) results])
-        (add-ext filename ext))
-      x))
+  (define-values (base name dir?) (split-path x))
+  (cond
+    [dir? x]
+    [else
+     (define x-parts (explode-path x))
+     (define filename (last x-parts))
+     (define escaped-extension-pat (pregexp (format "(.*)[~a](\\S+)$" escape-char)))
+     (define results (regexp-match escaped-extension-pat (->string filename)))
+     (if results
+         (let* ([filename-without-ext (second results)]
+                [ext (third results)]
+                [new-filename (add-ext filename-without-ext ext)])
+           (if (eq? base 'relative)
+               new-filename
+               (build-path base new-filename)))
+         x)]))
 
 
 (module-test-external
  (require sugar/coerce)
  (check-equal? (unescape-ext "foo") (->path "foo"))
+ (check-equal? (unescape-ext "foo_") (->path "foo_"))
+ (check-equal? (unescape-ext "foo_#$%") (->path "foo.#$%"))
  (check-equal? (unescape-ext "foo.html") (->path "foo.html"))
  (check-equal? (unescape-ext "foo_html") (->path "foo.html"))
+ (check-equal? (unescape-ext "foo_dir/bar") (->path "foo_dir/bar"))
+ (check-equal? (unescape-ext "foo_dir/bar.html") (->path "foo_dir/bar.html"))
+ (check-equal? (unescape-ext "foo_dir/bar_html") (->path "foo_dir/bar.html"))
  (check-equal? (unescape-ext "foo$html" #\$) (->path "foo.html"))
  (check-equal? (unescape-ext "foo_bar__html") (->path "foo_bar_.html"))
  (check-equal? (unescape-ext "foo$bar$$html" #\$) (->path "foo$bar$.html")))
