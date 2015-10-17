@@ -321,14 +321,14 @@ A parameter that defines the default pagetree used by pagetree navigation functi
 [p (or/c #f pagenodeish?)]
 [pagetree pagetree? (current-pagetree)])
 (or/c #f pagenode?)]
-Find the parent pagenode of @racket[_p] within @racket[_pagetree]. Return @racket[#f] if there isn't one.
+Find the parent pagenode of @racket[_p] within @racket[_pagetree]. Return @racket[#f] if there isn't one, or if you reach the root of the pagetree.
 
 @examples[#:eval my-eval
 (current-pagetree '(root (mama.html son.html daughter.html) uncle.html))
 (parent 'son.html)
-(parent "mama.html")
+(parent 'daughter.html)
+(parent "uncle.html")
 (parent (parent 'son.html))
-(parent (parent (parent 'son.html)))
 ]
 
 @defproc[

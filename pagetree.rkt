@@ -111,19 +111,28 @@
     (load-pagetree pagetree-source)))
 
 
-(define+provide/contract (parent pnish [pt (current-pagetree)])
-  (((or/c #f pagenodeish?)) (pagetree?) . ->* . (or/c #f pagenode?)) 
-  (and pt pnish
-       (let ([pagenode (->pagenode pnish)])
-         (if (member pagenode (map (λ(x) (if (list? x) (car x) x)) (cdr pt)))
-             (car pt)
-             (ormap (λ(x) (parent pagenode x)) (filter list? pt))))))
+(define+provide/contract (parent pnish [pt (current-pagetree)] #:allow-root [allow-root? #f])
+  (((or/c #f pagenodeish?)) (pagetree? #:allow-root boolean?) . ->* . (or/c #f pagenode?))
+  (define subtree? list?)
+  (define (topmost-node x) (if (subtree? x) (car x) x))
+  (define result
+    (and pt pnish
+         (let loop ([pagenode (->pagenode pnish)][subtree pt])
+           (define current-parent (car subtree))
+           (define current-children (cdr subtree))
+           (if (member pagenode (map topmost-node current-children))
+               current-parent
+               (ormap (λ(st) (loop pagenode st)) (filter subtree? current-children))))))
+  (if (eq? result (car pt))
+      (and allow-root? result)
+      result))
 
 
 (module-test-external
  (define test-pagetree `(pagetree-main foo bar (one (two three))))
  (check-equal? (parent 'three test-pagetree) 'two)
  (check-equal? (parent "three" test-pagetree) 'two)
+ (check-false (parent 'foo test-pagetree))
  (check-false (parent #f test-pagetree))
  (check-false (parent 'nonexistent-name test-pagetree)))
 
@@ -147,7 +156,7 @@
 
 (define+provide/contract (siblings pnish [pt (current-pagetree)])
   (((or/c #f pagenodeish?)) (pagetree?) . ->* . (or/c #f pagenodes?))  
-  (children (parent pnish pt) pt))
+  (children (parent #:allow-root #t pnish pt) pt))
 
 (module-test-external
  (define test-pagetree `(pagetree-main foo bar (one (two three))))
