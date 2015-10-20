@@ -86,9 +86,15 @@ th a:hover {
     color: #bbb;
 }
 
-a:active {
+a:active, span.indented-link-text:active {
     text-decoration: underline;
 }
+
+a.indented-link:active {
+    /* don't want to underline leading nbsps */
+    text-decoration: none;
+}
+
 
 
 tt {
