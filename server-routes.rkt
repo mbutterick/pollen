@@ -179,9 +179,16 @@
                                                 (cons #f `(a ((href ,filename)) ,(->string source-minus-ext) (span ((class "file-ext")) "." ,source-first-ext ,extra-row-string)))])]
                                             [else ; other non-source file
                                              (cons filename filename)])])
-                           (define link-tx (cdr main-cell))
-                           ;; indent link text by depth in pagetree
-                           (cons (car main-cell) `(,(get-tag link-tx) ,(cons '(class "indented-link") (get-attrs link-tx)) ,(make-string (* 2 indent-level) #\u00A0) (span ((class "indented-link-text")) ,@(get-elements link-tx)))))
+                           
+                           (cons (car main-cell)
+                                 (let ([cell-content (cdr main-cell)]
+                                       [indent-string (make-string (* 2 indent-level) #\u00A0)])
+                                   (cond
+                                     [(string? cell-content) (string-append indent-string cell-content)]
+                                     [(txexpr? cell-content)
+                                               ;; indent link text by depth in pagetree
+                                               `(,(get-tag cell-content) ,(cons '(class "indented-link") (get-attrs cell-content)) ,indent-string (span ((class "indented-link-text")) ,@(get-elements cell-content)))]
+                                     [else (error 'make-path-row (format "mysterious cell data: ~v" cell-content))]))))
                          
                          (cond ; 'in' cell
                            [source  (cons (format "in/~a" source) "in")]
