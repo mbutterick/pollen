@@ -311,7 +311,7 @@ To understand the necessary ingredients of a template, let's look at a simple on
 @fileblock["fallback.html"
 @codeblock[#:keep-lang-line? #f]{
 #lang pollen
-◊(->html (html (head (meta 'charset: "UTF-8")) (body doc)))
+◊(->html (html (head (meta #:charset "UTF-8")) (body doc)))
 }]
 
 It has three key ingredients. 
@@ -320,7 +320,7 @@ First, there's an X-expression that represents a basic HTML page:
 
 @codeblock[#:keep-lang-line? #f]{
 #lang pollen
-(html (head (meta 'charset: "UTF-8")) (body))
+(html (head (meta #:charset "UTF-8")) (body))
 }
 
 That X-expression is equivalent to this HTML string:
@@ -331,7 +331,7 @@ But within a template, we need to tell Pollen how we want to convert the X-expre
 
 @codeblock[#:keep-lang-line? #f]{
 #lang pollen
-◊(->html (html (head (meta 'charset: "UTF-8")) (body)))
+◊(->html (html (head (meta #:charset "UTF-8")) (body)))
 }
 
 Third, we need to include the content from our source file. By convention, every Pollen source file makes its output available through an exported variable named @code{doc}. A source file in preprocessor mode puts its text result in @code{doc}. And a source file in authoring mode puts its X-expression result in @code{doc}. So we put the variable @code{doc} inside the @code{body} tag.
@@ -340,7 +340,7 @@ Third, we need to include the content from our source file. By convention, every
 
 @codeblock[#:keep-lang-line? #f]{
 #lang pollen
-◊(->html (html (head (meta 'charset: "UTF-8")) (body doc)))
+◊(->html (html (head (meta #:charset "UTF-8")) (body doc)))
 }
 
 Under the hood, a template is just a partial program that relies on a set of variables defined by another source file. (In Racket, this set of variables is called a @defterm{lexical context}). So if you ran this template on its own, nothing would happen, because @code{doc} isn't defined. But when you run it in the context of another source file, it picks up the @code{doc} that's defined by that file.

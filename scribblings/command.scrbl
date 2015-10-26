@@ -705,20 +705,20 @@ Here's the hard way. You can type out your list of attributes in Racket format a
 @repl-output{'(title ((class "red") (id "first")) "The Beginning of the End")}
 
 
-But that's a lot of parentheses to think about. So here's the easy way. Anytime you use a tag function, there's a shortcut for inserting attributes. You can enter them as a series of symbol–string pairs between the Racket-argument brackets. The only caveat is that the symbols have to begin with a quote mark @litchar{'} and end with a colon @litchar{:}. So taken together, they look like this:
+But that's a lot of parentheses to think about. So here's the easy way. Anytime you use a tag function, there's a shortcut for inserting attributes. You can enter them as a series of @italic{keyword arguments} between the Racket-argument brackets. The only caveat is that the values for these keyword arguments have to be strings. So taken together, they look like this:
 
 @codeblock|{
 #lang pollen
-◊title['class: "red" 'id: "first"]{The Beginning of the End}
+◊title[#:class "red" #:id "first"]{The Beginning of the End}
 }|
 
 @repl-output{'(title ((class "red") (id "first")) "The Beginning of the End")}
 
-Racket arguments can be any valid Racket expressions. For instance, this will also work:
+The string arguments can be any valid Racket expressions that produce strings. For instance, this will also work:
 
 @codeblock|{
 #lang pollen
-◊title['class: (format "~a" (* 6 7)) 'id: "first"]{The Beginning of the End}
+◊title[#:class (format "~a" (* 6 7)) #:id "first"]{The Beginning of the End}
 }|
 
 @repl-output{'(title ((class "42") (id "first")) "The Beginning of the End")}
@@ -728,12 +728,12 @@ Since Pollen commands are really just Racket arguments underneath, you can use t
 @codeblock|{
 #lang pollen
 ◊(define name "Brennan")
-◊title['class: "red" 'id: ◊name]{The Beginning of the End}
+◊title[#:class "red" #:id ◊name]{The Beginning of the End}
 }|
 
 @repl-output{'(title ((class "read") (id "Brennan")) "The Beginning of the End")}
 
-You can also use this area for @italic{keyword arguments}. Keyword arguments can be used to provide options for a particular Pollen command, to avoid redundancy. Suppose that instead of using the @code{h1 ... h6} tags, you want to consolidate them into one command called @code{heading} and select the level separately. You can do this with a keyword, in this case @racket[#:level], which is passed as a Racket argument:
+When used in custom tag functions, keyword arguments don't have to represent attributes. Instead, they can be used to provide options for a particular Pollen command, to avoid redundancy. Suppose that instead of using the @code{h1 ... h6} tags, you want to consolidate them into one command called @code{heading} and select the level separately. You can do this with a keyword, in this case @racket[#:level], which is passed as a Racket argument:
 
 @codeblock|{
 #lang pollen

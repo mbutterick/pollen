@@ -14,9 +14,11 @@ Convenience functions for working with tags.
 
 @defproc[
 (make-default-tag-function
-[id txexpr-tag?])
+[id txexpr-tag?]
+[kw-attr-name keyword?]
+[kw-attr-value string?] ... ...)
 (-> txexpr?)]
-Make a default tag function for @racket[_id]. As arguments, a tag function takes an optional set of X-expression attributes (@racket[txexpr-attrs?]) followed by X-expression elements (@racket[txexpr-elements?]). From these, the tag function creates a tagged X-expression using @racket[_id] as the tag.
+Make a default tag function for @racket[_id]. The new tag function takes an optional set of X-expression attributes (@racket[txexpr-attrs?]) followed by X-expression elements (@racket[txexpr-elements?]). From these, the tag function creates a tagged X-expression using @racket[_id] as the tag.
 
 @examples[
 (require pollen/tag)
@@ -25,19 +27,36 @@ Make a default tag function for @racket[_id]. As arguments, a tag function takes
 (beaucoup '((id "greeting")) "Bonjour")
 ]
 
-Entering attributes this way can be cumbersome. So for convenience, a tag function provides an alternative: any symbol + string pairs at the front of your expression will be interpreted as attributes, if the symbols are followed by a colon. If you leave out the colon, the symbols will be interpreted as part of the content of the tag.
+Entering attributes this way can be cumbersome. So for convenience, the new tag function provides an alternative: any keyword arguments and their values will be interpreted as attributes.
 
 @examples[
 (require pollen/tag)
 (define beaucoup (make-default-tag-function 'em))
-(beaucoup 'id: "greeting" 'class: "large" "Bonjour")
-(code:comment @#,t{Don't forget the colons})
-(beaucoup 'id "greeting" 'class "large" "Bonjour")
-(code:comment @#,t{Don't forget to provide a value for each attribute})
-(beaucoup 'id: 'class: "large" "Bonjour")
+(beaucoup #:id "greeting" #:class "large" "Bonjour")
+]
+
+You can also provide keyword arguments to @racket[make-default-tag-function] itself, and they will become default attributes for every use of the tag function.
+
+@examples[
+(require pollen/tag)
+(define beaucoup-small (make-default-tag-function 'em #:class "small"))
+(beaucoup-small #:id "greeting" "Bonjour")
 ]
 
 Pollen also uses this function to provide the default behavior for undefined tags. See @racket[#%top].
+
+Note that while default tag functions are typically used to generate tagged X-expressions, they don't enforce any restrictions on input, so they also do not guarantee that you will in fact get a valid tagged X-expression as output. This is intentional — default tag functions are a coding convenience, and their output is likely to be processed by other tag functions, so raising the error here would be premature.
+
+@examples[
+(require pollen/tag)
+(define strange (make-default-tag-function 'div #:class "bizarre"))
+(code:comment @#,t{Invalid data types for elements})
+(strange + *)
+(code:comment @#,t{Double "class" attribute})
+(strange #:class "spooky")
+]
+
+
 
 @defproc[
 (split-attributes

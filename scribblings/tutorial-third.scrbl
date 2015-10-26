@@ -192,15 +192,15 @@ Then you have two options for adding attributes. The verbose way corresponds to 
 
 Each key–value pair is in parentheses, and then the list of pairs is within parentheses, with a @racket[quote] (@litchar{'}) at the front that signals that the text should be used literally.
 
-This involves some superfluous typing, however, so Pollen also supports an abbreviated syntax for attributes:
+This involves some superfluous typing, however, so Pollen also allows you to specify attributes with keyword arguments:
 
 @fileblock["article.html.pm" @codeblock{
 #lang pollen
  
-◊span['class:"author" 'id:"primary" 'living:"true"]{Prof. Leonard}
+◊span[#:class "author" #:id "primary" #:living "true"]{Prof. Leonard}
 }]
 
-In this form, each attribute key starts with a quote mark @litchar{'} and ends with a colon @litchar{:}. As before, the attribute value is in quotation marks.
+In this form, each attribute name is prefixed with @litchar{#:}, indicating a keyword argument. As before, the attribute value is in quotation marks following the keyword name.
 
 Both of these forms will produce the same X-expression:
 
@@ -213,7 +213,7 @@ Now that you know how to make tags and attributes, you might wonder whether Poll
 
 You could write it in Pollen markup like so:
 
-@repl-output{◊div['class:"red" style:"font-size:150%"]{Important ◊em{News}}}
+@repl-output{◊div[#:class "red" #:style "font-size:150%"]{Important ◊em{News}}}
 
 And then just convert it (using the @racket[->html] function) into the HTML above. Thus, the tags you already know (and love?) can be used in Pollen markup, but with fewer keystrokes and cruft.
 
