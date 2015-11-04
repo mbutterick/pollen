@@ -1,0 +1,10 @@
+#lang pollen/mode racket/base
+(require rackunit racket/string)
+
+;; This file is named .foo so that `raco test` doesn't try to run it automatically.
+;; (the `test-omit` flag doesn't work in 6.0)
+
+(define (proc)
+    (apply string-join (string-split ∆string-append{foo bar zam}) ∆'{X}))
+
+(provide proc)

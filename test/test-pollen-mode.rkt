@@ -1,7 +1,10 @@
-#lang pollen/mode racket/base
-(require rackunit racket/string)
+#lang at-exp racket/base
+(require rackunit pollen/world racket/runtime-path)
 
-(define (proc)
-    (apply string-join (string-split ◊string-append{foo bar zam}) ◊'{X}))
+;; define-runtime-path only allowed at top level
+(define-runtime-path test-dir "data/pollen-mode")
+(define-runtime-path test-source "data/pollen-mode/test-pollen-mode.foo")
 
-(check-equal? (proc) "fooXbarXzam")
+(parameterize ([current-directory test-dir]
+               [world:current-project-root test-dir])
+  (check-equal? ((dynamic-require test-source 'proc)) "fooXbarXzam"))
