@@ -133,7 +133,7 @@ Here are a few examples of correct Pollen-mode commands:
   #lang pollen
   ◊variable-name
   ◊tag{Text inside the tag.}
-  ◊tag['attr: "value"]{Text inside the tag}
+  ◊tag[#:attr "value"]{Text inside the tag}
   ◊get-customer-id["Brennan Huff"]
   ◊tag{His ID is ◊get-customer-id["Brennan Huff"].}
 }
@@ -144,7 +144,7 @@ And some incorrect examples:
   #lang pollen
   ◊tag {Text inside the tag.} ; space between first and second parts
   ◊tag[Text inside the tag] ; text argument needs to be within braces
-  ◊tag{Text inside the tag}['attr: "value"] ; wrong order 
+  ◊tag{Text inside the tag}[#:attr "value"] ; wrong order 
 }
 
 The next section describes each of these parts in detail.
@@ -524,9 +524,9 @@ To make a meta, you create a tag with the special @code{define-meta} name. Then 
 #lang pollen
 
 ◊define-meta[dog]{Roxy} ; Pollen-mode syntax
-◊some-tag['key: "value"]{Normal tag}
+◊some-tag[#:key "value"]{Normal tag}
 ◊(define-meta cat "Chopper") ; equivalent Racket-mode syntax
-◊some-tag['key: "value"]{Another normal tag}
+◊some-tag[#:key "value"]{Another normal tag}
 }
 
 When you run a source file with metas in it, two things happen. First, the metas are removed from the output:
@@ -553,9 +553,9 @@ Still, you can override this too:
 #lang pollen
 
 ◊define-meta[dog]{Roxy}
-◊some-tag['key: "value"]{Normal tag}
+◊some-tag[#:key "value"]{Normal tag}
 ◊(define-meta cat "Chopper")
-◊some-tag['key: "value"]{Another normal tag}
+◊some-tag[#:key "value"]{Another normal tag}
 ◊(define-meta here-path "tesseract")
 }
 

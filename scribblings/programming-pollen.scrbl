@@ -44,7 +44,7 @@ A tag with attributes and content:
 ◊div['((attr1 "val1")(attr2 "val2"))]{My nice div.}
 
 A tag with attributes and content (alternate syntax):
-◊div['attr1: "val1" 'attr2: "val2"]{My nice div.}
+◊div[#:attr1 "val1" #:attr2 "val2"]{My nice div.}
 }
 
 Let's also recall that these commands can be written in Racket mode equivalently:
@@ -188,7 +188,7 @@ Detecting attributes in an argument list can be tricky because a) the tag may or
   (define-values (attributes elements) (split-attributes parts))
   `(extra ,attributes (big ,@"@"elements)))
 
-I want to attend ◊em['key: "value"]{RacketCon}.}]
+I want to attend ◊em[#:key "value"]{RacketCon}.}]
 
 This will move the @racket[elements] inside the @racket[big] tag, and attach the @racket[attributes] to the @racket[extra] tag:
 

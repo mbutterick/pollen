@@ -76,7 +76,7 @@ Because @link["https://highlightjs.org/"]{Highlight.js} is browser-based, it doe
 
 @codeblock{
 #lang pollen/markup
-◊pre{◊code['class: "python"]{
+◊pre{◊code[#:class "python"]{
 for x in range(3):
     print x
 }}}}

@@ -71,5 +71,5 @@ Helper function for custom tag functions. Take a rest argument that possibly inc
   (values attrs elements))
 (tag "Hello world")
 (tag '((key "value")) "Hello world")
-(tag 'key: "value" "Hello world")
+(tag #:key "value" "Hello world")
 ]
