@@ -4,7 +4,9 @@
 ;; This file is named .foo so that `raco test` doesn't try to run it automatically.
 ;; (the `test-omit` flag doesn't work in 6.0)
 
+;; pollen/mode only works with default ◊ command char, even though it's overridden in pollen.rkt here
+
 (define (proc)
-    (apply string-join (string-split ∆string-append{foo bar zam}) ∆'{X}))
+    (apply string-join (string-split ◊string-append{foo bar zam}) ◊'{X}))
 
 (provide proc)

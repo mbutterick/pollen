@@ -931,14 +931,15 @@ Here, both @tt{(home-link)} and @tt{(home-link-pollen-mode)} will produce the sa
 
 @terminal{'(a ((href "index.html")) "Click to go home")}
 
-
 Of course, you can use @racketmodname[pollen/mode] in any Racket source file, not just @filepath{pollen.rkt}. 
 
-Keep in mind that @racketmodname[pollen/mode] is just a syntactic convenience. It doesn't change any of the underlying semantics of your Racket source file. Your Pollen-mode commands are being translated into Racket commands and compiled along with everything else.
+@bold{Major caveat}: @racketmodname[pollen/mode] only works with Pollen's default command character, namely the lozenge (@litchar{◊}). If you've overridden this command character in your @filepath{pollen.rkt} file, your custom command character will work everywhere @italic{except} in @racketmodname[pollen/mode]. This limitation is necessary to prevent the intractable situation where @filepath{pollen.rkt} relies on @racketmodname[pollen/mode], but @racketmodname[pollen/mode] relies on a config setting in @filepath{pollen.rkt}.
+
+Also keep in mind that @racketmodname[pollen/mode] is just a syntactic convenience. It doesn't change any of the underlying semantics of your Racket source file. Your Pollen-mode commands are being translated into Racket commands and compiled along with everything else.
 
 Another good way to use Pollen-mode commands in Racket is for unit tests with @racketmodname[rackunit]. With @racketmodname[pollen/mode], you can write your unit tests in Pollen mode or Racket mode (or mix them).
 
-@margin-note{Unit tests are little one-line tests you put into your code to verify it does what you expect. You do this with the @racketmodname[rackunit] library, which is beloved by all Racket programmers. For more, see @secref["quick-start" #:doc '(lib "rackunit/scribblings/rackunit.scrbl")].}
+@margin-note{Unit tests are little one-line tests you put into your code to verify that it does what you expect. You make these with the @racketmodname[rackunit] library, which is beloved by all Racket programmers. For more, see @secref["quick-start" #:doc '(lib "rackunit/scribblings/rackunit.scrbl")].}
 
 @fileblock["pollen.rkt" @codeblock|{
 #lang pollen/mode racket/base

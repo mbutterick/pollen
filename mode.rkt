@@ -43,7 +43,7 @@ so that everything will work correctly in 6.0.
         [else (other-get-info key default)]))))
 
 (module* reader racket/base
-  (require syntax/module-reader pollen/world
+  (require syntax/module-reader
            (only-in (submod ".." at-reader) make-at-readtable))
   
   (provide (rename-out [at-read read]
@@ -54,7 +54,7 @@ so that everything will work correctly in 6.0.
     (λ args
       (parameterize ([current-readtable (make-at-readtable #:datum-readtable 'dynamic
                                                            #:command-readtable 'dynamic
-                                                           #:command-char (world:current-command-char))])
+                                                           #:command-char (dynamic-require 'pollen/world 'world:command-char))])
         (apply p args))))
   
   (define-values (at-read at-read-syntax at-get-info)
