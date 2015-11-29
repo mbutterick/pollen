@@ -1,5 +1,5 @@
 #lang racket/base
-(require racket/path racket/file compiler/cm file/cache sugar/coerce sugar/list "project.rkt" "rerequire.rkt" "cache-ns.rkt" "debug.rkt" "file.rkt" racket/place "world.rkt")
+(require racket/path racket/file compiler/cm file/cache sugar/coerce sugar/list "project.rkt" "rerequire.rkt" "debug.rkt" "file.rkt" racket/place "world.rkt")
 
 ;; The cache is a hash with paths as keys.
 ;; The cache values are also hashes, with key/value pairs for that path.

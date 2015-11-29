@@ -1,7 +1,7 @@
 #lang racket/base
 (require racket/file racket/path compiler/cm)
 (require sugar/test sugar/define sugar/file)
-(require "file.rkt" "cache.rkt" "debug.rkt" "pagetree.rkt" "project.rkt" "template.rkt" "rerequire.rkt" "cache-ns.rkt" "world.rkt")
+(require "file.rkt" "cache.rkt" "debug.rkt" "pagetree.rkt" "project.rkt" "template.rkt" "rerequire.rkt" "world.rkt")
 
 ;; used to track renders according to modification dates of component files
 (define mod-date-hash (make-hash))
