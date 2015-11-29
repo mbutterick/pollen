@@ -1,6 +1,6 @@
 #lang racket/base
-(require racket/syntax syntax/strip-context)
-(require (only-in scribble/reader make-at-reader) pollen/world pollen/project racket/list)
+(require racket/syntax syntax/strip-context racket/class)
+(require (only-in scribble/reader make-at-reader) pollen/file pollen/world pollen/project racket/list)
 (provide define+provide-reader-in-mode (all-from-out pollen/world))
 
 
@@ -58,7 +58,6 @@
                      'module-language
                      `#(pollen/language-info get-language-info ,reader-here-path)))) ; reader-here-path acts as "top" runtime config
 
-
 (define-syntax-rule (define+provide-reader-in-mode mode)
   (begin
     (define reader-mode mode)
@@ -68,10 +67,17 @@
       (λ (key default)
         (case key
           [(color-lexer)
-           (define make-scribble-inside-lexer2
+           (define my-make-scribble-inside-lexer
              (dynamic-require 'syntax-color/scribble-lexer 'make-scribble-inside-lexer (λ () #f)))
-           (cond [make-scribble-inside-lexer2
-                  (make-scribble-inside-lexer2 #:command-char #\◊)]
+           (cond [my-make-scribble-inside-lexer
+                  (define definitions-frame (object-name in))
+                  (define maybe-source-path (with-handlers ([exn:fail? (λ(exn) #f)])
+                                              (send definitions-frame get-filename))) ; will be #f if unsaved file
+                  (define my-command-char (if maybe-source-path
+                                              (parameterize ([current-directory (dirname maybe-source-path)])
+                                                (world:current-command-char))
+                                              world:command-char))
+                  (my-make-scribble-inside-lexer #:command-char my-command-char)]
                  [else default])]
           [else default])))
     (provide (rename-out [custom-read read] [custom-read-syntax read-syntax]) get-info)))
