@@ -37,6 +37,10 @@ But don't knock the lozenge till you try it.
 
 @subsection{Lozenge helpers}
 
+@subsubsection{DrRacket}
+
+When you use DrRacket, you'll see a button in the toolbar that says @onscreen{Insert command char}. This will insert the lozenge (or whatever command character you've defined for your project).
+
 
 @subsubsection{AHK script}
 

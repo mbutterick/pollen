@@ -1,6 +1,6 @@
 #lang racket/base
 (require racket/syntax syntax/strip-context racket/class)
-(require (only-in scribble/reader make-at-reader) pollen/file pollen/world pollen/project racket/list)
+(require (only-in scribble/reader make-at-reader) pollen/world pollen/project racket/list)
 (provide define+provide-reader-in-mode (all-from-out pollen/world))
 
 
@@ -64,20 +64,28 @@
     (define custom-read-syntax (make-custom-read-syntax reader-mode))
     (define custom-read (make-custom-read custom-read-syntax))
     (define (get-info in mod line col pos)
-      (λ (key default)
-        (case key
-          [(color-lexer)
-           (define my-make-scribble-inside-lexer
-             (dynamic-require 'syntax-color/scribble-lexer 'make-scribble-inside-lexer (λ () #f)))
-           (cond [my-make-scribble-inside-lexer
-                  (define definitions-frame (object-name in))
-                  (define maybe-source-path (with-handlers ([exn:fail? (λ(exn) #f)])
-                                              (send definitions-frame get-filename))) ; will be #f if unsaved file
-                  (define my-command-char (if maybe-source-path
-                                              (parameterize ([current-directory (dirname maybe-source-path)])
-                                                (world:current-command-char))
-                                              world:command-char))
-                  (my-make-scribble-inside-lexer #:command-char my-command-char)]
-                 [else default])]
-          [else default])))
+      ;; DrRacket caches source file information per session,
+      ;; so we can do the same to avoid multiple searches for the command char.
+      (let ([command-char-cache (make-hash)])
+        (λ (key default)
+          (case key
+            [(color-lexer drracket:toolbar-buttons) ; only do source-path searching if we have one of these keys
+             (define maybe-source-path (with-handlers ([exn:fail? (λ(exn) #f)])
+                                         ;; Robert Findler does not endorse `get-filename` here,
+                                         ;; because it's sneaky and may not always work.
+                                         ;; OTOH Scribble relies on it, so IMO it's highly unlikely to change.
+                                         (let ([maybe-definitions-frame (object-name in)])
+                                           (send maybe-definitions-frame get-filename)))) ; will be #f if unsaved file
+             (define my-command-char (hash-ref! command-char-cache maybe-source-path (λ _ (world:current-command-char maybe-source-path))))
+             (case key
+               [(color-lexer)
+                (define my-make-scribble-inside-lexer
+                  (dynamic-require 'syntax-color/scribble-lexer 'make-scribble-inside-lexer (λ () #f)))
+                (cond [my-make-scribble-inside-lexer
+                       (my-make-scribble-inside-lexer #:command-char my-command-char)]
+                      [else default])]
+               [(drracket:toolbar-buttons)
+                (define my-make-drracket-buttons (dynamic-require 'pollen/drracket-buttons 'make-drracket-buttons))
+                (my-make-drracket-buttons my-command-char)])]
+            [else default]))))
     (provide (rename-out [custom-read read] [custom-read-syntax read-syntax]) get-info)))
