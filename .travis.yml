@@ -12,7 +12,7 @@ env:
     - RACKET_VERSION=6.0
     - RACKET_VERSION=6.1
     - RACKET_VERSION=6.2
-    - RACKET_VERSION=6.2.1
+    - RACKET_VERSION=6.3
     - RACKET_VERSION=HEAD
 
 # You may want to test against certain versions of Racket, without
