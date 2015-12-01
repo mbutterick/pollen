@@ -186,6 +186,9 @@ Suppose you want to change the inset to 30%. Without a preprocessor, you'd have 
 The @code{◊} character is called a @italic{lozenge}. In Pollen, the lozenge is a special character used to denote anything that Pollen should interpret as a command (rather than plain text). 
 
 @margin-note{How to type a lozenge:
+If you're using DrRacket, click the @onscreen{Insert command char} button on the toolbar to insert a lozenge in your code.
+
+If you're not:
 @(linebreak)@bold{Mac}: option + shift + V
 @(linebreak)@bold{Windows}: holding down alt, type 9674 on the num pad
 @(linebreak)@bold{Ubuntu}: ctrl + shift + U, then 25CA}
