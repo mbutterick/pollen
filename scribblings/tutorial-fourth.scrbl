@@ -1,6 +1,6 @@
 #lang scribble/manual
 
-@(require scribble/eval racket/date (for-label racket/file racket/system pollen/decode plot pollen/world pollen/tag racket/base pollen/template txexpr racket/list racket/string))
+@(require scribble/eval racket/date (for-label racket/file racket/system pollen/decode plot pollen/world pollen/tag racket/base pollen/template txexpr racket/list racket/string pollen/render))
 @(require "mb-tools.rkt")
 
 @(define my-eval (make-base-eval))
@@ -200,7 +200,7 @@ The goal of this whole endeavor is to derive multiple output files from one sour
 ◊(apply string-append (filter string? (flatten doc)))
 }|]
 
-What we're doing here is converting the X-expression to text in a smarter way. We use @racket[local-require] to bring in @racket[racket/list] so we can use the @racket[flatten] function. Then, to understand what the next line does, just read it from the inside out: ``Take the @racket[doc] export from the source file (which is an X-expression), @racket[flatten] it into a list, @racket[filter] out everything that's not a @racket[string?] (creating a list that's only strings) and @racket[apply] the @racket[string-append] function to these, resulting in one big string.'' Which is exactly what we need for a plain-text file.
+What we're doing here is converting the X-expression to text in a smarter way. We use @racket[local-require] to bring in @racket[racket/list] so we can use the @racket[flatten] function. Then, to understand what the next line does, just read it from the inside out: ``Take the @racket[doc] export from the source file (which is an X-expression), @racket[flatten] it into a list, @racket[filter] with @racket[string?] (creating a list that's only strings) and @racket[apply] the @racket[string-append] function to these, resulting in one big string.'' Which is exactly what we need for a plain-text file.
 
 When you return to the project server and click on @filepath{cv.txt.pm}, you'll see the result:
 
@@ -211,6 +211,7 @@ Today is @(date->string (current-date)). I really want this job.}
 
 So far, so good. We've got legible plain text. But we've completely lost our formatting. Let's fix that.
 
+@margin-note{Have you ever used @code{◊(define-meta template ...)} to specify a  template for a particular source file? You can still use this in a multiple-output project — just supply a list of templates rather than a single template. See @racket[get-template-for].}
 
 @subsubsection{Branching tag functions}
 

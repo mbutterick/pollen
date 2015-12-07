@@ -77,7 +77,18 @@ Note that @racket[_pagetree] or @racket[_pagetree_source] is used strictly as a 
 Find a template file for @racket[_source-path], with the following priority:
 @itemlist[#:style 'ordered
 
-@item{If the @racket[metas] for @racket[_source-path] have a key for @code[(format "~a" world:template-meta-key)], then use the value of this key.}
+@item{If the @racket[metas] for @racket[_source-path] have a key for @code[(format "~a" world:template-meta-key)], then use the value of this key, e.g. —
+
+@code{◊(define-meta template "my-template.html")}
+
+If your project has @seclink["fourth-tutorial"]{multiple output targets}, you can supply a list of templates, and the template with an extension matching the current output target will be selected automatically, e.g. —
+
+@code{◊(define-meta template (list "my-template.html" "my-template.txt" "my-template.pdf"))}
+
+
+
+
+}
 
 @item{If this key doesn't exist, or refers to a nonexistent file, look for a default template with the name @code[(format "~a.[output extension]" world:default-template-prefix)]. Meaning, if @racket[_source-path] is @code[(format "intro.html.~a" world:markup-source-ext)], the output path would be @code["intro.html"], so the default template would be @code[(format "~a.html" world:default-template-prefix)]. Look for this default template in the same directory as the source file, and then search upwards within successive parent directories. (Corollary: a default template in the project root will apply to all files in the project unless overridden within a subdirectory.)}
 
