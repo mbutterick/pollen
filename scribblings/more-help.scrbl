@@ -18,9 +18,9 @@ For general tips and how-to questions, use the @link["https://groups.google.com/
 @link["https://github.com/basus/pollen-mode"]{Pollen mode}: Emacs mode for Pollen by Shrutarshi Basu
 
 
-@section{Can I see the source for Practical Typography?}
+@section{Can I see the source for Practical Typography or Typography for Lawyers?}
 
-Yes, in fact you can see the source for something better — @link["http://typographyforlawyers.com/"]{Typography for Lawyers}. In terms of content, TFL was originally the basis of Practical Typography. But in terms of code, this new TFL website is essentially a clone of Practical Typography, but rewritten to be clearer and more instructive, with extensive source comments. [@link["https://github.com/mbutterick/pollen-tfl"]{source}]
+Yes, the source for @link["http://typographyforlawyers.com/"]{Typography for Lawyers} is available. In terms of content, TFL was originally the basis of Practical Typography. But in terms of code, this new TFL website is essentially a clone of Practical Typography, but rewritten to be clearer and more instructive, with extensive source comments. [@link["https://github.com/mbutterick/pollen-tfl"]{source}]
 
 @section{More projects & guides}
 
