@@ -17,7 +17,12 @@ For general tips and how-to questions, use the @link["https://groups.google.com/
 
 @link["https://github.com/basus/pollen-mode"]{Pollen mode}: Emacs mode for Pollen by Shrutarshi Basu
 
-@section{Sample projects & guides}
+
+@section{Can I see the source for Practical Typography?}
+
+Yes, in fact you can see the source for something better — @link["http://typographyforlawyers.com/"]{Typography for Lawyers}. In terms of content, TFL was originally the basis of Practical Typography. But in terms of code, this new TFL website is essentially a clone of Practical Typography, but rewritten to be clearer and more instructive, with extensive source comments. [@link["https://github.com/mbutterick/pollen-tfl"]{source}]
+
+@section{More projects & guides}
 
 @link["http://mstill.io"]{mstill.io blog} by Malcolm Still [@link["https://github.com/malcolmstill/mstill.io"]{source}]
 
@@ -28,7 +33,3 @@ For general tips and how-to questions, use the @link["https://groups.google.com/
 @link["http://con.racket-lang.org/"]{RacketCon 2015 website} by MB [@link["https://github.com/racket/racket-lang-org/tree/master/rcon/2015-mb"]{source}]
 
 @link["http://unitscale.com/mb/technique/dual-typed-untyped-library.html"]{Making a dual typed / untyped Racket library} by MB [source linked at bottom of page]
-
-@section{Can I see the source for Practical Typography?}
-
-Eventually. I'm working on tidying it up & adding comments so it's a worthy educational tool. In the meantime, the @seclink["third-tutorial"]{third tutorial} covers all the important techniques used in PT (the rest is mostly snazzy typography; read PT itself to learn about that).
