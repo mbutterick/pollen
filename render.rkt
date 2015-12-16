@@ -156,8 +156,13 @@
           ;; it will foul up the render
           ;; so recompile first to avoid "can't redefine a constant" errors.
           (managed-compile-zo source-path)
+          ;; scribble/lp files have their doc export in a 'doc submodule, so check both locations
+          (define doc (dynamic-require source-path 'doc
+                                       (λ _ (dynamic-require `(submod ,source-path doc) 'doc
+                                                             (λ _ #f)))))
           ;; BTW this next action has side effects: scribble will copy in its core files if they don't exist.
-          (scribble-render (list (dynamic-require source-path 'doc)) (list source-path))))
+          (when doc
+            (scribble-render (list doc) (list source-path)))))
   (define result (file->string (->output-path source-path)))
   (delete-file (->output-path source-path)) ; because render promises the data, not the side effect
   result)
