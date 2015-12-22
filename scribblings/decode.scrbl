@@ -351,11 +351,22 @@ In @racket[_str], convert three hyphens to an em dash, and two hyphens to an en 
 
 
 @defproc[
+(merge-newlines
+[elements (listof xexpr?)])
+(listof xexpr?)]
+Within @racket[_elements], merge sequential newline characters (@racket["\n"]) into a single whitespace element. Helper function used by @racket[detect-paragraphs].
+
+@examples[#:eval my-eval
+(merge-newlines '(p "\n" "\n" "foo" "\n" "\n\n" "bar" 
+  (em "\n" "\n" "\n")))]
+
+
+@defproc[
 (detect-linebreaks
-[tagged-xexpr-elements txexpr-elements?]
+[tagged-xexpr-elements (listof xexpr?)]
 [#:separator linebreak-sep string? (world:current-linebreak-separator)]
 [#:insert linebreak xexpr? '(br)])
-txexpr-elements?]
+(listof xexpr?)]
 Within @racket[_tagged-xexpr-elements], convert occurrences of @racket[_linebreak-sep] (@racket["\n"] by default) to @racket[_linebreak], but only if @racket[_linebreak-sep] does not occur between blocks (see @racket[block-txexpr?]). Why? Because block-level elements automatically display on a new line, so adding @racket[_linebreak] would be superfluous. In that case, @racket[_linebreak-sep] just disappears.
 
 @examples[#:eval my-eval
@@ -365,12 +376,12 @@ Within @racket[_tagged-xexpr-elements], convert occurrences of @racket[_linebrea
 
 @defproc[
 (detect-paragraphs
-[elements txexpr-elements?]
+[elements (listof xexpr?)]
 [#:separator paragraph-sep string? (world:current-paragraph-separator)]
 [#:tag paragraph-tag symbol? 'p]
-[#:linebreak-proc linebreak-proc (txexpr-elements? . -> . txexpr-elements?) detect-linebreaks]
+[#:linebreak-proc linebreak-proc ((listof xexpr?) . -> . (listof xexpr?)) detect-linebreaks]
 [#:force? force-paragraph? boolean? #f])
-txexpr-elements?]
+(listof xexpr?)]
 Find paragraphs within @racket[_elements] and wrap them with @racket[_paragraph-tag]. Also handle linebreaks using @racket[detect-linebreaks].
 
 What counts as a paragraph? Any @racket[_elements] that are either a) explicitly set apart with @racket[_paragraph-sep], or b) adjacent to a @racket[block-txexpr?] (in which case the paragraph-ness is implied).

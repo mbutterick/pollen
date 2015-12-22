@@ -313,17 +313,17 @@
   (define not-block? (λ(i) (not (block-txexpr? i))))
   (filter-not empty?
               (for/list ([i (in-range (len xc))])
-                (let ([item (get xc i)])
-                  (cond
-                    ;; skip first and last
-                    [(or (= i 0) (= i (sub1 (len xc)))) item]
-                    [(equal? item newline)                   
-                     (match (get xc (- i 1) (+ i 2)) ; a three-element slice with x[i] in the middle
-                       ;; only convert if neither adjacent tag is a block
-                       ;; (because blocks automatically force a newline before & after)
-                       [(list (? not-block?) newline (? not-block?)) linebreak]
-                       [else empty])] ; otherwise delete
-                    [else item])))))
+                        (let ([item (get xc i)])
+                          (cond
+                            ;; skip first and last
+                            [(or (= i 0) (= i (sub1 (len xc)))) item]
+                            [(equal? item newline)                   
+                             (match (get xc (- i 1) (+ i 2)) ; a three-element slice with x[i] in the middle
+                               ;; only convert if neither adjacent tag is a block
+                               ;; (because blocks automatically force a newline before & after)
+                               [(list (? not-block?) newline (? not-block?)) linebreak]
+                               [else empty])] ; otherwise delete
+                            [else item])))))
 
 (module-test-external
  (check-equal? (detect-linebreaks '("foo" "\n" "bar")) '("foo" (br) "bar"))
@@ -366,39 +366,30 @@
   (and (string? x) (regexp-match paragraph-pattern x)))
 
 
-
-(define (newline? x)
-  (and (string? x) (equal? (world:current-newline) x)))
-(define (not-newline? x)
-  (not (newline? x)))
-
-(define (do-merge xs [acc '()])
-  (if (empty? xs)
-      acc
-      ;; Try to peel the newlines off the front.
-      (let-values ([(leading-newlines remainder) (splitf-at xs newline?)])
-        (if (not (empty? leading-newlines)) ; if you got newlines ...
-            ;; combine them into a string and append them to the accumulator, 
-            ;; and recurse on the rest
-            (do-merge remainder (append acc (list (apply string-append leading-newlines))))
-            ;; otherwise peel off elements up to the next newline, append them to accumulator,
-            ;; and recurse on the rest
-            (do-merge (dropf remainder not-newline?) 
-                      (append acc (takef remainder not-newline?)))))))
-
-
 ;; Find adjacent newline characters in a list and merge them into one item
-;; Scribble, by default, makes each newline a separate list item
-;; In practice, this is worthless.
+;; Scribble, by default, makes each newline a separate list item.
 (define+provide/contract (merge-newlines x)
-  (txexpr-elements? . -> . txexpr-elements?)  
-  (cond
-    [(list? x) (do-merge (map merge-newlines x))]
-    [else x]))
+  (txexpr-elements? . -> . txexpr-elements?)
+  
+  (define (newlines? x)
+    (and (string? x)
+         (let ([newline-pat (regexp (format "^~a+$" (world:current-newline)))])
+           (regexp-match newline-pat x))))
+  
+  (define (merge-if-newlines xs)
+    (if (newlines? (car xs))
+        (list (string-append* xs))
+        xs))
+  
+  (let loop ([x x])
+    (if (list? x)
+        (let ([xs (map loop x)])
+          (append-map merge-if-newlines (slicef xs newlines?)))
+        x)))
 
 (module-test-external
- (check-equal? (merge-newlines '(p "\n" "foo" "\n" "\n" "bar" (em "\n" "\n" "\n"))) 
-               '(p "\n" "foo" "\n\n" "bar" (em "\n\n\n"))))
+ (check-equal? (merge-newlines '(p "\n" "\n" "foo" "\n" "\n\n" "bar" (em "\n" "\n" "\n"))) 
+               '(p "\n\n" "foo" "\n\n\n" "bar" (em "\n\n\n"))))
 
 
 
