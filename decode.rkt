@@ -365,12 +365,10 @@
   (define paragraph-pattern (pregexp (format "^~a+$" sep)))
   (and (string? x) (regexp-match paragraph-pattern x)))
 
-
 ;; Find adjacent newline characters in a list and merge them into one item
 ;; Scribble, by default, makes each newline a separate list item.
 (define+provide/contract (merge-newlines x)
   (txexpr-elements? . -> . txexpr-elements?)
-  
   (define (newlines? x)
     (and (string? x)
          (let ([newline-pat (regexp (format "^~a+$" (world:current-newline)))])
@@ -382,12 +380,14 @@
         xs))
   
   (let loop ([x x])
-    (if (list? x)
+    (if (pair? x)
         (let ([xs (map loop x)])
           (append-map merge-if-newlines (slicef xs newlines?)))
         x)))
 
 (module-test-external
+ (require racket/list)
+ (check-equal? (merge-newlines empty) empty)
  (check-equal? (merge-newlines '(p "\n" "\n" "foo" "\n" "\n\n" "bar" (em "\n" "\n" "\n"))) 
                '(p "\n\n" "foo" "\n\n\n" "bar" (em "\n\n\n"))))
 
