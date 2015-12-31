@@ -465,64 +465,34 @@ But more often, you're going to want to use functions defined elsewhere, and sto
 
 Any function in Racket's extensive libraries can be called by loading the library with the @racket[require] command, which will make all its functions and constants available with the usual Pollen command syntax:
 
-@fileblock["article.html.pm" @codeblock{
+@fileblock["article.html.pp" @codeblock{
 #lang pollen
-
-◊(require racket/math)
-
-Pi is close to ◊|pi|.
-The hyperbolic sine of pi is close to ◊(sinh pi).
+◊(require racket/math) 
+Pi is close to ◊(number->string pi). 
+The hyperbolic sine of pi is close to ◊(number->string (sinh pi)).
 }]
 
 The result:
 
-@repl-output{'(root "Pi is close to " 3.141592653589793 "." "\n" "The hyperbolic sine of pi is close to " 11.548739357257748 ".")}
+@repl-output{
+'(root "Pi is close to " "3.141592653589793" "." "\n" "The hyperbolic sine of pi is close to " "11.548739357257748" ".")}
 
-One caveat — you're still in a Pollen markup file, so the return value of whatever function you call has to produce a string or an X-expression, so it can be merged into the document. @margin-note*{This is similar to the restriction introduced in the @seclink["Setting_up_a_preprocessor_source_file"]{first tutorial} where functions used in preprocessor files had to produce text.}
-Pollen won't stop you from calling a function that returns an incompatible value, like @racket[plot], which returns a bitmap image: 
+One caveat — you're still in a Pollen markup file, so the return value of whatever function you call has to produce a string or an X-expression, so it can be merged into the document. That's why we have @racket[number->string] wrapping the numerical values. @margin-note*{This is similar to the restriction introduced in the @seclink["Setting_up_a_preprocessor_source_file"]{first tutorial} where functions used in preprocessor files had to produce text.}
 
-@fileblock["article.html.pm" @codeblock{
-#lang pollen
-
-◊(require math plot)
-
-Here's a sine wave:
-◊(plot (function sin (- pi) pi #:label "y = sin(x)"))
-}]
-
-But it won't work when you try to run it in DrRacket or load it in the project server.
-
-It would be fine, however, to call a different kind of @racket[plot] function that returned an SVG result, because any XML-ish data structure can be converted to an X-expression. 
-
-@margin-note{Super web nerds also know that binary data can be converted into XML-ish form by encoding the file as a base64 data URL — but if you know what I'm talking about, then you don't need my help to try it.}
-
-For functions that don't return a string or an X-expression, you can always make a conversion by hand. For instance, consider @racket[range], a Racket function that returns a list of integers:
+If your functions produce incompatible results, you'll get an error. For instance, look what happens when we remove @racket[number->string] from the example above.
 
 @fileblock["article.html.pm" @codeblock{
 #lang pollen
-
-◊(require racket/list)
-A list of integers: ◊(range 5)
+◊(require racket/math)
+Pi is close to ◊|pi|. 
+The hyperbolic sine of pi is close to ◊(sinh pi).
 }]
 
 This will produce an error in DrRacket:
 
 @errorblock{
-pollen markup error: in '(root "A list of integers: " (0 1 2 3 4)), '(0 1 2 3 4) is not a valid element (must be txexpr, string, symbol, XML char, or cdata)
-}
+pollen markup error: in '(root "Pi is close to " 3.141592653589793 "." "\n" "The hyperbolic sine of pi is close to " 11.548739357257748 "."), 3.141592653589793 is not a valid element (must be txexpr, string, symbol, XML char, or cdata)}
 
-In a case like this, you can explicitly convert the return value to a string (in whatever way makes sense):
-
-@fileblock["article.html.pm" @codeblock{
-#lang pollen
-
-◊(require racket/list racket/string)
-A list of integers: ◊(string-join (map number->string (range 5)))
-}]
-
-And get this output:
-
-@repl-output{'(root "A list of integers: " "0 1 2 3 4")}
 
 
 @subsection[#:tag-prefix "tutorial-3"]{Using the @filepath{pollen.rkt} file}
