@@ -465,7 +465,7 @@ But more often, you're going to want to use functions defined elsewhere, and sto
 
 Any function in Racket's extensive libraries can be called by loading the library with the @racket[require] command, which will make all its functions and constants available with the usual Pollen command syntax:
 
-@fileblock["article.html.pp" @codeblock{
+@fileblock["article.html.pm" @codeblock{
 #lang pollen
 ◊(require racket/math) 
 Pi is close to ◊(number->string pi). 
