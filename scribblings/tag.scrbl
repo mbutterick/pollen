@@ -58,18 +58,16 @@ Note that while default tag functions are typically used to generate tagged X-ex
 
 
 
-@defproc[
-(split-attributes
-[parts list?])
-(values txexpr-attrs? txexpr-elements?)]
-Helper function for custom tag functions. Take a rest argument that possibly includes tag attributes plus elements, and split it into attributes and elements. If there are no attributes, that return value will be the empty list. Properly parses the abbreviated Pollen syntax for attributes (described in @racket[make-default-tag-function]).
+@defform[
+(define-tag-function
+(tag-id attr-id elem-id) body ...)]
+Helper function for making custom tag functions. Handles parsing chores, including conversion of keyword arguments into attributes (described in @racket[make-default-tag-function]), and parses other attributes and elements normally.
 
 @examples[
 (require pollen/tag)
-(define (tag . parts) 
-  (define-values (attrs elements) (split-attributes parts))
-  (values attrs elements))
-(tag "Hello world")
-(tag '((key "value")) "Hello world")
-(tag #:key "value" "Hello world")
+(define-tag-function (tag-name attrs elems) 
+  `(new-name ,(cons '(zim "zam") attrs) ,@elems))
+(tag-name "Hello world")
+(tag-name '((key "value")) "Hello world")
+(tag-name #:key "value" "Hello world")
 ]

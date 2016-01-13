@@ -1,4 +1,5 @@
-#lang racket/base
+#lang pollen/mode racket/base
+(require (for-syntax racket/base))
 (require txexpr sugar/define racket/string racket/match)
 
 
@@ -10,7 +11,7 @@
      (define (make-one-tag id)
        (make-keyword-procedure
         (λ (inner-kws inner-kw-args . attrs+xs)
-
+          
           ;; Three possible sources of attrs:
           ;; 1) normal attrs, in a list at the front of the args
           ;; 2) colon args, using special 'key: "value" syntax, also at the front of the args
@@ -48,6 +49,10 @@
        (procedure-rename tag-proc tag-proc-name)))))
 
 
+;; deprecated since `define-tag-function`.
+;; Does not and cannot handle keywords correctly (for attributes)
+;; because it wants a function arity like (proc . parts),
+;; which converts keywords into positional arguments.
 (define/contract+provide (split-attributes parts)
   (list? . -> . (values txexpr-attrs? txexpr-elements?))
   (define dummy-tag (gensym))
@@ -59,14 +64,48 @@
 (module+ test
   (require rackunit)
   (define outerdiv (make-default-tag-function 'div #:class "outer" #:style "outer"))
-  (check-equal? (outerdiv "foo") '(div ((class "outer") (style "outer")) "foo"))
-  (check-equal? (outerdiv) '(div ((class "outer") (style "outer"))))
-  (check-equal? (outerdiv #:class "inner") '(div ((class "outer") (style "outer") (class "inner"))))
-  (check-equal? (outerdiv #:class "inner" "foo") '(div ((class "outer") (style "outer") (class "inner")) "foo"))
-  ;; `make-keyword-procedure` sorts keyword arguments alphabetically, so 'field' ends up before 'id'
-  (check-equal? (outerdiv #:id "shazbot" #:field "greens" "foo") '(div ((class "outer") (style "outer") (field "greens") (id "shazbot")) "foo"))
-  (check-equal? (outerdiv 'id: "shazbot" "foo") '(div ((class "outer") (style "outer") (id "shazbot")) "foo"))
-  (check-equal? (outerdiv '((id "shazbot")) "foo") '(div ((class "outer") (style "outer") (id "shazbot")) "foo"))
-  (check-equal? (outerdiv 'id: "shazbot" 'class: "inner" "foo") '(div ((class "outer") (style "outer") (id "shazbot") (class "inner")) "foo"))
+  (check-txexprs-equal? (outerdiv "foo") '(div ((class "outer") (style "outer")) "foo"))
+  (check-txexprs-equal? (outerdiv) '(div ((class "outer") (style "outer"))))
+  (check-txexprs-equal? (outerdiv #:class "inner") '(div ((class "outer") (style "outer") (class "inner"))))
+  (check-txexprs-equal? (outerdiv #:class "inner" "foo") '(div ((class "outer") (style "outer") (class "inner")) "foo"))
+  (check-txexprs-equal? (outerdiv #:field "greens" #:id "shazbot" "foo") '(div ((class "outer") (style "outer") (field "greens") (id "shazbot")) "foo"))
+  (check-txexprs-equal? (outerdiv 'id: "shazbot" "foo") '(div ((class "outer") (style "outer") (id "shazbot")) "foo"))
+  (check-txexprs-equal? (outerdiv '((id "shazbot")) "foo") '(div ((class "outer") (style "outer") (id "shazbot")) "foo"))
+  (check-txexprs-equal? (outerdiv 'id: "shazbot" 'class: "inner" "foo") '(div ((class "outer") (style "outer") (id "shazbot") (class "inner")) "foo"))
   ;; (outerdiv 'id: "shazbot" '((class "inner")) "foo") won't work because colon attrs supplant conventional attrs (docs concur)
-  (check-equal? (outerdiv 'id: "shazbot" #:class "inner" "foo") '(div ((class "outer") (style "outer") (class "inner") (id "shazbot")) "foo")))
+  (check-txexprs-equal? (outerdiv 'id: "shazbot" #:class "inner" "foo") '(div ((class "outer") (style "outer") (class "inner") (id "shazbot")) "foo")))
+
+
+(provide define-tag-function)
+(define-syntax (define-tag-function stx)
+  (syntax-case stx (λ)
+    [(_ (ID ARG ...) EXPR ...)
+     #'(define-tag-function ID (λ (ARG ...) EXPR ...))]
+    [(_ ID (λ (ATTRS ELEMS) EXPR0 EXPR ...))
+     #'(define ID
+         (make-keyword-procedure
+          (λ (kws kwargs . args)
+            (define tx-proc (keyword-apply make-default-tag-function kws kwargs (list 'ID)))
+            (define tx (apply tx-proc args))
+            (define-values (_ ATTRS ELEMS) (txexpr->values tx))
+            EXPR0 EXPR ...)))]
+    [(_ ID (λ (ATTRS ELEMS)))
+     (raise-syntax-error 'define-tag-function (format "bad syntax (no expressions for procedure body) in ~a" (syntax->datum stx)))]
+    [(_ ID (λ (ARG ...) EXPR ...)) (raise-syntax-error 'define-tag-function (format "bad syntax (arity must be exactly 2 positional arguments) in ~a" (cadr (syntax->datum stx))))]))
+
+
+(module+ test
+  (require rackunit)
+   (define foo2 (make-default-tag-function 'foo))
+  
+  (define-tag-function (foo attrs elems)
+    `(foo ,(reverse attrs) ,@elems))
+  (check-txexprs-equal? ◊foo[#:zim "zam"]{hello}  ◊foo2[#:zim "zam"]{hello})
+  (check-txexprs-equal? ◊foo[#:ding "dong" '((zim "zam"))]{hello}  ◊foo2[#:ding "dong" '((zim "zam"))]{hello})
+  (check-txexprs-equal? ◊foo['zim: "zam" #:ding "dong" ]{hello} ◊foo2['zim: "zam" #:ding "dong" ]{hello})
+
+ (define-tag-function foolam (λ (attrs elems)
+    `(foo ,(reverse attrs) ,@elems)))
+  (check-txexprs-equal? ◊foolam[#:zim "zam"]{hello}  ◊foo2[#:zim "zam"]{hello})
+  (check-txexprs-equal? ◊foolam[#:ding "dong" '((zim "zam"))]{hello}  ◊foo2[#:ding "dong" '((zim "zam"))]{hello})
+  (check-txexprs-equal? ◊foolam['zim: "zam" #:ding "dong" ]{hello} ◊foo2['zim: "zam" #:ding "dong" ]{hello}))
