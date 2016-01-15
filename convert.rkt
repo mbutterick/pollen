@@ -29,7 +29,7 @@
         [(struct pcdata (start stop string)) string]
         [(struct entity (start stop entity)) entity]
         [(struct attribute (start stop key value)) (list key value)]
-        [(struct element (start stop name attributes content)) `(,name ,(map loop attributes) ,@(map loop content))]
+        [(struct element (start stop name attributes content)) `(,name ,@(if (empty? attributes) empty (list (map loop attributes))) ,@(map loop content))]
         [(list elements ...) (map loop elements)]
         [else (format "unknown item: ~a" elem)])))
 
