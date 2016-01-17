@@ -197,7 +197,7 @@ Convert an output path @racket[_p] into the source path of the specified type th
 (->source-path
 [p pathish?]) 
 (or/c #f path?)]
-Attempt to automatically convert an output path @racket[_p] into its source path. This function checks for the existence of the path with the extensions for markup, markdown, preprocessor, null, and scribble files.
+Attempt to automatically convert an output path @racket[_p] into its source path. This function checks for the existence of the path with the extensions for markup, markdown, preprocessor, null, and scribble files. If there are no matches, then @racket[#f] is returned.
 
 @defproc[
 (->output-path
