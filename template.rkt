@@ -11,7 +11,7 @@
   (path->pagenode (or (select-from-metas (world:current-here-path-key) metas) 'unknown)))
 
 
-(define (pagenode->path pagenode)
+(define+provide (pagenode->path pagenode)
   (build-path (world:current-project-root) (symbol->string pagenode)))
 
 
@@ -80,8 +80,8 @@
   (check-false (select-from-doc 'absent-key  doc))))
 
 
-(define (get-metas pagenode-or-path)
-  ;  ((or/c pagenode? pathish?) . -> . hash?)
+(define+provide/contract (get-metas pagenode-or-path)
+  ((or/c pagenode? pathish?) . -> . hash?)
   (define source-path (->source-path (cond
                                        [(pagenode? pagenode-or-path) (pagenode->path pagenode-or-path)]
                                        [else pagenode-or-path])))
@@ -90,8 +90,8 @@
       (error (format "get-metas: no source found for '~a' in directory ~a" pagenode-or-path (current-directory)))))
 
 
-(define (get-doc pagenode-or-path)
-  ;  ((or/c pagenode? pathish?) . -> . (or/c txexpr? string?))
+(define+provide/contract (get-doc pagenode-or-path)
+  ((or/c pagenode? pathish?) . -> . (or/c txexpr? string?))
   (define source-path (->source-path (cond
                                        [(pagenode? pagenode-or-path) (pagenode->path pagenode-or-path)]
                                        [else pagenode-or-path])))

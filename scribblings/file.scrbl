@@ -11,11 +11,13 @@
 
 A utility module that provides functions for working with Pollen source and output files. The tests rely on file extensions specified in @racket[pollen/world].
 
-Pollen handles six kinds of source files:
+Pollen handles seven kinds of source files:
 
 @bold{Preprocessor}, with file extension @code[(format ".~a" world:preproc-source-ext)]. 
 
 @bold{Markup}, with file extension @code[(format ".~a" world:markup-source-ext)]. 
+
+@bold{Markdown}, with file extension @code[(format ".~a" world:markdown-source-ext)]. 
 
 @bold{Template}, with file extension @code[(format ".~a" world:template-source-ext)]. 
 
@@ -33,6 +35,11 @@ boolean?]
 
 @defproc[
 (markup-source?
+[v any/c]) 
+boolean?]
+
+@defproc[
+(markdown-source?
 [v any/c]) 
 boolean?]
 
@@ -61,6 +68,7 @@ Test whether @racket[_v] is a path representing a source file of the specified t
 @examples[#:eval my-eval
 (preproc-source? "main.css.pp")
 (markup-source? "default.html.pm")
+(markdown-source? "default.html.pmd")
 (template-source? "main.html.pt")
 (null-source? "index.html.p")
 (scribble-source? "file.scrbl")
@@ -77,6 +85,11 @@ boolean?]
 
 @defproc[
 (has-markup-source?
+[v any/c]) 
+boolean?]
+
+@defproc[
+(has-markdown-source?
 [v any/c]) 
 boolean?]
 
@@ -113,6 +126,11 @@ boolean?]
 boolean?]
 
 @defproc[
+(has/is-markdown-source?
+[v any/c]) 
+boolean?]
+
+@defproc[
 (has/is-template-source?
 [v any/c]) 
 boolean?]
@@ -142,6 +160,11 @@ path?]
 path?]
 
 @defproc[
+(->markdown-source-path
+[p pathish?]) 
+path?]
+
+@defproc[
 (->template-source-path
 [p pathish?]) 
 path?]
@@ -162,13 +185,19 @@ Convert an output path @racket[_p] into the source path of the specified type th
 (define name "default.html")
 (->preproc-source-path name)
 (->markup-source-path name)
+(->markdown-source-path name)
 (->template-source-path name)
 (->scribble-source-path name)
 (->null-source-path name)
 ]
 
+Convert an output path @racket[_p] into the source path of the specified type that would produce this output path. This function simply generates a path for a file — it does not ask whether the file exists.
 
-
+@defproc[
+(->source-path
+[p pathish?]) 
+(or/c #f path?)]
+Attempt to automatically convert an output path @racket[_p] into its source path. This function checks for the existence of the path with the extensions for markup, markdown, preprocessor, null, and scribble files. If there are no matches, then @racket[#f] is returned.
 
 @defproc[
 (->output-path

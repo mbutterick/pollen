@@ -138,6 +138,13 @@ Note that if @racket[_meta-source] is a relative path or pagenode, it is treated
 (select-from-metas 'nonexistent-key metas)
 ]
 
+@defproc[
+(get-metas
+[source-file (or/c pagenode? pathish?)])
+hash?]
+Retrieve the @racket[metas] hashtable from @racket[_file-source]. The @racket[_file-source] argument can be either a pagenode or source path that identifies a source file that provides @racket[metas]. If @racket[_file-source] does not exist, an error is thrown.
+
+Note that if @racket[_source-file] is a relative path or pagenode, it is treated as being relative to @racket[world:current-project-root]. If that's not what you want, you'll need to convert it explicitly to a complete-path (e.g., with @racket[path->complete-path] or @racket[->complete-path]).
 
 
 @defproc[
@@ -159,6 +166,15 @@ Note that if @racket[_doc-source] is a relative path or pagenode, it is treated 
 ('answer . select-from-doc . doc)
 (select-from-doc 'nonexistent-key doc)
 ]
+
+@defproc[
+(get-doc
+[source-file (or/c pagenode? pathish?)])
+(or/c txexpr? string?)]
+Retrieve the @racket[_doc] from @racket[_file-source]. The @racket[_file-source] argument can be either a pagenode or source path that identifies a source file that provides @racket[metas]. If @racket[_file-source] does not exist, an error is thrown.
+
+Note that if @racket[_source-file] is a relative path or pagenode, it is treated as being relative to @racket[world:current-project-root]. If that's not what you want, you'll need to convert it explicitly to a complete-path (e.g., with @racket[path->complete-path] or @racket[->complete-path]).
+
 
 @defproc[
 (when/block
