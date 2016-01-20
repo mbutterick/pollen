@@ -84,6 +84,29 @@ As the input contract suggests, this function can take either a single @racket[x
 ]
 
 
+
+@defproc[
+(get-doc
+[doc-source (or/c pagenode? pathish?)])
+(or/c txexpr? string?)]
+Retrieve the @racket[doc] export from @racket[_doc-source], which can be either a path, path string, or pagenode that can be resolved into a source path. If @racket[_doc-source] cannot be resolved, raise an error.
+
+If @racket[_doc-source] is a relative path or pagenode, it is treated as being relative to @racket[world:current-project-root]. If that's not what you want, you'll need to convert it explicitly to a complete-path (e.g., with @racket[path->complete-path] or @racket[->complete-path]).
+
+If @racket[world:current-main-export] is set to an identifier name other than @racket[doc], then that identifier is retrieved instead.
+
+
+@defproc[
+(get-metas
+[meta-source (or/c pagenode? pathish?)])
+hash?]
+Retrieve the @racket[metas] export from @racket[_meta-source], which can be either a path, path string, or pagenode that can be resolved into a source path. If @racket[_meta-source] cannot be resolved, raise an error.
+
+If @racket[_meta-source] is a relative path or pagenode, it is treated as being relative to @racket[world:current-project-root]. If that's not what you want, you'll need to convert it explicitly to a complete-path (e.g., with @racket[path->complete-path] or @racket[->complete-path]).
+
+If @racket[world:current-meta-export] is set to an identifier name other than @racket[metas], then that identifier is retrieved instead.
+
+
 @deftogether[(
 
 @defproc[
@@ -139,7 +162,6 @@ Note that if @racket[_meta-source] is a relative path or pagenode, it is treated
 ]
 
 
-
 @defproc[
 (select-from-doc
 [key symbolish?]
@@ -159,6 +181,9 @@ Note that if @racket[_doc-source] is a relative path or pagenode, it is treated 
 ('answer . select-from-doc . doc)
 (select-from-doc 'nonexistent-key doc)
 ]
+
+
+
 
 @defproc[
 (when/block

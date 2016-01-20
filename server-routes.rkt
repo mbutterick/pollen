@@ -222,7 +222,7 @@
                              (define path-source-pairs
                                (map
                                 (λ(p) (define source
-                                        (let ([possible-source (->source-path (build-path dashboard-dir p))])
+                                        (let ([possible-source (get-source (build-path dashboard-dir p))])
                                           (and possible-source (->string (find-relative-path dashboard-dir possible-source)))))
                                   (cons p source))
                                 project-paths))

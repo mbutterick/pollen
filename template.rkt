@@ -76,28 +76,30 @@
  (check-equal? (select-from-doc 'key  '(root (key "value"))) '("value"))
  (check-false (select-from-doc 'absent-key  '(root (key "value"))))
  (let ([doc '(root (key "value"))])
-  (check-equal? (select-from-doc 'key  doc) '("value"))
-  (check-false (select-from-doc 'absent-key  doc))))
+   (check-equal? (select-from-doc 'key  doc) '("value"))
+   (check-false (select-from-doc 'absent-key  doc))))
 
 
-(define (get-metas pagenode-or-path)
-  ;  ((or/c pagenode? pathish?) . -> . hash?)
-  (define source-path (->source-path (cond
-                                       [(pagenode? pagenode-or-path) (pagenode->path pagenode-or-path)]
-                                       [else pagenode-or-path])))
-  (if source-path
-      (cached-require source-path (world:current-meta-export))
-      (error (format "get-metas: no source found for '~a' in directory ~a" pagenode-or-path (current-directory)))))
+(define (pagenode-or-path->source pagenode-or-path)
+  (get-source (if (pagenode? pagenode-or-path)
+                  (pagenode->path pagenode-or-path)
+                  pagenode-or-path)))
 
 
-(define (get-doc pagenode-or-path)
-  ;  ((or/c pagenode? pathish?) . -> . (or/c txexpr? string?))
-  (define source-path (->source-path (cond
-                                       [(pagenode? pagenode-or-path) (pagenode->path pagenode-or-path)]
-                                       [else pagenode-or-path])))
-  (if source-path
-      (cached-require source-path (world:current-main-export))
-      (error (format "get-doc: no source found for '~a' in directory ~a" pagenode-or-path (current-directory)))))
+(define+provide/contract (get-metas pagenode-or-path)
+  ((or/c pagenode? pathish?) . -> . hash?)
+  (define source-path (pagenode-or-path->source pagenode-or-path))
+  (unless source-path
+    (error (format "get-metas: no source found for '~a' in directory ~a" pagenode-or-path (current-directory))))
+  (cached-require source-path (world:current-meta-export)))
+
+
+(define+provide/contract (get-doc pagenode-or-path)
+  ((or/c pagenode? pathish?) . -> . (or/c txexpr? string?))
+  (define source-path (pagenode-or-path->source pagenode-or-path))
+  (unless source-path
+    (error (format "get-doc: no source found for '~a' in directory ~a" pagenode-or-path (current-directory))))
+  (cached-require source-path (world:current-main-export)))
 
 
 (define (trim-outer-tag html)
@@ -109,7 +111,7 @@
 
 (define+provide/contract (->html x-in #:tag [tag #f] #:attrs [attrs #f] #:splice [splice? #f])
   (((or/c xexpr? (listof xexpr?))) (#:tag (or/c #f txexpr-tag?) #:attrs (or/c #f txexpr-attrs?) #:splice boolean?) . ->* . string?)
-
+  
   (define x (cond
               [(txexpr? x-in) x-in]
               [(list? x-in) (cons 'html x-in)]
@@ -144,7 +146,7 @@
  (check-equal? (->html #:splice #t x) "hello")
  (check-equal? (->html #:tag 'brennan #:attrs '((id "dale")) x) "<brennan id=\"dale\">hello</brennan>")
  (check-equal? (->html #:tag 'brennan #:attrs '((id "dale")) #:splice #t x) "hello")
-
+ 
  (define xs '("hello " (em "you") " " 42))
  (check-equal? (->html xs) "hello <em>you</em> &#42;")
  (check-equal? (->html #:splice #t xs) "hello <em>you</em> &#42;")

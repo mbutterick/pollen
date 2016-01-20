@@ -267,6 +267,21 @@
  (check-equal? (->markup-source-path 'foo) (->path "foo.pm")))
 
 (make-source-utility-functions markdown)
+(module-test-external
+ (require sugar/coerce)
+ (check-true (markdown-source? "foo.html.pmd"))
+ (check-false (markdown-source? "foo.html"))
+ (check-false (markdown-source? #f))
+ (check-equal? (->markdown-source-paths (->path "foo.pmd")) (list (->path "foo.pmd")))
+ (check-equal? (->markdown-source-paths (->path "foo.html")) (list (->path "foo.html.pmd") (->path "foo_html.pmd")
+                                                                 (->path "foo.poly.pmd") (->path "foo_poly.pmd")))
+ (check-equal? (->markdown-source-paths "foo") (list (->path "foo.pmd")))
+ (check-equal? (->markdown-source-paths 'foo) (list (->path "foo.pmd")))
+ (check-equal? (->markdown-source-path (->path "foo.pmd")) (->path "foo.pmd"))
+ (check-equal? (->markdown-source-path (->path "foo.html")) (->path "foo.html.pmd"))
+ (check-equal? (->markdown-source-path "foo") (->path "foo.pmd"))
+ (check-equal? (->markdown-source-path 'foo) (->path "foo.pmd")))
+
 
 (make-source-utility-functions template)
 (module-test-external
@@ -277,10 +292,12 @@
 (make-source-utility-functions scribble)
 
 
-(define/contract+provide (->source-path path)
+(define/contract+provide (get-source path)
   (coerce/path? . -> . (or/c #f path?))
   (ormap (λ(proc) (proc path)) (list get-markup-source get-markdown-source get-preproc-source get-null-source get-scribble-source)))
 
+;; for backward compatibility
+(define+provide ->source-path get-source)
 
 (define+provide/contract (->output-path x)
   (coerce/path? . -> . coerce/path?)
