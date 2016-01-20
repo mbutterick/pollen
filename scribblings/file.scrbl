@@ -1,6 +1,6 @@
 #lang scribble/manual
 
-@(require scribble/eval pollen/render pollen/world (for-label racket (except-in pollen #%module-begin) pollen/world sugar))
+@(require scribble/eval pollen/render pollen/world (for-label racket (except-in pollen #%module-begin) pollen/world sugar pollen/file))
 
 @(define my-eval (make-base-eval))
 @(my-eval `(require pollen pollen/file))
@@ -230,7 +230,7 @@ Find an existing source path of the specified type that would produce the output
 (get-source
 [p pathish?]) 
 (or/c #f path?)]
-Find an existing source path that would produce the output path @racket[_p]. Check source formats in this order: @racket[get-markup-source], @racket[get-markdown-source], @racket[get-preproc-source], @racket[get-null-source], @racket[get-scribble-source]. If there is no corresponding source, return @racket[#f].
+Find an existing source path that would produce the output path @racket[_p]. Check source formats in this order: @racket[get-markup-source], @racket[get-markdown-source], @racket[get-preproc-source], @racket[get-null-source], and @racket[get-scribble-source]. If there is no corresponding source, return @racket[#f].
 
 
 
