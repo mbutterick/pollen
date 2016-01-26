@@ -1,0 +1,52 @@
+#lang racket/base
+(require sugar/test racket/require (matching-identifiers-in #rx"-source\\?$" "private/file-utils.rkt")
+         (matching-identifiers-in #rx"-source-path$" "private/file-utils.rkt")
+         (matching-identifiers-in #rx"^get.*-source$" "private/file-utils.rkt")
+         (only-in "private/file-utils.rkt" ->output-path))
+(provide (all-from-out "private/file-utils.rkt"))
+
+;; do the tests here to verify that the right functions are available through file.rkt
+(module-test-external
+ (require sugar/coerce pollen/world)
+ (check-true (preproc-source? "foo.pp"))
+ (check-false (preproc-source? "foo.bar"))
+ (check-false (preproc-source? #f))
+ (check-equal? (->preproc-source-path (->path "foo.pp")) (->path "foo.pp"))
+ (check-equal? (->preproc-source-path (->path "foo.html")) (->path "foo.html.pp"))
+ (check-equal? (->preproc-source-path "foo") (->path "foo.pp"))
+ (check-equal? (->preproc-source-path 'foo) (->path "foo.pp"))
+ 
+ (check-true (pagetree-source? (format "foo.~a" (world:current-pagetree-source-ext))))
+ (check-false (pagetree-source? (format "~a.foo" (world:current-pagetree-source-ext))))
+ (check-false (pagetree-source? #f))
+ 
+ (check-true (markup-source? "foo.pm"))
+ (check-false (markup-source? "foo.p"))
+ (check-false (markup-source? #f))
+ (check-equal? (->markup-source-path (->path "foo.pm")) (->path "foo.pm"))
+ (check-equal? (->markup-source-path (->path "foo.html")) (->path "foo.html.pm"))
+ (check-equal? (->markup-source-path "foo") (->path "foo.pm"))
+ (check-equal? (->markup-source-path 'foo) (->path "foo.pm"))
+ 
+ (check-true (markdown-source? "foo.html.pmd"))
+ (check-false (markdown-source? "foo.html"))
+ (check-false (markdown-source? #f))
+ (check-equal? (->markdown-source-path (->path "foo.pmd")) (->path "foo.pmd"))
+ (check-equal? (->markdown-source-path (->path "foo.html")) (->path "foo.html.pmd"))
+ (check-equal? (->markdown-source-path "foo") (->path "foo.pmd"))
+ (check-equal? (->markdown-source-path 'foo) (->path "foo.pmd"))
+ 
+ (check-false (get-source 42))
+ (check-equal? (->output-path (->path "foo.pmap")) (->path "foo.pmap"))
+ (check-equal? (->output-path "foo.html") (->path "foo.html"))
+ (check-equal? (->output-path 'foo.html.p) (->path "foo.html"))
+ (check-equal? (->output-path (->path "/Users/mb/git/foo.html.p")) (->path "/Users/mb/git/foo.html"))
+ (check-equal? (->output-path "foo.xml.p") (->path "foo.xml"))
+ (check-equal? (->output-path 'foo.barml.p) (->path "foo.barml"))
+ 
+ (check-equal? (->output-path 'foo_html.p) (->path "foo.html"))
+ (check-equal? (->output-path (->path "/Users/mb/git/foo_html.p")) (->path "/Users/mb/git/foo.html"))
+ (check-equal? (->output-path "foo_xml.p") (->path "foo.xml"))
+ (check-equal? (->output-path 'foo_barml.p) (->path "foo.barml"))
+ (check-equal? (->output-path "foo.poly.pm") (->path "foo.html"))
+ (check-equal? (->output-path "foo_poly.pp") (->path "foo.html")))
