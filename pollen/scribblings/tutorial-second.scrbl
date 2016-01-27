@@ -672,7 +672,7 @@ One way to fix the problem would be to have three separate template files — t
 
 But since we have a whole programming language available in Pollen, that's a dull-witted way to solve the problem. The better way is to add @italic{conditionals} to the template to selectively change the navigation. That keeps things simple, because we'll still have only one @filepath{template.html} to deal with.
 
-To handle @filepath{article.html}, we want to hide the previous-page navigation link when there's no previous page. As it turns out, if the @racket[previous] function can't find a previous page, it will return false. So we just need to wrap our previous-page navigation in the @racket[when/block] command like so:
+To handle @filepath{article.html}, we want to hide the previous-page navigation link when there's no previous page. As it turns out, if the @racket[previous] function can't find a previous page, it will return false. So we just need to wrap our previous-page navigation in the @racket[when/splice] command like so:
 
 @fileblock["template.html"
 @codeblock[#:keep-lang-line? #f]{
@@ -685,14 +685,14 @@ To handle @filepath{article.html}, we want to hide the previous-page navigation 
 </head>
 <body>◊->html[doc]
 The current page is called ◊|here|.
-◊when/block[(previous here)]{The previous is 
+◊when/splice[(previous here)]{The previous is 
 <a href="◊|(previous here)|">◊|(previous here)|</a>.} 
 The next is <a href="◊|(next here)|">◊|(next here)|</a>.
 </body>
 </html>
 }]
 
-The basic structure of @racket[when/block] is @tt{◊when/block[@racketvarfont{condition}]{@racketvarfont{insert-this-text}}.} Note the square braces around the @racketvarfont{condition}, and the curly braces around the @racketvarfont{text}. Using @racket[(previous here)] as the condition is shorthand for ``when @racket[(previous here)] does not return false...''
+The basic structure of @racket[when/splice] is @tt{◊when/splice[@racketvarfont{condition}]{@racketvarfont{insert-this-text}}.} Note the square braces around the @racketvarfont{condition}, and the curly braces around the @racketvarfont{text}. Using @racket[(previous here)] as the condition is shorthand for ``when @racket[(previous here)] does not return false...''
 
 Programmers in the audience might be getting anxious about the repeated use of @racket[(previous here)] — you're welcome to store that value in a variable, and everything will work the same way:
 
@@ -708,7 +708,7 @@ Programmers in the audience might be getting anxious about the repeated use of @
 <body>◊->html[doc]
 The current page is called ◊|here|.
 ◊(define prev-page (previous here))
-◊when/block[prev-page]{The previous is 
+◊when/splice[prev-page]{The previous is 
 <a href="◊|prev-page|">◊|prev-page|</a>.} 
 The next is <a href="◊|(next here)|">◊|(next here)|</a>.
 </body>
@@ -717,7 +717,7 @@ The next is <a href="◊|(next here)|">◊|(next here)|</a>.
 
 We need a different technique for handling the end of the next-page navigation, because we're not reaching the actual end of the pagetree. We're just reaching the end of the pages we care about navigating through. 
 
-What condition will help us detect this? Here, we can notice that the names of our article pages all contain the string @code{article}. While you'd probably want a more robust condition for a real project, in this tutorial, what we'll do is hide the next-page navigation if the name of the next page doesn't contain ``@code{article}''. As we did before, we wrap our navigation line in the @racket[when/block] function:
+What condition will help us detect this? Here, we can notice that the names of our article pages all contain the string @code{article}. While you'd probably want a more robust condition for a real project, in this tutorial, what we'll do is hide the next-page navigation if the name of the next page doesn't contain ``@code{article}''. As we did before, we wrap our navigation line in the @racket[when/splice] function:
 
 @fileblock["template.html"
 @codeblock[#:keep-lang-line? #f]{
@@ -731,9 +731,9 @@ What condition will help us detect this? Here, we can notice that the names of o
 <body>◊->html[doc]
 The current page is called ◊|here|.
 ◊(define prev-page (previous here))
-◊when/block[prev-page]{The previous is 
+◊when/splice[prev-page]{The previous is 
 <a href="◊|prev-page|">◊|prev-page|</a>.} 
-◊when/block[(regexp-match "article" (->string (next here)))]{
+◊when/splice[(regexp-match "article" (->string (next here)))]{
 The next is <a href="◊|(next here)|">◊|(next here)|</a>.}
 </body>
 </html>
@@ -799,10 +799,10 @@ BAM! An error page that says @tt{Can’t convert #f to string}. What happened? W
 <body>◊->html[doc]
 The current page is called ◊|here|.
 ◊(define prev-page (previous here))
-◊when/block[prev-page]{The previous is 
+◊when/splice[prev-page]{The previous is 
 <a href="◊|prev-page|">◊|prev-page|</a>.} 
 ◊(define next-page (next here))
-◊when/block[next-page]{
+◊when/splice[next-page]{
 The next is <a href="◊|next-page|">◊|next-page|</a>.}
 </body>
 </html>

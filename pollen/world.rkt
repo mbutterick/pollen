@@ -109,6 +109,8 @@
 
 (define-settable here-path-key 'here-path)
 
+(define-settable splicing-tag '@)
+
 (define-settable poly-source-ext 'poly) ; extension that signals source can be used for multiple output targets
 (define-settable poly-targets '(html)) ; current target applied to multi-output source files
 (define current-poly-target (make-parameter (car (current-poly-targets))))

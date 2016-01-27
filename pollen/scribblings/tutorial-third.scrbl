@@ -804,10 +804,10 @@ In this project, we want to end up with HTML, so our source files will be called
 </head>
 <body>◊(->html doc #:splice #t)
 ◊(define prev-page (previous here))
-◊when/block[prev-page]{
+◊when/splice[prev-page]{
 <div id="prev">← <a href="◊|prev-page|">◊(select 'h1 prev-page)</a></div>}
 ◊(define next-page (next here))
-◊when/block[next-page]{
+◊when/splice[next-page]{
 <div id="next"><a href="◊|next-page|">◊(select 'h1 next-page)</a> →</div>}
 </body>
 </html>
@@ -954,7 +954,7 @@ This page isn't a miracle of web design, but it shows you in one example:
 
 @item{A dynamically-generated CSS file that computes positions for CSS elements using numerical values set up with @racket[define], and mathematical conversions thereof;}
 
-@item{Navigational links that appear and disappear as needed using conditional statements (@racket[when/block]) in @filepath{template.html}, with the page sequence defined by @filepath{index.ptree} and the names of the links being pulled from the @code{h1} tag of each source file using @racket[select].}
+@item{Navigational links that appear and disappear as needed using conditional statements (@racket[when/splice]) in @filepath{template.html}, with the page sequence defined by @filepath{index.ptree} and the names of the links being pulled from the @code{h1} tag of each source file using @racket[select].}
 
 ]
 

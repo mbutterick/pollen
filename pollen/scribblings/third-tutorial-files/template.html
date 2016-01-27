@@ -6,10 +6,10 @@
 </head>
 <body>◊->html[doc]
 ◊(define prev-page (previous here))
-◊when/block[prev-page]{
+◊when/splice[prev-page]{
 <div id="prev">← <a href="◊|prev-page|">◊(select 'h1 prev-page)</a></div>}
 ◊(define next-page (next here))
-◊when/block[next-page]{
+◊when/splice[next-page]{
 <div id="next"><a href="◊|next-page|">◊(select 'h1 next-page)</a> →</div>}
 </body>
 </html>

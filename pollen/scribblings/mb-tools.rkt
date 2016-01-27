@@ -64,8 +64,7 @@
   (syntax-case stx ()
     [(_ name predicate? desc ...)
      (with-syntax ([world:name (format-id stx "world:~a" #'name)]
-                   [world:current-name (format-id stx "world:current-~a" #'name)]
-                   [local:name (format-id stx "local:~a" #'name)])
+                   [world:current-name (format-id stx "world:current-~a" #'name)])
        #'(deftogether ((defthing world:name predicate?)
                        (defproc (world:current-name) predicate?))
            desc ...))]))

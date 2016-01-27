@@ -83,9 +83,10 @@
   `(div  
     (p "filename =" ,(->string relative-path))
     (p "size = " ,(bytecount->string (file-size path)))
-    ,@(when/splice (not (equal? (get-ext path) "svg"))
-                   `(p "width = " ,(->string (image-width img)) " " 
-                       "height = " ,(->string (image-height img))))
+    ,@(if (not (equal? (get-ext path) "svg"))
+          `(p "width = " ,(->string (image-width img)) " " 
+              "height = " ,(->string (image-height img)))
+          "")
     (a ((href ,img-url)) (img ((style "width:100%;border:1px solid #eee")(src ,img-url))))))
 
 (require file/unzip)
@@ -186,8 +187,8 @@
                                    (cond
                                      [(string? cell-content) (string-append indent-string cell-content)]
                                      [(txexpr? cell-content)
-                                               ;; indent link text by depth in pagetree
-                                               `(,(get-tag cell-content) ,(cons '(class "indented-link") (get-attrs cell-content)) ,indent-string (span ((class "indented-link-text")) ,@(get-elements cell-content)))]
+                                      ;; indent link text by depth in pagetree
+                                      `(,(get-tag cell-content) ,(cons '(class "indented-link") (get-attrs cell-content)) ,indent-string (span ((class "indented-link-text")) ,@(get-elements cell-content)))]
                                      [else (error 'make-path-row (format "mysterious cell data: ~v" cell-content))]))))
                          
                          (cond ; 'in' cell

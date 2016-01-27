@@ -1,6 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base syntax/strip-context racket/syntax "../world.rkt" "split-metas.rkt")
-         "to-string.rkt" "../pagetree.rkt" "../world.rkt") ; need world here to resolve PARSER-MODE-ARG later
+         "to-string.rkt" "../pagetree.rkt" "splice.rkt" "../world.rkt") ; need world here to resolve PARSER-MODE-ARG
 (provide (all-defined-out))
 
 (define-syntax-rule (define+provide-module-begin-in-mode PARSER-MODE-ARG)
@@ -10,7 +10,7 @@
     (define-syntax (pollen-module-begin stx)
       (syntax-case stx ()
         [(_ EXPR (... ...))
-         (let-values ([(meta-keys meta-values expr-without-metas) (split-metas (syntax->datum #'(EXPR (... ...))) (world:current-define-meta-name))])
+         (let*-values ([(meta-keys meta-values expr-without-metas) (split-metas (syntax->datum #'(EXPR (... ...))) (world:current-define-meta-name))])
            (with-syntax ([(EXPR-WITHOUT-METAS (... ...)) (datum->syntax #'(EXPR (... ...)) expr-without-metas)]
                          [(KEY (... ...)) (datum->syntax #'(EXPR (... ...)) meta-keys)]
                          [(VALUE (... ...)) (datum->syntax #'(EXPR (... ...)) meta-values)]
@@ -21,6 +21,7 @@
                          [MODE-PAGETREE (datum->syntax #'(EXPR (... ...)) world:mode-pagetree)]
                          [MODE-MARKUP (datum->syntax #'(EXPR (... ...)) world:mode-markup)]
                          [MODE-MARKDOWN (datum->syntax #'(EXPR (... ...)) world:mode-markdown)]
+                         [SPLICING_TAG (datum->syntax #'(EXPR (... ...)) (world:current-splicing-tag))]
                          [DOC (format-id #'(EXPR (... ...)) "~a" (world:current-main-export))]
                          [DOC-RAW (generate-temporary)]); prevents conflicts with other imported Pollen sources
              (replace-context #'(EXPR (... ...))
@@ -48,7 +49,8 @@
                                                    (λ(xs) (apply ROOT ((dynamic-require 'markdown 'parse-markdown) (apply string-append (map to-string xs)))))]
                                                   [else (λ(xs) (apply string-append (map to-string xs)))])] ; string output for preprocessor
                                           ;; drop leading newlines, as they're often the result of `defines` and `requires`
-                                          [doc-elements (or (memf (λ(ln) (not (equal? ln NEWLINE))) DOC-RAW) null)])
-                                     (proc doc-elements)))
+                                          [doc-elements (or (memf (λ(ln) (not (equal? ln NEWLINE))) DOC-RAW) null)]
+                                          [doc-elements-spliced (splice doc-elements 'SPLICING_TAG)])
+                                     (proc doc-elements-spliced)))
                                  
                                  (provide DOC METAS (except-out (all-from-out 'inner) DOC-RAW #%top))))))])))) ; hide internal exports

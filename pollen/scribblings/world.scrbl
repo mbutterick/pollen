@@ -155,6 +155,9 @@ Default separators used in decoding. The first two are initialized to @racket["\
 
 @defoverridable[here-path-key symbol?]{Key used to store the absolute path of the current source file in its @racket[metas] hashtable. Default is @racket['here-path].}
 
+@defoverridable[splicing-tag symbol?]{Key used to signal that an X-expression should be spliced into its containing X-expression. Default is @val[world:splicing-tag].}
+
+
 @defoverridable[poly-source-ext symbol?]{Extension that indicates a source file can target multiple output types. Default is @racket['poly].}
 
 

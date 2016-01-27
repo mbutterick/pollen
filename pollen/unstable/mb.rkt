@@ -1,6 +1,6 @@
 #lang racket/base
-(require (for-syntax racket/base))
-(require racket/list sugar/define sugar/test txexpr racket/match sugar/container sugar/coerce sugar/len)
+(require (for-syntax racket/base "../world.rkt"))
+(require racket/list sugar/define sugar/test txexpr racket/match sugar/container sugar/coerce sugar/len racket/string "../private/to-string.rkt" )
 
 (define (make-replacer query+replacement)
   (let ([queries (map car query+replacement)]
@@ -123,14 +123,3 @@
  (check-equal? (nonbreaking-last-space '(p "Hi there") #:nbsp "_up_" #:minimum-word-length 3) 
                '(p "Hi " "there")) 
  (check-equal? (nonbreaking-last-space '(p "Hi here" (em "ho there")) #:nbsp "Ø") '(p "Hi here" (em "hoØ" "there"))))
-
-
-
-(provide when/block)
-(define-syntax (when/block stx)
-  (syntax-case stx ()
-    [(_ condition body ...)
-     #'(if condition (string-append* 
-                      (with-handlers ([exn:fail? (λ(exn) (error (format "within when/block, ~a" (exn-message exn))))])
-                        (map ->string (list body ...)))) 
-           "")]))

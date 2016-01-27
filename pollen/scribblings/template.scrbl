@@ -112,6 +112,15 @@ Note that if @racket[_meta-source] is a relative path or pagenode, it is treated
 ]
 
 
+@defform[(when/splice condition pollen-args)]
+If @racket[_condition] is true, put the @racket[_pollen-args] into the document. Within a template file, usually invoked like so:
+
+@verbatim{◊when/splice[@racketvarfont{condition}]{The text to insert.}}
+
+The inserted text can contain its own nested Pollen commands.
+
+@racket[when/splice] can be more convenient than @racket[when], because @racket[when] will only use the last argument between the curly braces. @racket[when/splice], by contrast, treats everything between the curly braces as a block.
+
 
 
 @section{HTML}

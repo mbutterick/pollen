@@ -1,4 +1,5 @@
 #lang racket/base
+(require (for-syntax racket/base "../world.rkt"))
 (require racket/string xml xml/path sugar/define sugar/container sugar/coerce sugar/test racket/list)
 (require "../file.rkt" txexpr "../world.rkt" "../cache.rkt" "../pagetree.rkt" "../private/debug.rkt")
 
@@ -92,4 +93,18 @@
 (define+provide/contract (get-doc pagenode-or-path)
   ((or/c pagenode? pathish?) . -> . (or/c is-doc-value? string?))
   (cached-doc (convert+validate-path pagenode-or-path 'get-doc)))
+
+(provide when/splice)
+(define-syntax (when/splice stx)
+  (syntax-case stx ()
+    [(_ COND BODY ...)
+     (with-syntax ([SPLICING-TAG (datum->syntax stx (world:current-splicing-tag))])
+       #'(if COND
+             (with-handlers ([exn:fail? (λ(exn) (error (format "within when/block, ~a" (exn-message exn))))])
+               (list 'SPLICING-TAG BODY ...)) 
+             ""))]))
+
+(provide when/block) ; bw compat
+(define-syntax-rule (when/block ARGS ...)
+  (when/splice ARGS ...))
 
