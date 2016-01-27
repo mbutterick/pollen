@@ -114,7 +114,7 @@ Note that if @racket[_meta-source] is a relative path or pagenode, it is treated
 
 
 
-@section{HTML templates}
+@section{HTML}
 
 @defmodule[pollen/template/html]
 
@@ -125,7 +125,7 @@ Functions specific to HTML templates.
 [xexpr-or-xexprs (or/c xexpr? (listof xexpr?))]
 [#:tag html-tag (or/c #f txexpr-tag?) #f]
 [#:attrs html-attrs (or/c #f txexpr-attrs?) #f]
-[#:splice splice-html? boolean? #f])
+[#:splice? splice-html? boolean? #f])
 string?]
 Convert @racket[_xexpr-or-xexprs] to an HTML string. Similar to @racket[xexpr->string], but consistent with the HTML spec, text that appears within @code{script} or @code{style} blocks will not be escaped.
 
@@ -161,13 +161,13 @@ If the generated HTML has an outer tag, the @racket[_splice-html?] option will s
 @examples[#:eval my-eval
 (define tx '(root (p "Chicken nuggets")))
 (->html tx)
-(->html tx #:splice #t)
+(->html tx #:splice? #t)
 (define x "Fancy sauce")
 (->html x)
 (code:comment @#,t{This next one won't do anything})
-(->html x #:splice #t)
-(code:comment @#,t{Adds the outer tag, but then #:splice removes it})
-(->html x #:tag 'div #:attrs '((id "doback")) #:splice #t)
+(->html x #:splice? #t)
+(code:comment @#,t{Adds the outer tag, but then #:splice? removes it})
+(->html x #:tag 'div #:attrs '((id "doback")) #:splice? #t)
 ]
 
 
