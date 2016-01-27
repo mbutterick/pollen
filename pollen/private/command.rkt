@@ -75,7 +75,7 @@ version                print the version (~a)" (world:current-server-port) world
 
 (define (handle-setup directory-maybe)
   (displayln "preheating cache ...")
-  ((dynamic-require 'pollen/cache 'preheat-cache) directory-maybe)) 
+  ((dynamic-require 'pollen/private/preheat-cache 'preheat-cache) directory-maybe)) 
 
 
 (define (handle-render)

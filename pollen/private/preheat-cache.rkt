@@ -1,8 +1,9 @@
 #lang racket/base
-(require "../world.rkt" "../file.rkt" racket/file "cache-utils.rkt" "debug.rkt" racket/path racket/place sugar/list)
+(require "file-utils.rkt" racket/file "cache-utils.rkt" "debug.rkt" racket/path racket/place sugar/list)
+(provide preheat-cache)
 
-(define (preheat-cache [starting-dir (world:current-project-root)])
-  (when (or (not (path-string? starting-dir)) (not (directory-exists? starting-dir)))
+(define (preheat-cache starting-dir)
+  (unless (and (path-string? starting-dir) (directory-exists? starting-dir))
     (error 'preheat-cache (format "~a is not a directory" starting-dir)))
   
   (define max-places 8) ; number of parallel processes to spawn at a time
