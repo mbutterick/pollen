@@ -105,6 +105,11 @@
              ""))]))
 
 (provide when/block) ; bw compat
-(define-syntax-rule (when/block ARGS ...)
-  (when/splice ARGS ...))
+(define-syntax (when/block stx)
+  (syntax-case stx ()
+    [(_ condition body ...)
+     #'(if condition (string-append* 
+                      (with-handlers ([exn:fail? (λ(exn) (error (format "within when/block, ~a" (exn-message exn))))])
+                        (map ->string (list body ...)))) 
+           "")]))
 
