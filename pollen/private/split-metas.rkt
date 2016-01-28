@@ -17,5 +17,11 @@
           (map loop (filter non-meta?/gather x))
           x)))
   
-  (let ([meta-key cadr][meta-value caddr])
-    (values (map meta-key matches) (map meta-value matches) rest)))
+  (values (apply hasheq (apply append (map cdr matches))) rest))
+
+(module+ test
+  (require rackunit)
+  (define x '(root (div (define-meta foo "bar") "hi") "zim" "zam"))
+  (define-values (metas rest) (split-metas x 'define-meta))
+  (check-equal? metas '#hasheq((foo . "bar")))
+  (check-equal? rest '(root (div "hi") "zim" "zam")))

@@ -10,10 +10,9 @@
     (define-syntax (pollen-module-begin stx)
       (syntax-case stx ()
         [(_ EXPR (... ...))
-         (let*-values ([(meta-keys meta-values expr-without-metas) (split-metas (syntax->datum #'(EXPR (... ...))) (world:current-define-meta-name))])
-           (with-syntax ([(EXPR-WITHOUT-METAS (... ...)) (datum->syntax #'(EXPR (... ...)) expr-without-metas)]
-                         [(KEY (... ...)) (datum->syntax #'(EXPR (... ...)) meta-keys)]
-                         [(VALUE (... ...)) (datum->syntax #'(EXPR (... ...)) meta-values)]
+         (let-values ([(meta-hash expr-without-metas) (split-metas (syntax->datum #'(EXPR (... ...))) (world:current-define-meta-name))])
+           (with-syntax ([META-HASH (datum->syntax #'(EXPR (... ...)) meta-hash)]
+                         [(EXPR-WITHOUT-METAS (... ...)) (datum->syntax #'(EXPR (... ...)) expr-without-metas)]
                          [METAS (format-id #'(EXPR (... ...)) "~a" (world:current-meta-export))]
                          [META-MOD (format-symbol "~a" (world:current-meta-export))]
                          [ROOT (format-id #'(EXPR (... ...)) "~a" (world:current-main-root-node))]
@@ -27,8 +26,8 @@
              (replace-context #'(EXPR (... ...))
                               #'(#%module-begin
                                  (module META-MOD racket/base
-                                   (provide (all-defined-out))
-                                   (define METAS (apply hasheq (append (list 'KEY VALUE) (... ...)))))
+                                   (provide METAS)
+                                   (define METAS META-HASH))
                                  
                                  (module inner pollen/private/doclang-raw
                                    DOC-RAW ; positional arg for doclang-raw that sets name of export.
