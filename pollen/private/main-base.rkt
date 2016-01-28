@@ -22,7 +22,7 @@
                          [MODE-MARKDOWN (datum->syntax #'(EXPR (... ...)) world:mode-markdown)]
                          [SPLICING_TAG (datum->syntax #'(EXPR (... ...)) (world:current-splicing-tag))]
                          [DOC (format-id #'(EXPR (... ...)) "~a" (world:current-main-export))]
-                         [DOC-RAW (generate-temporary)]); prevents conflicts with other imported Pollen sources
+                         [DOC-RAW (generate-temporary 'pollen-)]); prevents conflicts with other imported Pollen sources
              (replace-context #'(EXPR (... ...))
                               #'(#%module-begin
                                  (module META-MOD racket/base
