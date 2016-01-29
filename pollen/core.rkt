@@ -103,6 +103,13 @@
   (cached-doc (convert+validate-path pagenode-or-path 'get-doc)))
 
 
+;; This `@` definition is here to provide a hook for the docs.
+;; But this is just default tag behavior, and thus would work without the definition.
+;; Which is why the splicing tag can be renamed:
+;; it just becomes an undefined tag, also with default behavior.
+;; For a pollen source, the actual splicing happens when the source is compiled.
+;; For a template in the render environment, which is more text-ish,
+;; the splicing tag is redefined to produce a basic list.
 (define+provide @ (make-default-tag-function '@))
 
 (provide when/splice)
