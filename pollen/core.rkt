@@ -1,11 +1,13 @@
 #lang racket/base
-(require (for-syntax racket/base "world.rkt"))
+(require (for-syntax racket/base "world.rkt" "private/splice.rkt"))
 (require txexpr xml/path sugar/define sugar/coerce sugar/test racket/string)
 (require "private/file-utils.rkt"
          "world.rkt"
          "cache.rkt"
          "pagetree.rkt"
-         "private/to-string.rkt")
+         "tag.rkt"
+         "private/to-string.rkt"
+         "private/splice.rkt")
 
 (define is-meta-value? hash?)
 (define is-doc-value? txexpr?)
@@ -13,7 +15,7 @@
 (define not-false? identity)
 
 (define+provide define-meta identity) ;; stub so it will be picked up for docs
-
+(define+provide @ (make-default-tag-function '@))
 
 (define+provide/contract (select* key value-source)
   (coerce/symbol? (or/c is-meta-value? is-doc-value? pagenode? pathish?) . -> . (or/c #f txexpr-elements?))
@@ -108,17 +110,22 @@
     [(_ COND BODY ...)
      (with-syntax ([SPLICING-TAG (datum->syntax stx (world:current-splicing-tag))])
        #'(if COND
-             (with-handlers ([exn:fail? (λ(exn) (error (format "within when/block, ~a" (exn-message exn))))])
+             (with-handlers ([exn:fail? (λ(exn) (error (format "within when/splice, ~a" (exn-message exn))))])
                (list 'SPLICING-TAG BODY ...)) 
              ""))]))
 
-(provide when/block) ; bw compat
-(define-syntax (when/block stx)
+
+(provide when/splice/text)
+(define-syntax (when/splice/text stx)
   (syntax-case stx ()
-    [(_ condition body ...)
-     #'(if condition (string-append* 
-                      (with-handlers ([exn:fail? (λ(exn) (error (format "within when/block, ~a" (exn-message exn))))])
-                        (map to-string (list body ...)))) 
-           "")]))
+    [(_ COND BODY ...)
+     (with-syntax ([SPLICING-TAG (datum->syntax stx (world:current-splicing-tag))])
+       #'(if COND
+             (with-handlers ([exn:fail? (λ(exn) (error (format "within when/splice, ~a" (exn-message exn))))])
+               (map to-string (list BODY ...))) 
+             ""))]))
 
 
+(provide when/block) ; bw compat
+(define-syntax-rule (when/block cond body ...)
+  (when/splice/text cond body ...))
