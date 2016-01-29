@@ -25,7 +25,7 @@ A parameter that holds the root directory of the current project (e.g., the dire
 @defparam[world:current-server-extras-path dir path?]{
 A parameter that reports the path to the directory of support files for the project server. Initialized to @racket[#f], but set to a proper value when the server runs.}
 
-@defparam[world:current-poly-target target symbol??]{
+@defparam[world:current-poly-target target symbol?]{
 A parameter that reports the current rendering target for @racket[poly] source files. Initialized to @racket['html].}
 
 
@@ -77,8 +77,6 @@ Determines the default HTTP port for the project server. Initialized to @racket[
 @defoverridable[meta-export symbol?]{The meta hashtable exported from a compiled Pollen source file. Initialized to @racket[metas].}
 
 @defoverridable[meta-tag-name symbol?]{Name of the tag used to mark metas within Pollen source.}
-
-@defoverridable[server-extras-dir string?]{Name of directory where server support files live. Initialized to @tt{server-extras}.}
 
 @defoverridable[extension-escape-char char?]{Character for escaping output-file extensions within source-file names. Initialized to @racket[#\_].}
 

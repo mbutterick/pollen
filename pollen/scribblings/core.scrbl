@@ -22,6 +22,17 @@ You can retrieve a meta value — even in the same document where you define it
 
 For an introduction to metas, see @secref["Inserting_metas"].
 
+@defform[(\@ arg ...)]
+Splicing tag: signals that a list should be merged into its containing expression. You can use something other than @racket[\@] by overriding @racket[world:current-splicing-tag].
+
+@examples[#:eval my-eval
+(module splicer pollen/markup
+'(div "one" (\@ "two" "three") "four"))
+(require 'splicer)
+doc
+]
+
+
 
 @defform[(when/splice condition pollen-args)]
 If @racket[_condition] is true, put the @racket[_pollen-args] into the document. Within a template file, usually invoked like so:

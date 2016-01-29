@@ -176,19 +176,20 @@
   (define expr-to-eval 
     `(begin 
        (require (for-syntax racket/base))
-       (require pollen/private/include-template pollen/cache pollen/private/debug pollen/pagetree)
+       (require pollen/private/include-template pollen/cache pollen/private/debug pollen/pagetree pollen/core)
        ,(require-directory-require-files source-path)
        (parameterize ([current-pagetree (make-project-pagetree ,(world:current-project-root))])
-         (let ([,(world:current-main-export) (cached-doc ,(path->string source-path))]
-               [,(world:current-meta-export) (cached-metas ,(path->string source-path))])
-           (local-require pollen/template pollen/top pollen/core)
+         (let ([,(world:current-main-export source-path) (cached-doc ,(path->string source-path))]
+               [,(world:current-meta-export source-path) (cached-metas ,(path->string source-path))]
+               [,(world:current-splicing-tag source-path) (λ xs xs)]) ; splice behavior is different in textual context
+           (local-require pollen/template pollen/top)
            (define here (path->pagenode
-                         (or (select-from-metas ',(world:current-here-path-key) ,(world:current-meta-export)) 'unknown)))
+                         (or (select-from-metas ',(world:current-here-path-key source-path) ,(world:current-meta-export source-path)) 'unknown)))
            (cond 
-             [(bytes? ,(world:current-main-export)) ,(world:current-main-export)] ; if main export is binary, just pass it through
+             [(bytes? ,(world:current-main-export source-path)) ,(world:current-main-export source-path)] ; if main export is binary, just pass it through
              [else
               ;; `include-template` is the slowest part of the operation (the eval itself is cheap)
-              (include-template #:command-char ,(world:current-command-char) (file ,(->string (find-relative-path source-dir template-path))))])))))
+              (include-template #:command-char ,(world:current-command-char source-path) (file ,(->string (find-relative-path source-dir template-path))))])))))
   (time (parameterize ([current-directory (->complete-path source-dir)]) ; because include-template wants to work relative to source location
           (render-through-eval expr-to-eval))))
 
@@ -213,7 +214,7 @@
       (with-handlers ([exn:fail:contract? (λ _ #f)]) ; in case source-path doesn't work with cached-require
         (parameterize ([current-directory (world:current-project-root)])
           (let* ([source-metas (cached-metas source-path)]
-                 [template-name-or-names (select-from-metas (world:current-template-meta-key) source-metas)] ; #f or atom or list
+                 [template-name-or-names (select-from-metas (world:current-template-meta-key source-path) source-metas)] ; #f or atom or list
                  [template-name (cond
                                   [(list? template-name-or-names)
                                    (define result
@@ -224,13 +225,13 @@
     
     (define (get-default-template)
       (and output-path-ext
-           (let ([default-template-filename (add-ext (world:current-default-template-prefix) output-path-ext)])
+           (let ([default-template-filename (add-ext (world:current-default-template-prefix source-path) output-path-ext)])
              (find-upward-from source-path default-template-filename file-exists-or-has-source?))))
-    
+
     (define (get-fallback-template)
       (and output-path-ext
            (build-path (world:current-server-extras-path)
-                       (add-ext (world:current-fallback-template-prefix) output-path-ext))))
+                       (add-ext (world:current-fallback-template-prefix source-path) output-path-ext))))
     
     (or (file-exists-or-has-source? (get-template-from-metas))
         (file-exists-or-has-source? (get-default-template))

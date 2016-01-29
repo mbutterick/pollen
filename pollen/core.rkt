@@ -6,7 +6,6 @@
          "cache.rkt"
          "pagetree.rkt"
          "tag.rkt"
-         "private/to-string.rkt"
          "private/splice.rkt")
 
 (define is-meta-value? hash?)
@@ -15,7 +14,7 @@
 (define not-false? identity)
 
 (define+provide define-meta identity) ;; stub so it will be picked up for docs
-(define+provide @ (make-default-tag-function '@))
+
 
 (define+provide/contract (select* key value-source)
   (coerce/symbol? (or/c is-meta-value? is-doc-value? pagenode? pathish?) . -> . (or/c #f txexpr-elements?))
@@ -104,6 +103,8 @@
   (cached-doc (convert+validate-path pagenode-or-path 'get-doc)))
 
 
+(define+provide @ (make-default-tag-function '@))
+
 (provide when/splice)
 (define-syntax (when/splice stx)
   (syntax-case stx ()
@@ -111,21 +112,10 @@
      (with-syntax ([SPLICING-TAG (datum->syntax stx (world:current-splicing-tag))])
        #'(if COND
              (with-handlers ([exn:fail? (λ(exn) (error (format "within when/splice, ~a" (exn-message exn))))])
-               (list 'SPLICING-TAG BODY ...)) 
-             ""))]))
-
-
-(provide when/splice/text)
-(define-syntax (when/splice/text stx)
-  (syntax-case stx ()
-    [(_ COND BODY ...)
-     (with-syntax ([SPLICING-TAG (datum->syntax stx (world:current-splicing-tag))])
-       #'(if COND
-             (with-handlers ([exn:fail? (λ(exn) (error (format "within when/splice, ~a" (exn-message exn))))])
-               (map to-string (list BODY ...))) 
+               (SPLICING-TAG BODY ...)) 
              ""))]))
 
 
 (provide when/block) ; bw compat
 (define-syntax-rule (when/block cond body ...)
-  (when/splice/text cond body ...))
+  (when/splice cond body ...))
