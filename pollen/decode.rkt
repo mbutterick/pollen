@@ -3,6 +3,8 @@
 (require "world.rkt"
          "private/whitespace.rkt")
 
+(require "unstable/mb.rkt")
+(provide (all-from-out "unstable/mb.rkt"))
 
 (define (->list/tx x)
   ;; same as ->list but catches special case of single txexpr,
