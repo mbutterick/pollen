@@ -1,6 +1,6 @@
 #lang scribble/manual
 
-@(require scribble/eval pollen/render pollen/world (for-label racket (except-in pollen #%module-begin) pollen/world web-server/templates pollen/file sugar pollen/render))
+@(require scribble/eval pollen/render pollen/world (for-label racket (except-in pollen #%module-begin) pollen/world pollen/core web-server/templates pollen/file sugar pollen/render))
 
 @(define my-eval (make-base-eval))
 @(my-eval `(require pollen))

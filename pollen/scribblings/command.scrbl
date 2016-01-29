@@ -1,7 +1,7 @@
 #lang scribble/manual
 @(require scribble/bnf scribble/eval "utils.rkt" "mb-tools.rkt"
           (for-syntax racket/base)
-          (for-label rackunit pollen/world pollen/render pollen/template (only-in scribble/reader
+          (for-label rackunit pollen/core pollen/world pollen/render pollen/template (only-in scribble/reader
                               use-at-readtable)))
 
 @(define read-eval (make-base-eval))
@@ -522,7 +522,7 @@ The value of edge is ◊|edge| pixels}
 
 @margin-note{Pollen occasionally uses metas internally. For instance, the @racket[get-template-for] function will look in the metas of a source file to see if a template is explicitly specified. The @racket[pollen/template] module also contains functions for working with metas, such as @racket[select-from-metas].}
 
-To make a meta, you create a tag with the special @code{define-meta} name. Then you have two choices: you can either embed the key-value pair as an attribute, or as a tagged X-expression within the meta (using the key as the tag, and the value as the body):
+To make a meta, you create a tag with the special @racket[define-meta] name. Then you have two choices: you can either embed the key-value pair as an attribute, or as a tagged X-expression within the meta (using the key as the tag, and the value as the body):
 
 @codeblock{
 #lang pollen

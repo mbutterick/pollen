@@ -154,6 +154,7 @@
 
 ;; Find adjacent newline characters in a list and merge them into one item
 ;; Scribble, by default, makes each newline a separate list item.
+;; Ignore empty strings.
 (define+provide/contract (merge-newlines x)
   (txexpr-elements? . -> . txexpr-elements?)
   (define newline-pat (regexp (format "^~a+$" (world:current-newline))))
@@ -161,16 +162,18 @@
   (define (merge-if-newlines xs)
     (if (newlines? (car xs))
         (list (apply string-append xs))
-        xs))  
+        xs))
+  (define not-empty-string? (λ(x) (not (and (string? x) (= (string-length x) 0)))))
   (let loop ([x x])
     (if (pair? x)
-        (let ([xs (map loop x)])
+        (let ([xs (map loop (filter not-empty-string? x))])
           (append-map merge-if-newlines (slicef xs newlines?)))
         x)))
 
 (module-test-external
  (require racket/list)
  (check-equal? (merge-newlines empty) empty)
+ (check-equal? (merge-newlines '(p "\n" "" "\n")) '(p "\n\n"))
  (check-equal? (merge-newlines '(p "\n" "\n" "foo" "\n" "\n\n" "bar" (em "\n" "\n" "\n"))) 
                '(p "\n\n" "foo" "\n\n\n" "bar" (em "\n\n\n"))))
 

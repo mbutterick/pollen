@@ -31,9 +31,9 @@
                                  
                                  (module inner pollen/private/doclang-raw
                                    DOC-RAW ; positional arg for doclang-raw that sets name of export.
-                                   (require pollen/top pollen/world)
+                                   (require pollen/top pollen/world pollen/core)
                                    (require (submod ".." META-MOD))
-                                   (provide (all-defined-out) #%top (all-from-out (submod ".." META-MOD)))
+                                   (provide (all-defined-out) #%top (all-from-out (submod ".." META-MOD) pollen/core))
                                    EXPR-WITHOUT-METAS (... ...))
                                  
                                  (require 'inner)

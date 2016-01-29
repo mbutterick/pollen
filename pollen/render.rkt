@@ -8,6 +8,7 @@
          "private/cache-utils.rkt"
          "pagetree.rkt"
          "template.rkt"
+         "core.rkt"
          "private/rerequire.rkt"
          "world.rkt")
 
@@ -180,7 +181,7 @@
        (parameterize ([current-pagetree (make-project-pagetree ,(world:current-project-root))])
          (let ([,(world:current-main-export) (cached-doc ,(path->string source-path))]
                [,(world:current-meta-export) (cached-metas ,(path->string source-path))])
-           (local-require pollen/template pollen/top)
+           (local-require pollen/template pollen/top pollen/core)
            (define here (path->pagenode
                          (or (select-from-metas ',(world:current-here-path-key) ,(world:current-meta-export)) 'unknown)))
            (cond 

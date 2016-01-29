@@ -5,6 +5,7 @@
 @local-table-of-contents[]
 
 @include-section["cache.scrbl"]
+@include-section["core.scrbl"]
 @include-section["decode.scrbl"]
 @include-section["file.scrbl"]
 @include-section["pagetree.scrbl"]
