@@ -1,5 +1,5 @@
 #lang racket/base
-(require (for-syntax racket/base "../world.rkt"))
+(require (for-syntax racket/base "../setup.rkt"))
 (require racket/list sugar/define sugar/test txexpr racket/match sugar/container sugar/coerce sugar/len racket/string "../private/to-string.rkt" )
 
 (define (make-replacer query+replacement)

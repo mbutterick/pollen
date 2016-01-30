@@ -4,7 +4,7 @@
 (define (root . xs)
   `(rootover ,@xs))
 
-(module world racket/base
+(module setup racket/base
   (provide (all-defined-out))
   
   (define preproc-source-ext 'ppover)

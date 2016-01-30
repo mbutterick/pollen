@@ -1,7 +1,7 @@
 #lang scribble/manual
 @(require scribble/bnf scribble/eval "utils.rkt" "mb-tools.rkt"
           (for-syntax racket/base)
-          (for-label rackunit pollen/core pollen/world pollen/render pollen/template (only-in scribble/reader
+          (for-label rackunit pollen/core pollen/setup pollen/render pollen/template (only-in scribble/reader
                               use-at-readtable)))
 
 @(define read-eval (make-base-eval))
@@ -29,7 +29,7 @@ Here's how you type it:
 
 @bold{Ubuntu}: ctrl + shift + U, then 25CA
 
-Still, if you don't want to use the lozenge as your command character, you can set Pollen's @racket[world:command-char] value to whatever character you want (see also @seclink["world-overrides"]).
+Still, if you don't want to use the lozenge as your command character, you can set Pollen's @racket[setup:default-command-char] value to whatever character you want (see also @seclink["setup-overrides"]).
 
 @margin-note{Scribble uses the @"@" sign as a delimiter. It's not a bad choice if you only work with Racket files. But as you use Pollen to work on other kinds of text-based files that commonly contain @"@" signs — HTML pages especially — it gets cumbersome. So I changed it.}
 

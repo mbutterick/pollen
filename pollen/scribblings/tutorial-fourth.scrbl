@@ -1,6 +1,6 @@
 #lang scribble/manual
 
-@(require scribble/eval racket/date (for-label pollen/core racket/file racket/system pollen/decode plot pollen/world pollen/tag racket/base pollen/template txexpr racket/list racket/string pollen/render))
+@(require scribble/eval racket/date (for-label pollen/core racket/file racket/system pollen/decode plot pollen/setup pollen/tag racket/base pollen/template txexpr racket/list racket/string pollen/render))
 @(require "mb-tools.rkt")
 
 @(define my-eval (make-base-eval))
@@ -16,7 +16,7 @@ In previous tutorial projects, we've maintained a one-to-one relationship betwee
 
 @item{Setting up & using @tt{poly} source files}
 
-@item{The @tt{world} submodule}
+@item{The @tt{setup} submodule}
 
 @item{Branching tag functions}
 
@@ -83,7 +83,7 @@ In the previous tutorials, you saw how Pollen source files correspond to certain
 
 In a multiple-output project, a source file no longer has a one-to-one correspondence with a specific output type. To indicate this, we'll instead use the special @tt{poly} extension. So our @filepath{document.html.pm} will become @filepath{document.poly.pm}.
 
-@margin-note{The @tt{poly} extension is the default, but can be changed for a  project by using the @racket[world:current-poly-source-ext] setting.}
+@margin-note{The @tt{poly} extension is the default, but can be changed for a  project by using the @racket[setup:poly-source-ext] setting.}
 
 Let's set up a new multi-output project for a résumé. Find a convenient directory and create a new @tt{poly} source file as follows:
 
@@ -142,11 +142,11 @@ Today is @(date->string (current-date)). I @bold{really} want this job.
 
 Though Pollen imputes HTML as a target for poly sources by default, if you only wanted HTML, you wouldn't be using a poly source. So our next step will be to explicitly define the output targets that we want to associate with poly sources. 
 
-@subsubsection{Using the @tt{world} submodule}
+@subsubsection{Using the @tt{setup} submodule}
 
-We'll do this by setting the @racket[world:current-poly-targets] value in our @filepath{pollen.rkt}. If you haven't investigated it yet, the @racket[pollen/world] module offers @seclink["world-overrides"] that allow you to configure certain Pollen characteristics from within a @filepath{pollen.rkt} file. The example on that page, for instance, shows how to change the markup source extension and the Pollen command character. 
+We'll do this by setting the @racket[setup:poly-targets] value in our @filepath{pollen.rkt}. If you haven't investigated it yet, the @racket[pollen/setup] module offers @seclink["setup-overrides"] that allow you to configure certain Pollen characteristics from within a @filepath{pollen.rkt} file. The example on that page, for instance, shows how to change the markup source extension and the Pollen command character. 
 
-The idea is that you add a @racket[world] submodule to your @filepath{pollen.rkt} file with a @racket[define] statement for the value. Because we're defining the local value, we drop the @racket[world:current-] prefix and just call it @racket[poly-targets]. Our value will be a list of file extensions denoting the targets. To start, let's set our output formats to HTML and plain text, which we'll denote with the list of extensions @racket['(html txt)]. 
+The idea is that you add a @racket[setup] submodule to your @filepath{pollen.rkt} file with a @racket[define] statement for the value. Because we're defining the local value, we drop the @racket[setup:] prefix and just call it @racket[poly-targets]. Our value will be a list of file extensions denoting the targets. To start, let's set our output formats to HTML and plain text, which we'll denote with the list of extensions @racket['(html txt)]. 
 
 @margin-note{I'm glossing over the details of @seclink["submodules" #:doc '(lib "scribblings/guide/guide.scrbl")], but they're one of the best-considered features of the Racket language. What makes submodules so handy is that they are truly independent: you can load a submodule from a source file without running the main body of the file. Thus, tasks like this — setting configuration values — that might require separate files in other languages can be handled as submodules in Racket.}
 
@@ -155,7 +155,7 @@ The idea is that you add a @racket[world] submodule to your @filepath{pollen.rkt
 (require racket/date)
 (provide (all-defined-out))
 
-(module config racket/base
+(module setup racket/base
   (provide (all-defined-out))
   (define poly-targets '(html txt)))
 
@@ -173,7 +173,7 @@ Though you ordinarily don't have to restart the project server to see changes in
 
 @image/rp["poly-ps-html-txt.png" #:scale 0.45]
 
-What's happened is that @racket[world:current-poly-targets] now reflects the settings in @filepath{pollen.rkt}. The project server sees that we want to associate poly files with HTML and plain-text targets, and accordingly shows us two entries in the project-server listing: @filepath{cv.html.pm} and @filepath{cv.txt.pm}. As the adjacent message indicates, these are not new source files on disk, but rather implied by @filepath{cv.poly.pm}.
+What's happened is that @racket[setup:poly-targets] now reflects the settings in @filepath{pollen.rkt}. The project server sees that we want to associate poly files with HTML and plain-text targets, and accordingly shows us two entries in the project-server listing: @filepath{cv.html.pm} and @filepath{cv.txt.pm}. As the adjacent message indicates, these are not new source files on disk, but rather implied by @filepath{cv.poly.pm}.
 
 If you click on @filepath{cv.html.pm}, you'll see the same HTML output that you saw before. If you click on @filepath{cv.txt.pm}, however, you'll see this:
 
@@ -221,14 +221,14 @@ But plain text doesn't have @racket[h2] or @racket[strong]. So how about this: w
 
 ``So how do we make our tags mean one thing for HTML and a different thing for plain text?'' We make @italic{branching tag functions} that do different things depending on what the current rendering target for poly sources is.
 
-That value, in fact, is stored in a Pollen @seclink["parameterize" #:doc '(lib "scribblings/guide/guide.scrbl")]{parameter} called @racket[(world:current-poly-target)]. What we're going to do is rewrite our tag functions to behave differently based on the value of this parameter. Update your @filepath{pollen.rkt} as follows:
+That value, in fact, is stored in a Pollen @seclink["parameterize" #:doc '(lib "scribblings/guide/guide.scrbl")]{parameter} called @racket[(setup:current-poly-target)]. What we're going to do is rewrite our tag functions to behave differently based on the value of this parameter. Update your @filepath{pollen.rkt} as follows:
 
 @fileblock["pollen.rkt" @codeblock|{
 #lang racket/base
-(require racket/date pollen/world)
+(require racket/date pollen/setup)
 (provide (all-defined-out))
 
-(module config racket/base
+(module setup racket/base
   (provide (all-defined-out))
   (define poly-targets '(html txt)))
 
@@ -236,12 +236,12 @@ That value, in fact, is stored in a Pollen @seclink["parameterize" #:doc '(lib "
   (date->string (current-date)))
 
 (define (heading . xs)
-  (case (world:current-poly-target)
+  (case (setup:current-poly-target)
     [(txt) (map string-upcase xs)]
     [else `(h2 ,@xs)]))
 
 (define (emph . xs)
-  (case (world:current-poly-target)
+  (case (setup:current-poly-target)
     [(txt) `("**" ,@xs "**")]
     [else `(strong ,@xs)]))
 }|]
@@ -269,10 +269,10 @@ Let's see how fast we can add support for LaTeX output. Here's the updated @file
 
 @fileblock["pollen.rkt" @codeblock|{
 #lang racket/base
-(require racket/date pollen/world)
+(require racket/date pollen/setup)
 (provide (all-defined-out))
 
-(module config racket/base
+(module setup racket/base
   (provide (all-defined-out))
   (define poly-targets '(html txt ltx)))
 
@@ -280,13 +280,13 @@ Let's see how fast we can add support for LaTeX output. Here's the updated @file
   (date->string (current-date)))
 
 (define (heading . xs)
-  (case (world:current-poly-target)
+  (case (setup:current-poly-target)
     [(ltx) (apply string-append `("{\\huge " ,@xs "}"))]
     [(txt) (map string-upcase xs)]
     [else `(h2 ,@xs)]))
 
 (define (emph . xs)
-  (case (world:current-poly-target)
+  (case (setup:current-poly-target)
     [(ltx) (apply string-append `("{\\bf " ,@xs "}"))]
     [(txt) `("**" ,@xs "**")]
     [else `(strong ,@xs)]))
@@ -332,10 +332,10 @@ First, we update @filepath{pollen.rkt}:
 
 @fileblock["pollen.rkt" @codeblock|{
 #lang racket/base
-(require racket/date pollen/world)
+(require racket/date pollen/setup)
 (provide (all-defined-out))
 
-(module config racket/base
+(module setup racket/base
   (provide (all-defined-out))
   (define poly-targets '(html txt ltx pdf)))
 
@@ -343,13 +343,13 @@ First, we update @filepath{pollen.rkt}:
   (date->string (current-date)))
 
 (define (heading . xs)
-  (case (world:current-poly-target)
+  (case (setup:current-poly-target)
     [(ltx pdf) (apply string-append `("{\\huge " ,@xs "}"))]
     [(txt) (map string-upcase xs)]
     [else `(h2 ,@xs)]))
 
 (define (emph . xs)
-  (case (world:current-poly-target)
+  (case (setup:current-poly-target)
     [(ltx pdf) (apply string-append `("{\\bf " ,@xs "}"))]
     [(txt) `("**" ,@xs "**")]
     [else `(strong ,@xs)]))

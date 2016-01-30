@@ -10,7 +10,7 @@
          "template.rkt"
          "core.rkt"
          "private/rerequire.rkt"
-         "world.rkt")
+         "setup.rkt")
 
 ;; used to track renders according to modification dates of component files
 (define mod-date-hash (make-hash))
@@ -62,7 +62,7 @@
   (define pagetree (if (pagetree? pagetree-or-path)
                        pagetree-or-path
                        (cached-doc pagetree-or-path)))
-  (parameterize ([current-directory (world:current-project-root)])
+  (parameterize ([current-directory (setup:current-project-root)])
     (for-each render-from-source-or-output-path (map ->complete-path (pagetree->list pagetree)))))
 
 
@@ -90,7 +90,7 @@
     (cond
       [(not (file-exists? output-path)) 'file-missing]
       [(mod-date-missing-or-changed? source-path template-path) 'mod-key-missing-or-changed]
-      [(not (world:current-render-cache-active source-path)) 'render-cache-deactivated]
+      [(not (setup:render-cache-active source-path)) 'render-cache-deactivated]
       [else #f]))
   (when render-needed?
     (render-to-file source-path template-path output-path)))
@@ -117,9 +117,9 @@
   
   (define output-path (or maybe-output-path (->output-path source-path)))
   (define template-path (or maybe-template-path (get-template-for source-path output-path)))
-  (message (format "rendering: /~a as /~a" (find-relative-path (world:current-project-root) source-path)
-                   (find-relative-path (world:current-project-root) output-path)))
-  (define render-result (parameterize ([world:current-poly-target (->symbol (get-ext output-path))])
+  (message (format "rendering: /~a as /~a" (find-relative-path (setup:current-project-root) source-path)
+                   (find-relative-path (setup:current-project-root) output-path)))
+  (define render-result (parameterize ([setup:current-poly-target (->symbol (get-ext output-path))])
                           (apply render-proc (list source-path template-path output-path))))
   ;; wait till last possible moment to store mod dates, because render-proc may also trigger its own subrenders
   ;; e.g., of a template. 
@@ -178,18 +178,18 @@
        (require (for-syntax racket/base))
        (require pollen/private/include-template pollen/cache pollen/private/debug pollen/pagetree pollen/core)
        ,(require-directory-require-files source-path)
-       (parameterize ([current-pagetree (make-project-pagetree ,(world:current-project-root))])
-         (let ([,(world:current-main-export source-path) (cached-doc ,(path->string source-path))]
-               [,(world:current-meta-export source-path) (cached-metas ,(path->string source-path))]
-               [,(world:current-splicing-tag source-path) (λ xs xs)]) ; splice behavior is different in textual context
+       (parameterize ([current-pagetree (make-project-pagetree ,(setup:current-project-root))])
+         (let ([,(setup:main-export source-path) (cached-doc ,(path->string source-path))]
+               [,(setup:meta-export source-path) (cached-metas ,(path->string source-path))]
+               [,(setup:splicing-tag source-path) (λ xs xs)]) ; splice behavior is different in textual context
            (local-require pollen/template pollen/top)
            (define here (path->pagenode
-                         (or (select-from-metas ',(world:current-here-path-key source-path) ,(world:current-meta-export source-path)) 'unknown)))
+                         (or (select-from-metas ',(setup:here-path-key source-path) ,(setup:meta-export source-path)) 'unknown)))
            (cond 
-             [(bytes? ,(world:current-main-export source-path)) ,(world:current-main-export source-path)] ; if main export is binary, just pass it through
+             [(bytes? ,(setup:main-export source-path)) ,(setup:main-export source-path)] ; if main export is binary, just pass it through
              [else
               ;; `include-template` is the slowest part of the operation (the eval itself is cheap)
-              (include-template #:command-char ,(world:current-command-char source-path) (file ,(->string (find-relative-path source-dir template-path))))])))))
+              (include-template #:command-char ,(setup:command-char source-path) (file ,(->string (find-relative-path source-dir template-path))))])))))
   (time (parameterize ([current-directory (->complete-path source-dir)]) ; because include-template wants to work relative to source location
           (render-through-eval expr-to-eval))))
 
@@ -212,9 +212,9 @@
     (define output-path-ext (get-ext output-path))
     (define (get-template-from-metas)
       (with-handlers ([exn:fail:contract? (λ _ #f)]) ; in case source-path doesn't work with cached-require
-        (parameterize ([current-directory (world:current-project-root)])
+        (parameterize ([current-directory (setup:current-project-root)])
           (let* ([source-metas (cached-metas source-path)]
-                 [template-name-or-names (select-from-metas (world:current-template-meta-key source-path) source-metas)] ; #f or atom or list
+                 [template-name-or-names (select-from-metas (setup:template-meta-key source-path) source-metas)] ; #f or atom or list
                  [template-name (cond
                                   [(list? template-name-or-names)
                                    (define result
@@ -225,13 +225,13 @@
     
     (define (get-default-template)
       (and output-path-ext
-           (let ([default-template-filename (add-ext (world:current-default-template-prefix source-path) output-path-ext)])
+           (let ([default-template-filename (add-ext (setup:default-template-prefix source-path) output-path-ext)])
              (find-upward-from source-path default-template-filename file-exists-or-has-source?))))
 
     (define (get-fallback-template)
       (and output-path-ext
-           (build-path (world:current-server-extras-path)
-                       (add-ext (world:current-fallback-template-prefix source-path) output-path-ext))))
+           (build-path (setup:current-server-extras-path)
+                       (add-ext (setup:fallback-template-prefix source-path) output-path-ext))))
     
     (or (file-exists-or-has-source? (get-template-from-metas))
         (file-exists-or-has-source? (get-default-template))
@@ -241,21 +241,21 @@
 
 
 (module-test-external
- (require pollen/world sugar/file sugar/coerce)
- (define fallback.html (build-path (world:current-server-extras-path)
-                                   (add-ext (world:current-fallback-template-prefix) 'html)))
+ (require pollen/setup sugar/file sugar/coerce)
+ (define fallback.html (build-path (setup:current-server-extras-path)
+                                   (add-ext (setup:fallback-template-prefix) 'html)))
  (check-equal? (get-template-for (->complete-path "foo.poly.pm")) fallback.html)
  (check-equal? (get-template-for (->complete-path "foo.html.pm")) fallback.html)
  
- (define fallback.svg (build-path (world:current-server-extras-path)
-                                  (add-ext (world:current-fallback-template-prefix) 'svg)))
- (parameterize ([world:current-poly-target 'svg])
+ (define fallback.svg (build-path (setup:current-server-extras-path)
+                                  (add-ext (setup:fallback-template-prefix) 'svg)))
+ (parameterize ([setup:current-poly-target 'svg])
    (check-equal? (get-template-for (->complete-path "foo.poly.pm")) fallback.svg)
    (check-equal? (get-template-for (->complete-path "foo.html.pm")) fallback.html))
  
- (define fallback.missing (build-path (world:current-server-extras-path)
-                                      (add-ext (world:current-fallback-template-prefix) 'missing)))
- (parameterize ([world:current-poly-target 'missing])
+ (define fallback.missing (build-path (setup:current-server-extras-path)
+                                      (add-ext (setup:fallback-template-prefix) 'missing)))
+ (parameterize ([setup:current-poly-target 'missing])
    (check-false (get-template-for (->complete-path "foo.poly.pm")))
    (check-equal? (get-template-for (->complete-path "foo.html.pm")) fallback.html)))
 
@@ -264,5 +264,5 @@
   ;(list? . -> . (or/c string? bytes?))
   (parameterize ([current-namespace (make-base-namespace)]
                  [current-output-port (current-error-port)])
-    (namespace-attach-module (namespace-anchor->namespace render-module-ns) 'pollen/world) ; brings in params
+    (namespace-attach-module (namespace-anchor->namespace render-module-ns) 'pollen/setup) ; brings in params
     (eval expr-to-eval)))

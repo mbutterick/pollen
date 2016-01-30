@@ -1,7 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base racket/syntax))
 (require racket/path)
-(require "../world.rkt" sugar/define sugar/file sugar/string sugar/coerce sugar/test)
+(require "../setup.rkt" sugar/define sugar/file sugar/string sugar/coerce sugar/test)
 
 
 ;; because it comes up all the time
@@ -65,7 +65,7 @@
                          (directory-list dir #:build? #t))))))
 
 
-(define+provide (escape-last-ext x [escape-char (world:current-extension-escape-char)])
+(define+provide (escape-last-ext x [escape-char (setup:extension-escape-char)])
   ;((pathish?) (char?) . ->* . coerce/path?)
   ;; if x has a file extension, reattach it with the escape char
   (define current-ext (get-ext x))
@@ -83,7 +83,7 @@
 (define second cadr)
 (define third caddr)
 (define (last x) (car (reverse x)))
-(define+provide (unescape-ext x [escape-char (world:current-extension-escape-char)])
+(define+provide (unescape-ext x [escape-char (setup:extension-escape-char)])
   ;((coerce/string?) (char?) . ->* . coerce/path?)
   ;; if x has an escaped extension, unescape it.
   (define-values (base name dir?) (split-path x))
@@ -121,7 +121,7 @@
 
 
 (define+provide (ext-in-poly-targets? ext [x #f])
-  (member (->symbol ext) (apply world:current-poly-targets (if x (list x) null))))
+  (member (->symbol ext) (apply setup:poly-targets (if x (list x) null))))
 
 (module-test-external
  (check-equal? (ext-in-poly-targets? 'html) '(html))
@@ -129,7 +129,7 @@
 
 
 (define+provide (has-poly-ext? x)
-  (equal? (get-ext x) (->string (world:current-poly-source-ext))))
+  (equal? (get-ext x) (->string (setup:poly-source-ext))))
 
 (module-test-external
  (check-true (has-poly-ext? "foo.poly"))
@@ -149,7 +149,7 @@
 (define-syntax (make-source-utility-functions stx)
   (syntax-case stx ()
     [(_ stem)
-     (with-syntax ([world:current-stem-source-ext (format-id stx "world:current-~a-source-ext" #'stem)]
+     (with-syntax ([setup:stem-source-ext (format-id stx "setup:~a-source-ext" #'stem)]
                    [stem-source? (format-id stx "~a-source?" #'stem)]
                    [get-stem-source (format-id stx "get-~a-source" #'stem)]
                    [has/is-stem-source? (format-id stx "has/is-~a-source?" #'stem)]
@@ -160,7 +160,7 @@
            ;; does file have particular extension
            (define+provide/contract (stem-source? x)
              (any/c . -> . boolean?)
-             (and (pathish? x) (has-ext? (->path x) (world:current-stem-source-ext)) #t))
+             (and (pathish? x) (has-ext? (->path x) (setup:stem-source-ext)) #t))
            
            ;; non-theoretical: want the first possible source that exists in the filesystem
            (define+provide/contract (get-stem-source x)
@@ -186,19 +186,19 @@
                                  (list x) ; already has the source extension
                                  #,(if (eq? (syntax->datum #'stem) 'scribble)
                                        #'(if (x . has-ext? . 'html) ; different logic for scribble sources
-                                             (list (add-ext (remove-ext* x) (world:current-stem-source-ext)))
+                                             (list (add-ext (remove-ext* x) (setup:stem-source-ext)))
                                              #f)
                                        #'(let ([x-ext (get-ext x)]
-                                               [source-ext (world:current-stem-source-ext)])
+                                               [source-ext (setup:stem-source-ext)])
                                            (append
                                             (list (add-ext x source-ext)) ; standard
                                             (if x-ext ; has existing ext, therefore needs escaped version
                                                 (append
                                                  (list (add-ext (escape-last-ext x) source-ext))
                                                  (if (ext-in-poly-targets? x-ext x) ; needs multi + escaped multi
-                                                     (let ([x-multi (add-ext (remove-ext x) (world:current-poly-source-ext))])
+                                                     (let ([x-multi (add-ext (remove-ext x) (setup:poly-source-ext))])
                                                        (list
-                                                        (add-ext x-multi (world:current-stem-source-ext))
+                                                        (add-ext x-multi (setup:stem-source-ext))
                                                         (add-ext (escape-last-ext x-multi) source-ext)))
                                                      null))
                                                 null))))))
@@ -272,7 +272,7 @@
     [(or (markup-source? x) (preproc-source? x) (null-source? x) (markdown-source? x))
      (define output-path (unescape-ext (remove-ext x)))
      (if (has-poly-ext? output-path)
-         (add-ext (remove-ext output-path) (or (world:current-poly-target) (car (world:current-poly-targets))))
+         (add-ext (remove-ext output-path) (or (setup:current-poly-target) (car (setup:poly-targets))))
          output-path)]
     [(scribble-source? x) (add-ext (remove-ext x) 'html)]
     [else x]))
@@ -280,7 +280,7 @@
 
 (define+provide (project-files-with-ext ext)
   ;(coerce/symbol? . -> . complete-paths?)
-  (map ->complete-path (filter (λ(i) (has-ext? i (->symbol ext))) (directory-list (world:current-project-root)))))
+  (map ->complete-path (filter (λ(i) (has-ext? i (->symbol ext))) (directory-list (setup:current-project-root)))))
 
 
 (define (racket-source? x)
@@ -298,7 +298,7 @@
 
 
 (define+provide (cache-file? path)
-  (ormap (λ(cache-name) (ends-with? (path->string path) cache-name)) world:cache-names))
+  (ormap (λ(cache-name) (ends-with? (path->string path) cache-name)) setup:default-cache-names))
 
 
 (define+provide (pollen-related-file? file)
@@ -312,4 +312,4 @@
                                 racket-source?
                                 magic-directory?
                                 cache-file?
-                                (world:current-unpublished-path?))))
+                                (setup:unpublished-path?))))

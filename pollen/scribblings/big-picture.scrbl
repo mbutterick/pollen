@@ -75,7 +75,7 @@ As mentioned above, a Pollen source file is not code with text embedded in it, b
 @item{@bold{If you can write text, you can program in Pollen.} Really. As you already found out in the @secref["quick-tour"], this is a valid Pollen program:
 @codeblock{
 #lang pollen
-Hello world: how are you on this fine summer day?
+Hello setup: how are you on this fine summer day?
 }}
 
 @item{@bold{Commands start with ◊.} A simple rule: if a piece of text starts with @litchar{◊}, it's treated as a command; otherwise it's treated as ordinary text.}

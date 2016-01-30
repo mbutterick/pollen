@@ -1,6 +1,6 @@
 #lang scribble/manual
 
-@(require scribble/eval "mb-tools.rkt" pollen/render pollen/world (for-label racket (except-in pollen #%module-begin) pollen/world sugar pollen/file))
+@(require scribble/eval "mb-tools.rkt" pollen/render pollen/setup (for-label racket (except-in pollen #%module-begin) pollen/setup sugar pollen/file))
 
 @(define my-eval (make-base-eval))
 @(my-eval `(require pollen pollen/file))
@@ -15,22 +15,22 @@ Pollen handles six kinds of source files:
 
 
 @itemlist[
-@item{@bold{Preprocessor}, with file extension @ext[world:preproc-source-ext]}
+@item{@bold{Preprocessor}, with file extension @ext[setup:default-preproc-source-ext]}
 
-@item{@bold{Markup}, with file extension @ext[world:markup-source-ext]} 
+@item{@bold{Markup}, with file extension @ext[setup:default-markup-source-ext]} 
 
-@item{@bold{Markdown}, with file extension @ext[world:markdown-source-ext]} 
+@item{@bold{Markdown}, with file extension @ext[setup:default-markdown-source-ext]} 
 
-@item{@bold{Null}, with file extension @ext[world:null-source-ext]}
+@item{@bold{Null}, with file extension @ext[setup:default-null-source-ext]}
 
-@item{@bold{Scribble}, with file extension @ext[world:scribble-source-ext]}
+@item{@bold{Scribble}, with file extension @ext[setup:default-scribble-source-ext]}
 
-@item{@bold{Pagetree}, with file extension @ext[world:pagetree-source-ext]. This is the only source type that does not produce an output file.}
+@item{@bold{Pagetree}, with file extension @ext[setup:default-pagetree-source-ext]. This is the only source type that does not produce an output file.}
 
 ]
 
 
-The functions in this module rely on file extensions specified in @racketmodname[pollen/world]. These extensions can be overridden within a project — see @secref["world-overrides"]. 
+The functions in this module rely on file extensions specified in @racketmodname[pollen/setup]. These extensions can be overridden within a project — see @secref["setup-overrides"]. 
 
 For each kind of Pollen source file, the corresponding output file name is derived by removing the extension from the name of the source file. So the preprocessor source file @filepath{default.css.pp} would become @filepath{default.css}. (See 
 @secref["Saving___naming_your_source_file"] if this rings no bells.)
@@ -170,7 +170,7 @@ In all cases, if there is no corresponding source, return @racket[#f].
 path?]
 Convert a source path @racket[_p] into its corresponding output path. This function simply generates a path for a file — it does not ask whether the file exists.
 
-If @racket[_p] has a @seclink["The_poly_output_type"]{@id[world:poly-source-ext] output type}, then @racket[->output-path] uses @racket[world:current-poly-target] as the output-path extension.
+If @racket[_p] has a @seclink["The_poly_output_type"]{@id[setup:default-poly-source-ext] output type}, then @racket[->output-path] uses @racket[setup:current-poly-target] as the output-path extension.
 
 Otherwise, there are no type-specific variants for this function because the output path of a Pollen source file is @seclink["Saving___naming_your_source_file"]{determined by its name}.
 

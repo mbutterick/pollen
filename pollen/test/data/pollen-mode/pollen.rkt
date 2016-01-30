@@ -1,5 +1,5 @@
 #lang racket/base
 
-(module world racket/base
+(module setup racket/base
   (provide (all-defined-out))
   (define command-char #\∆))

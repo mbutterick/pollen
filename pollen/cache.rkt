@@ -3,18 +3,18 @@
          sugar/define
          "private/cache-utils.rkt"
          "private/debug.rkt"
-         "world.rkt")
+         "setup.rkt")
 
 ;; The cache is a hash with paths as keys.
 ;; The cache values are also hashes, with key/value pairs for that path.
 
-(define+provide (reset-cache [starting-dir (world:current-project-root)])
+(define+provide (reset-cache [starting-dir (setup:current-project-root)])
   (unless (and (path-string? starting-dir) (directory-exists? starting-dir))
     (raise-argument-error 'reset-cache "path-string to existing directory" starting-dir))
   
   (for ([path (in-directory starting-dir)]
         #:when (and (directory-exists? path)
-                    (equal? (path->string (car (reverse (explode-path path)))) (world:current-cache-dir-name))))
+                    (equal? (path->string (car (reverse (explode-path path)))) (setup:cache-dir-name))))
        (message (format "removing cache directory: ~a" path))
        (delete-directory/files path)))
 
@@ -31,11 +31,11 @@
         (raise-argument-error caller-name "path to existing file" path-or-path-string))
       
       (cond
-        [(world:current-compile-cache-active path)
+        [(setup:compile-cache-active path)
          (define key (paths->key path))
          (hash-ref (hash-ref! ram-cache key (λ _ (cache-ref! key (λ _ (path->hash path))))) subkey)]
         [else (parameterize ([current-namespace (make-base-namespace)])
-                (namespace-attach-module (namespace-anchor->namespace cache-module-ns) 'pollen/world) ; brings in params
+                (namespace-attach-module (namespace-anchor->namespace cache-module-ns) 'pollen/setup) ; brings in params
                 (dynamic-require path subkey))]))))
 
 
@@ -44,8 +44,8 @@
 
 
 (define+provide (cached-doc path-string)
-  (cached-require-base path-string (world:current-main-export) 'cached-doc))
+  (cached-require-base path-string (setup:main-export) 'cached-doc))
 
 
 (define+provide (cached-metas path-string)
-  (cached-require-base path-string (world:current-meta-export) 'cached-metas))
+  (cached-require-base path-string (setup:meta-export) 'cached-metas))

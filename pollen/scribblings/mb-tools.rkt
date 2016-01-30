@@ -63,10 +63,11 @@
 (define-syntax (defoverridable stx)
   (syntax-case stx ()
     [(_ name predicate? desc ...)
-     (with-syntax ([world:name (format-id stx "world:~a" #'name)]
-                   [world:current-name (format-id stx "world:current-~a" #'name)])
-       #'(deftogether ((defthing world:name predicate?)
-                       (defproc (world:current-name) predicate?))
+     (with-syntax ([setup:default-name (format-id stx "setup:default-~a" #'name)]
+                   [setup:name (format-id stx "setup:~a" #'name)])
+       #'(deftogether ((defproc (setup:name) predicate?)
+                       (defthing setup:default-name predicate?)
+                       )
            desc ...))]))
 
 (define (val . args)

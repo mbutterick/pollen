@@ -7,7 +7,7 @@
 
 ;; do the tests here to verify that the right functions are available through file.rkt
 (module-test-external
- (require sugar/coerce pollen/world)
+ (require sugar/coerce pollen/setup)
  (check-true (preproc-source? "foo.pp"))
  (check-false (preproc-source? "foo.bar"))
  (check-false (preproc-source? #f))
@@ -16,8 +16,8 @@
  (check-equal? (->preproc-source-path "foo") (->path "foo.pp"))
  (check-equal? (->preproc-source-path 'foo) (->path "foo.pp"))
  
- (check-true (pagetree-source? (format "foo.~a" (world:current-pagetree-source-ext))))
- (check-false (pagetree-source? (format "~a.foo" (world:current-pagetree-source-ext))))
+ (check-true (pagetree-source? (format "foo.~a" (setup:pagetree-source-ext))))
+ (check-false (pagetree-source? (format "~a.foo" (setup:pagetree-source-ext))))
  (check-false (pagetree-source? #f))
  
  (check-true (markup-source? "foo.pm"))

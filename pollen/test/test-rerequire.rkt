@@ -1,5 +1,5 @@
 #lang at-exp racket/base
-(require rackunit racket/runtime-path pollen/render racket/file racket/system pollen/world)
+(require rackunit racket/runtime-path pollen/render racket/file racket/system pollen/setup)
 
 ;; define-runtime-path only allowed at top level
 (define-runtime-path rerequire-dir "data/rerequire")
@@ -16,7 +16,7 @@
 ;; test makes sure that file render changes after pollen.rkt changes
 (parameterize ([current-output-port (open-output-string)]
                [current-directory rerequire-dir]
-               [world:current-project-root rerequire-dir])
+               [setup:current-project-root rerequire-dir])
   
   (display-to-file @string-append{#lang racket/base
  (provide id)

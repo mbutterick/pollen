@@ -1,7 +1,8 @@
 #lang racket/base
-(require (for-syntax racket/base syntax/strip-context racket/syntax "../world.rkt" "split-metas.rkt")
-         "to-string.rkt" "../pagetree.rkt" "splice.rkt" "../world.rkt") ; need world here to resolve PARSER-MODE-ARG
+(require (for-syntax racket/base syntax/strip-context racket/syntax "../setup.rkt" "split-metas.rkt")
+         "to-string.rkt" "../pagetree.rkt" "splice.rkt" "../setup.rkt") ; need world here to resolve PARSER-MODE-ARG
 (provide (all-defined-out))
+(require sugar/debug)
 
 (define-syntax-rule (define+provide-module-begin-in-mode PARSER-MODE-ARG)
   (begin
@@ -10,18 +11,18 @@
     (define-syntax (pollen-module-begin stx)
       (syntax-case stx ()
         [(_ EXPR (... ...))
-         (let-values ([(meta-hash expr-without-metas) (split-metas (syntax->datum #'(EXPR (... ...))) (world:current-define-meta-name))])
+         (let-values ([(meta-hash expr-without-metas) (split-metas (syntax->datum #'(EXPR (... ...))) (setup:define-meta-name))])
            (with-syntax ([META-HASH (datum->syntax #'(EXPR (... ...)) meta-hash)]
                          [(EXPR-WITHOUT-METAS (... ...)) (datum->syntax #'(EXPR (... ...)) expr-without-metas)]
-                         [METAS (format-id #'(EXPR (... ...)) "~a" (world:current-meta-export))]
-                         [META-MOD (format-symbol "~a" (world:current-meta-export))]
-                         [ROOT (format-id #'(EXPR (... ...)) "~a" (world:current-main-root-node))]
-                         [NEWLINE (datum->syntax #'(EXPR (... ...)) (world:current-newline))]
-                         [MODE-PAGETREE (datum->syntax #'(EXPR (... ...)) world:mode-pagetree)]
-                         [MODE-MARKUP (datum->syntax #'(EXPR (... ...)) world:mode-markup)]
-                         [MODE-MARKDOWN (datum->syntax #'(EXPR (... ...)) world:mode-markdown)]
-                         [SPLICING_TAG (datum->syntax #'(EXPR (... ...)) (world:current-splicing-tag))]
-                         [DOC (format-id #'(EXPR (... ...)) "~a" (world:current-main-export))]
+                         [METAS (format-id #'(EXPR (... ...)) "~a" (setup:meta-export))]
+                         [META-MOD (format-symbol "~a" (setup:meta-export))]
+                         [ROOT (format-id #'(EXPR (... ...)) "~a" (setup:main-root-node))]
+                         [NEWLINE (datum->syntax #'(EXPR (... ...)) (setup:newline))]
+                         [MODE-PAGETREE (datum->syntax #'(EXPR (... ...)) setup:default-mode-pagetree)]
+                         [MODE-MARKUP (datum->syntax #'(EXPR (... ...)) setup:default-mode-markup)]
+                         [MODE-MARKDOWN (datum->syntax #'(EXPR (... ...)) setup:default-mode-markdown)]
+                         [SPLICING_TAG (datum->syntax #'(EXPR (... ...)) (setup:splicing-tag))]
+                         [DOC (format-id #'(EXPR (... ...)) "~a" (setup:main-export))]
                          [DOC-RAW (generate-temporary 'pollen-)]); prevents conflicts with other imported Pollen sources
              (replace-context #'(EXPR (... ...))
                               #'(#%module-begin
@@ -31,7 +32,7 @@
                                  
                                  (module inner pollen/private/doclang-raw
                                    DOC-RAW ; positional arg for doclang-raw that sets name of export.
-                                   (require pollen/top pollen/world pollen/core)
+                                   (require pollen/top pollen/setup pollen/core)
                                    (require (submod ".." META-MOD))
                                    (provide (all-defined-out) #%top (all-from-out (submod ".." META-MOD) pollen/core))
                                    EXPR-WITHOUT-METAS (... ...))

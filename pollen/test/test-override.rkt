@@ -1,5 +1,5 @@
 #lang at-exp racket/base
-(require rackunit racket/port racket/system racket/runtime-path compiler/find-exe pollen/world)
+(require rackunit racket/port racket/system racket/runtime-path compiler/find-exe pollen/setup)
 
 ;; define-runtime-path only allowed at top level
 (define-runtime-path override-dir "data/override")
@@ -21,7 +21,7 @@
 (define racket-path (find-exe))
 ;; parameterize needed to pick up override file
 (parameterize ([current-directory override-dir]
-               [world:current-project-root override-dir])
+               [setup:current-project-root override-dir])
   (when racket-path
     (define (run path)
       (define cmd-string (format "'~a' ~a" racket-path path))

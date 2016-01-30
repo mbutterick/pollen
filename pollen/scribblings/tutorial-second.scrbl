@@ -1,6 +1,6 @@
 #lang scribble/manual
 
-@(require (for-label racket/base pollen/world pollen/template pollen/pagetree sugar))
+@(require (for-label racket/base pollen/setup pollen/template pollen/pagetree sugar))
 
 @(require "mb-tools.rkt")
 
@@ -165,7 +165,7 @@ Skipping past a few boring details, that's basically all there is to it.
 
 So why is it called an X-expression? Lisp languages are built out of units called S-expressions, which look like this:
 
-@terminal{(and (txexpr? x) (memq (get-tag x) (world:current-block-tags)) #t))}
+@terminal{(and (txexpr? x) (memq (get-tag x) (setup:block-tags)) #t))}
 
 S-expressions use prefix notation, where each pair of parentheses contains a list. The first element in the list names a function, and the other elements are the arguments to that function. (This is a review of @secref["Racket_basics__if_you_re_not_familiar_"].) X-expressions are just a minor adaptation of S-expression notation to represent markup, hence the name (the @defterm{X} is short for @defterm{XML-like}).
 
@@ -336,7 +336,7 @@ But within a template, we need to tell Pollen how we want to convert the X-expre
 
 Third, we need to include the content from our source file. By convention, every Pollen source file makes its output available through an exported variable named @code{doc}. A source file in preprocessor mode puts its text result in @code{doc}. And a source file in authoring mode puts its X-expression result in @code{doc}. So we put the variable @code{doc} inside the @code{body} tag.
 
-@margin-note{You can change the name to something other than @code{doc} by changing @racket[world:main-export].}
+@margin-note{You can change the name to something other than @code{doc} by changing @racket[setup:default-main-export].}
 
 @codeblock[#:keep-lang-line? #f]{
 #lang pollen

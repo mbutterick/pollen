@@ -1,10 +1,10 @@
 #lang racket/base
-(require pollen/world pollen/render racket/file racket/path sugar/coerce "file-utils.rkt" pollen/pagetree racket/string racket/list racket/vector racket/cmdline)
+(require pollen/setup pollen/render racket/file racket/path sugar/coerce "file-utils.rkt" pollen/pagetree racket/string racket/list racket/vector racket/cmdline)
 
 ;; The use of dynamic-require throughout this file is intentional:
 ;; this way, low-dependency raco commands (like "version") are faster.
 ;; Whereas with `require` or `local-require`, everything would have to be front-loaded.
-;; but ... maybe most of the latency is due to pollen/world environment checking.
+;; but ... maybe most of the latency is due to pollen/setup environment checking.
 ;; todo: investigate this
 
 (module+ raco
@@ -61,11 +61,11 @@ publish [dir] [dest]   copy project in dir to dest without source files
                           (warning: overwrites existing dest dir)
 setup                  preload cache
 reset                  reset cache
-version                print the version (~a)" (world:current-server-port) world:version)))
+version                print the version (~a)" (setup:current-server-port) setup:default-version)))
 
 
 (define (handle-version)
-  (displayln world:version))
+  (displayln setup:default-version))
 
 
 (define (handle-reset directory-maybe)
@@ -79,7 +79,7 @@ version                print the version (~a)" (world:current-server-port) world
 
 
 (define (handle-render)
-  (define render-target-wanted (make-parameter (world:current-poly-target)))
+  (define render-target-wanted (make-parameter (setup:current-poly-target)))
   (define parsed-args (command-line #:program "raco pollen render"
                                     #:argv (vector-drop (current-command-line-arguments) 1) ; snip the 'render' from the front
                                     #:once-each
@@ -90,13 +90,13 @@ version                print the version (~a)" (world:current-server-port) world
   (define path-args (if (empty? parsed-args)
                         (list (current-directory))
                         parsed-args))
-  (parameterize ([current-directory (world:current-project-root)]
-                 [world:current-poly-target (render-target-wanted)])
+  (parameterize ([current-directory (setup:current-project-root)]
+                 [setup:current-poly-target (render-target-wanted)])
     (define first-arg (car path-args))
     (if (directory-exists? first-arg)
         (let ([dir first-arg]) ; now we know it's a dir
           (parameterize ([current-directory dir]
-                         [world:current-project-root dir])
+                         [setup:current-project-root dir])
             (define preprocs (filter preproc-source? (directory-list dir)))
             (define static-pagetrees (filter pagetree-source? (directory-list dir)))
             ;; if there are no static pagetrees, use make-project-pagetree
@@ -119,8 +119,8 @@ version                print the version (~a)" (world:current-server-port) world
 (define (handle-start directory-maybe [port #f])
   (when (not (directory-exists? directory-maybe))
     (error (format "~a is not a directory" directory-maybe)))
-  (parameterize ([world:current-project-root directory-maybe]
-                 [world:current-server-port (or port world:default-port)])
+  (parameterize ([setup:current-project-root directory-maybe]
+                 [setup:current-server-port (or port setup:default-default-port)])
     (displayln "Starting project server ...")
     ((dynamic-require 'pollen/private/project-server 'start-server))))
 
@@ -129,7 +129,7 @@ version                print the version (~a)" (world:current-server-port) world
   (define target-path
     (or 
      (and rest-args (not (null? rest-args)) (path->complete-path (string->path (car rest-args))))
-     (build-path (find-system-path 'desk-dir) (string->path (if (equal? arg-command-name "clone") "clone" (world:current-publish-directory-name))))))
+     (build-path (find-system-path 'desk-dir) (string->path (if (equal? arg-command-name "clone") "clone" (setup:publish-directory-name))))))
   
   (define (delete-it path)
     (cond
@@ -156,7 +156,7 @@ version                print the version (~a)" (world:current-server-port) world
   (when (directory-exists? target-dir)
     (delete-directory/files target-dir))
   (copy-directory/files source-dir target-dir)
-  (parameterize ([world:current-project-root (current-directory)])
+  (parameterize ([setup:current-project-root (current-directory)])
     (for-each delete-it (find-files pollen-related-file? target-dir)))
   (displayln (format "completed to ~a" target-dir)))
 

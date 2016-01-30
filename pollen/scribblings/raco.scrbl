@@ -1,6 +1,6 @@
 #lang scribble/manual
 
-@(require "mb-tools.rkt" scribble/eval pollen/world (for-label (except-in racket ...) pollen/world))
+@(require "mb-tools.rkt" scribble/eval pollen/setup (for-label (except-in racket ...) pollen/setup))
 
 @(define my-eval (make-base-eval))
 @(my-eval `(require pollen pollen/file))
@@ -47,7 +47,7 @@ Displays a list of available commands.
 
 @section{@exec{raco pollen start}}
 
-Start the project server from the current directory using the default port, which is the value of the parameter @racket[world:current-server-port] (by default, port @(format "~a" world:default-port)).
+Start the project server from the current directory using the default port, which is the value of the parameter @racket[setup:current-server-port] (by default, port @(format "~a" setup:default-default-port)).
 
 This command can be invoked with two optional arguments.
 
@@ -56,7 +56,7 @@ This command can be invoked with two optional arguments.
 @terminal{
 > raco pollen start ~/path/to/project/}
 
-@racket[raco pollen start _path _port] will start the project server in @racket[_path] using @racket[_port] rather than @racket[world:current-server-port]. This is useful if you want to have multiple project servers running simultaneously.
+@racket[raco pollen start _path _port] will start the project server in @racket[_path] using @racket[_port] rather than @racket[setup:current-server-port]. This is useful if you want to have multiple project servers running simultaneously.
 
 @terminal{
 > raco pollen start ~/path/to/project/
@@ -88,7 +88,7 @@ Paths can also be specified as output rather than input paths, and the correspon
 > raco pollen render foo.html
 > raco pollen render foo.html bar.html zam.css}
 
-The optional @exec{-t} or @exec{--target} switch specifies the render target for multi-output source files. If the target is omitted, the renderer will use whatever target appears first in @racket[(world:current-poly-targets)].
+The optional @exec{-t} or @exec{--target} switch specifies the render target for multi-output source files. If the target is omitted, the renderer will use whatever target appears first in @racket[(setup:poly-targets)].
 
 @terminal{
 > raco pollen render -t pdf foo.poly.pm}
@@ -107,7 +107,7 @@ Make a copy of the project directory on the desktop, but without any source file
 
 If you're already in your project directory and want to publish somewhere other than the desktop, use @racket[raco pollen publish _. _dest-dir].
 
-You can determine the files that get filtered out in a particular project by using @racket[world:current-unpublished-path?].
+You can determine the files that get filtered out in a particular project by using @racket[setup:unpublished-path?].
 
 
 @section{@exec{raco pollen setup}}

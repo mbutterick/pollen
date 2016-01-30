@@ -1,6 +1,6 @@
 #lang scribble/manual
 
-@(require "mb-tools.rkt" scribble/eval pollen/cache pollen/world (for-label racket (except-in pollen #%module-begin) pollen/world txexpr pollen/decode pollen/file sugar pollen/pagetree))
+@(require "mb-tools.rkt" scribble/eval pollen/cache pollen/setup (for-label racket (except-in pollen #%module-begin) pollen/setup txexpr pollen/decode pollen/file sugar pollen/pagetree))
 
 @(define my-eval (make-base-eval))
 @(my-eval `(require pollen pollen/pagetree txexpr))
@@ -24,7 +24,7 @@ Pagetrees surface throughout the Pollen system. They're primarily used for navig
 
 @section{Making pagetrees with a source file}
 
-A pagetree source file either starts with @code{#lang pollen} and uses the @racketfont{@(format ".~a" world:pagetree-source-ext)} extension, or starts with @code{#lang pollen/ptree} and then can have any file extension. 
+A pagetree source file either starts with @code{#lang pollen} and uses the @racketfont{@(format ".~a" setup:default-pagetree-source-ext)} extension, or starts with @code{#lang pollen/ptree} and then can have any file extension. 
 
 Unlike other Pollen source files, since the pagetree source is not rendered into an output format, the rest of the filename is up to you.
 
@@ -422,7 +422,7 @@ Return the pagenode immediately after @racket[_p]. For @racket[next*], return al
 [pagetree-source pathish?])
 pagetree?
 ]
-Get a pagetree from a @ext[world:pagetree-source-ext] source file, namely @racket[_pagetree-source].
+Get a pagetree from a @ext[setup:default-pagetree-source-ext] source file, namely @racket[_pagetree-source].
 
 
 @defproc[
@@ -456,7 +456,7 @@ Report whether @racket[_pagenode] is in @racket[_pagetree].
 @defproc[
 (path->pagenode
 [p pathish?]
-[starting-path pathish? (world:current-project-root)])
+[starting-path pathish? (setup:current-project-root)])
 pagenode?
 ]
 Convert path @racket[_p] to a pagenode — meaning, make it relative to @racket[_starting-path], run it through @racket[->output-path], and convert it to a symbol. Does not tell you whether the resulting pagenode actually exists in the current pagetree (for that, use @racket[in-pagetree?]).

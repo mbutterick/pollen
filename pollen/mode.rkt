@@ -8,7 +8,7 @@ a) adapts the at-exp metalang from 6.2
 b) incorporates the scribble/reader from 6.2
 so that everything will work correctly in 6.0.
 
-Note that pollen/mode uses world:command-char, NOT (world:current-command-char),
+Note that pollen/mode uses setup:default-command-char, NOT (setup:command-char),
 because doing so would create a loading loop if pollen/mode were used in "pollen.rkt"
 (which is a likely place to use it)
 Intractable problem, unavoiable limitation.
@@ -59,7 +59,7 @@ Intractable problem, unavoiable limitation.
     (λ args
       (parameterize ([current-readtable (make-at-readtable #:datum-readtable 'dynamic
                                                            #:command-readtable 'dynamic
-                                                           #:command-char (dynamic-require 'pollen/world 'world:command-char))])
+                                                           #:command-char (dynamic-require 'pollen/setup 'setup:default-command-char))])
         (apply p args))))
   
   (define-values (at-read at-read-syntax at-get-info)

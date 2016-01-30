@@ -1,7 +1,7 @@
 #lang racket/base
 (require racket/syntax syntax/strip-context racket/class)
-(require (only-in scribble/reader make-at-reader) pollen/world "project.rkt" racket/list)
-(provide define+provide-reader-in-mode (all-from-out pollen/world))
+(require (only-in scribble/reader make-at-reader) pollen/setup "project.rkt" racket/list)
+(provide define+provide-reader-in-mode (all-from-out pollen/setup))
 
 
 (define (make-custom-read custom-read-syntax-proc) 
@@ -11,11 +11,11 @@
 (define (make-custom-read-syntax reader-mode)
   (λ (path-string p)
     (define read-inner (make-at-reader 
-                        #:command-char (if (or (eq? reader-mode world:mode-template) 
+                        #:command-char (if (or (eq? reader-mode setup:default-mode-template) 
                                                (and (string? path-string)
-                                                    (regexp-match (pregexp (format "\\.~a$" (world:current-template-source-ext))) path-string)))
-                                           (world:current-template-command-char)
-                                           (world:current-command-char))
+                                                    (regexp-match (pregexp (format "\\.~a$" (setup:template-source-ext))) path-string)))
+                                           (setup:template-command-char)
+                                           (setup:command-char))
                         #:syntax? #t 
                         #:inside? #t))
     (define source-stx (read-inner path-string p))
@@ -23,24 +23,24 @@
                                [(symbol? path-string) (symbol->string path-string)]
                                [(equal? path-string "unsaved editor") path-string]
                                [else (path->string path-string)]))
-    (define parser-mode (if (eq? reader-mode world:mode-auto)
+    (define parser-mode (if (eq? reader-mode setup:default-mode-auto)
                             (let* ([file-ext-pattern (pregexp "\\w+$")]
                                    [here-ext (string->symbol (car (regexp-match file-ext-pattern reader-here-path)))]
                                    [auto-computed-mode (cond
-                                                         [(eq? here-ext (world:current-pagetree-source-ext)) world:mode-pagetree]
-                                                         [(eq? here-ext (world:current-markup-source-ext)) world:mode-markup]
-                                                         [(eq? here-ext (world:current-markdown-source-ext)) world:mode-markdown]
-                                                         [else world:mode-preproc])])
+                                                         [(eq? here-ext (setup:pagetree-source-ext)) setup:default-mode-pagetree]
+                                                         [(eq? here-ext (setup:markup-source-ext)) setup:default-mode-markup]
+                                                         [(eq? here-ext (setup:markdown-source-ext)) setup:default-mode-markdown]
+                                                         [else setup:default-mode-preproc])])
                               auto-computed-mode)
                             reader-mode))
     (define post-parser-syntax
-      (with-syntax ([HERE-KEY (format-id source-stx "~a" (world:current-here-path-key))]
+      (with-syntax ([HERE-KEY (format-id source-stx "~a" (setup:here-path-key))]
                     [HERE-PATH (datum->syntax source-stx reader-here-path)]
                     [POLLEN-MOD (format-symbol "~a" (gensym))] ; prevents conflicts with other imported Pollen sources
                     [PARSER-MODE-VALUE (format-symbol "~a" parser-mode)]
                     [DIRECTORY-REQUIRES (datum->syntax source-stx (require+provide-directory-require-files path-string))]
                     [(SOURCE-LINE ...) source-stx]
-                    [DOC (format-id source-stx "~a" (world:current-main-export))])
+                    [DOC (format-id source-stx "~a" (setup:main-export))])
         (replace-context
          source-stx
          #'(module runtime-wrapper racket/base
@@ -76,7 +76,7 @@
                                          ;; OTOH Scribble relies on it, so IMO it's highly unlikely to change.
                                          (let ([maybe-definitions-frame (object-name in)])
                                            (send maybe-definitions-frame get-filename)))) ; will be #f if unsaved file
-             (define my-command-char (hash-ref! command-char-cache maybe-source-path (λ _ (world:current-command-char maybe-source-path))))
+             (define my-command-char (hash-ref! command-char-cache maybe-source-path (λ _ (setup:command-char maybe-source-path))))
              (case key
                [(color-lexer)
                 (define my-make-scribble-inside-lexer

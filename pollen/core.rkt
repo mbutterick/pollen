@@ -1,8 +1,8 @@
 #lang racket/base
-(require (for-syntax racket/base "world.rkt" "private/splice.rkt"))
+(require (for-syntax racket/base "setup.rkt" "private/splice.rkt"))
 (require txexpr xml/path sugar/define sugar/coerce sugar/test racket/string)
 (require "private/file-utils.rkt"
-         "world.rkt"
+         "setup.rkt"
          "cache.rkt"
          "pagetree.rkt"
          "tag.rkt"
@@ -86,7 +86,7 @@
 
 (define (convert+validate-path pagenode-or-path caller)
   (let ([path (get-source (if (pagenode? pagenode-or-path)
-                              (build-path (world:current-project-root) (symbol->string pagenode-or-path))
+                              (build-path (setup:current-project-root) (symbol->string pagenode-or-path))
                               pagenode-or-path))])
     (unless path
       (error (format "~a no source found for '~a' in directory ~a" caller path (current-directory))))
@@ -116,7 +116,7 @@
 (define-syntax (when/splice stx)
   (syntax-case stx ()
     [(_ COND BODY ...)
-     (with-syntax ([SPLICING-TAG (datum->syntax stx (world:current-splicing-tag))])
+     (with-syntax ([SPLICING-TAG (datum->syntax stx (setup:splicing-tag))])
        #'(if COND
              (with-handlers ([exn:fail? (λ(exn) (error (format "within when/splice, ~a" (exn-message exn))))])
                (SPLICING-TAG BODY ...)) 

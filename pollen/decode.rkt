@@ -1,6 +1,6 @@
 #lang racket/base
 (require xml txexpr racket/list sugar/list sugar/define sugar/test)
-(require "world.rkt"
+(require "setup.rkt"
          "private/whitespace.rkt")
 
 (require "unstable/mb.rkt")
@@ -119,12 +119,12 @@
   ;; so rather than test for `txexpr?` at the beginning (which is potentially slow)
   ;; just look at the tag.
   (and (pair? x)
-       (memq (get-tag x) (world:current-block-tags))
+       (memq (get-tag x) (setup:block-tags))
        #t))
 
 
 (define+provide/contract (decode-linebreaks elems [maybe-linebreak-proc '(br)]
-                                            #:separator [newline (world:current-linebreak-separator)])
+                                            #:separator [newline (setup:linebreak-separator)])
   ((txexpr-elements?) ((or/c txexpr-element? (txexpr-element? txexpr-element? . -> . txexpr-element?)) #:separator string?) . ->* . txexpr-elements?)
   (define linebreak-proc (if (procedure? maybe-linebreak-proc)
                              maybe-linebreak-proc
@@ -159,7 +159,7 @@
 ;; Ignore empty strings.
 (define+provide/contract (merge-newlines x)
   (txexpr-elements? . -> . txexpr-elements?)
-  (define newline-pat (regexp (format "^~a+$" (world:current-newline))))
+  (define newline-pat (regexp (format "^~a+$" (setup:newline))))
   (define (newlines? x) (and (string? x) (regexp-match newline-pat x)))  
   (define (merge-if-newlines xs)
     (if (newlines? (car xs))
@@ -195,7 +195,7 @@
     (linebreak-proc (merge-newlines (trimf elems whitespace?))))
   
   (define (paragraph-break? x)
-    (define paragraph-separator (world:current-paragraph-separator))
+    (define paragraph-separator (setup:paragraph-separator))
     (define paragraph-pattern (pregexp (format "^~a+$" paragraph-separator)))
     (and (string? x) (regexp-match paragraph-pattern x)))
   

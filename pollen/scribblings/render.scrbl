@@ -1,6 +1,6 @@
 #lang scribble/manual
 
-@(require scribble/eval pollen/render pollen/world (for-label racket (except-in pollen #%module-begin) pollen/world pollen/core web-server/templates pollen/file sugar pollen/render))
+@(require scribble/eval pollen/render pollen/setup (for-label racket (except-in pollen #%module-begin) pollen/setup pollen/core web-server/templates pollen/file sugar pollen/render))
 
 @(define my-eval (make-base-eval))
 @(my-eval `(require pollen))
@@ -75,7 +75,7 @@ Note that @racket[_pt-or-pt-source] is used strictly as a list of files to rende
 Find a template file for @racket[_source-path], with the following priority:
 @itemlist[#:style 'ordered
 
-@item{If the @racket[metas] for @racket[_source-path] have a key for @code[(format "~a" world:template-meta-key)], then use the value of this key, e.g. —
+@item{If the @racket[metas] for @racket[_source-path] have a key for @code[(format "~a" setup:default-template-meta-key)], then use the value of this key, e.g. —
 
 @code{◊(define-meta template "my-template.html")}
 
@@ -88,7 +88,7 @@ If your project has @seclink["fourth-tutorial"]{multiple output targets}, you ca
 
 }
 
-@item{If this key doesn't exist, or refers to a nonexistent file, look for a default template with the name @code[(format "~a.[output extension]" world:default-template-prefix)]. Meaning, if @racket[_source-path] is @code[(format "intro.html.~a" world:markup-source-ext)], the output path would be @code["intro.html"], so the default template would be @code[(format "~a.html" world:default-template-prefix)]. Look for this default template in the same directory as the source file, and then search upwards within successive parent directories. (Corollary: a default template in the project root will apply to all files in the project unless overridden within a subdirectory.)}
+@item{If this key doesn't exist, or refers to a nonexistent file, look for a default template with the name @code[(format "~a.[output extension]" setup:default-default-template-prefix)]. Meaning, if @racket[_source-path] is @code[(format "intro.html.~a" setup:default-markup-source-ext)], the output path would be @code["intro.html"], so the default template would be @code[(format "~a.html" setup:default-default-template-prefix)]. Look for this default template in the same directory as the source file, and then search upwards within successive parent directories. (Corollary: a default template in the project root will apply to all files in the project unless overridden within a subdirectory.)}
 
 @item{If this file doesn't exist, use the fallback template as a last resort. (See @secref["Templates"
          #:tag-prefixes '("tutorial-2")

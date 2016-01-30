@@ -5,7 +5,7 @@
          web-server/dispatch)
 (require "project-server-routes.rkt" 
          "debug.rkt" 
-         "../world.rkt"
+         "../setup.rkt"
          "../file.rkt"
          "../cache.rkt")
 
@@ -19,19 +19,19 @@
      [((string-arg) ... "out" (string-arg)) route-out]
      [else route-default]))
   
-  (message (format "Welcome to Pollen ~a" world:version) (format "(Racket ~a)" (version)))
-  (message (format "Project root is ~a" (world:current-project-root)))
+  (message (format "Welcome to Pollen ~a" setup:default-version) (format "(Racket ~a)" (version)))
+  (message (format "Project root is ~a" (setup:current-project-root)))
   
-  (define server-name (format "http://localhost:~a" (world:current-server-port)))
+  (define server-name (format "http://localhost:~a" (setup:current-server-port)))
   (message (format "Project server is ~a" server-name) "(Ctrl-C to exit)")
-  (message (format "Project dashboard is ~a/~a" server-name (world:current-default-pagetree)))
+  (message (format "Project dashboard is ~a/~a" server-name (setup:default-pagetree)))
   (message "Ready to rock")
     
   (parameterize ([error-print-width 1000])
     (serve/servlet pollen-servlet
-                   #:port (world:current-server-port)
+                   #:port (setup:current-server-port)
                    #:listen-ip #f
                    #:servlet-regexp #rx"" ; respond to top level
                    #:command-line? #t
                    #:file-not-found-responder route-404
-                   #:extra-files-paths (list (world:current-server-extras-path) (world:current-project-root)))))
+                   #:extra-files-paths (list (setup:current-server-extras-path) (setup:current-project-root)))))

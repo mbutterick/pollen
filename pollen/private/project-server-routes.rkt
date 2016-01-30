@@ -5,7 +5,7 @@
 (require web-server/http/request-structs)
 (require web-server/http/response-structs)
 (require 2htdp/image)
-(require "../world.rkt" "../render.rkt" sugar txexpr "file-utils.rkt" "debug.rkt" "../pagetree.rkt" "../cache.rkt")
+(require "../setup.rkt" "../render.rkt" sugar txexpr "file-utils.rkt" "debug.rkt" "../pagetree.rkt" "../cache.rkt")
 
 (module+ test (require rackunit))
 
@@ -25,7 +25,7 @@
      (meta ([charset "UTF-8"]))
      (link ([rel "stylesheet"] 
             [type "text/css"] 
-            [href ,(format "/~a" (world:current-dashboard-css))])))
+            [href ,(format "/~a" (setup:dashboard-css))])))
     (body
      ,content-xexpr (div ((id "pollen-logo"))))))
 
@@ -42,7 +42,7 @@
   (define localhost-client "::1")
   (define url-string (url->string (request-uri req)))
   (when (not (ends-with? url-string "favicon.ico"))
-    (message "request:" (string-replace url-string (world:current-default-pagetree) " dashboard")
+    (message "request:" (string-replace url-string (setup:default-pagetree) " dashboard")
              (if (not (equal? client localhost-client)) (format "from ~a" client) ""))))
 
 ;; pass string args to route, then
@@ -53,7 +53,7 @@
   (procedure? . -> . procedure?)
   (λ(req . string-args) 
     (logger req) 
-    (define path (apply build-path (world:current-project-root) (flatten string-args)))
+    (define path (apply build-path (setup:current-project-root) (flatten string-args)))
     (response/xexpr+doctype (route-proc path))))
 
 
@@ -78,7 +78,7 @@
   (pathish? . -> . xexpr?)
   (define path (->complete-path p))
   (define img (bitmap/file path))
-  (define relative-path (->string (find-relative-path (world:current-project-root) path)))
+  (define relative-path (->string (find-relative-path (setup:current-project-root) path)))
   (define img-url (format "/~a" relative-path))
   `(div  
     (p "filename =" ,(->string relative-path))
@@ -93,7 +93,7 @@
 (define (handle-zip-path p)
   (pathish? . -> . xexpr?)
   (define path (->path p))
-  (define relative-path (->string (find-relative-path (world:current-project-root) path)))
+  (define relative-path (->string (find-relative-path (setup:current-project-root) path)))
   (define ziplist (zip-directory-entries (read-zip-directory path)))
   `(div  
     (p "filename =" ,(->string relative-path))
@@ -134,7 +134,7 @@
 (define (dashboard dashboard-ptree)
   (define dashboard-dir (get-enclosing-dir dashboard-ptree))
   (define (in-project-root?)
-    (directories-equal? dashboard-dir (world:current-project-root)))
+    (directories-equal? dashboard-dir (setup:current-project-root)))
   (define parent-dir (and (not (in-project-root?)) (get-enclosing-dir dashboard-dir)))
   (define empty-cell (cons #f #f))
   (define (make-link-cell href+text)
@@ -145,21 +145,21 @@
                                   text)))))
   
   (define (make-parent-row)
-    (define title (string-append "Project root" (if (equal? (world:current-project-root) dashboard-dir) (format " = ~a" dashboard-dir) "")))
-    (define dirs (cons title (if (not (equal? (world:current-project-root) dashboard-dir))
-                                 (explode-path (find-relative-path (world:current-project-root) dashboard-dir))
+    (define title (string-append "Project root" (if (equal? (setup:current-project-root) dashboard-dir) (format " = ~a" dashboard-dir) "")))
+    (define dirs (cons title (if (not (equal? (setup:current-project-root) dashboard-dir))
+                                 (explode-path (find-relative-path (setup:current-project-root) dashboard-dir))
                                  null)))
     (define dirlinks (cons "/" (map (λ(ps) (format "/~a/" (apply build-path ps)))  
                                     (for/list ([i (in-range (length (cdr dirs)))])
                                               (take (cdr dirs) (add1 i))))))
-    `(tr (th ((colspan "3")) ,@(add-between (map (λ(dir dirlink) `(a ((href ,(format "~a~a" dirlink (world:current-default-pagetree)))) ,(->string dir))) dirs dirlinks) "/"))))
+    `(tr (th ((colspan "3")) ,@(add-between (map (λ(dir dirlink) `(a ((href ,(format "~a~a" dirlink (setup:default-pagetree)))) ,(->string dir))) dirs dirlinks) "/"))))
   
   (define (make-path-row filename source indent-level)
     `(tr ,@(map make-link-cell 
                 (append (list                          
                          (let ([main-cell (cond ; main cell
                                             [(directory-exists? (build-path dashboard-dir filename)) ; links subdir to its dashboard
-                                             (cons (format "~a/~a" filename (world:current-default-pagetree)) (format "~a/" filename))]
+                                             (cons (format "~a/~a" filename (setup:default-pagetree)) (format "~a/" filename))]
                                             [(and source (equal? (get-ext source) "scrbl")) ; scribble source
                                              (cons #f `(a ((href ,filename)) ,filename (span ((class "file-ext")) " (from " ,(->string (find-relative-path dashboard-dir source)) ")")))]
                                             [source ; ordinary source. use remove-ext because source may have escaped extension in it
@@ -167,9 +167,9 @@
                                              (define source-minus-ext (unescape-ext (remove-ext source)))
                                              (define source-second-ext (get-ext source-minus-ext))
                                              (cond ; multi source. expand to multiple output files.
-                                               [(and source-second-ext (equal? source-second-ext (->string (world:current-poly-source-ext (->complete-path source)))))
+                                               [(and source-second-ext (equal? source-second-ext (->string (setup:poly-source-ext (->complete-path source)))))
                                                 (define source-base (remove-ext source-minus-ext))
-                                                (define output-names (map (λ(ext) (->string (add-ext source-base ext))) (world:current-poly-targets (->complete-path source))))
+                                                (define output-names (map (λ(ext) (->string (add-ext source-base ext))) (setup:poly-targets (->complete-path source))))
                                                 (cons #f `(span ,@(map (λ(on) `(a ((href ,on)) ,on (span ((class "file-ext")) "." ,source-first-ext ,(format " (from ~a)" (->string (find-relative-path dashboard-dir source)))))) output-names)))]
                                                [else
                                                 (define extra-row-string
@@ -201,7 +201,7 @@
                            [(pagetree-source? filename) empty-cell]
                            [else (cons (format "out/~a" filename) "out")]))))))
   
-  (define (ineligible-path? x) (member x (world:current-paths-excluded-from-dashboard)))
+  (define (ineligible-path? x) (member x (setup:paths-excluded-from-dashboard)))
   
   (define directory-pagetree (with-handlers ([exn:fail:contract? (λ _ (directory->pagetree dashboard-dir))])
                                (cached-doc (->path dashboard-ptree))))
@@ -256,7 +256,7 @@
 
 (define/contract (req->path req)
   (request? . -> . path?)
-  (define base (world:current-project-root))
+  (define base (setup:current-project-root))
   (define file (url->path (request-uri req)))
   (if (eq? (system-path-convention-type) 'windows)
       (build-path base file) ; because url->path returns a relative path for 'windows

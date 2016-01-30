@@ -1,6 +1,6 @@
 #lang scribble/manual
 
-@(require scribble/eval pollen/cache pollen/world (for-label racket (except-in pollen #%module-begin) pollen/render txexpr xml pollen/pagetree sugar/coerce pollen/core pollen/world))
+@(require scribble/eval pollen/cache pollen/setup (for-label racket (except-in pollen #%module-begin) pollen/render txexpr xml pollen/pagetree sugar/coerce pollen/core pollen/setup))
 
 @(define my-eval (make-base-eval))
 @(my-eval `(require pollen pollen/core xml))
@@ -23,7 +23,7 @@ You can retrieve a meta value — even in the same document where you define it
 For an introduction to metas, see @secref["Inserting_metas"].
 
 @defform[(\@ arg ...)]
-Splicing tag: signals that a list should be merged into its containing expression. You can use something other than @racket[\@] by overriding @racket[world:current-splicing-tag].
+Splicing tag: signals that a list should be merged into its containing expression. You can use something other than @racket[\@] by overriding @racket[setup:splicing-tag].
 
 @examples[#:eval my-eval
 (module splicer pollen/markup
@@ -55,9 +55,9 @@ Functions for retrieving data out of Pollen source files. These are not the only
 (or/c txexpr? string?)]
 Retrieve the @racket[doc] export from @racket[_doc-source], which can be either a path, path string, or pagenode that can be resolved into a source path. If @racket[_doc-source] cannot be resolved, raise an error.
 
-If @racket[_doc-source] is a relative path or pagenode, it is treated as being relative to @racket[world:current-project-root]. If that's not what you want, you'll need to convert it explicitly to a complete-path (e.g., with @racket[path->complete-path] or @racket[->complete-path]).
+If @racket[_doc-source] is a relative path or pagenode, it is treated as being relative to @racket[setup:current-project-root]. If that's not what you want, you'll need to convert it explicitly to a complete-path (e.g., with @racket[path->complete-path] or @racket[->complete-path]).
 
-If @racket[world:current-main-export] has been overridden with a project-specific value, then that is retrieved instead.
+If @racket[setup:main-export] has been overridden with a project-specific value, then that is retrieved instead.
 
 
 @defproc[
@@ -66,9 +66,9 @@ If @racket[world:current-main-export] has been overridden with a project-specifi
 hash?]
 Retrieve the @racket[metas] export from @racket[_meta-source], which can be either a path, path string, or pagenode that can be resolved into a source path. If @racket[_meta-source] cannot be resolved, raise an error.
 
-If @racket[_meta-source] is a relative path or pagenode, it is treated as being relative to @racket[world:current-project-root]. If that's not what you want, you'll need to convert it explicitly to a complete-path (e.g., with @racket[path->complete-path] or @racket[->complete-path]).
+If @racket[_meta-source] is a relative path or pagenode, it is treated as being relative to @racket[setup:current-project-root]. If that's not what you want, you'll need to convert it explicitly to a complete-path (e.g., with @racket[path->complete-path] or @racket[->complete-path]).
 
-If @racket[world:current-meta-export] has been overridden with a project-specific value, then that is retrieved instead.
+If @racket[setup:meta-export] has been overridden with a project-specific value, then that is retrieved instead.
 
 
 @deftogether[(
@@ -92,7 +92,7 @@ With @racket[select], you get the first result; with @racket[select*], you get t
 
 In both cases, you get @racket[#f] if there are no matches.
 
-Note that if @racket[_value-source] is a relative path or pagenode, it is treated as being relative to @racket[world:current-project-root]. If that's not what you want, you'll need to convert it explicitly to a complete-path (e.g., with @racket[path->complete-path] or @racket[->complete-path]).
+Note that if @racket[_value-source] is a relative path or pagenode, it is treated as being relative to @racket[setup:current-project-root]. If that's not what you want, you'll need to convert it explicitly to a complete-path (e.g., with @racket[path->complete-path] or @racket[->complete-path]).
 
 @examples[#:eval my-eval
 (module nut-butters pollen/markup
@@ -115,7 +115,7 @@ Note that if @racket[_value-source] is a relative path or pagenode, it is treate
 (or/c #f (listof xexpr?))]
 Look up the value of @racket[_key] in @racket[_doc-source]. The @racket[_doc-source] argument can be either 1) a tagged X-expression representing a @racket[doc] or 2) a pagenode or source path that identifies a source file that provides @racket[doc]. If no value exists for @racket[_key], you get @racket[#f].
 
-Note that if @racket[_doc-source] is a relative path or pagenode, it is treated as being relative to @racket[world:current-project-root]. If that's not what you want, you'll need to convert it explicitly to a complete-path (e.g., with @racket[path->complete-path] or @racket[->complete-path]).
+Note that if @racket[_doc-source] is a relative path or pagenode, it is treated as being relative to @racket[setup:current-project-root]. If that's not what you want, you'll need to convert it explicitly to a complete-path (e.g., with @racket[path->complete-path] or @racket[->complete-path]).
 
 @examples[#:eval my-eval
 (module gelato pollen/markup
@@ -137,7 +137,7 @@ Note that if @racket[_doc-source] is a relative path or pagenode, it is treated 
 (or/c #f xexpr?)]
 Look up the value of @racket[_key] in @racket[_meta-source]. The @racket[_meta-source] argument can be either 1) a hashtable representing @racket[metas] or 2) a pagenode or source path that identifies a source file that provides @racket[metas]. If no value exists for @racket[_key], you get @racket[#f]. 
 
-Note that if @racket[_meta-source] is a relative path or pagenode, it is treated as being relative to @racket[world:current-project-root]. If that's not what you want, you'll need to convert it explicitly to a complete-path (e.g., with @racket[path->complete-path] or @racket[->complete-path]).
+Note that if @racket[_meta-source] is a relative path or pagenode, it is treated as being relative to @racket[setup:current-project-root]. If that's not what you want, you'll need to convert it explicitly to a complete-path (e.g., with @racket[path->complete-path] or @racket[->complete-path]).
 
 @examples[#:eval my-eval
 (define metas (hash 'template "sub.xml.pp" 'target "print"))

@@ -1,5 +1,5 @@
 #lang racket/base
-(require sugar txexpr racket/list racket/string pollen/world xml html racket/file racket/match "html.rkt" net/url racket/port)
+(require sugar txexpr racket/list racket/string pollen/setup xml html racket/file racket/match "html.rkt" net/url racket/port)
 
 (define (attrs->pollen attrs)
   (string-join (flatten (map (λ(pair) (list (format "'~a:" (car pair)) (format "\"~a\"" (cadr pair)))) attrs)) " "))
@@ -12,7 +12,7 @@
     (cond
       [(and p-breaks (txexpr? x) (equal? (car x) 'p) (apply string-append `("\n" ,@(map ->string (map loop (get-elements x))) "\n")))]
       [(txexpr? x) (apply string-append 
-                          (map ->string  `(,(world:current-command-char) ,(get-tag x) 
+                          (map ->string  `(,(setup:command-char) ,(get-tag x) 
                                                                  ,@(if (not (null? (get-attrs x))) `("[" ,(attrs->pollen (get-attrs x)) "]") null) 
                                                                  ,@(if (not (null? (get-elements x))) `("{" ,@(map loop (get-elements x)) "}" ) null))))]
       [(symbol? x) (loop (entity->integer x))]

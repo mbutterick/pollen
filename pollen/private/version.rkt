@@ -1,3 +1,3 @@
 #lang racket/base
-(provide version)
-(define version "1.0")
+(provide default-version)
+(define default-version "1.0")

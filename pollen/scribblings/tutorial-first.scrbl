@@ -1,6 +1,6 @@
 #lang scribble/manual
 
-@(require (for-label pollen/world racket) "mb-tools.rkt")
+@(require (for-label pollen/setup racket) "mb-tools.rkt")
 
 @title[#:tag "first-tutorial"]{First tutorial: the project server & preprocessor}
 
@@ -234,7 +234,7 @@ Though port @tt{8080} is the default, you can start the project server on any po
 > raco pollen start /path/to/tutorial 8088
 }
 
-@margin-note{You can also change the default port by altering @racket[world:default-port], or parameterizing it with @racket[world:current-server-port].}
+@margin-note{You can also change the default port by altering @racket[setup:default-default-port], or parameterizing it with @racket[setup:current-server-port].}
 
 Note that when you pass a port argument, you also have to pass a path argument. (Without it, you'll get an error, as illustrated below.) If you want the project server to start in the current directory, you can use the usual @litchar{.} shorthand:
 

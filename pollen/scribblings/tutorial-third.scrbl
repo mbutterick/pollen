@@ -1,6 +1,6 @@
 #lang scribble/manual
 
-@(require scribble/eval (for-label pollen/decode plot pollen/world pollen/tag racket/base pollen/template txexpr racket/list racket/string))
+@(require scribble/eval (for-label pollen/decode plot pollen/setup pollen/tag racket/base pollen/template txexpr racket/list racket/string))
 @(require "mb-tools.rkt")
 
 @(define my-eval (make-base-eval))

@@ -1,5 +1,5 @@
 #lang racket/base
-(require "file-utils.rkt" "../world.rkt" "project.rkt" file/cache racket/file sugar/coerce compiler/cm)
+(require "file-utils.rkt" "../setup.rkt" "project.rkt" file/cache racket/file sugar/coerce compiler/cm)
 (provide (all-defined-out))
 
 (define (paths->key source-path [template-path #f])
@@ -12,8 +12,8 @@
   ;; can't use relative paths for cache keys because source files include `here-path` which is absolute.
   ;; problem is that cache could appear valid on another filesystem (based on relative pathnames & mod dates)
   ;; but would actually be invalid (because the `here-path` names are wrong).
-  (define poly-flag (and (has-inner-poly-ext? source-path) (world:current-poly-target)))
-  (define pollen-env (getenv world:env-name))
+  (define poly-flag (and (has-inner-poly-ext? source-path) (setup:current-poly-target)))
+  (define pollen-env (getenv setup:default-env-name))
   (define path+mod-time-pairs
     (map (λ(ps) (and ps (let ([cp (->complete-path ps)])
                           (cons (path->string cp) (with-handlers ([exn:fail? (λ _ 0)])
@@ -37,8 +37,8 @@
   (for-each managed-compile-zo (or drfs null))
   (define path-dir (dirname path))
   (apply hash
-         (let ([doc-key (world:current-main-export)]
-               [meta-key (world:current-meta-export)])
+         (let ([doc-key (setup:main-export)]
+               [meta-key (setup:meta-export)])
            (parameterize ([current-namespace (make-base-namespace)]
                           [current-directory path-dir])
              ;; I monkeyed around with using the metas submodule to pull out the metas (for speed)
@@ -46,7 +46,7 @@
              ;; so it's just simpler to get both at once and be done with it.
              ;; the savings of avoiding two cache fetches at the outset outweighs
              ;; the benefit of not reloading doc when you just need metas.
-             (namespace-attach-module (namespace-anchor->namespace cache-utils-module-ns) 'pollen/world) ; brings in params
+             (namespace-attach-module (namespace-anchor->namespace cache-utils-module-ns) 'pollen/setup) ; brings in params
              (list doc-key (dynamic-require path doc-key) meta-key (dynamic-require path meta-key))))))
 
 (define (my-make-directory* dir)
@@ -59,7 +59,7 @@
 
 (define (make-cache-dirs path)
   (define path-dir (dirname path))
-  (define cache-dir (build-path path-dir (world:current-cache-dir-name)))
+  (define cache-dir (build-path path-dir (setup:cache-dir-name)))
   (define private-cache-dir (build-path cache-dir "private"))
   (my-make-directory* private-cache-dir) ; will also make cache-dir, if needed
   (values cache-dir private-cache-dir))
@@ -75,5 +75,5 @@
               private-cache-dir
               (λ _
                 (write-to-file (path-hash-thunk) dest-file #:exists 'replace))
-              #:max-cache-size (world:current-compile-cache-max-size))
+              #:max-cache-size (setup:compile-cache-max-size))
   (file->value dest-file))

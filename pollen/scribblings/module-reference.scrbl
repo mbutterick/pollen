@@ -10,7 +10,7 @@
 @include-section["file.scrbl"]
 @include-section["pagetree.scrbl"]
 @include-section["render.scrbl"]
+@include-section["setup.scrbl"]
 @include-section["tag.scrbl"]
 @include-section["template.scrbl"]
 @include-section["top.scrbl"]
-@include-section["world.scrbl"]
