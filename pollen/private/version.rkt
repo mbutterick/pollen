@@ -13,7 +13,7 @@
                                                    10)))))))
 
 (define (get-version)
-  (define major-version 1)
+  (define major-version 0)
   (define minor-version (convert (~r ts #:base 26)))
   (format "~a.~a" major-version minor-version))
 
