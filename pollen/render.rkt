@@ -225,7 +225,7 @@
     
     (define (get-default-template)
       (and output-path-ext
-           (let ([default-template-filename (add-ext (setup:default-template-prefix source-path) output-path-ext)])
+           (let ([default-template-filename (add-ext (setup:template-prefix source-path) output-path-ext)])
              (find-upward-from source-path default-template-filename file-exists-or-has-source?))))
 
     (define (get-fallback-template)

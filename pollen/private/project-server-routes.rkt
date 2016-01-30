@@ -42,7 +42,7 @@
   (define localhost-client "::1")
   (define url-string (url->string (request-uri req)))
   (when (not (ends-with? url-string "favicon.ico"))
-    (message "request:" (string-replace url-string (setup:default-pagetree) " dashboard")
+    (message "request:" (string-replace url-string (setup:main-pagetree) " dashboard")
              (if (not (equal? client localhost-client)) (format "from ~a" client) ""))))
 
 ;; pass string args to route, then
@@ -152,14 +152,14 @@
     (define dirlinks (cons "/" (map (λ(ps) (format "/~a/" (apply build-path ps)))  
                                     (for/list ([i (in-range (length (cdr dirs)))])
                                               (take (cdr dirs) (add1 i))))))
-    `(tr (th ((colspan "3")) ,@(add-between (map (λ(dir dirlink) `(a ((href ,(format "~a~a" dirlink (setup:default-pagetree)))) ,(->string dir))) dirs dirlinks) "/"))))
+    `(tr (th ((colspan "3")) ,@(add-between (map (λ(dir dirlink) `(a ((href ,(format "~a~a" dirlink (setup:main-pagetree)))) ,(->string dir))) dirs dirlinks) "/"))))
   
   (define (make-path-row filename source indent-level)
     `(tr ,@(map make-link-cell 
                 (append (list                          
                          (let ([main-cell (cond ; main cell
                                             [(directory-exists? (build-path dashboard-dir filename)) ; links subdir to its dashboard
-                                             (cons (format "~a/~a" filename (setup:default-pagetree)) (format "~a/" filename))]
+                                             (cons (format "~a/~a" filename (setup:main-pagetree)) (format "~a/" filename))]
                                             [(and source (equal? (get-ext source) "scrbl")) ; scribble source
                                              (cons #f `(a ((href ,filename)) ,filename (span ((class "file-ext")) " (from " ,(->string (find-relative-path dashboard-dir source)) ")")))]
                                             [source ; ordinary source. use remove-ext because source may have escaped extension in it

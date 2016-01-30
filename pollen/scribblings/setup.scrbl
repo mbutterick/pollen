@@ -16,7 +16,7 @@ Global values that are used throughout the Pollen system.
 I mean @italic{parameters} in the Racket sense, i.e. values that can be fed to @racket[parameterize]. 
 
 @defparam[setup:current-server-port port integer?]{
-A parameter that sets the HTTP port for the project server. Initialized to @racket[setup:default-default-port].}
+A parameter that sets the HTTP port for the project server. Initialized to @racket[setup:default-project-server-port].}
 
 
 @defparam[setup:current-project-root port path?]{
@@ -68,7 +68,7 @@ Of course, you can restore the defaults simply by removing these defined values 
 These values are each equipped with a corresponding @racket[setup:]@racket[_name] function that will return the value loaded from the @racket[setup] submodule (if @racket[_name] was defined there), otherwise it returns the original value for @racket[setup:]@racket[_name]. For instance, @racket[setup:default-command-char] will always be @litchar{◊}, but in the example above, @racket[setup:command-char] would return @litchar{🎸}. 
 
 
-@defoverridable[default-port integer?]{
+@defoverridable[project-server-port integer?]{
 Determines the default HTTP port for the project server. Initialized to @racket[8080].}
 
 
@@ -106,7 +106,7 @@ File extensions for Pollen source files, initialized to the following values:
 @defoverridable[decodable-extensions (listof symbol?)]{File extensions that are eligible for decoding.}
 
 
-@defoverridable[default-pagetree string?]{Pagetree that Pollen dashboard loads by default in each directory. Initialized to @filepath{index.ptree}.}
+@defoverridable[main-pagetree string?]{Pagetree that Pollen dashboard loads by default in each directory. Initialized to @filepath{index.ptree}.}
 
 
 @defoverridable[pagetree-root-node symbol?]{Name of the root node in a decoded pagetree. It's ignored by the code, so its only role is to clue you in that you're looking at something that came out of the pagetree decoder. Initialized to @code{'pagetree-root}.}
@@ -124,7 +124,7 @@ File extensions for Pollen source files, initialized to the following values:
 
 @defoverridable[command-char char?]{The magic character that indicates a Pollen command, function, or variable. Initialized to @racket[#\◊].}
 
-@defoverridable[default-template-prefix string?]{Prefix of the default template. Initialized to @code{"template"}.}
+@defoverridable[template-prefix string?]{Prefix of the default template. Initialized to @code{"template"}.}
 
 
 @defoverridable[fallback-template-prefix string?]{Used to generate the name of the fallback template (i.e., the template used to render a Pollen markup file when no other template can be found). Prefix is combined with the output suffix of the source file. Initialized to @code{"fallback"}.}

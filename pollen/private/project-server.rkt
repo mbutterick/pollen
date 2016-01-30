@@ -24,7 +24,7 @@
   
   (define server-name (format "http://localhost:~a" (setup:current-server-port)))
   (message (format "Project server is ~a" server-name) "(Ctrl-C to exit)")
-  (message (format "Project dashboard is ~a/~a" server-name (setup:default-pagetree)))
+  (message (format "Project dashboard is ~a/~a" server-name (setup:main-pagetree)))
   (message "Ready to rock")
     
   (parameterize ([error-print-width 1000])

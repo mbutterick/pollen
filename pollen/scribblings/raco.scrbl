@@ -47,7 +47,7 @@ Displays a list of available commands.
 
 @section{@exec{raco pollen start}}
 
-Start the project server from the current directory using the default port, which is the value of the parameter @racket[setup:current-server-port] (by default, port @(format "~a" setup:default-default-port)).
+Start the project server from the current directory using the default port, which is the value of the parameter @racket[setup:current-server-port] (by default, port @(format "~a" setup:default-project-server-port)).
 
 This command can be invoked with two optional arguments.
 

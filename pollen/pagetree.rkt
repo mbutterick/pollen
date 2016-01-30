@@ -112,7 +112,7 @@
 (define+provide/contract (make-project-pagetree project-dir)
   (pathish? . -> . pagetree?)
   (with-handlers ([exn:fail? (λ(exn) (directory->pagetree project-dir))])
-    (define pagetree-source (build-path project-dir (setup:default-pagetree)))
+    (define pagetree-source (build-path project-dir (setup:main-pagetree)))
     (load-pagetree pagetree-source)))
 
 

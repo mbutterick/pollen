@@ -88,7 +88,7 @@ If your project has @seclink["fourth-tutorial"]{multiple output targets}, you ca
 
 }
 
-@item{If this key doesn't exist, or refers to a nonexistent file, look for a default template with the name @code[(format "~a.[output extension]" setup:default-default-template-prefix)]. Meaning, if @racket[_source-path] is @code[(format "intro.html.~a" setup:default-markup-source-ext)], the output path would be @code["intro.html"], so the default template would be @code[(format "~a.html" setup:default-default-template-prefix)]. Look for this default template in the same directory as the source file, and then search upwards within successive parent directories. (Corollary: a default template in the project root will apply to all files in the project unless overridden within a subdirectory.)}
+@item{If this key doesn't exist, or refers to a nonexistent file, look for a default template with the name @code[(format "~a.[output extension]" setup:default-template-prefix)]. Meaning, if @racket[_source-path] is @code[(format "intro.html.~a" setup:default-markup-source-ext)], the output path would be @code["intro.html"], so the default template would be @code[(format "~a.html" setup:default-template-prefix)]. Look for this default template in the same directory as the source file, and then search upwards within successive parent directories. (Corollary: a default template in the project root will apply to all files in the project unless overridden within a subdirectory.)}
 
 @item{If this file doesn't exist, use the fallback template as a last resort. (See @secref["Templates"
          #:tag-prefixes '("tutorial-2")

@@ -62,14 +62,14 @@
 
 (define-settable decodable-extensions (list (markup-source-ext) (pagetree-source-ext)))
 
-(define-settable default-pagetree (format "index.~a" (pagetree-source-ext)))
+(define-settable main-pagetree (format "index.~a" (pagetree-source-ext)))
 (define-settable pagetree-root-node 'pagetree-root)
 (define-settable main-root-node 'root)
 
 (define-settable command-char #\◊)
 (define-settable template-command-char #\∂)
 
-(define-settable default-template-prefix "template")
+(define-settable template-prefix "template")
 (define-settable fallback-template-prefix "fallback")
 (define-settable template-meta-key "template")
 
@@ -88,9 +88,9 @@
 (define-settable paths-excluded-from-dashboard (map string->path (list "poldash.css" "compiled")))
 
 
-(define-settable default-port 8080)
+(define-settable project-server-port 8080)
 
-(define current-server-port (make-parameter (default-port)))
+(define current-server-port (make-parameter (project-server-port)))
 
 (define-settable dashboard-css "poldash.css")
 

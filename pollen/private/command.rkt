@@ -120,7 +120,7 @@ version                print the version (~a)" (setup:current-server-port) setup
   (when (not (directory-exists? directory-maybe))
     (error (format "~a is not a directory" directory-maybe)))
   (parameterize ([setup:current-project-root directory-maybe]
-                 [setup:current-server-port (or port setup:default-default-port)])
+                 [setup:current-server-port (or port setup:default-project-server-port)])
     (displayln "Starting project server ...")
     ((dynamic-require 'pollen/private/project-server 'start-server))))
 
