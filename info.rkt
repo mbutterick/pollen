@@ -1,7 +1,7 @@
 #lang info
 (define collection 'multi)
 
-(define version "0.eskfcau")
+(define version "0.9.912.58103")
 (define deps '("base" "txexpr" "sugar" ("markdown" #:version "0.18") "htdp"
                "at-exp-lib" "html-lib" "rackjure" "web-server-lib" "scribble-text-lib" "rackunit-lib"
                "gui-lib"))
