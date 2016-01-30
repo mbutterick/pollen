@@ -1,6 +1,6 @@
 #lang scribble/manual
 
-@(require scribble/eval pollen/decode pollen/setup txexpr (for-label txexpr racket (except-in pollen #%module-begin)))
+@(require scribble/eval pollen/decode pollen/setup txexpr (for-label pollen/unstable/pygments txexpr racket (except-in pollen #%module-begin)))
 
 @(define my-eval (make-base-eval))
 @(my-eval `(require pollen pollen/unstable/pygments))

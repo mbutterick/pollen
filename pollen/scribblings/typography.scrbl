@@ -1,17 +1,17 @@
 #lang scribble/manual
 
-@(require scribble/eval pollen/decode pollen/setup txexpr (for-label txexpr racket (except-in pollen #%module-begin)))
+@(require scribble/eval pollen/decode pollen/setup txexpr (for-label pollen/unstable/typography txexpr racket (except-in pollen #%module-begin)))
 
 @(define my-eval (make-base-eval))
-@(my-eval `(require pollen pollen/unstable/pygments))
+@(my-eval `(require pollen pollen/unstable/typography))
 @(require "mb-tools.rkt")
 
 
-@title{TypogrPHY}
+@title{Typography}
 
 @defmodule[pollen/unstable/typography]
 
-A few t
+Quick & dirty utilities. I use them, but I haven't tested them with enough edge cases to feel like they deserve to live outside @racket[unstable]. I welcome improvements.
 
 
 @defproc[
