@@ -4,10 +4,10 @@
          "private/whitespace.rkt")
 
 (require "unstable/typography.rkt")
-(provide (all-from-out "unstable/typography.rkt"))
+(provide (all-from-out "unstable/typography.rkt")) ; bw compat
 
 (require "private/whitespace.rkt")
-(provide (all-from-out "private/whitespace.rkt"))
+(provide (all-from-out "private/whitespace.rkt")) ; bw compat
 
 (define (->list/tx x)
   ;; same as ->list but catches special case of single txexpr,
