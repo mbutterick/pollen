@@ -1,0 +1,72 @@
+#lang scribble/manual
+
+@(require scribble/eval pollen/decode pollen/setup txexpr (for-label txexpr racket (except-in pollen #%module-begin)))
+
+@(define my-eval (make-base-eval))
+@(my-eval `(require pollen pollen/unstable/pygments))
+@(require "mb-tools.rkt")
+
+
+@title{TypogrPHY}
+
+@defmodule[pollen/unstable/typography]
+
+A few t
+
+
+@defproc[
+(smart-quotes
+[str string?])
+string?]
+Convert straight quotes in @racket[_str] to curly according to American English conventions.
+
+@examples[#:eval my-eval
+(define tricky-string 
+"\"Why,\" she could've asked, \"are we in O‘ahu watching 'Mame'?\"")
+(display tricky-string)
+(display (smart-quotes tricky-string))
+]
+
+@defproc[
+(smart-dashes
+[str string?])
+string?]
+In @racket[_str], convert three hyphens to an em dash, and two hyphens to an en dash, and remove surrounding spaces.
+
+@examples[#:eval my-eval
+(define tricky-string "I had a few --- OK, like 6--8 --- thin mints.")
+(display tricky-string)
+(display (smart-dashes tricky-string))
+(code:comment @#,t{Monospaced font not great for showing dashes, but you get the idea})
+]
+
+
+
+@defproc[
+(wrap-hanging-quotes
+[tx txexpr?]
+[#:single-preprend single-preprender txexpr-tag? 'squo]
+[#:double-preprend double-preprender txexpr-tag? 'dquo]
+)
+txexpr?]
+Find single or double quote marks at the beginning of @racket[_tx] and wrap them in an X-expression with the tag @racket[_single-preprender] or @racket[_double-preprender], respectively. The default values are @racket['squo] and @racket['dquo].
+
+@examples[#:eval my-eval
+(wrap-hanging-quotes '(p "No quote to hang."))
+(wrap-hanging-quotes '(p "“What? We need to hang quotes?”"))
+]
+
+In pro typography, quotation marks at the beginning of a line or paragraph are often shifted into the margin slightly to make them appear more optically aligned with the left edge of the text. With a reflowable layout model like HTML, you don't know where your line breaks will be. 
+
+This function will simply insert the @racket['squo] and @racket['dquo] tags, which provide hooks that let you do the actual hanging via CSS, like so (actual measurement can be refined to taste):
+
+@verbatim{squo {margin-left: -0.25em;}
+dquo {margin-left: -0.50em;}
+}
+
+Be warned: there are many edge cases this function does not handle well.
+
+@examples[#:eval my-eval
+(code:comment @#,t{Argh: this edge case is not handled properly})
+(wrap-hanging-quotes '(p "“" (em "What?") "We need to hang quotes?”"))
+]
