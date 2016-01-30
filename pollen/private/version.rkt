@@ -12,7 +12,10 @@
                                                    (- (char->integer #\a) (char->integer #\0))
                                                    10)))))))
 
-(define (pollen:version)
+(define (get-version)
   (define major-version 1)
   (define minor-version (convert (~r ts #:base 26)))
   (format "~a.~a" major-version minor-version))
+
+
+(define pollen:version (get-version))

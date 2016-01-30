@@ -20,7 +20,7 @@
      [((string-arg) ... "out" (string-arg)) route-out]
      [else route-default]))
   
-  (message (format "Welcome to Pollen ~a" (pollen:version)) (format "(Racket ~a)" (version)))
+  (message (format "Welcome to Pollen ~a" pollen:version) (format "(Racket ~a)" (version)))
   (message (format "Project root is ~a" (setup:current-project-root)))
   
   (define server-name (format "http://localhost:~a" (setup:current-server-port)))

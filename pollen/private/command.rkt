@@ -65,7 +65,7 @@ version                print the version" (setup:current-server-port))))
 
 
 (define (handle-version)
-  (displayln ((dynamic-require 'pollen/private/version 'pollen:version))))
+  (displayln (dynamic-require 'pollen/private/version 'pollen:version)))
 
 
 (define (handle-reset directory-maybe)
