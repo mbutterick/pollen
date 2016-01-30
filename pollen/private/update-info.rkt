@@ -1,7 +1,7 @@
 #lang racket/base
 (require racket/runtime-path racket/file pollen/private/version)
 
-(define-runtime-path info-file "../info.rkt")
+(define-runtime-path info-file "../../info.rkt")
 
 (define str (file->string info-file))
 
