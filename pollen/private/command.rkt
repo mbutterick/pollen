@@ -61,11 +61,11 @@ publish [dir] [dest]   copy project in dir to dest without source files
                           (warning: overwrites existing dest dir)
 setup                  preload cache
 reset                  reset cache
-version                print the version (~a)" (setup:current-server-port) setup:default-version)))
+version                print the version" (setup:current-server-port))))
 
 
 (define (handle-version)
-  (displayln setup:default-version))
+  (displayln ((dynamic-require 'pollen/private/version 'pollen:version))))
 
 
 (define (handle-reset directory-maybe)

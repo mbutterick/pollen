@@ -1,8 +1,8 @@
 #lang racket/base
-(require (for-syntax racket/base racket/syntax) "private/version.rkt")
+(require (for-syntax racket/base racket/syntax))
 (require racket/runtime-path)
 
-(provide (prefix-out setup: (combine-out (all-defined-out) (all-from-out "private/version.rkt"))))
+(provide (prefix-out setup: (combine-out (all-defined-out))))
 
 (define current-project-root (make-parameter (current-directory)))
 
