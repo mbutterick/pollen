@@ -111,10 +111,10 @@ version                print the version (~a)" (setup:current-server-port) setup
                      [else
                       (displayln (format "rendering preproc & pagetree files in directory ~a" dir))
                       preprocs-and-static-pagetrees])))
-            (apply render* batch-to-render)))
+            (apply render-batch batch-to-render)))
         (begin ; first arg is a file
           (displayln (format "rendering ~a" (string-join (map ->string path-args) " ")))
-          (apply render* path-args)))))
+          (apply render-batch path-args)))))
 
 (define (handle-start directory-maybe [port #f])
   (when (not (directory-exists? directory-maybe))

@@ -45,9 +45,10 @@
 
 (define (list-of-pathish? x) (and (list? x) (andmap pathish? x)))
 
-(define+provide/contract (render* . xs)
+
+(define+provide/contract (render-batch . xs)
   (() #:rest list-of-pathish? . ->* . void?)
-  ;; Why not just (map render ...)?
+  ;; Why not just (for-each render ...)?
   ;; Because certain files will pass through multiple times (e.g., templates)
   ;; And with render, they would be rendered repeatedly.
   ;; Using reset-modification-dates is sort of like session control.

@@ -55,16 +55,16 @@ If none of these conditions exist, @racket[_output-path] is deemed to be up to d
 
 
 @defproc[
-(render*
+(render-batch
 [source-path pathish?] ...) 
 void?]
-Render multiple @racket[_source-paths] in one go. This can be faster than @racket[(for-each render _source-paths)] if your @racket[_source-paths] rely on a common set of templates. Templates may have their own source files that need to be compiled. If you use @racket[render], the templates will be repeatedly (and needlessly) re-compiled. Whereas if you use @racket[render*], each template will only be compiled once.
+Render multiple @racket[_source-paths] in one go. This can be faster than @racket[(for-each render _source-paths)] if your @racket[_source-paths] rely on a common set of templates. Templates may have their own source files that need to be compiled. If you use @racket[render], the templates will be repeatedly (and needlessly) re-compiled. Whereas if you use @racket[render-batch], each template will only be compiled once.
 
 @defproc[
 (render-pagenodes 
 [pt-or-pt-source (or/c pathish? pagetree?)]) 
 void?]
-Using @racket[_pt-or-pt-source], render the pagenodes in that pagetree using @racket[render*].
+Using @racket[_pt-or-pt-source], render the pagenodes in that pagetree using @racket[render-batch].
 
 Note that @racket[_pt-or-pt-source] is used strictly as a list of files to render, like a batch file. It is not used as the navigational pagetree for the rendered files.
 
