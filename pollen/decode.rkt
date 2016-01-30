@@ -6,6 +6,9 @@
 (require "unstable/typography.rkt")
 (provide (all-from-out "unstable/typography.rkt"))
 
+(require "private/whitespace.rkt")
+(provide (all-from-out "private/whitespace.rkt"))
+
 (define (->list/tx x)
   ;; same as ->list but catches special case of single txexpr,
   ;; which is itself a list, but in this case should be wrapped into a list,
