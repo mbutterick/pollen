@@ -63,10 +63,10 @@
 (define-syntax (defoverridable stx)
   (syntax-case stx ()
     [(_ name predicate? desc ...)
-     (with-syntax ([setup:default-name (format-id stx "setup:default-~a" #'name)]
+     (with-syntax ([default-name (format-id stx "default-~a" #'name)]
                    [setup:name (format-id stx "setup:~a" #'name)])
        #'(deftogether ((defproc (setup:name) predicate?)
-                       (defthing setup:default-name predicate?)
+                       (defthing default-name predicate?)
                        )
            desc ...))]))
 

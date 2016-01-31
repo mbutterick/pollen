@@ -47,12 +47,12 @@ For instance, suppose you wanted the main export of every Pollen source file to 
 
 Of course, you can restore the defaults simply by removing these defined values from @racket["pollen.rkt"].
 
-Every @racket[(setup:_name)] function will resolve the current value of that variable: it will return the value from the @racket[setup] submodule (if @racket[_name] was defined there), otherwise it will return the default value (which is directly available from @racket[setup:default-]@racket[_name]). For instance, @racket[setup:default-command-char] will always be @litchar{◊}, but in the example above, @racket[(setup:command-char)] would return @litchar{🎸}. 
+Every @racket[(setup:_name)] function will resolve the current value of that variable: it will return the value from the @racket[setup] submodule (if @racket[_name] was defined there), otherwise it will return the default value (which is directly available from @racket[default-]@racket[_name]). For instance, @racket[default-command-char] will always be @litchar{◊}, but in the example above, @racket[(setup:command-char)] would return @litchar{🎸}. 
 
 @section{Values}
 
 @defoverridable[project-server-port integer?]{
-Determines the default HTTP port for the project server. Initialized to @val[setup:default-project-server-port].}
+Determines the default HTTP port for the project server. Initialized to @val[default-project-server-port].}
 
 @defoverridable[main-export symbol?]{The main X-expression exported from a compiled Pollen source file. Initialized to @racket[doc].}
 
@@ -72,13 +72,13 @@ Determines the default HTTP port for the project server. Initialized to @val[set
 )]
 File extensions for Pollen source files, initialized to the following values:
 
-@racket[setup:default-preproc-source-ext] = @code[(format "'~a" setup:default-preproc-source-ext)]
-@(linebreak)@racket[setup:default-markup-source-ext] = @code[(format "'~a" setup:default-markup-source-ext)]
-@(linebreak)@racket[setup:default-markdown-source-ext] = @code[(format "'~a" setup:default-markdown-source-ext)]
-@(linebreak)@racket[setup:default-null-source-ext] = @code[(format "'~a" setup:default-null-source-ext)]
-@(linebreak)@racket[setup:default-pagetree-source-ext] = @code[(format "'~a" setup:default-pagetree-source-ext)]
-@(linebreak)@racket[setup:default-template-source-ext] = @code[(format "'~a" setup:default-template-source-ext)]
-@(linebreak)@racket[setup:default-scribble-source-ext] = @code[(format "'~a" setup:default-scribble-source-ext)]
+@racket[default-preproc-source-ext] = @code[(format "'~a" default-preproc-source-ext)]
+@(linebreak)@racket[default-markup-source-ext] = @code[(format "'~a" default-markup-source-ext)]
+@(linebreak)@racket[default-markdown-source-ext] = @code[(format "'~a" default-markdown-source-ext)]
+@(linebreak)@racket[default-null-source-ext] = @code[(format "'~a" default-null-source-ext)]
+@(linebreak)@racket[default-pagetree-source-ext] = @code[(format "'~a" default-pagetree-source-ext)]
+@(linebreak)@racket[default-template-source-ext] = @code[(format "'~a" default-template-source-ext)]
+@(linebreak)@racket[default-scribble-source-ext] = @code[(format "'~a" default-scribble-source-ext)]
 
 
 @defoverridable[main-pagetree string?]{Pagetree that Pollen dashboard loads by default in each directory. Initialized to @filepath{index.ptree}.}
@@ -89,7 +89,7 @@ File extensions for Pollen source files, initialized to the following values:
 
 @defoverridable[block-tags (listof symbol?)]{Tags that are treated as blocks by @racket[block-txexpr?]. Initialized to the @link["https://developer.mozilla.org/en-US/docs/Web/HTML/Block-level_elements"]{block-level elements in HTML5}, namely:
 
-@racketidfont{@(string-join (map symbol->string (cdr setup:default-block-tags)) " ")}
+@racketidfont{@(string-join (map symbol->string (cdr default-block-tags)) " ")}
 
 ... plus @racket[setup:main-root-node].}
 
@@ -117,7 +117,7 @@ Default separators used in decoding. The first two are initialized to @racket["\
 @defoverridable[unpublished-path? (path? . -> . boolean?)]{Predicate that determines whether a path is omitted from @secref{raco_pollen_publish} operations. If the predicate is @racket[#t], then the path is omitted. The default, therefore, is @racket[#f].}
 
 
-@defoverridable[splicing-tag symbol?]{Key used to signal that an X-expression should be spliced into its containing X-expression. Default is @val[setup:default-splicing-tag].}
+@defoverridable[splicing-tag symbol?]{Key used to signal that an X-expression should be spliced into its containing X-expression. Default is @val[default-splicing-tag].}
 
 
 @defoverridable[poly-source-ext symbol?]{Extension that indicates a source file can target multiple output types. Default is @racket['poly].}
@@ -130,15 +130,15 @@ Default separators used in decoding. The first two are initialized to @racket["\
 
 I mean @italic{parameters} in the Racket sense, i.e. values that can be fed to @racket[parameterize]. 
 
-@defparam[setup:current-server-port port integer?]{
-A parameter that sets the HTTP port for the project server. Initialized to @racket[setup:default-project-server-port].}
+@defparam[current-server-port port integer?]{
+A parameter that sets the HTTP port for the project server. Initialized to @racket[default-project-server-port].}
 
 
-@defparam[setup:current-project-root port path?]{
+@defparam[current-project-root port path?]{
 A parameter that holds the root directory of the current project (e.g., the directory where you launched @code{raco pollen start}).}
 
-@defparam[setup:current-server-extras-path dir path?]{
+@defparam[current-server-extras-path dir path?]{
 A parameter that reports the path to the directory of support files for the project server. Initialized to @racket[#f], but set to a proper value when the server runs.}
 
-@defparam[setup:current-poly-target target symbol?]{
+@defparam[current-poly-target target symbol?]{
 A parameter that reports the current rendering target for @racket[poly] source files. Initialized to @racket['html].}

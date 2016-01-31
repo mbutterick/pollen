@@ -55,7 +55,7 @@ Functions for retrieving data out of Pollen source files. These are not the only
 (or/c txexpr? string?)]
 Retrieve the @racket[doc] export from @racket[_doc-source], which can be either a path, path string, or pagenode that can be resolved into a source path. If @racket[_doc-source] cannot be resolved, raise an error.
 
-If @racket[_doc-source] is a relative path or pagenode, it is treated as being relative to @racket[setup:current-project-root]. If that's not what you want, you'll need to convert it explicitly to a complete-path (e.g., with @racket[path->complete-path] or @racket[->complete-path]).
+If @racket[_doc-source] is a relative path or pagenode, it is treated as being relative to @racket[current-project-root]. If that's not what you want, you'll need to convert it explicitly to a complete-path (e.g., with @racket[path->complete-path] or @racket[->complete-path]).
 
 If @racket[setup:main-export] has been overridden with a project-specific value, then that is retrieved instead.
 
@@ -66,7 +66,7 @@ If @racket[setup:main-export] has been overridden with a project-specific value,
 hash?]
 Retrieve the @racket[metas] export from @racket[_meta-source], which can be either a path, path string, or pagenode that can be resolved into a source path. If @racket[_meta-source] cannot be resolved, raise an error.
 
-If @racket[_meta-source] is a relative path or pagenode, it is treated as being relative to @racket[setup:current-project-root]. If that's not what you want, you'll need to convert it explicitly to a complete-path (e.g., with @racket[path->complete-path] or @racket[->complete-path]).
+If @racket[_meta-source] is a relative path or pagenode, it is treated as being relative to @racket[current-project-root]. If that's not what you want, you'll need to convert it explicitly to a complete-path (e.g., with @racket[path->complete-path] or @racket[->complete-path]).
 
 If @racket[setup:meta-export] has been overridden with a project-specific value, then that is retrieved instead.
 
@@ -92,7 +92,7 @@ With @racket[select], you get the first result; with @racket[select*], you get t
 
 In both cases, you get @racket[#f] if there are no matches.
 
-Note that if @racket[_value-source] is a relative path or pagenode, it is treated as being relative to @racket[setup:current-project-root]. If that's not what you want, you'll need to convert it explicitly to a complete-path (e.g., with @racket[path->complete-path] or @racket[->complete-path]).
+Note that if @racket[_value-source] is a relative path or pagenode, it is treated as being relative to @racket[current-project-root]. If that's not what you want, you'll need to convert it explicitly to a complete-path (e.g., with @racket[path->complete-path] or @racket[->complete-path]).
 
 @examples[#:eval my-eval
 (module nut-butters pollen/markup
@@ -115,7 +115,7 @@ Note that if @racket[_value-source] is a relative path or pagenode, it is treate
 (or/c #f (listof xexpr?))]
 Look up the value of @racket[_key] in @racket[_doc-source]. The @racket[_doc-source] argument can be either 1) a tagged X-expression representing a @racket[doc] or 2) a pagenode or source path that identifies a source file that provides @racket[doc]. If no value exists for @racket[_key], you get @racket[#f].
 
-Note that if @racket[_doc-source] is a relative path or pagenode, it is treated as being relative to @racket[setup:current-project-root]. If that's not what you want, you'll need to convert it explicitly to a complete-path (e.g., with @racket[path->complete-path] or @racket[->complete-path]).
+Note that if @racket[_doc-source] is a relative path or pagenode, it is treated as being relative to @racket[current-project-root]. If that's not what you want, you'll need to convert it explicitly to a complete-path (e.g., with @racket[path->complete-path] or @racket[->complete-path]).
 
 @examples[#:eval my-eval
 (module gelato pollen/markup
@@ -137,7 +137,7 @@ Note that if @racket[_doc-source] is a relative path or pagenode, it is treated 
 (or/c #f xexpr?)]
 Look up the value of @racket[_key] in @racket[_meta-source]. The @racket[_meta-source] argument can be either 1) a hashtable representing @racket[metas] or 2) a pagenode or source path that identifies a source file that provides @racket[metas]. If no value exists for @racket[_key], you get @racket[#f]. 
 
-Note that if @racket[_meta-source] is a relative path or pagenode, it is treated as being relative to @racket[setup:current-project-root]. If that's not what you want, you'll need to convert it explicitly to a complete-path (e.g., with @racket[path->complete-path] or @racket[->complete-path]).
+Note that if @racket[_meta-source] is a relative path or pagenode, it is treated as being relative to @racket[current-project-root]. If that's not what you want, you'll need to convert it explicitly to a complete-path (e.g., with @racket[path->complete-path] or @racket[->complete-path]).
 
 @examples[#:eval my-eval
 (define metas (hash 'template "sub.xml.pp" 'target "print"))

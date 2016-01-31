@@ -86,7 +86,7 @@
 
 (define (convert+validate-path pagenode-or-path caller)
   (let ([path (get-source (if (pagenode? pagenode-or-path)
-                              (build-path (setup:current-project-root) (symbol->string pagenode-or-path))
+                              (build-path (current-project-root) (symbol->string pagenode-or-path))
                               pagenode-or-path))])
     (unless path
       (error (format "~a no source found for '~a' in directory ~a" caller path (current-directory))))

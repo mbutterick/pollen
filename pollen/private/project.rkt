@@ -7,7 +7,7 @@
 (define+provide/contract (get-directory-require-files source-arg)
   (pathish? . -> . (or/c #f (λ(xs) (and (list? xs) (andmap complete-path? xs)))))
   (define source-path (->path source-arg))  
-  (define require-filenames (list setup:default-directory-require))
+  (define require-filenames (list default-directory-require))
   (define identity (λ(x) x))
   (define possible-requires (filter identity (map (λ(f) (find-upward-from source-path f)) require-filenames)))
   (and (pair? possible-requires) possible-requires))

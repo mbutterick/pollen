@@ -93,7 +93,7 @@
   ;; certain files (leading dot) will be ignored by `directory-list` anyhow.
   ;; we will, however, ignore Pollen's cache files, because those shouldn't be project-manipulated.
   (define (not-pollen-cache? path)
-    (not (member (->string path) setup:default-cache-names)))
+    (not (member (->string path) default-cache-names)))
   
   (unless (directory-exists? dir)
     (error 'directory->pagetree (format "directory ~v doesn't exist" dir)))
@@ -241,7 +241,7 @@
  (check-false (next 'three test-pagetree)))
 
 
-(define/contract+provide (path->pagenode path [starting-path (setup:current-project-root)])
+(define/contract+provide (path->pagenode path [starting-path (current-project-root)])
   ((coerce/path?) (coerce/path?) . ->* . coerce/symbol?)
   (define starting-dir
     (if (directory-exists? starting-path)

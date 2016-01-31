@@ -8,7 +8,7 @@
 (define-runtime-path three-source "data/subtemplate/subdir/subsubdir/three.txt.pm")
 
 (parameterize ([current-directory subtemplate-dir]
-               [setup:current-project-root subtemplate-dir]
+               [current-project-root subtemplate-dir]
                [current-output-port (open-output-string)])
   (check-equal? (render one-source) "one in main template")
   (check-equal? (render two-source) "two in main template")

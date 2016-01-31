@@ -2,12 +2,15 @@
 (require (for-syntax racket/base racket/syntax))
 (require racket/runtime-path)
 
-(provide (prefix-out setup: (combine-out (all-defined-out))))
+(define-syntax-rule (define+provide id expr ...)
+  (begin
+    (provide id)
+    (define id expr ...)))
 
-(define current-project-root (make-parameter (current-directory)))
+(define+provide current-project-root (make-parameter (current-directory)))
 
-(define default-directory-require "pollen.rkt")
-(define default-env-name "POLLEN")
+(define+provide default-directory-require "pollen.rkt")
+(define+provide default-env-name "POLLEN")
 
 (define (get-path-to-override [file-or-dir (current-directory)])
   (define file-with-config-submodule default-directory-require)
@@ -33,6 +36,7 @@
                    [world-submodule (format-id stx "~a" world-submodule-name)]
                    [name-fail-thunked (format-id stx "fail-thunk-~a" #'name)] )
        #'(begin
+           (provide (prefix-out setup: name-thunked) default-name)
            (define default-name default-value)
            (define name-fail-thunked (λ _ default-name))
            ;; can take a dir argument that sets start point for (get-path-to-override) search.
@@ -49,16 +53,16 @@
 (define-settable scribble-source-ext 'scrbl)
 
 ;; these are deliberately not settable because they're just internal signalers, no effect on external interface
-(define default-mode-auto 'auto)
-(define default-mode-preproc 'pre)
-(define default-mode-markup 'markup)
-(define default-mode-markdown 'markdown)
-(define default-mode-pagetree 'ptree)
-(define default-mode-template 'template)
+(define+provide default-mode-auto 'auto)
+(define+provide default-mode-preproc 'pre)
+(define+provide default-mode-markup 'markup)
+(define+provide default-mode-markdown 'markdown)
+(define+provide default-mode-pagetree 'ptree)
+(define+provide default-mode-template 'template)
 
 (define-settable cache-filename "pollen.cache")
 (define-settable cache-dir-name "pollen-cache")
-(define default-cache-names (list (cache-filename) (cache-dir-name)))
+(define+provide default-cache-names (list (cache-filename) (cache-dir-name)))
 
 (define-settable decodable-extensions (list (markup-source-ext) (pagetree-source-ext)))
 
@@ -90,12 +94,12 @@
 
 (define-settable project-server-port 8080)
 
-(define current-server-port (make-parameter (project-server-port)))
+(define+provide current-server-port (make-parameter (project-server-port)))
 
 (define-settable dashboard-css "poldash.css")
 
 (define-runtime-path server-extras-dir "private/server-extras")
-(define current-server-extras-path (make-parameter server-extras-dir))
+(define+provide current-server-extras-path (make-parameter server-extras-dir))
 
 (define-settable publish-directory-name "publish")
 
@@ -113,4 +117,4 @@
 
 (define-settable poly-source-ext 'poly) ; extension that signals source can be used for multiple output targets
 (define-settable poly-targets '(html)) ; current target applied to multi-output source files
-(define current-poly-target (make-parameter (car (poly-targets))))
+(define+provide current-poly-target (make-parameter (car (poly-targets))))

@@ -6,9 +6,9 @@
 (define-runtime-path poly-source "data/poly/test.poly.pm")
 
 (parameterize ([current-directory poly-dir]
-               [setup:current-project-root poly-dir]
+               [current-project-root poly-dir]
                [current-output-port (open-output-string)])
-  (parameterize ([setup:current-poly-target 'txt])
+  (parameterize ([current-poly-target 'txt])
     (check-equal? (render poly-source) "TITLE is **big**"))
-  (parameterize ([setup:current-poly-target 'html])
+  (parameterize ([current-poly-target 'html])
     (check-equal? (render poly-source) (format "~v" '(root (h2 "title") " is " (strong "big"))))))

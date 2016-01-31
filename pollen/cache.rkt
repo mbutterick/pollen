@@ -8,7 +8,7 @@
 ;; The cache is a hash with paths as keys.
 ;; The cache values are also hashes, with key/value pairs for that path.
 
-(define+provide (reset-cache [starting-dir (setup:current-project-root)])
+(define+provide (reset-cache [starting-dir (current-project-root)])
   (unless (and (path-string? starting-dir) (directory-exists? starting-dir))
     (raise-argument-error 'reset-cache "path-string to existing directory" starting-dir))
   

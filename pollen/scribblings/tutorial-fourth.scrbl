@@ -221,7 +221,7 @@ But plain text doesn't have @racket[h2] or @racket[strong]. So how about this: w
 
 ``So how do we make our tags mean one thing for HTML and a different thing for plain text?'' We make @italic{branching tag functions} that do different things depending on what the current rendering target for poly sources is.
 
-That value, in fact, is stored in a Pollen @seclink["parameterize" #:doc '(lib "scribblings/guide/guide.scrbl")]{parameter} called @racket[(setup:current-poly-target)]. What we're going to do is rewrite our tag functions to behave differently based on the value of this parameter. Update your @filepath{pollen.rkt} as follows:
+That value, in fact, is stored in a Pollen @seclink["parameterize" #:doc '(lib "scribblings/guide/guide.scrbl")]{parameter} called @racket[(current-poly-target)]. What we're going to do is rewrite our tag functions to behave differently based on the value of this parameter. Update your @filepath{pollen.rkt} as follows:
 
 @fileblock["pollen.rkt" @codeblock|{
 #lang racket/base
@@ -236,12 +236,12 @@ That value, in fact, is stored in a Pollen @seclink["parameterize" #:doc '(lib "
   (date->string (current-date)))
 
 (define (heading . xs)
-  (case (setup:current-poly-target)
+  (case (current-poly-target)
     [(txt) (map string-upcase xs)]
     [else `(h2 ,@xs)]))
 
 (define (emph . xs)
-  (case (setup:current-poly-target)
+  (case (current-poly-target)
     [(txt) `("**" ,@xs "**")]
     [else `(strong ,@xs)]))
 }|]
@@ -280,13 +280,13 @@ Let's see how fast we can add support for LaTeX output. Here's the updated @file
   (date->string (current-date)))
 
 (define (heading . xs)
-  (case (setup:current-poly-target)
+  (case (current-poly-target)
     [(ltx) (apply string-append `("{\\huge " ,@xs "}"))]
     [(txt) (map string-upcase xs)]
     [else `(h2 ,@xs)]))
 
 (define (emph . xs)
-  (case (setup:current-poly-target)
+  (case (current-poly-target)
     [(ltx) (apply string-append `("{\\bf " ,@xs "}"))]
     [(txt) `("**" ,@xs "**")]
     [else `(strong ,@xs)]))
@@ -343,13 +343,13 @@ First, we update @filepath{pollen.rkt}:
   (date->string (current-date)))
 
 (define (heading . xs)
-  (case (setup:current-poly-target)
+  (case (current-poly-target)
     [(ltx pdf) (apply string-append `("{\\huge " ,@xs "}"))]
     [(txt) (map string-upcase xs)]
     [else `(h2 ,@xs)]))
 
 (define (emph . xs)
-  (case (setup:current-poly-target)
+  (case (current-poly-target)
     [(ltx pdf) (apply string-append `("{\\bf " ,@xs "}"))]
     [(txt) `("**" ,@xs "**")]
     [else `(strong ,@xs)]))

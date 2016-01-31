@@ -53,7 +53,7 @@
   (procedure? . -> . procedure?)
   (λ(req . string-args) 
     (logger req) 
-    (define path (apply build-path (setup:current-project-root) (flatten string-args)))
+    (define path (apply build-path (current-project-root) (flatten string-args)))
     (response/xexpr+doctype (route-proc path))))
 
 
@@ -78,7 +78,7 @@
   (pathish? . -> . xexpr?)
   (define path (->complete-path p))
   (define img (bitmap/file path))
-  (define relative-path (->string (find-relative-path (setup:current-project-root) path)))
+  (define relative-path (->string (find-relative-path (current-project-root) path)))
   (define img-url (format "/~a" relative-path))
   `(div  
     (p "filename =" ,(->string relative-path))
@@ -93,7 +93,7 @@
 (define (handle-zip-path p)
   (pathish? . -> . xexpr?)
   (define path (->path p))
-  (define relative-path (->string (find-relative-path (setup:current-project-root) path)))
+  (define relative-path (->string (find-relative-path (current-project-root) path)))
   (define ziplist (zip-directory-entries (read-zip-directory path)))
   `(div  
     (p "filename =" ,(->string relative-path))
@@ -134,7 +134,7 @@
 (define (dashboard dashboard-ptree)
   (define dashboard-dir (get-enclosing-dir dashboard-ptree))
   (define (in-project-root?)
-    (directories-equal? dashboard-dir (setup:current-project-root)))
+    (directories-equal? dashboard-dir (current-project-root)))
   (define parent-dir (and (not (in-project-root?)) (get-enclosing-dir dashboard-dir)))
   (define empty-cell (cons #f #f))
   (define (make-link-cell href+text)
@@ -145,9 +145,9 @@
                                   text)))))
   
   (define (make-parent-row)
-    (define title (string-append "Project root" (if (equal? (setup:current-project-root) dashboard-dir) (format " = ~a" dashboard-dir) "")))
-    (define dirs (cons title (if (not (equal? (setup:current-project-root) dashboard-dir))
-                                 (explode-path (find-relative-path (setup:current-project-root) dashboard-dir))
+    (define title (string-append "Project root" (if (equal? (current-project-root) dashboard-dir) (format " = ~a" dashboard-dir) "")))
+    (define dirs (cons title (if (not (equal? (current-project-root) dashboard-dir))
+                                 (explode-path (find-relative-path (current-project-root) dashboard-dir))
                                  null)))
     (define dirlinks (cons "/" (map (λ(ps) (format "/~a/" (apply build-path ps)))  
                                     (for/list ([i (in-range (length (cdr dirs)))])
@@ -256,7 +256,7 @@
 
 (define/contract (req->path req)
   (request? . -> . path?)
-  (define base (setup:current-project-root))
+  (define base (current-project-root))
   (define file (url->path (request-uri req)))
   (if (eq? (system-path-convention-type) 'windows)
       (build-path base file) ; because url->path returns a relative path for 'windows

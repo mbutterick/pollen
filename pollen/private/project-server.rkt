@@ -21,18 +21,18 @@
      [else route-default]))
   
   (message (format "Welcome to Pollen ~a" pollen:version) (format "(Racket ~a)" (version)))
-  (message (format "Project root is ~a" (setup:current-project-root)))
+  (message (format "Project root is ~a" (current-project-root)))
   
-  (define server-name (format "http://localhost:~a" (setup:current-server-port)))
+  (define server-name (format "http://localhost:~a" (current-server-port)))
   (message (format "Project server is ~a" server-name) "(Ctrl-C to exit)")
   (message (format "Project dashboard is ~a/~a" server-name (setup:main-pagetree)))
   (message "Ready to rock")
     
   (parameterize ([error-print-width 1000])
     (serve/servlet pollen-servlet
-                   #:port (setup:current-server-port)
+                   #:port (current-server-port)
                    #:listen-ip #f
                    #:servlet-regexp #rx"" ; respond to top level
                    #:command-line? #t
                    #:file-not-found-responder route-404
-                   #:extra-files-paths (list (setup:current-server-extras-path) (setup:current-project-root)))))
+                   #:extra-files-paths (list (current-server-extras-path) (current-project-root)))))

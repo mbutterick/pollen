@@ -18,9 +18,9 @@
                          [META-MOD (format-symbol "~a" (setup:meta-export))]
                          [ROOT (format-id #'(EXPR (... ...)) "~a" (setup:main-root-node))]
                          [NEWLINE (datum->syntax #'(EXPR (... ...)) (setup:newline))]
-                         [MODE-PAGETREE (datum->syntax #'(EXPR (... ...)) setup:default-mode-pagetree)]
-                         [MODE-MARKUP (datum->syntax #'(EXPR (... ...)) setup:default-mode-markup)]
-                         [MODE-MARKDOWN (datum->syntax #'(EXPR (... ...)) setup:default-mode-markdown)]
+                         [MODE-PAGETREE (datum->syntax #'(EXPR (... ...)) default-mode-pagetree)]
+                         [MODE-MARKUP (datum->syntax #'(EXPR (... ...)) default-mode-markup)]
+                         [MODE-MARKDOWN (datum->syntax #'(EXPR (... ...)) default-mode-markdown)]
                          [SPLICING_TAG (datum->syntax #'(EXPR (... ...)) (setup:splicing-tag))]
                          [DOC (format-id #'(EXPR (... ...)) "~a" (setup:main-export))]
                          [DOC-RAW (generate-temporary 'pollen-)]); prevents conflicts with other imported Pollen sources

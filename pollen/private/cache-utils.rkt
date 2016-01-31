@@ -12,8 +12,8 @@
   ;; can't use relative paths for cache keys because source files include `here-path` which is absolute.
   ;; problem is that cache could appear valid on another filesystem (based on relative pathnames & mod dates)
   ;; but would actually be invalid (because the `here-path` names are wrong).
-  (define poly-flag (and (has-inner-poly-ext? source-path) (setup:current-poly-target)))
-  (define pollen-env (getenv setup:default-env-name))
+  (define poly-flag (and (has-inner-poly-ext? source-path) (current-poly-target)))
+  (define pollen-env (getenv default-env-name))
   (define path+mod-time-pairs
     (map (λ(ps) (and ps (let ([cp (->complete-path ps)])
                           (cons (path->string cp) (with-handlers ([exn:fail? (λ _ 0)])

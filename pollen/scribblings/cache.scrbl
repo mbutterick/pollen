@@ -9,7 +9,7 @@
 
 @defmodule[pollen/cache]
 
-The slowest part of a Pollen @racket[render] is compiling a source file. Because Pollen allows source files to be edited and previewed dynamically, these files get recompiled a lot. Therefore, Pollen stores copies of the exports of source files — namely, whatever is stored in @code[(format "~a" setup:default-main-export)] and @code[(format "~a" setup:default-meta-export)] — in a cache so they can be reused.
+The slowest part of a Pollen @racket[render] is compiling a source file. Because Pollen allows source files to be edited and previewed dynamically, these files get recompiled a lot. Therefore, Pollen stores copies of the exports of source files — namely, whatever is stored in @code[(format "~a" default-main-export)] and @code[(format "~a" default-meta-export)] — in a cache so they can be reused.
 
 In each directory of your project, Pollen creates a subdirectory called @filepath{pollen-cache}. The files are stored on disk so they can be reused between sessions. If you delete files within a cache directory (or the whole thing), don't worry — everything will get regenerated. (However, you should not read or write to any @filepath{pollen-cache} directory, as the implementation details are subject to change.)
 
@@ -68,7 +68,7 @@ hash-eq?]
 )]
 Try to retrieve the requested value out of the cache. If it's not there, or out of date, @racket[dynamic-require] is used to update it from the source.
 
-Despite their names, these functions actually rely on @racket[setup:main-export] and @racket[setup:meta-export] (which default to @id[setup:default-main-export] and @id[setup:default-meta-export]). Thus, if you override those names, everything will still work as expected.
+Despite their names, these functions actually rely on @racket[setup:main-export] and @racket[setup:meta-export] (which default to @id[default-main-export] and @id[default-meta-export]). Thus, if you override those names, everything will still work as expected.
 
 If you want the speed benefit of the cache, you should @bold{always} use @racket[cached-doc] and @racket[cached-metas] to get data from Pollen source files. That doesn't mean you can't also use functions like @racket[require], @racket[local-require], and @racket[dynamic-require]. They'll just be slower.
 

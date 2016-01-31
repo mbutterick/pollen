@@ -63,7 +63,7 @@
   (define pagetree (if (pagetree? pagetree-or-path)
                        pagetree-or-path
                        (cached-doc pagetree-or-path)))
-  (parameterize ([current-directory (setup:current-project-root)])
+  (parameterize ([current-directory (current-project-root)])
     (for-each render-from-source-or-output-path (map ->complete-path (pagetree->list pagetree)))))
 
 
@@ -118,9 +118,9 @@
   
   (define output-path (or maybe-output-path (->output-path source-path)))
   (define template-path (or maybe-template-path (get-template-for source-path output-path)))
-  (message (format "rendering: /~a as /~a" (find-relative-path (setup:current-project-root) source-path)
-                   (find-relative-path (setup:current-project-root) output-path)))
-  (define render-result (parameterize ([setup:current-poly-target (->symbol (get-ext output-path))])
+  (message (format "rendering: /~a as /~a" (find-relative-path (current-project-root) source-path)
+                   (find-relative-path (current-project-root) output-path)))
+  (define render-result (parameterize ([current-poly-target (->symbol (get-ext output-path))])
                           (apply render-proc (list source-path template-path output-path))))
   ;; wait till last possible moment to store mod dates, because render-proc may also trigger its own subrenders
   ;; e.g., of a template. 
@@ -179,7 +179,7 @@
        (require (for-syntax racket/base))
        (require pollen/private/include-template pollen/cache pollen/private/debug pollen/pagetree pollen/core)
        ,(require-directory-require-files source-path)
-       (parameterize ([current-pagetree (make-project-pagetree ,(setup:current-project-root))])
+       (parameterize ([current-pagetree (make-project-pagetree ,(current-project-root))])
          (let ([,(setup:main-export source-path) (cached-doc ,(path->string source-path))]
                [,(setup:meta-export source-path) (cached-metas ,(path->string source-path))]
                [,(setup:splicing-tag source-path) (λ xs xs)]) ; splice behavior is different in textual context
@@ -213,7 +213,7 @@
     (define output-path-ext (get-ext output-path))
     (define (get-template-from-metas)
       (with-handlers ([exn:fail:contract? (λ _ #f)]) ; in case source-path doesn't work with cached-require
-        (parameterize ([current-directory (setup:current-project-root)])
+        (parameterize ([current-directory (current-project-root)])
           (let* ([source-metas (cached-metas source-path)]
                  [template-name-or-names (select-from-metas (setup:template-meta-key source-path) source-metas)] ; #f or atom or list
                  [template-name (cond
@@ -231,7 +231,7 @@
 
     (define (get-fallback-template)
       (and output-path-ext
-           (build-path (setup:current-server-extras-path)
+           (build-path (current-server-extras-path)
                        (add-ext (setup:fallback-template-prefix source-path) output-path-ext))))
     
     (or (file-exists-or-has-source? (get-template-from-metas))
@@ -243,20 +243,20 @@
 
 (module-test-external
  (require pollen/setup sugar/file sugar/coerce)
- (define fallback.html (build-path (setup:current-server-extras-path)
+ (define fallback.html (build-path (current-server-extras-path)
                                    (add-ext (setup:fallback-template-prefix) 'html)))
  (check-equal? (get-template-for (->complete-path "foo.poly.pm")) fallback.html)
  (check-equal? (get-template-for (->complete-path "foo.html.pm")) fallback.html)
  
- (define fallback.svg (build-path (setup:current-server-extras-path)
+ (define fallback.svg (build-path (current-server-extras-path)
                                   (add-ext (setup:fallback-template-prefix) 'svg)))
- (parameterize ([setup:current-poly-target 'svg])
+ (parameterize ([current-poly-target 'svg])
    (check-equal? (get-template-for (->complete-path "foo.poly.pm")) fallback.svg)
    (check-equal? (get-template-for (->complete-path "foo.html.pm")) fallback.html))
  
- (define fallback.missing (build-path (setup:current-server-extras-path)
+ (define fallback.missing (build-path (current-server-extras-path)
                                       (add-ext (setup:fallback-template-prefix) 'missing)))
- (parameterize ([setup:current-poly-target 'missing])
+ (parameterize ([current-poly-target 'missing])
    (check-false (get-template-for (->complete-path "foo.poly.pm")))
    (check-equal? (get-template-for (->complete-path "foo.html.pm")) fallback.html)))
 

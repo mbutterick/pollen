@@ -6,5 +6,5 @@
 (define-runtime-path test-source "data/pollen-mode/test-pollen-mode.foo")
 
 (parameterize ([current-directory test-dir]
-               [setup:current-project-root test-dir])
+               [current-project-root test-dir])
   (check-equal? ((dynamic-require test-source 'proc)) "fooXbarXzam"))

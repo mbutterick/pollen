@@ -20,7 +20,7 @@
 ;; test makes sure that quick tour files work 
 (parameterize ([current-output-port (open-output-string)]
                [current-directory quick-tour-dir]
-               [setup:current-project-root quick-tour-dir])
+               [current-project-root quick-tour-dir])
   (check-not-exn (λ _ (render-to-file-if-needed hello.txt.pp)))
   (check-not-exn (λ _ (render-to-file-if-needed margin.html.pp)))
   (check-not-exn (λ _ (render-to-file-if-needed downtown.html.pmd)))

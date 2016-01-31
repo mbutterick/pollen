@@ -61,7 +61,7 @@ publish [dir] [dest]   copy project in dir to dest without source files
                           (warning: overwrites existing dest dir)
 setup                  preload cache
 reset                  reset cache
-version                print the version" (setup:current-server-port))))
+version                print the version" (current-server-port))))
 
 
 (define (handle-version)
@@ -79,7 +79,7 @@ version                print the version" (setup:current-server-port))))
 
 
 (define (handle-render)
-  (define render-target-wanted (make-parameter (setup:current-poly-target)))
+  (define render-target-wanted (make-parameter (current-poly-target)))
   (define parsed-args (command-line #:program "raco pollen render"
                                     #:argv (vector-drop (current-command-line-arguments) 1) ; snip the 'render' from the front
                                     #:once-each
@@ -90,13 +90,13 @@ version                print the version" (setup:current-server-port))))
   (define path-args (if (empty? parsed-args)
                         (list (current-directory))
                         parsed-args))
-  (parameterize ([current-directory (setup:current-project-root)]
-                 [setup:current-poly-target (render-target-wanted)])
+  (parameterize ([current-directory (current-project-root)]
+                 [current-poly-target (render-target-wanted)])
     (define first-arg (car path-args))
     (if (directory-exists? first-arg)
         (let ([dir first-arg]) ; now we know it's a dir
           (parameterize ([current-directory dir]
-                         [setup:current-project-root dir])
+                         [current-project-root dir])
             (define preprocs (filter preproc-source? (directory-list dir)))
             (define static-pagetrees (filter pagetree-source? (directory-list dir)))
             ;; if there are no static pagetrees, use make-project-pagetree
@@ -119,8 +119,8 @@ version                print the version" (setup:current-server-port))))
 (define (handle-start directory-maybe [port #f])
   (when (not (directory-exists? directory-maybe))
     (error (format "~a is not a directory" directory-maybe)))
-  (parameterize ([setup:current-project-root directory-maybe]
-                 [setup:current-server-port (or port setup:default-project-server-port)])
+  (parameterize ([current-project-root directory-maybe]
+                 [current-server-port (or port default-project-server-port)])
     (displayln "Starting project server ...")
     ((dynamic-require 'pollen/private/project-server 'start-server))))
 
@@ -156,7 +156,7 @@ version                print the version" (setup:current-server-port))))
   (when (directory-exists? target-dir)
     (delete-directory/files target-dir))
   (copy-directory/files source-dir target-dir)
-  (parameterize ([setup:current-project-root (current-directory)])
+  (parameterize ([current-project-root (current-directory)])
     (for-each delete-it (find-files pollen-related-file? target-dir)))
   (displayln (format "completed to ~a" target-dir)))
 

@@ -234,7 +234,7 @@ Though port @tt{8080} is the default, you can start the project server on any po
 > raco pollen start /path/to/tutorial 8088
 }
 
-@margin-note{You can also change the default port by altering @racket[setup:default-project-server-port], or parameterizing it with @racket[setup:current-server-port].}
+@margin-note{You can also change the default port by altering @racket[default-project-server-port], or parameterizing it with @racket[current-server-port].}
 
 Note that when you pass a port argument, you also have to pass a path argument. (Without it, you'll get an error, as illustrated below.) If you want the project server to start in the current directory, you can use the usual @litchar{.} shorthand:
 

@@ -8,11 +8,11 @@
   (define compile-cache-active #f))
 
 (define (heading . xs)
-  (case (setup:current-poly-target)
+  (case (current-poly-target)
     [(txt) (map string-upcase xs)]
     [else `(h2 ,@xs)]))
 
 (define (emph . xs)
-  (case (setup:current-poly-target)
+  (case (current-poly-target)
     [(txt) `("**" ,@xs "**")]
     [else `(strong ,@xs)]))

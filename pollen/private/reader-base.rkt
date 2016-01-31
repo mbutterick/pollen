@@ -11,7 +11,7 @@
 (define (make-custom-read-syntax reader-mode)
   (λ (path-string p)
     (define read-inner (make-at-reader 
-                        #:command-char (if (or (eq? reader-mode setup:default-mode-template) 
+                        #:command-char (if (or (eq? reader-mode default-mode-template) 
                                                (and (string? path-string)
                                                     (regexp-match (pregexp (format "\\.~a$" (setup:template-source-ext))) path-string)))
                                            (setup:template-command-char)
@@ -23,14 +23,14 @@
                                [(symbol? path-string) (symbol->string path-string)]
                                [(equal? path-string "unsaved editor") path-string]
                                [else (path->string path-string)]))
-    (define parser-mode (if (eq? reader-mode setup:default-mode-auto)
+    (define parser-mode (if (eq? reader-mode default-mode-auto)
                             (let* ([file-ext-pattern (pregexp "\\w+$")]
                                    [here-ext (string->symbol (car (regexp-match file-ext-pattern reader-here-path)))]
                                    [auto-computed-mode (cond
-                                                         [(eq? here-ext (setup:pagetree-source-ext)) setup:default-mode-pagetree]
-                                                         [(eq? here-ext (setup:markup-source-ext)) setup:default-mode-markup]
-                                                         [(eq? here-ext (setup:markdown-source-ext)) setup:default-mode-markdown]
-                                                         [else setup:default-mode-preproc])])
+                                                         [(eq? here-ext (setup:pagetree-source-ext)) default-mode-pagetree]
+                                                         [(eq? here-ext (setup:markup-source-ext)) default-mode-markup]
+                                                         [(eq? here-ext (setup:markdown-source-ext)) default-mode-markdown]
+                                                         [else default-mode-preproc])])
                               auto-computed-mode)
                             reader-mode))
     (define post-parser-syntax

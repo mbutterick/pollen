@@ -272,7 +272,7 @@
     [(or (markup-source? x) (preproc-source? x) (null-source? x) (markdown-source? x))
      (define output-path (unescape-ext (remove-ext x)))
      (if (has-poly-ext? output-path)
-         (add-ext (remove-ext output-path) (or (setup:current-poly-target) (car (setup:poly-targets))))
+         (add-ext (remove-ext output-path) (or (current-poly-target) (car (setup:poly-targets))))
          output-path)]
     [(scribble-source? x) (add-ext (remove-ext x) 'html)]
     [else x]))
@@ -280,7 +280,7 @@
 
 (define+provide (project-files-with-ext ext)
   ;(coerce/symbol? . -> . complete-paths?)
-  (map ->complete-path (filter (λ(i) (has-ext? i (->symbol ext))) (directory-list (setup:current-project-root)))))
+  (map ->complete-path (filter (λ(i) (has-ext? i (->symbol ext))) (directory-list (current-project-root)))))
 
 
 (define (racket-source? x)
@@ -298,7 +298,7 @@
 
 
 (define+provide (cache-file? path)
-  (ormap (λ(cache-name) (ends-with? (path->string path) cache-name)) setup:default-cache-names))
+  (ormap (λ(cache-name) (ends-with? (path->string path) cache-name)) default-cache-names))
 
 
 (define+provide (pollen-related-file? file)

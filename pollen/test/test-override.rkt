@@ -21,7 +21,7 @@
 (define racket-path (find-exe))
 ;; parameterize needed to pick up override file
 (parameterize ([current-directory override-dir]
-               [setup:current-project-root override-dir])
+               [current-project-root override-dir])
   (when racket-path
     (define (run path)
       (define cmd-string (format "'~a' ~a" racket-path path))

@@ -257,7 +257,7 @@ To change how this test works, use a @racket[setup] submodule as described in @s
 (module setup racket/base
   (provide (all-defined-out))
   (require pollen/setup)
-  (define block-tags (cons 'bloq setup:default-block-tags)))]
+  (define block-tags (cons 'bloq default-block-tags)))]
 
 After that change, the result will be:
 
@@ -265,14 +265,14 @@ After that change, the result will be:
 
 The default block tags are: 
 
-@racketidfont{@(string-join (map symbol->string setup:default-block-tags) " ")}
+@racketidfont{@(string-join (map symbol->string default-block-tags) " ")}
 
 
 @defproc[
 (merge-newlines
 [elements (listof xexpr?)])
 (listof xexpr?)]
-Within @racket[_elements], merge sequential newline characters into a single element. The newline string is controlled by @racket[setup:newline], and defaults to @val[setup:default-newline].
+Within @racket[_elements], merge sequential newline characters into a single element. The newline string is controlled by @racket[setup:newline], and defaults to @val[default-newline].
 
 @examples[#:eval my-eval
 (merge-newlines '(p "\n" "\n" "foo" "\n" "\n\n" "bar" 
@@ -286,7 +286,7 @@ Within @racket[_elements], merge sequential newline characters into a single ele
 (listof xexpr?)]
 Within @racket[_elements], convert occurrences of the linebreak separator to @racket[_linebreaker], but only if the separator does not occur between blocks (see @racket[block-txexpr?]). Why? Because block-level elements automatically display on a new line, so adding @racket[_linebreaker] would be superfluous. In that case, the linebreak separator just disappears.
 
-The linebreak separator is controlled by @racket[setup:linebreak-separator], and defaults to @val[setup:default-linebreak-separator].
+The linebreak separator is controlled by @racket[setup:linebreak-separator], and defaults to @val[default-linebreak-separator].
 
 The @racket[_linebreaker] argument can either be an X-expression, or a function that takes two X-expressions and returns one. This function will receive the previous and next elements, to make contextual substitution possible.
 
@@ -308,7 +308,7 @@ Find paragraphs within @racket[_elements] and wrap them with @racket[_paragraph-
 
 What counts as a paragraph? Any @racket[_elements] that are either a) explicitly set apart with a paragraph separator, or b) adjacent to a @racket[block-txexpr?] (in which case the paragraph-ness is implied).
 
-The paragraph separator is controlled by @racket[setup:paragraph-separator], and defaults to @val[setup:default-paragraph-separator].
+The paragraph separator is controlled by @racket[setup:paragraph-separator], and defaults to @val[default-paragraph-separator].
 
 @examples[#:eval my-eval
 (decode-paragraphs '("Explicit para" "\n\n" "Explicit para"))

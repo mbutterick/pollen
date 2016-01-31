@@ -336,7 +336,7 @@ But within a template, we need to tell Pollen how we want to convert the X-expre
 
 Third, we need to include the content from our source file. By convention, every Pollen source file makes its output available through an exported variable named @code{doc}. A source file in preprocessor mode puts its text result in @code{doc}. And a source file in authoring mode puts its X-expression result in @code{doc}. So we put the variable @code{doc} inside the @code{body} tag.
 
-@margin-note{You can change the name to something other than @code{doc} by changing @racket[setup:default-main-export].}
+@margin-note{You can change the name to something other than @code{doc} by changing @racket[default-main-export].}
 
 @codeblock[#:keep-lang-line? #f]{
 #lang pollen
