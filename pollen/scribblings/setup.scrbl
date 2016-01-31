@@ -125,3 +125,20 @@ Default separators used in decoding. The first two are initialized to @racket["\
 
 @defoverridable[poly-targets (listof symbol?)]{List of symbols that denotes the possible targets of a @racket['poly] source file. Default is @racket['(html)].}
 
+
+@section{Parameters}
+
+I mean @italic{parameters} in the Racket sense, i.e. values that can be fed to @racket[parameterize]. 
+
+@defparam[setup:current-server-port port integer?]{
+A parameter that sets the HTTP port for the project server. Initialized to @racket[setup:default-project-server-port].}
+
+
+@defparam[setup:current-project-root port path?]{
+A parameter that holds the root directory of the current project (e.g., the directory where you launched @code{raco pollen start}).}
+
+@defparam[setup:current-server-extras-path dir path?]{
+A parameter that reports the path to the directory of support files for the project server. Initialized to @racket[#f], but set to a proper value when the server runs.}
+
+@defparam[setup:current-poly-target target symbol?]{
+A parameter that reports the current rendering target for @racket[poly] source files. Initialized to @racket['html].}
