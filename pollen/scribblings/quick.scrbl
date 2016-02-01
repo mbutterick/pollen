@@ -1,15 +1,15 @@
 #lang scribble/manual
 
-@(require "mb-tools.rkt" (for-label racket pollen/template))
+@(require "mb-tools.rkt" pollen/private/version (for-label racket pollen/template))
 
 @title[#:tag "quick-tour"]{Quick tour}
 
 
 @section{Creating a source file}
 
-Assuming you've installed Racket & Pollen, launch DrRacket. 
+Assuming you've @seclink["Installation"]{installed Racket & Pollen}, launch DrRacket. 
 
-Open a new document. Change the top line to:
+Start a new document. Change the top line to:
 
 @codeblock{
 #lang pollen
@@ -31,7 +31,7 @@ Click the @onscreen{Run} button. In the interactions window, you'll see the resu
 
 @repl-output{Hello world}
 
-Not bad. I think Pollen just won the @link["http://en.wikipedia.org/wiki/List_of_Hello_world_program_examples"]{Hello World Tournament}.
+Not bad. I think Pollen just won the @link["http://helloworldcollection.de"]{Hello World Tournament}.
 
 You can work with Pollen source files in any text editor, including Emacs or Sublime Text. The key advantage of DrRacket is that you can preview the results by running the file.
 
@@ -67,10 +67,8 @@ Save this file as @filepath{hello.txt.pp} in any convenient directory. The deskt
 Open a terminal window and issue two commands:
 
 @terminal{
-> cd [directory containing your file]
+> cd /directory/containing/your/hello-file
 > raco pollen render hello.txt.pp}
-
-@margin-note{Windows users, I'll trust you to convert @exec{raco} into the appropriate command for your system — assuming defaults, it's likely to be @filepath{C:\Program Files\Racket\raco} (include the surrounding quotes in the command).}
 
 After a moment, a new file will appear called @filepath{hello.txt}. Let's see what's in it:
 
@@ -80,6 +78,8 @@ Goodbye Stranger
 Breakfast in America
 Take the Long Way Home
 }
+
+@margin-note{If @exec{raco} doesn't work, it's probably because the @envvar{PATH} wasn't set up correctly during @secref["Installation"].}
 
 You've just learned three things:
 
@@ -92,10 +92,14 @@ You've just learned three things:
 @item{The name of the output file is the same as the source file, minus the Pollen source extension. So @filepath{hello.txt.pp} is rendered to a file called @filepath{hello.txt}.}
 ]
 
-Try editing the text in @filepath{hello.txt.pp} and running @commandline{raco pollen render hello.txt.pp} again. The old @filepath{hello.txt} will be replaced with a new one showing your changes. Thus, now you've learned a fourth thing:
+Try editing the text in @filepath{hello.txt.pp} and running the command again:
+
+@commandline{raco pollen render hello.txt.pp} 
+
+The old @filepath{hello.txt} will be replaced with a new one showing your changes. So now you've learned a fourth thing:
 
 @itemlist[
-@item{Pollen works by rendering output files from source files. Output files can be overwritten. Therefore, you should only make edits to your source files.}
+@item{Pollen works by rendering output files from source files. Output files can be overwritten. Therefore, you should only edit your source files.}
 ]
 
 
@@ -106,19 +110,19 @@ You just saw two ways to view the output of a Pollen source file — first, you
 Now here's a third: the Pollen project server. To start the project server, return to your terminal and issue two commands:
 
 @terminal{
-> cd [directory containing your hello.txt.pp file]
+> cd /directory/containing/your/hello-file
 > raco pollen start}
 
 After a moment, you'll see the startup message:
 
 @terminal{
-Welcome to Pollen 0.001 (Racket @(version))
+Welcome to Pollen @|pollen:version| (Racket @(version))
 Project root is /path/to/your/directory
 Project server is http://localhost:8080 (Ctrl-C to exit)
 Project dashboard is http://localhost:8080/index.ptree
 Ready to rock}
 
-Open a web browser and point it at @link-tt{http://localhost:8080/index.ptree}. The top line of the window will say @tt{Project root} and show the name of the starting directory. Below that will be a listing of the files in the directory. 
+Open a web browser and point it at the project dashboard, which by default is @link-tt{http://localhost:8080/index.ptree}. The top line of the window will say @tt{Project root} and show the name of the starting directory. Below that will be a listing of the files in the directory. 
 
 Among them will be @filepath{hello.txt}, with a greyed-out @filepath{.pp} extension. Click on it, and you'll be taken to @link-tt{http://localhost:8080/hello.txt}, where you'll see:
 
@@ -145,14 +149,14 @@ Mean Street
 Panama
 Hear About It Later}
 
-Notice what happened — the Pollen project server dynamically regenerated the output file (@filepath{hello.txt}) from the source file (@filepath{hello.txt.pp}) after you edited the source. If you like, try making some more changes to @filepath{hello.txt.pp}, and reloading the browser to see the updates in @filepath{hello.txt}.
+Notice what happened — the Pollen project server dynamically regenerated the output file (@filepath{hello.txt}) from the source file (@filepath{hello.txt.pp}) after you edited the source. If you like, try making some more changes to @filepath{hello.txt.pp}, and reloading the browser to see the updates in @filepath{hello.txt}. The project server will regenerate the file whenever it changes.
 
 
 @section{Intermission}
 
 That covers input & output. Now let's circle back and look at what else you can do with Pollen (beyond the epic achievement of displaying plain text in a web browser).
 
-For the rest of this tutorial, I recommend keeping two windows on screen: a web-browser window pointed at your project server (the main URL is @link-tt{http://localhost:8080/index.ptree}) and the DrRacket editing window.
+For the rest of this tutorial, I recommend keeping two windows on screen: a web-browser window pointed at your @link["http://localhost:8080/index.ptree"]{project dashboard}, and the DrRacket editing window.
 
 @section{Pollen as a preprocessor}
 
@@ -170,14 +174,14 @@ For instance, HTML. In DrRacket, create a new file called @filepath{margin.html.
 
 The @filepath{.pp} file extension — which you saw before, with @filepath{hello.txt.pp} — stands for ``Pollen preprocessor.'' You can use the Pollen preprocessor with any text-based file by inserting @code{#lang pollen} as the first line, and adding the @filepath{.pp} file extension.
 
-But for now, go to your @link["http://localhost:8080/index.ptree"]{project dashboard} and click @link["http://localhost:8080/margin.html"]{@filepath{margin.html}}. You should see a black box containing the text ``5em is the inset.''
+But for now, go to your @link["http://localhost:8080/index.ptree"]{project dashboard} and click @link["http://localhost:8080/margin.html"]{@filepath{margin.html}}. You should see a black box containing the text ``@tt{5em is the inset.}''
 
 Suppose you want to change the inset to 30%. Without a preprocessor, you'd have to search & replace each value. But with a preprocessor, you can move the inset value into a variable, and update it from that one location. So first, introduce a variable called @code{my-inset} by using the @racket[define] command:
 
 @fileblock["margin.html.pp" 
 @codeblock{
 #lang pollen
-◊define[my-inset]{30%}
+◊(define my-inset "30%")
 <body style="margin: 10em; border:1px solid black">
 10em is the inset.
 </body>
@@ -185,28 +189,22 @@ Suppose you want to change the inset to 30%. Without a preprocessor, you'd have 
 
 The @code{◊} character is called a @italic{lozenge}. In Pollen, the lozenge is a special character used to denote anything that Pollen should interpret as a command (rather than plain text). 
 
-@margin-note{How to type a lozenge:
-If you're using DrRacket, click the @onscreen{Insert command char} button on the toolbar to insert a lozenge in your code.
+If you're using DrRacket, you can insert a lozenge by clicking the @onscreen{Insert command char ◊} button at the top of your source window. (If you're not using DrRacket, see @seclink["The_lozenge_glyph____"]{these instructions}.)
 
-If you're not:
-@(linebreak)@bold{Mac}: option + shift + V
-@(linebreak)@bold{Windows}: holding down alt, type 9674 on the num pad
-@(linebreak)@bold{Ubuntu}: ctrl + shift + U, then 25CA}
+Thus, the command @code{◊(define my-inset "30%")} means ``create the variable @code{my-inset} and assign it the value @racket{30%}.''
 
-Thus, the command @code{◊define[my-inset]{30%}} means ``create a variable called @code{my-inset} and give it the value @code{30%}.''
-
-Now you can insert the variable into the HTML like so, this time using the ◊ character with the variable name in the two places the value needs to appear:
+Now you can insert the variable into the HTML, this time using the special ◊ character with the variable name in the two places the value needs to appear:
 
 @fileblock["margin.html.pp" 
 @codeblock{
 #lang pollen
-◊define[my-inset]{30%}
+◊(define my-inset "30%")
 <body style="margin: ◊my-inset; border:1px solid black">
 ◊my-inset is the inset.
 </body>
 }]
 
-Now reload @link["http://localhost:8080/margin.html"]{@filepath{margin.html}}. You'll see that the size of the margin has changed (because of the change to the @code{style} attribute) and so has the text of the HTML. If you like, try editing @code{my-inset} with different values and reloading the page. You can also try using @racket[define] to create another variable (for instance, to change the color of the box border).
+In your web browesr, reload @link["http://localhost:8080/margin.html"]{@filepath{margin.html}}. You'll see that the size of the margin has changed (because of the change to the @code{style} attribute) and so has the text of the HTML. If you like, try editing @code{my-inset} with different values and reloading the page. You can also try using @racket[define] to create another variable (for instance, to change the color of the box border).
 
 Still, this is the tiniest tip of the iceberg. The Pollen preprocessor gives you access to everything in the Racket programming language — including string manipulation, math functions, and so on.
 
@@ -214,7 +212,7 @@ Still, this is the tiniest tip of the iceberg. The Pollen preprocessor gives you
 
 When used as a preprocessor, Pollen's rule is that what you write is what you get. But if you're targeting HTML, who wants to type out all those @code{<tedious>tags</tedious>}? You can make Pollen do the heavy lifting by using an @defterm{authoring mode}.
 
-For instance, Markdown authoring mode. Markdown is a simplified @link["https://daringfireball.net/projects/markdown/"]{notation system} for HTML. You can use Markdown authoring mode in Pollen by inserting @tt{#lang pollen} as the first line, and adding the @filepath{.pmd} file extension.
+For instance, Markdown authoring mode. Markdown is a simplified @link["https://daringfireball.net/projects/markdown/"]{notation system} for HTML. You can use Markdown authoring mode in Pollen by inserting @code{#lang pollen} as the first line, and adding the @filepath{.pmd} file extension.
 
 Try it. In DrRacket, create a file with the following lines and save it as @filepath{downtown.html.pmd}:
 
@@ -230,7 +228,7 @@ Pollen + Markdown
 + [search for Racket](https://google.com/search?q=racket)
 }]
 
-As before, go to the @link["http://localhost:8080/index.ptree"]{dashboard} for the project server. This time, click the link for @link["http://localhost:8080/downtown.html"]{@filepath{downtown.html}}. You'll see something like this:
+As before, go to the @link["http://localhost:8080/index.ptree"]{project dashboard}. This time, click the link for @link["http://localhost:8080/downtown.html"]{@filepath{downtown.html}}. You'll see something like this:
 
 
 @browser{
@@ -249,7 +247,7 @@ In Markdown authoring mode, you can still embed Pollen commands within the sourc
 @fileblock["downtown.html.pmd"
 @codeblock{
 #lang pollen
-◊define[metal]{Plutonium}
+◊(define metal "Plutonium")
  
 Pollen + ◊metal
 ---------------
@@ -270,19 +268,19 @@ Refresh @link["http://localhost:8080/downtown.html"]{@filepath{downtown.html}} i
 }
 
 
-Pollen is handling two tasks here: interpreting the commands in the source, and then converting the Markdown to HTML. (For more, see @secref["Markdown_authoring_mode"
+Pollen is handling three tasks here: interpreting the commands in the source, converting the source to Markdown, and then to HTML. (For more, see @secref["Markdown_authoring_mode"
          #:doc '(lib "pollen/scribblings/pollen.scrbl")].)
 
-But what if you wanted to use Pollen as a preprocessor that outputs a Markdown file? No problem — just change the source name from @filepath{downtown.html.pmd} to @filepath{downtown.md.pp}. Changing the extension from @filepath{.pmd} to @filepath{.pp} switches Pollen from Markdown mode back to preprocessor mode. And changing the base name from @filepath{downtown.html} to @filepath{downtown.md} updates the name of the output file.
+But what if you wanted to use Pollen as a preprocessor that outputs a Markdown file? No problem — just change the source name from @filepath{downtown.html.pmd} to @filepath{downtown.md.pp}. Changing the extension from @filepath{.pmd} to @filepath{.pp} switches Pollen from Markdown mode back to preprocessor mode. And changing the base name from @filepath{downtown.html} to @filepath{downtown.md} updates the name of the output file (and thereby skips the HTML conversion).
 
 
 @section{Pollen markup}
 
-If all you need to do is produce basic HTML, Markdown is great. But if you need to do semantic markup or other kinds of custom markup, it's not flexible enough. 
+If all you need to do is produce basic HTML, Markdown is fine. But if you need to do semantic markup or other kinds of custom markup, it's @seclink["The_case_against_Markdown"]{not flexible enough}. 
 
-In that case, you can use another Pollen authoring mode, called @defterm{Pollen markup}. To use Pollen markup, insert @code{#lang pollen} as the first line of your source file, and add a @filepath{.pm} file extension.
+In that case, you can use a different authoring mode, called @defterm{Pollen markup}. To use Pollen markup, insert @code{#lang pollen} as the first line of your source as usual, but this time add a @filepath{.pm} file extension.
 
-Compared to Markdown authoring mode, Pollen markup is wide open. Markdown authoring mode limits you to the formatting commands supported by Markdown. With Pollen markup, by contrast, you can use any tags you want. Markdown mode decodes the source in a fixed way (i.e., with the Markdown decoder). But Pollen markup lets you build any decoder you want.
+Compared to Markdown authoring mode, Pollen markup is wide open. Markdown authoring mode limits you to the formatting commands supported by Markdown. With Pollen markup, by contrast, you can use any tags you want. Markdown mode interprets the source in a fixed way (i.e., according to Markdown rules). But Pollen markup lets you attach any behavior you want to your tags.
 
 To see how this works, let's convert our Markdown example into Pollen markup. Marking up content is simple: insert the lozenge character (@code{◊}) followed by the name of the tag (@code{◊tag}), followed by the content of the tag in curly braces (@code{◊tag{content}}). In DrRacket, create a new file called @filepath{uptown.html.pm} as follows:
 
@@ -314,13 +312,12 @@ For that, we'll make a special file called @filepath{pollen.rkt}. This is a file
 @fileblock["pollen.rkt"
 @codeblock{
 #lang racket/base
-
 (require pollen/tag)
 (provide (all-defined-out))
 (define headline (default-tag-function 'h2))
 (define items (default-tag-function 'ul))
 (define item (default-tag-function 'li 'p))
-(define (link url text) `(a [[href ,url]] ,text))
+(define (link url text) `(a ((href ,url)) ,text))
 }]
 
 Return to the @link["http://localhost:8080/index.ptree"]{project dashboard} and click on @link["http://localhost:8080/uptown.html"]{@filepath{uptown.html}}. Now you'll get the right result:
@@ -333,7 +330,7 @@ Return to the @link["http://localhost:8080/index.ptree"]{project dashboard} and 
        • @link["https://google.com/search?q=racket"]{search for Racket}
 }
 
-Pollen markup takes a little more effort to set up. But it also allows you more flexibility. If you want to do semantic markup, or convert your source into multiple output formats, or handle complex page layouts — it's the way to go. (For more, see @seclink["Writing_with_Pollen_markup"
+Pollen markup takes a little more effort to set up. But it also allows you more flexibility. If you want to do semantic markup, or convert your source into @seclink["fourth-tutorial"]{multiple output formats}, or handle complex page layouts — it's the way to go. (For more, see @seclink["Writing_with_Pollen_markup"
          #:doc '(lib "pollen/scribblings/pollen.scrbl")].)
 
 @section{Templates}
@@ -354,11 +351,11 @@ So let's create @filepath{template.html}. Make a new file that with the followin
 border:10px double gray; padding: 3em; font-size: 130%;">
 This file is ◊here 
 <hr />
-◊->html{◊doc}
+◊(->html ◊doc)
 </div></body></html>
 }]
 
-This is a simple HTML file that should look familiar, except for the two template variables. The first, @code{here}, contains the name of the current source file. As before, the lozenge character marks it as a Pollen command rather than text, so you write it as @code{◊here}. The other command, @code{◊->html{◊doc}}, takes the content from the source file, which is contained in a variable called @code{doc}, and converts it to HTML with a Pollen function called @racket[->html].
+This is a simple HTML file that should look familiar, except for the two template variables. The first, @code{here}, contains the name of the current source file. As before, the lozenge character marks it as a Pollen command rather than text, so you write it as @code{◊here}. The other command, @code{◊(->html ◊doc)}, takes the content from the source file, which is contained in a variable called @code{doc}, and converts it to HTML with @racket[->html].
 
 Return to your web browser and reload @link["http://localhost:8080/uptown.html"]{@filepath{uptown.html}}. (Or @link["http://localhost:8080/downtown.html"]{@filepath{downtown.html}} — both will work.) The page will be rendered with the new @filepath{template.html}. As before, you can edit the template or the source and the project server will dynamically update the output file. 
 
@@ -367,7 +364,7 @@ Return to your web browser and reload @link["http://localhost:8080/uptown.html"]
 Pollen can also be used as a dynamic preview server for Scribble files. From your terminal, do the following:
 
 @terminal{
-> cd [directory containing your Scribble files]
+> cd /path/to/scribble/sources
 > raco pollen start}
 
 On the @link["http://localhost:8080/index.ptree"]{project dashboard}, you'll see your @filepath{filename.scrbl} files listed as @filepath{filename.html}. By clicking on these names, you can get a preview rendering of the Scribble source file. This may not represent the ultimate structure of your Scribble project — you may end up combining multiple Scribble source files into one HTML file, or making multiple HTML files from one Scribble source — but it's handy for checking your work as you go.
@@ -380,20 +377,21 @@ Now you've seen the key features of Pollen. What do you think?
 
 @itemlist[
 
-@item{@italic{``So it's like WordPress, but harder to use?''} I was a happy WordPress user for several years. If you need a blog, it's great. But the farther you get from blogs, the more it becomes like teaching an elephant to pirouette. And for those who like to solve problems with programming, PHP is, um, limited.}
+@item{@italic{``So it's like WordPress, but harder to use?''} I was once a happy WordPress user. If you need a blog, it's great. But the farther you get from blogs, the more it becomes like teaching a hippo to fly. And for those who like to solve problems with programming, PHP is, um, @link["http://eev.ee/blog/2012/04/09/php-a-fractal-of-bad-design/"]{limited}.}
 
 @item{@italic{``What about pairing a Python template system and Python web server?''} Good idea. I even tried it. But Python template systems don't offer you Python — they offer you limited dialects that aren't very Pythonic. Also, Python's handing of XML-ish data is cumbersome.}
 
 @item{@italic{``Haven't you heard of Jekyll?''} Yes. If everything you need to write is expressible in Markdown, it's great. If you need more than that, you're stuck. (See also @seclink["The_case_against_Markdown"]{my objections to Markdown for books}.)}
 
-@item{@italic{``Sounds a lot like LaTeX. Why not use that?''} Also a good idea. LaTeX gets a lot of things right. But it wasn't designed for web publishing.}
+@item{@italic{``Sounds a lot like LaTeX. Why not use that?''} Also a good idea. LaTeX gets a lot of things right. But it's also missing a lot — for instance, Unicode and web publishing.}
 
+@item{@italic{``Does the world really need another static site generator?''} Agreed — if you want a system that does the heavy lifting, you have plenty of good options. But if you want a system that's fully programmable and @seclink["Adding_support_for_PDF_output"]{doesn't limit you} to websites — well, let me know @link["http://lmgtfy.com/?q=programmable+document+generator"]{what you find}.}
 
-@item{@italic{``Eh, there are plenty of adequate options. Why should I learn a system written in Racket, which I've never used?''} A salient objection. It's also the question I asked myself before I committed to Racket. But publishing systems that are author- or designer-friendly tend to be programmer-hostile, and vice versa. Racket is the only language I found that could meet my requirements. (For more about the benefits of Racket, see @link["http://practicaltypography.com/why-racket-why-lisp.html"]{Why Racket? Why Lisp?})}
+@item{@italic{``Why should I try a system written in Racket, which I've never used?''} I respect your skepticism. I had never used it either. But Pollen isn't built on Racket merely so I can enhance my indie cred. Rather, it's because XML and Lisps have a @link["http://www.defmacro.org/ramblings/lisp.html"]{close kinship}, and the Racket developers had already figured out how to @seclink["reader" #:doc '(lib "scribblings/scribble/scribble.scrbl")]{embed code in text}. (For more about the benefits of Racket, see @link["http://practicaltypography.com/why-racket-why-lisp.html"]{Why Racket? Why Lisp?})}
 
 
 ]
 
-But don't take my word for it. The rest of this documentation will show you the useful and sophisticated things you can do with Pollen. If there's another tool that suits you better, great. Keep in mind that I didn't make Pollen because I'm a programmer. I'm a writer who wants to make electronic books that are better than the ones we have now.  And for that, I needed a better tool.
+But don't take my word for it. The rest of this documentation will show you the useful and sophisticated things you can do with Pollen. If there's another tool that suits you better, great. Keep in mind that I didn't make Pollen because I'm a programmer. I'm a writer who wants to make electronic books that are better than the ones we have now. And for that, I needed a better tool.
 
 Now I have it.
