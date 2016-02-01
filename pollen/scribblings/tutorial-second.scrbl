@@ -733,13 +733,13 @@ The current page is called ◊|here|.
 ◊(define prev-page (previous here))
 ◊when/splice[prev-page]{The previous is 
 <a href="◊|prev-page|">◊|prev-page|</a>.} 
-◊when/splice[(regexp-match "article" (->string (next here)))]{
+◊when/splice[(regexp-match "article" (symbol->string (next here)))]{
 The next is <a href="◊|(next here)|">◊|(next here)|</a>.}
 </body>
 </html>
 }]
 
-This time, the condition is @racket[(regexp-match "article" (->string (next here)))]. How were you supposed to know this? You weren't. That's why this is a tutorial. Without going on a lengthy detour, the @racket[regexp-match] function returns true if the first string (in this case, @racket["article"]) is found inside the second string (in this case, we convert @racket[(next here)] to a string by wrapping it in @racket[->string]).
+This time, the condition is @racket[(regexp-match "article" (symbol->string (next here)))]. How were you supposed to know this? You weren't. That's why this is a tutorial. Without going on a lengthy detour, the @racket[regexp-match] function returns true if the first string (in this case, @racket["article"]) is found inside the second string (in this case, we convert @racket[(next here)] to a string by wrapping it in @racket[symbol->string]).
 
 In any case, even if some of the programmy bits went over your head just now, relax and paste the code into your template. What you'll see when you refresh @filepath{carticle.html} is that the next-page link is gone. So now our template lets us navigate among the pages of our article, and the conditionals handle the end pages correctly.
 
@@ -783,7 +783,7 @@ Pagetrees don't change as often as other source files, so as a performance optim
 
 Now refresh @filepath{carticle.html}. You'll notice that the navigation links are different. You won't see a previous-page link — because @filepath{carticle.html} is now the first page in the pagetree — and the next page will show up as @filepath{article.html}. Click through to @filepath{article.html}, and you'll see the navigation likewise updated. Click through to @filepath{barticle.html}, and you'll see ...
 
-BAM! An error page that says @tt{Can’t convert #f to string}. What happened? We switched to using our own pagetree file but we didn't update our template conditionals. Once you reach @filepath{barticle.html}, the value of @racket[(next here)] is false, which means the @racket[(->string (next here))] command in the template conditional is trying to convert false into a string. Hence the error.
+BAM! An error page that says @tt{Can’t convert #f to string}. What happened? We switched to using our own pagetree file but we didn't update our template conditionals. Once you reach @filepath{barticle.html}, the value of @racket[(next here)] is false, which means the @racket[(symbol->string (next here))] command in the template conditional is trying to convert false into a string. Hence the error.
 
  So let's go back and fix that. Because we don't have extraneous files in our pagetree anymore, we can change the second conditional in the template to work the same way as the first:
 
