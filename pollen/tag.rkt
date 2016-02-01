@@ -1,5 +1,5 @@
 #lang pollen/mode racket/base
-(require (for-syntax racket/base))
+(require (for-syntax racket/base syntax/parse))
 (require txexpr racket/string racket/match)
 (provide default-tag-function make-default-tag-function define-tag-function)
 
@@ -66,34 +66,35 @@
 
 
 (define-syntax (define-tag-function stx)
-  (syntax-case stx (λ)
-    [(_ (ID ARG ...) EXPR ...)
+  (syntax-parse stx
+    #:literals (λ)
+    [(_ (ID:id ARG:id ...) EXPR:expr ...)
      #'(define-tag-function ID (λ (ARG ...) EXPR ...))]
-    [(_ ID (λ (ATTRS ELEMS) EXPR0 EXPR ...))
+    [(_ ID:id (λ (ATTRS:id ELEMS:id ARG:id ...) EXPR:expr ...))
+     #:fail-when (> (length (syntax->list #'(ARG ...))) 0) "tag function must have exactly 2 positional arguments"
+     #:fail-when (check-duplicate-identifier (list #'ATTRS #'ELEMS)) "duplicate variable name"
+     #:fail-when (null? (syntax->list #'(EXPR ...))) "body of definition cannot be empty"
      #'(define ID
          (make-keyword-procedure
           (λ (kws kwargs . args)
             (define tx-proc (keyword-apply default-tag-function kws kwargs (list 'ID)))
             (define tx (apply tx-proc args))
             (define-values (_ ATTRS ELEMS) (txexpr->values tx))
-            EXPR0 EXPR ...)))]
-    [(_ ID (λ (ATTRS ELEMS)))
-     (raise-syntax-error 'define-tag-function (format "bad syntax (no expressions for procedure body) in ~a" (syntax->datum stx)))]
-    [(_ ID (λ (ARG ...) EXPR ...)) (raise-syntax-error 'define-tag-function (format "bad syntax (arity must be exactly 2 positional arguments) in ~a" (cadr (syntax->datum stx))))]))
+            EXPR ...)))]))
 
 
 (module+ test
   (require rackunit)
-   (define foo2 (default-tag-function 'foo))
+  (define foo2 (default-tag-function 'foo))
   
   (define-tag-function (foo attrs elems)
     `(foo ,(reverse attrs) ,@elems))
   (check-txexprs-equal? ◊foo[#:zim "zam"]{hello}  ◊foo2[#:zim "zam"]{hello})
   (check-txexprs-equal? ◊foo[#:ding "dong" '((zim "zam"))]{hello}  ◊foo2[#:ding "dong" '((zim "zam"))]{hello})
   (check-txexprs-equal? ◊foo['zim: "zam" #:ding "dong" ]{hello} ◊foo2['zim: "zam" #:ding "dong" ]{hello})
-
- (define-tag-function foolam (λ (attrs elems)
-    `(foo ,(reverse attrs) ,@elems)))
+  
+  (define-tag-function foolam (λ (attrs elems)
+                                `(foo ,(reverse attrs) ,@elems)))
   (check-txexprs-equal? ◊foolam[#:zim "zam"]{hello}  ◊foo2[#:zim "zam"]{hello})
   (check-txexprs-equal? ◊foolam[#:ding "dong" '((zim "zam"))]{hello}  ◊foo2[#:ding "dong" '((zim "zam"))]{hello})
   (check-txexprs-equal? ◊foolam['zim: "zam" #:ding "dong" ]{hello} ◊foo2['zim: "zam" #:ding "dong" ]{hello}))
