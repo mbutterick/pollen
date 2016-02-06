@@ -1,7 +1,7 @@
 #lang scribble/manual
 @(require scribble/bnf scribble/eval "utils.rkt" "mb-tools.rkt"
           (for-syntax racket/base)
-          (for-label rackunit pollen/core pollen/setup pollen/render pollen/template (only-in scribble/reader
+          (for-label rackunit pollen/core pollen/setup pollen/cache pollen/tag pollen/render pollen/template (only-in scribble/reader
                               use-at-readtable)))
 
 @(define read-eval (make-base-eval))
@@ -17,23 +17,25 @@
 Pollen uses a special character — the @italic{lozenge}, which looks like this: ◊ — to mark commands  within a Pollen source file. So when you put a ◊ in your source, whatever comes next will be treated as a command. If you don't, it will just be interpreted as plain text.
 
 
-@section{The lozenge glyph (◊)}
+@section[#:tag "the-lozenge"]{The lozenge (◊)}
 
 I chose the lozenge as the command character because a) it appears in almost every font, b) it's barely used in ordinary typesetting, c) it's not used in any programming language that I know of, and d) its shape and color allow it to stand out easily in code without being distracting. 
 
-Here's how you type it:
+If you're using DrRacket, you can use the @onscreen{Insert Command Char} button at the top of the editing window to — you guessed it — insert the command character.
+
+If you're using a different editor, here's how you type it:
 
 @bold{Mac}: option + shift + V
+@(linebreak)@bold{Windows}: holding down alt, type 9674 on the num pad
+@(linebreak)@bold{Ubuntu}: ctrl + shift + U, then 25CA
 
-@bold{Windows}: holding down alt, type 9674 on the num pad
+@subsection{``But I don't want to use it ...''}
 
-@bold{Ubuntu}: ctrl + shift + U, then 25CA
+Fine, but you have to pick @italic{something} as your command character. If you don't like this one, you can override it within a project — see @seclink["setup-overrides"].
 
-Still, if you don't want to use the lozenge as your command character, you can set Pollen's @racket[default-command-char] value to whatever character you want (see also @seclink["setup-overrides"]).
+Still, it's not like I'm asking you to learn @link["http://c2.com/cgi/wiki?AplLanguage"]{APL}. Racket supports Unicode, so it's a little silly to artificially limit ourselves to ASCII.
 
-@margin-note{Scribble uses the @"@" sign as a delimiter. It's not a bad choice if you only work with Racket files. But as you use Pollen to work on other kinds of text-based files that commonly contain @"@" signs — HTML pages especially — it gets cumbersome. So I changed it.}
-
-But don't knock the lozenge till you try it. 
+My advice: don't knock the lozenge till you try it.
 
 @subsection{Lozenge helpers}
 
@@ -42,7 +44,7 @@ But don't knock the lozenge till you try it.
 When you use DrRacket, you'll see a button in the toolbar that says @onscreen{Insert command char}. This will insert the lozenge (or whatever command character you've defined for your project).
 
 
-@subsubsection{AHK script}
+@subsubsection{AHK script for Windows}
 
 Courtesy of @link["https://github.com/maphew"]{Matt Wilkie}: ``Here's a working AHK script to have double-tap backtick send the lozenge character. It took way more time than I want to think about, once started I couldn't let go.''
 
@@ -103,25 +105,26 @@ Courtesy of @link["https://github.com/lerichard95"]{Richard Le}: ``If you're usi
 ;; Bind key to M-\ a la DrRacket for lambda
 (global-set-key "\M-\\" 'insert-lozenge)}
 
-@;--------------------------------------------------------------------
-@section[#:tag "the-two-command-modes"]{The two command modes: Pollen mode & Racket mode}
+@section[#:tag "the-two-command-styles"]{The two command styles: Pollen style & Racket style}
 
-Pollen commands can be entered in one of two modes: @italic{Pollen mode} or @italic{Racket mode}. Both modes start with a lozenge (@litchar["◊"]):
+Pollen commands can be entered in one of two styles: @italic{Pollen style} or @italic{Racket style}. Both styles start with a lozenge (@litchar["◊"]):
 
 @racketblock[
- @#,BNF-seq[@litchar["◊"] @nonterm{command name} @litchar{[} @nonterm{Racket arguments ...} @litchar{]} @litchar["{"] @nonterm{text argument} @litchar["}"]]
+ @#,BNF-seq[@litchar["◊"] @nonterm{command name} @litchar{[} @nonterm{Racket arguments ...} @litchar{]} @litchar["{"] @nonterm{text body ...} @litchar["}"]]
 @#,BNF-seq[@litchar["◊"]
             @litchar{(} @nonterm{Racket expression} @litchar{)}]
 ]
 
-@bold{Pollen-mode commands}
+@bold{Pollen-style commands}
 
-A Pollen-mode command has the three possible parts after the @litchar["◊"]:
+A Pollen-style command has the three possible parts after the @litchar["◊"]:
 
 @itemlist[
 @item{The @italic{command name} appears immediately after the @litchar["◊"]. Typically it's a short word.} 
-@item{The @italic{Racket arguments} appear between square brackets. Pollen is partly an interface to the Racket programming language. These arguments are entered using Racket conventions — e.g., a @code{string of text} needs to be put in quotes as a @code{"string of text"}. If you like programming, you'll end up using these frequently. If you don't, you won't.}
-@item{The @italic{text argument} appears between braces (aka curly brackets). You can put any ordinary text here. Unlike with the Racket arguments, you don't put quotes around the text.}
+
+@item{The @italic{Racket arguments} appear between square brackets. Pollen is partly an interface to the Racket programming language. These arguments are entered using Racket conventions — e.g., a string of text needs to be put in quotes as a @code{"string of text"}. If you like programming, you'll end up using these arguments frequently. If you don't, you won't.}
+
+@item{The @italic{text body} appears between braces (aka curly brackets). You can put any ordinary text here. Unlike with the Racket arguments, you don't put quotes around the text.}
 ]
 
 Each of the three parts is optional. You can also nest commands within each other. However:
@@ -131,7 +134,7 @@ Each of the three parts is optional. You can also nest commands within each othe
 @item{Whatever parts you use must always appear in the order above.}
 ]
 
-Here are a few examples of correct Pollen-mode commands:
+Here are a few examples of correct Pollen-style commands:
 
 @codeblock{
   #lang pollen
@@ -147,40 +150,40 @@ And some incorrect examples:
 @codeblock{
   #lang pollen
   ◊tag {Text inside the tag.} ; space between first and second parts
-  ◊tag[Text inside the tag] ; text argument needs to be within braces
+  ◊tag[Text inside the tag] ; text body needs to be within braces
   ◊tag{Text inside the tag}[#:attr "value"] ; wrong order 
 }
 
 The next section describes each of these parts in detail.
 
-@bold{Racket-mode commands}
+@bold{Racket-style commands}
 
-If you're familiar with Racket expressions, you can use the Racket-mode commands to embed them within Pollen source files. It's simple: any Racket expression can become a Pollen command by adding @litchar["◊"] to the front. So in Racket, this code:
+If you're familiar with Racket expressions, you can use the Racket-style commands to embed them within Pollen source files. It's simple: any Racket expression becomes a Pollen command by adding @litchar["◊"] to the front. So in Racket, this code:
 
 @codeblock{
-  #lang racket
-  (define song "Revolution")
-  (format "~a #~a" song (* 3 3))
+#lang racket
+(define band "Level")
+(format "~a ~a" band (* 2 3 7))
 }
 
 Can be converted to Pollen like so: 
 
 @codeblock{
-  #lang pollen
-  ◊(define song "Revolution")
-  ◊(format "~a #~a" song (* 3 3))
+#lang pollen
+◊(define band "Level")
+◊(format "~a ~a" band (* 2 3 7))
 }
 
 And in DrRacket, they produce the same output:
 
-@repl-output{Revolution #9}
+@repl-output{Level 42}
 
 
-Beyond that, there's not much to say about Racket mode — any valid expression you can write in Racket will also be a valid Racket-mode Pollen command.
+Beyond that, there's not much to say about Racket style — any valid Racket expression will also be a valid Racket-style Pollen command.
 
-@bold{The relationship of Pollen mode and Racket mode}
+@bold{The relationship of Pollen style and Racket style}
 
-Even if you don't plan to write a lot of Racket-mode commands, you should be aware that under the hood, Pollen is converting all commands in Pollen mode to Racket mode. So a Pollen-mode command that looks like this:
+Even if you don't plan to write a lot of Racket-style commands, you should be aware that under the hood, Pollen is converting all Pollen-style commands to Racket style. So a Pollen-style command that looks like this:
 
 @codeblock[#:keep-lang-line? #f]{
 #lang pollen
@@ -188,38 +191,39 @@ Even if you don't plan to write a lot of Racket-mode commands, you should be awa
 }
 
 
-Is actually being turned into a Racket-mode command like this:
+Is actually being turned into this Racket-style command:
 
 @codeblock[#:keep-lang-line? #f]{
 #lang racket
 (headline #:size 'enormous "Man Bites Dog!")
 }
 
-Thus a Pollen-mode command is just an alternate way of writing a Racket-mode command. (More broadly, all of Pollen is just an alternate way of using Racket.)
+Thus a Pollen-style command is just an alternate way of writing a Racket-style command. (More broadly, all of Pollen is just an alternate way of using Racket.)
 
-The corollary is that you can always write Pollen commands using whichever mode is more convenient or readable. For instance, the earlier example, written in the Racket mode:
+The corollary is that you can always write Pollen commands using whichever style is more convenient or readable. For instance, the earlier example, written in the Racket style:
 
 @codeblock{
 #lang pollen
-◊(define song "Revolution")
-◊(format "~a #~a" song (* 3 3))
+◊(define band "Level")
+◊(format "~a ~a" band (* 2 3 7))
 }
 
-Can be rewritten using Pollen mode:
+Can be rewritten in Pollen style:
 
 @codeblock{
 #lang pollen
-◊define[song]{Revolution}
-◊format["~a #~a" song (* 3 3)]
+◊define[band]{Level}
+◊format["~a ~a" band (* 2 3 7)]
 }
 
 And it will work the same way.
 
+You can combine the two styles in whatever way makes sense to you. I typically reserve Pollen-style commands for when I'm mixing commands into textual material. Meaning, I prefer @code{◊headline[#:size 'enormous]{Man Bites Dog!}} over @code{◊(headline #:size 'enormous "Man Bites Dog!")}. But when I'm writing or using traditional Racket functions, I find Racket-style commands to be more readable (because they correspond to ordinary Racket syntax, and thus can be moved between Pollen and Racket source files more easily). So I prefer @code{◊(define band "Level")} over @code{◊define[band]{Level}}.
 
-@;--------------------------------------------------------------------
+
 @subsection{The command name}
 
-In Pollen, you'll typically use the command name for one of four purposes:
+In Pollen, you'll likely use a command for one of these purposes:
 
 @itemlist[
 @item{To invoke a tag function.}
@@ -229,10 +233,11 @@ In Pollen, you'll typically use the command name for one of four purposes:
 @item{To insert a comment.}
 ]
 
-@;--------------------------------------------------------------------
+Let's look at each kind of use.
+
 @subsubsection{Invoking tag functions}
 
-By default, Pollen treats every command name as a @italic{tag function}. The default tag function creates a tagged X-expression with the command name as the tag, and the text argument as the content.
+By default, Pollen treats every command name as a @italic{tag function}. The default tag function creates a  @seclink["What_s_a_txexpr_" #:doc '(lib "txexpr/scribblings/txexpr.scrbl")]{tagged X-expression} with the command name as the tag, and the text body as the content.
 
 @codeblock{
 #lang pollen
@@ -246,10 +251,10 @@ To streamline markup, Pollen doesn't restrict you to a certain set of tags, nor 
 
 @codeblock{
   #lang pollen
-  ◊utterlyridiculoustagname{Oh really?}
+  ◊utterly-ridiculous-tag-name{Oh really?}
 }
 
-@repl-output{'(utterlyridiculoustagname "Oh really?")}
+@repl-output{'(utterly-ridiculous-tag-name "Oh really?")}
 
 
 
@@ -270,7 +275,6 @@ the expected number of arguments does not match the given number
    
 What to do? Read on.
 
-@;--------------------------------------------------------------------
 @subsubsection{Invoking other functions}
 
 Though every command name starts out as a default tag function, it doesn't necessarily end there. You have two options for invoking other functions: defining your own, or invoking others from Racket.
@@ -296,7 +300,7 @@ We can define @code{strong} to do something else, like add to the text:
 
 @repl-output{'(strong "Hey! Listen up! Fancy Sauce, $1")}
 
-The replacement function has to accept any arguments that might get passed along, but it doesn't have to do anything with them. For instance, this function definition won't work because @code{strong} is going to get a text argument that it's not defined to handle:
+The replacement function has to accept any arguments that might get passed along, but it doesn't have to do anything with them. For instance, this function definition won't work because @code{strong} is going to get a text body that it's not defined to handle:
 
 @codeblock{
 #lang pollen
@@ -322,6 +326,9 @@ Whereas in this version, @code{strong} accepts an argument called @code{text}, b
 @repl-output{'(fib "1 1 2 3 5 8 13 ...")}
 
 
+@margin-note{The text body can pass an indefinite number of arguments. A well-designed tag function should be able to handle them, unlike these synthetic examples. For a more realistic example, see @secref["the-text-body"].}
+
+
 You can attach any behavior to a command name. As your project evolves, you can also update the behavior of a command name. In that way, Pollen commands become a set of hooks to which you can attach more elaborate processing.
 
 @bold{Using Racket functions}
@@ -330,19 +337,19 @@ You aren't limited to functions you define. Any function from Racket, or any Rac
 
 @codeblock|{
 #lang pollen
-◊range[1 20]
+◊(range 1 20)
 }|
 
 @repl-output{'(range 1 20)}
 
-Hold on — that's not what we want. Where's the list of numbers? The problem here is that we didn't explicitly import the @racketmodname[racket/list] library, which contains the definition for @racket[range]. (If you need to find out what library contains a certain function, the Racket documentation will tell you.) Without @racketmodname[racket/list], Pollen just thinks we're trying to use @code{range} as a tag function (and if we had been, then @repl-output{'(range 1 20)} would've been the right result). 
+Hold on — that's not what we want. Where's the list of numbers? The problem here is that we for to import the @racketmodname[racket/list] library, which contains the definition for @racket[range]. (If you need to find out what library contains a certain function, the Racket documentation will tell you.) Without @racketmodname[racket/list], Pollen just thinks we're trying to use @code{range} as a tag function (and if we had been, then @val['(range 1 20)] would've been the right result). 
 
 We fix this by using the @racket[require] command to bring in the @racketmodname[racket/list] library, which contains the @racket[range]  we want:
 
 @codeblock|{
 #lang pollen
 ◊(require racket/list)
-◊range[1 20]
+◊(range 1 20)
 }|
 
 @repl-output{'(1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19)}
@@ -353,7 +360,7 @@ Of course, you can also invoke Racket functions indirectly, by attaching them to
 #lang pollen
 ◊(require racket/list)
 ◊(define (rick start finish) (range start finish))
-◊rick[1 20]
+◊(rick 1 20)
 }|
 
 @repl-output{'(1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19)}
@@ -361,7 +368,7 @@ Of course, you can also invoke Racket functions indirectly, by attaching them to
 
 Let's return to the problem that surfaced in the last section — the fact that some command names can't be used as tag functions because they're already being used for other things. You can work around this by defining your own tag function with a non-conflicting name. 
 
-For instance, suppose we want to use @code{map} as a tag even though Racket is using it for its own function called @racket[map]. First, we invent a command name that doesn't conflict. Let's call it @code{my-map}. As you learned above, Pollen will treat a new command name as a tag function by default:
+For instance, suppose we want to use @code{map} as a tag even though Racket is using it for its own function called @racket[map]. First, we invent a command name that doesn't conflict. Let's call it @id{my-map}. As you learned above, Pollen will treat a new command name as a tag function by default:
 
 @codeblock|{
 #lang pollen
@@ -371,7 +378,7 @@ For instance, suppose we want to use @code{map} as a tag even though Racket is u
 @repl-output{'(my-map "How I would love this to be a map.")}
 
 
-But @code{my-map} is not the tag we want. We need to define @code{my-map} to be a tag function for @code{map}. We can do this with the Pollen helper @racket[default-tag-function]. That function lives in @racket[pollen/tag], so we @racket[require] that too:
+But @id{my-map} is not the tag we want. We need to define @id{my-map} to be a tag function for @id{map}. We can do this with the Pollen helper @racket[default-tag-function]. That function lives in @racketmodname[pollen/tag], so we @racket[require] that too:
 
 
 @codeblock|{
@@ -387,7 +394,6 @@ Problem solved.
 
 
 
-@;--------------------------------------------------------------------
 @subsubsection{Inserting the value of a variable}
 
 A Pollen command name usually refers to a function, but it can also refer to a @italic{variable}, which is a data value. Once you define the variable, you can insert it into your source by using the ◊ notation without any other arguments:
@@ -401,9 +407,7 @@ The value of foo is ◊foo
 @repl-output{The value of foo is bar}
 
 
-Be careful — if you include arguments, even blank ones, Pollen will treat the command name as a function. This won't work, because a variable is not a function:
-
-@margin-note{To understand what happens here, recall the relationship between Pollen's command modes. The Pollen-mode command @code{◊foo[]} becomes the Racket-mode command @code{(foo)}, which after variable substitution becomes @code{("bar")}. If you try to evaluate @code{("bar")} — e.g., in DrRacket — you'll get the same error.}
+Be careful — if you include arguments, even blank ones, Pollen will treat the command name as a function. For instance, this next example won't work, because a variable is not a function:
 
 
 @codeblock|{
@@ -419,7 +423,10 @@ expected a procedure that can be applied to arguments
   arguments...: [none]}
 
 
-The reason we can simply drop @code{◊foo} into the text argument of another Pollen command is that the variable @code{foo} holds a string (i.e., a text value). 
+To understand what happens here, recall the relationship between Pollen's command styles. The Pollen-style command @code{◊foo[]} becomes the Racket-style command @code{(foo)}, which after variable substitution becomes @code{("bar")}. If you try to evaluate @code{("bar")} — e.g., in DrRacket — you'll get the same error.
+
+The reason we can simply insert @code{◊foo} into the text body of another Pollen command is that the variable @code{foo} holds a string (i.e., a text value).
+
 
 In preprocessor source files, Pollen will convert a variable to a string in a sensible way. For instance, numbers are easily converted:
 
@@ -431,7 +438,7 @@ The value of zam is ◊zam
 
 @repl-output{The value of zam is 42}
 
-@margin-note{In an unsaved DrRacket file, or a file without a special Pollen source extension, the @tt{#lang pollen} designation invokes the Pollen preprocessor by default. You can explicitly invoke preprocessor mode by starting a file with @tt{#lang pollen/pre}. See also @secref["Preprocessor___pp_extension_"].}
+@margin-note{In an unsaved DrRacket file, or a file without a special Pollen source extension, the @tt{#lang pollen} designation invokes the Pollen preprocessor by default. You can explicitly invoke preprocessor style by starting a file with @tt{#lang pollen/pre}. See also @secref["Preprocessor___pp_extension_"].}
 
 If the variable holds a container datatype (like a @racket[list], @racket[hash], or @racket[vector]), Pollen will produce the Racket text representation of the item. Here, @code{zam} is a @racket[list] of integers:
 
@@ -449,7 +456,7 @@ This feature is included for your convenience. But in general, your readers won'
 #lang pollen
 ◊(require racket/string)
 ◊(define zam (list 1 2 3))
-The value of zam is ◊string-join[(map number->string zam)]{ and }
+The value of zam is ◊(string-join (map number->string zam) " and ")
 }|
 
 @repl-output{The value of zam is 1 and 2 and 3}
@@ -462,9 +469,9 @@ Pollen will still produce an error if you try to convert an esoteric value to a 
 The value of zam is ◊zam
 }|
 
-@errorblock{Pollen decoder: can't convert #<procedure:+> to string}
+@errorblock{pollen: Can't convert procedure #<procedure:+> to string}
 
-Moreover, Pollen will not perform @italic{any} automatic text conversion in Pollen markup source files. Suppose we take the example above — which worked as a preprocessor source file — and change the language to @racket[pollen/markup]:
+In Pollen markup, the result is different. A Pollen markup file makes an X-expression, not text, so Pollen doesn't perform @italic{any} automatic text conversion — that's your job. Suppose we take the example above — which worked with the Pollen preprocessor — and change the language to @racketmodname[pollen/markup]:
 
 @codeblock|{
 #lang pollen/markup
@@ -478,6 +485,19 @@ This time, the file will produce an error:
   pollen markup error: in '(root "The value of zam is " (1 2 3)), '(1 2 3) is not a valid element (must be txexpr, string, symbol, XML char, or cdata)
 }
 
+But the second example above, with the explicit conversion using @racket[string-join], does work in Pollen markup, because strings are valid X-expressions:
+
+@codeblock|{
+#lang pollen/markup
+◊(require racket/string)
+◊(define zam (list 1 2 3))
+The value of zam is ◊(string-join (map number->string zam) " and ")
+}|
+
+@repl-output{'(root "The value of zam is " "1 and 2 and 3")}
+
+@margin-note{See @secref["File_formats"] for more about the differences between Pollen dialects.}
+
 One special case to know about. In the examples above, there's a word space between the variable and the other text. But suppose you need to insert a variable into text so that there's no space in between. The simple ◊ notation won't work, because it won't be clear where the variable name ends and the text begins. 
 
 For instance, suppose we want to use a  variable @code{edge} next to the string @code{px}:
@@ -488,7 +508,7 @@ For instance, suppose we want to use a  variable @code{edge} next to the string 
 p { margin-left: ◊edgepx; }
 }|
 
-@errorblock{Pollen decoder: can't convert #<procedure:...t/pollen/tag.rkt:6:2> to string}
+@errorblock{pollen: Can't convert procedure #<procedure:pollen-tag:edgepx> to string}
 
 The example fails because Pollen reads the whole string after the @litchar{◊} as the single variable name @code{edgepx}. Since @code{edgepx} isn't defined, it's treated as a tag function, and since Pollen can't convert a function to a string, we get an error.
 
@@ -515,21 +535,20 @@ The value of edge is ◊|edge| pixels}
 
 
 
-@;--------------------------------------------------------------------
 @subsubsection{Inserting metas}
 
-@italic{Metas} are key–value pairs embedded in a source file that are not included in the main output when the source is compiled. Rather, they're gathered and exported as a separate hash table called, unsurprisingly, @racket[metas]. This hashtable is a good place to store information about the document that you might want to use later (for instance, a list of topic categories that the document belongs to).
+@italic{Metas} are key–value pairs embedded in a source file that are not included in the main output when the source is compiled. Rather, they're gathered and exported as a separate hash table called, unsurprisingly, @id{metas}. This hashtable is a good place to store information about the document that you might want to use later (for instance, a list of topic categories that the document belongs to).
 
-@margin-note{Pollen occasionally uses metas internally. For instance, the @racket[get-template-for] function will look in the metas of a source file to see if a template is explicitly specified. The @racket[pollen/template] module also contains functions for working with metas, such as @racket[select-from-metas].}
+@margin-note{Pollen occasionally uses metas internally. For instance, the @racket[get-template-for] function will look in the metas of a source file to see if a template is explicitly specified. The @racketmodname[pollen/core] module also contains functions for working with metas, such as @racket[select-from-metas].}
 
 To make a meta, you create a tag with the special @racket[define-meta] name. Then you have two choices: you can either embed the key-value pair as an attribute, or as a tagged X-expression within the meta (using the key as the tag, and the value as the body):
 
 @codeblock{
 #lang pollen
 
-◊define-meta[dog]{Roxy} ; Pollen-mode syntax
+◊define-meta[dog]{Roxy} ; Pollen-style syntax
 ◊some-tag[#:key "value"]{Normal tag}
-◊(define-meta cat "Chopper") ; equivalent Racket-mode syntax
+◊(define-meta cat "Chopper") ; equivalent Racket-style syntax
 ◊some-tag[#:key "value"]{Another normal tag}
 }
 
@@ -549,7 +568,7 @@ Second, the metas are collected into a hash table that is exported with the name
 '#hasheq((dog . "Roxy") (cat . "Chopper") (here-path . "unsaved-editor"))
 }
 
-The only key that's automatically defined in every meta table is @code{here-path}, which is the absolute path to the source file. (In this case, because the file hasn't been saved, you'll see the @code{unsaved-editor} name instead.) 
+The only key that's automatically defined in every meta table is @id{'here-path}, which is the absolute path to the source file. (In this case, because the file hasn't been saved, you'll see the @val{unsaved-editor} name instead.) 
 
 Still, you can override this too:
 
@@ -571,7 +590,7 @@ When you run this code, the result will be the same as before, but this time the
 }
 
 
-It doesn't matter how many metas you put in a source file, nor where you put them. They'll all be extracted into the @code{metas} hash table. The order of the metas is not preserved (because order is not preserved in a hash table). But if you have two metas with the same key, the later one will supersede the earlier one:
+It doesn't matter how many metas you put in a source file, nor where you put them. They'll all be extracted into the @id{metas} hash table. The order of the metas is not preserved (because order is not preserved in a hash table). But if you have two metas with the same key, the later one will supersede the earlier one:
 
 @codeblock{
 #lang pollen
@@ -579,14 +598,71 @@ It doesn't matter how many metas you put in a source file, nor where you put the
 ◊(define-meta dog "Lex")
 }
 
-In this case, though there are two metas named @racket[dog] (and they use different forms) only the second one persists:
+Though there are two metas named @id{dog}, only the second one persists:
 
 @terminal{
 > metas
 '#hasheq((dog . "Lex") (here-path . "unsaved-editor"))
 }
 
-@bold{Pro tip}: the @racket[metas] hashtable is available when you import a Pollen source file in the usual way, but it's also made available through a submodule called, unsurprisingly, @racket[metas].
+
+
+@subsubsection{Retrieving metas}
+
+The @id{metas} hashtable is available immediately within the body of your source file. You can use @racket[select] to get values out of @id{metas}.
+
+@codeblock{
+#lang pollen
+◊(define-meta dog "Roxy")
+◊(select 'dog metas)
+}
+
+@repl-output{Roxy}
+
+@id{metas} is an immutable hash, so you can also use immutable-hash functions, like @racket[hash-ref]:
+
+@codeblock{
+#lang pollen
+◊(define-meta dog "Roxy")
+◊(hash-ref metas 'dog)
+}
+
+@repl-output{Roxy}
+
+
+Because the metas are collected first, you can actually invoke a meta before you define it:
+
+@codeblock{
+#lang pollen
+◊(select 'dog metas)
+◊(define-meta dog "Roxy")
+◊(define-meta dog "Spooky")
+}
+
+@repl-output{Spooky}
+
+This can be useful for setting up fields that you want to include in @id{metas} but also have visible in the body of a document, like a title.
+
+@codeblock{
+#lang pollen/markup
+◊(define-meta title "The Amazing Truth")
+◊h1{◊(select 'title metas)}
+}
+
+The result of this file will be:
+
+@repl-output{'(root (h1 "The Amazing Truth"))}
+
+And the metas:
+@terminal{
+> metas
+'#hasheq((title . "The Amazing Truth") (here-path . "unsaved-editor"))
+}
+
+
+@bold{Pro tip}: Within Pollen, the fastest way to get a @id{metas} hashtable from another source file is to use @racket[cached-metas].
+
+@bold{Pro tip #2}: Outside Pollen, the @id{metas} hashtable is available when you import a Pollen source file in the usual way, but it's also made available through a submodule called, unsurprisingly, @id{metas}.
 
 @codeblock{
 #lang racket/base
@@ -594,62 +670,8 @@ In this case, though there are two metas named @racket[dog] (and they use differ
 (require (submod "pollen-source.rkt" metas)) ; just metas
 }
 
-The @racket[metas] submodule is useful because it gives you access to the @racket[metas] hashtable @italic{without} compiling the rest of the file. So if you need to collect metas from a set of source files — for instance, page titles (for a table of contents) or categories — getting the metas through the submodule is likely to be faster.
+The @id{metas} submodule gives you access to the @id{metas} hashtable @italic{without} compiling the rest of the file. So if you need to harvest metas from a set of source files — for instance, page titles (for a table of contents) or categories — using @racket[require] with the submodule will be faster.
 
-
-@;--------------------------------------------------------------------
-@subsubsection{Retrieving metas}
-
-The @racket[metas] hashtable is available immediately within the body of your source file. You can use @racket[hash-ref] to get values out of @racket[metas].
-
-@codeblock{
-#lang pollen
-◊(define-meta dog "Roxy")
-◊(hash-ref metas 'dog)
-}
-
-@terminal{
-Roxy
-}
-
-
-Because the metas are collected first, you can actually invoke a meta before you define it:
-
-@codeblock{
-#lang pollen
-◊(hash-ref metas 'dog)
-◊(define-meta dog "Roxy")
-◊(define-meta dog "Spooky")
-}
-
-@terminal{
-Spooky
-}
-
-This can be useful for setting up fields that you want to include in @racket[metas] but also have visible in the body of a document, like a title.
-
-@codeblock{
-#lang pollen/markup
-◊(define-meta title "The Amazing Truth")
-◊h1{◊(hash-ref metas 'title)}
-}
-
-The result of this file will be:
-
-@terminal{
-'(root (h1 "The Amazing Truth"))
-}
-
-And the metas:
-@terminal{
-> metas
-'#hasheq((title . "The Amazing Truth") (here-path . "unsaved-editor"))
-}
-You cannot, however, use @racket[hash-set!] or other similar functions, because @racket[metas] is an immutable hash.
-
-
-
-@;--------------------------------------------------------------------
 @subsubsection{Inserting a comment}
 
 Two options.
@@ -679,10 +701,9 @@ Actually, it's all a comment now
 
 @repl-output{Actually, it's all a comment now}
 
-@;--------------------------------------------------------------------
 @subsection{The Racket arguments}
 
-The middle part of a Pollen-mode command contains the @italic{Racket arguments} @litchar{[}between square brackets.@litchar{]} Most often, you'll see these used to pass extra information to commands that operate on text.
+The middle part of a Pollen-style command contains the @italic{Racket arguments} @litchar{[}between square brackets.@litchar{]} Most often, you'll see these used to pass extra information to commands that operate on text.
 
 For instance, tag functions. Recall from before that any not-yet-defined command name in Pollen is treated as a tag function:
 
@@ -709,7 +730,7 @@ Here's the hard way. You can type out your list of attributes in Racket format a
 @repl-output{'(title ((class "red") (id "first")) "The Beginning of the End")}
 
 
-But that's a lot of parentheses to think about. So here's the easy way. Anytime you use a tag function, there's a shortcut for inserting attributes. You can enter them as a series of @italic{keyword arguments} between the Racket-argument brackets. The only caveat is that the values for these keyword arguments have to be strings. So taken together, they look like this:
+But that's a lot of parentheses to think about. So here's the easy way. Whenever you use a tag function, there's a shortcut for inserting attributes. You can enter them as a series of @italic{keyword arguments} between the Racket-argument brackets. The only caveat is that the values for these keyword arguments have to be strings. So taken together, they look like this:
 
 @codeblock|{
 #lang pollen
@@ -722,7 +743,7 @@ The string arguments can be any valid Racket expressions that produce strings. F
 
 @codeblock|{
 #lang pollen
-◊title[#:class (format "~a" (* 6 7)) #:id "first"]{The Beginning of the End}
+◊title[#:class (number->string (* 6 7)) #:id "first"]{The Beginning of the End}
 }|
 
 @repl-output{'(title ((class "42") (id "first")) "The Beginning of the End")}
@@ -754,10 +775,29 @@ When used in custom tag functions, keyword arguments don't have to represent att
 '(h6 "Trivial league")
 }
 
-@;--------------------------------------------------------------------
-@subsection{The text argument}
+@bold{Pro tip}: See also @racket[define-tag-function], which automatically converts keyword arguments into attributes before they reach your function:
 
-The third part of a Pollen-mode command is the text argument. The text argument @litchar{@"{"}appears between curly braces@litchar{@"}"}. It can contain any text you want. The text argument can also contain other Pollen commands with their own text arguments. And they can contain other Pollen commands ... and so on, all the way down.
+@codeblock|{
+#lang pollen
+◊(require pollen/tag)
+◊(define-tag-function (heading attrs elems)
+  (define level (cadr (assq 'level attrs)))
+  `(,(string->symbol (format "h~a" level)) ,@elems))
+ 
+◊heading[#:level 1]{Major league}
+◊heading[#:level 2]{Minor league}
+◊heading[#:level 6]{Trivial league}
+}|
+
+@repl-output{'(h1 "Major league")
+'(h2 "Minor league")
+'(h6 "Trivial league")
+}
+
+
+@subsection[#:tag "the-text-body"]{The text body}
+
+The third part of a Pollen-style command is the text body. The text body @litchar{@"{"}appears between curly braces@litchar{@"}"}. It can contain any text you want. The text body can also contain other Pollen commands with their own text body. And they can contain other Pollen commands ... and so on, all the way down.
 
 @codeblock|{
 #lang pollen
@@ -766,9 +806,9 @@ The third part of a Pollen-mode command is the text argument. The text argument 
 
 @repl-output{'(div "Do it again. " (div "And again. " (div "And yet again.")))}
 
-Three small details to know about the text argument.
+Three things to know about the text body.
 
-First, the only character that needs special handling in a text argument is the lozenge @litchar{◊}. A lozenge ordinarily marks a new command. So if you want an actual lozenge to appear in the text, you have to escape it by typing @litchar{◊"◊"}.
+First, the only character that needs special handling in the text body is the lozenge @litchar{◊}. A lozenge ordinarily marks a new command. So if you want an actual lozenge to appear in the text, you have to escape it by typing @litchar{◊"◊"}.
 
 @codeblock|{
 #lang pollen
@@ -777,7 +817,7 @@ First, the only character that needs special handling in a text argument is the 
 
 @repl-output{'(definition "This is the lozenge: ◊")}
 
-Second, the whitespace-trimming policy. Here's the short version: if there's a carriage return at either end of the text argument, it is trimmed, and whitespace at the end of each line is selectively trimmed in an intelligent way. So this text argument, with carriage returns on the ends:
+Second, the whitespace-trimming policy. Here's the short version: if there's a newline at either end of the text body, it is trimmed, and whitespace at the end of each line is selectively trimmed in an intelligent way. So this text body, with newlines on the ends:
 
 @codeblock|{
 #lang pollen
@@ -790,7 +830,7 @@ I agree.
 
 @repl-output{'(div "Roomy!" "\n" "\n" "I agree.")}
 
-Yields the same result as this one:
+Yields the same result as this one, without the newlines:
 
 @codeblock|{
 #lang pollen
@@ -801,10 +841,11 @@ I agree.}
 
 @repl-output{'(div "Roomy!" "\n" "\n" "I agree.")}
 
-For the long version, please see [future link: Spaces, Newlines, and Indentation].
+For the long version, please see @secref["Spaces__Newlines__and_Indentation"
+         #:doc '(lib "scribblings/scribble/scribble.scrbl")].
 
 
-Third, within a multiline text argument, newline characters become individual strings that are not merged with adjacent text. So what you end up with is a list of strings, not a single string. That's why in the last example, we got this:
+Third, within a multiline text body, newline characters become individual strings that are not merged with adjacent text. So what you end up with is a list of strings, not a single string. That's why in the last example, we got this:
 
 @repl-output{'(div "Roomy!" "\n" "\n" "I agree.")}
 
@@ -812,7 +853,7 @@ Instead of this:
 
 @repl-output{'(div "Roomy!\n\nI agree.")}
 
-Under most circumstances, these two tagged X-expressions will behave the same way. The biggest exception is with functions. A function that operates on multiline text arguments needs to be able to handle an indefinite number of strings. For instance, this @code{jejune} function only accepts a single argument. It will work with a single-line text argument, because that produces a single string:
+Under most circumstances, these two tagged X-expressions will behave the same way. The biggest exception is with functions. A function that might operate on a multiline text body needs to be able to handle an indefinite number of strings. For instance, this @code{jejune} function only accepts a single argument. It will work with a single-line text body, because that produces a single string:
 
 @codeblock|{
 #lang pollen
@@ -823,7 +864,7 @@ Under most circumstances, these two tagged X-expressions will behave the same wa
 
 @repl-output{'(jejune "Irrational confidence")}
 
-But watch what happens with a multiline text argument:
+But watch what happens with a multiline text body:
 
 @codeblock|{
 #lang pollen
@@ -909,13 +950,11 @@ For numeric entities, you can also use a four-digit Unicode hex number by prefac
 Of course, you don't need to use @racket[string->symbol] and @racket[string->number] directly in your source. You can also define tag functions that generate entities. The key point is that to be treated as an entity, the return value must be a symbol or number, rather than a string.
 
 
-@section{Adding Pollen-mode commands to a Racket file}
+@section{Adding Pollen-style commands to a Racket file}
 
 @defmodulelang[pollen/mode]
 
-Just as you can embed any Racket-mode command in a Pollen source file, you can go the other way and embed Pollen-mode commands in a Racket file. For instance, in your @secref["The__pollen_rkt__file"], you may find it convenient to use Pollen mode for certain values.
-
-You enable Pollen mode within your source file by adding @racketmodname[pollen/mode] to your @tt{#lang} line at the top of your source:
+Just as you can embed any Racket-style command in a Pollen source file, you can go the other way and embed Pollen-style commands in a Racket file. Just insert @racketmodname[pollen/mode] in the @tt{#lang} line at the top of your source:
 
 @fileblock["pollen.rkt" @codeblock{
 #lang pollen/mode racket/base
@@ -926,12 +965,12 @@ You enable Pollen mode within your source file by adding @racketmodname[pollen/m
 (define (home-link)
   (link #:href "index.html" "Click to go home"))
 
-(define (home-link-pollen-mode)
+(define (home-link-pollen-style)
   ◊link[#:href "index.html"]{Click to go home})
 
 }]
 
-Here, both @tt{(home-link)} and @tt{(home-link-pollen-mode)} will produce the same X-expression as a result:
+Here, both @tt{(home-link)} and @tt{(home-link-pollen-style)} will produce the same X-expression as a result:
 
 @terminal{'(a ((href "index.html")) "Click to go home")}
 
@@ -939,11 +978,9 @@ Of course, you can use @racketmodname[pollen/mode] in any Racket source file, no
 
 @bold{Major caveat}: @racketmodname[pollen/mode] only works with Pollen's default command character, namely the lozenge (@litchar{◊}). If you've overridden this command character in your @filepath{pollen.rkt} file, your custom command character will work everywhere @italic{except} in @racketmodname[pollen/mode]. This limitation is necessary to prevent the intractable situation where @filepath{pollen.rkt} relies on @racketmodname[pollen/mode], but @racketmodname[pollen/mode] relies on a config setting in @filepath{pollen.rkt}.
 
-Also keep in mind that @racketmodname[pollen/mode] is just a syntactic convenience. It doesn't change any of the underlying semantics of your Racket source file. Your Pollen-mode commands are being translated into Racket commands and compiled along with everything else.
+Also keep in mind that @racketmodname[pollen/mode] is just a syntactic convenience. It doesn't change any of the underlying semantics of your Racket source file. Your Pollen-style commands are being translated into Racket commands and compiled along with everything else.
 
-Another good way to use Pollen-mode commands in Racket is for unit tests with @racketmodname[rackunit]. With @racketmodname[pollen/mode], you can write your unit tests in Pollen mode or Racket mode (or mix them).
-
-@margin-note{Unit tests are little one-line tests you put into your code to verify that it does what you expect. You make these with the @racketmodname[rackunit] library, which is beloved by all Racket programmers. For more, see @secref["quick-start" #:doc '(lib "rackunit/scribblings/rackunit.scrbl")].}
+Another good way to use Pollen-style commands in Racket is for unit tests with @racketmodname[rackunit]. With @racketmodname[pollen/mode], you can write your unit tests in Pollen style or Racket style (or mix them). This makes it easy to verify that Pollen-style commands will turn into the Racket values that you expect:
 
 @fileblock["pollen.rkt" @codeblock|{
 #lang pollen/mode racket/base

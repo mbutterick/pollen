@@ -6,4 +6,8 @@
     [(string? x) x]
     [(or (null? x) (void? x)) ""]
     [(or (symbol? x) (number? x) (path? x) (char? x)) (format "~a" x)]
+    ;; special handling for procedures, because if a procedure reaches this func,
+    ;; it usually indicates a failed attempt to use a tag function.
+    ;; meaning, it's more useful to raise an error.
+    [(procedure? x) (error 'pollen "Can't convert procedure ~a to string" x)]
     [else (format "~v" x)]))

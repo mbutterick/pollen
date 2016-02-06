@@ -1,8 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base syntax/strip-context racket/syntax "../setup.rkt" "split-metas.rkt")
-         "to-string.rkt" "../pagetree.rkt" "splice.rkt" "../setup.rkt") ; need world here to resolve PARSER-MODE-ARG
+         "to-string.rkt" "../pagetree.rkt" "splice.rkt" "../setup.rkt" ) ; need world here to resolve PARSER-MODE-ARG
 (provide (all-defined-out))
-(require sugar/debug)
 
 (define-syntax-rule (define+provide-module-begin-in-mode PARSER-MODE-ARG)
   (begin
@@ -46,7 +45,7 @@
                                                   [(eq? parser-mode 'MODE-PAGETREE) decode-pagetree]
                                                   [(eq? parser-mode 'MODE-MARKUP) (λ(xs) (apply ROOT xs))] ; if `root` undefined, it becomes a default tag function
                                                   [(eq? parser-mode 'MODE-MARKDOWN)
-                                                   (λ(xs) (apply ROOT ((dynamic-require 'markdown 'parse-markdown) (apply string-append (map to-string xs)))))]
+                                                   (λ(xs) (apply ROOT (map strip-empty-attrs ((dynamic-require 'markdown 'parse-markdown) (apply string-append (map to-string xs))))))]
                                                   [else (λ(xs) (apply string-append (map to-string xs)))])] ; string output for preprocessor
                                           ;; drop leading newlines, as they're often the result of `defines` and `requires`
                                           [doc-elements (or (memf (λ(ln) (not (equal? ln NEWLINE))) DOC-RAW) null)]

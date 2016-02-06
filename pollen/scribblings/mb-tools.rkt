@@ -47,7 +47,7 @@
 
 (define (noskip-note)
   (nested #:style (style "noskip" (list (css-style-addition mb-css) (alt-tag "div")))
-          (margin-note "Don’t skip this section! It explains a concept that's essential to understanding how Pollen works.")))
+          (margin-note "Don’t skip this section! It explains an essential Pollen concept.")))
 
 
 (define-syntax (image/rp stx)

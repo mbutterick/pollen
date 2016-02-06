@@ -8,7 +8,7 @@
 
 Consistent with Racket's @seclink["Package_Concepts" #:doc '(lib "pkg/scribblings/pkg.scrbl")]{version-numbering system}, the first digit reflects major updates to Pollen that break backward compatibility. The second digit reflects feature updates that don't affect existing features.
 
-Inconsistent with this system, Pollen's version also appends a build number, which is the age of the software in days and seconds. (The official version reported in Pollen's @filepath{info.rkt} is just the major + minor digits.)
+Inconsistent with this system, Pollen's version also appends a build number, which is the age of the software in days and minutes. (The official version reported in Pollen's @filepath{info.rkt} is just the major + minor digits.)
 
 @section{Source code}
 

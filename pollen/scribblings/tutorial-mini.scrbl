@@ -1,4 +1,4 @@
-  #lang scribble/manual
+#lang scribble/manual
 
 @(require scribble/eval (for-label pollen/unstable/pygments pollen/decode plot pollen/setup pollen/tag racket/base pollen/template txexpr racket/list racket/string))
 @(require "mb-tools.rkt")
@@ -21,11 +21,11 @@ Pygments is a Python library (though you don't need to know any Python to use it
 
 @subsection[#:tag "pygments-with-pollen"]{Using Pygments with Pollen}
 
-I used @link["http://pygments.org/"]{Pygments} for syntax highlighting in @link["http://unitscale.com/mb/technique/dual-typed-untyped-library.html"]{this recent article made with Pollen}. Links to the source are available at the bottom of the article.
+I used @link["http://pygments.org/"]{Pygments} for syntax highlighting in @link["http://unitscale.com/mb/technique/dual-typed-untyped-library.html"]{this article made with Pollen}. Links to the source are available at the bottom of the article.
 
 @itemlist[#:style 'ordered
 
-@item{Make sure you have @code{pygments} already installed. @link["http://pygments.org/download/"]{Instructions here.} Pretty easy — for instance, on my OS X machine, I was able to get it done by doing @code{easy_install pygments} at the command line.}
+@item{Make sure you have @code{pygments} already installed. @link["http://pygments.org/download/"]{Instructions here.} Pretty easy — for instance, on my OS X machine, it simply require @code{easy_install pygments} at the command line.}
 
 @item{The @racketmodname[pollen/unstable/pygments] helper module provides a function called @racket[highlight]. To make @racket[highlight] available in your source file, you can either add the line @code{◊(require pollen/unstable/pygments)} to the source file itself, or put it in @racket["pollen.rkt"] and @racket[provide] it from there.}
 
@@ -43,7 +43,7 @@ for x in range(3):
 When you run this file, you should see something like this, with the parsed syntax marked up into an X-expression:
 
 @repl-output{
-'(div ((class "highlight")) (table ((class "sourcetable")) (tbody () (tr () (td ((class "linenos")) (div ((class "linenodiv")) (pre () "1\n2"))) (td ((class "code")) (div ((class "source")) (pre () (span ((class "k")) "for") " " (span ((class "n")) "x") " " (span ((class "ow")) "in") " " (span ((class "nb")) "range") (span ((class "p")) "(") (span ((class "mi")) "3") (span ((class "p")) "):") "\n    " (span ((class "k")) "print") " " (span ((class "n")) "x") "\n")) "\n")))) "\n")
+'(div ((class "highlight")) (table ((class "sourcetable")) (tbody (tr (td ((class "linenos")) (div ((class "linenodiv")) (pre "1\n2"))) (td ((class "code")) (div ((class "source")) (pre (span ((class "k")) "for") " " (span ((class "n")) "x") " " (span ((class "ow")) "in") " " (span ((class "nb")) "range") (span ((class "p")) "(") (span ((class "mi")) "3") (span ((class "p")) "):") "\n    " (span ((class "k")) "print") " " (span ((class "n")) "x") "\n")) "\n")))) "\n")
 }
 }
 
@@ -52,7 +52,9 @@ When you run this file, you should see something like this, with the parsed synt
 
 ]
  
-I concede that the last step isn’t super convenient. But I haven’t yet figured out how it to make it easier. Larding the Pollen distribution with a bunch of Pygments themes doesn’t make sense. Moreover, even if convenient, they wouldn’t be editable / programmable, which is sort of the point of the whole exercise.
+I concede that the last step isn’t convenient. But I haven’t yet figured out how it to make it easier. Larding the Pollen distribution with a bunch of Pygments themes doesn’t make sense. Moreover, even if convenient, they wouldn’t be editable / programmable, which is sort of the point of the whole exercise. 
+
+Anyhow, that's why it's in the @code{unstable} category — it works, but I think it could be done better.
 
 @subsection{Using Highlight.js with Pollen}
 
@@ -63,9 +65,9 @@ Because @link["https://highlightjs.org/"]{Highlight.js} is browser-based, it doe
 
 @item{Download the @link["https://highlightjs.org/usage/"]{Highlight.js} library.}
 
-@item{Add these lines to the @code{<head>} section of your @racket["template.html"] (or other template):
+@item{Add these lines to the @code{<head>} section of your @filepath{template.html} (or other template):
 
-@repl-output{
+@terminal{
 <link rel="stylesheet" href="/path/to/styles/default.css">
 <script src="/path/to/highlight.js"></script>
 <script>hljs.initHighlightingOnLoad();</script>
@@ -105,9 +107,9 @@ As above, I concede that it would be more convenient to have Pollen automaticall
 
 @item{Download the @link["http://docs.mathjax.org/en/latest/start.html"]{MathJax} library if you want to run the library locally, without a network connection. You can also use the MathJax CDN and just link to the library across the network (I'll use this option in the example that follows).}
 
-@item{Add these lines to the @code{<head>} section of your @racket["template.html"] (or other template). First, the MathJax library itself:
+@item{Add these lines to the @code{<head>} section of your @filepath{template.html} (or other template). First, the MathJax library itself:
 
-@repl-output{
+@terminal{
 <script type="text/javascript"
   src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
 </script>
@@ -115,7 +117,7 @@ As above, I concede that it would be more convenient to have Pollen automaticall
 
 Then, add any configuration options. For instance, this will activate the dollar sign as an inline-equation delimiter:
 
-@repl-output{
+@terminal{
 <script type="text/x-mathjax-config">
   MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$']]}});
 </script>
@@ -135,7 +137,7 @@ Then, add any configuration options. For instance, this will activate the dollar
 ]
 
 
-Putting it together, here's a minimal working example in two files (obviously in a larger project, you'd move those tag functions to a @racket["pollen.rkt"] file):
+Putting it together, here's a minimal working example in two files (obviously in a larger project, you'd move those tag functions to a @filepath{pollen.rkt} file):
 
 @fileblock["equation.html.pm"
 @codeblock{
@@ -150,7 +152,7 @@ Putting it together, here's a minimal working example in two files (obviously in
 
 
 
-@fileblock["template.html"
+@fileblock["template.html.p"
 @codeblock[#:keep-lang-line? #f]{
 #lang pollen
 <html>
@@ -168,3 +170,4 @@ MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$']]}});
 </html>
 }]
 
+By the way, there's no @code{pollen/math} module because this task doesn't seem complicated enough to merit it. What I just described is all you need.

@@ -199,7 +199,7 @@ six
 
 @section{The automatic pagetree}
 
-In situations where Pollen needs a pagetree but can't find one, it will automatically synthesize a pagetree from a listing of files in the directory. This arises most frequently when @secref["Using_the_dashboard" #:doc '(lib "pollen/scribblings/pollen.scrbl")] in a directory that doesn't contain an explicit @filepath{index.ptree}. This way, you can get going with a project without having to stop for @racketfont{.ptree} housekeeping.
+In situations where Pollen needs a pagetree but can't find one, it will automatically synthesize a pagetree from a listing of files in the directory. This arises most frequently when @secref["The_project_dashboard"] in a directory that doesn't contain an explicit @filepath{index.ptree}. This way, you can get going with a project without having to stop for @racketfont{.ptree} housekeeping.
 
 As usual, convenience has a cost. Pollen doesn't know anything about which files in your directory are relevant to the project, so it includes all of them. For instance, if you start your project server on an OS X desktop, you'll see things like @filepath{Thumbs.db} and @filepath{desktop.ini}. 
 
@@ -212,7 +212,7 @@ Typically you'll call the pagetree-navigation functions from inside templates, u
 
 @section{Using @filepath{index.ptree} in the dashboard}
 
-When you're using the project server to view the files in a directory, the server will first look for a file called @filepath{index.ptree}. If it finds this pagetree file, it will use it to build the dashboard. If not, then it will synthesize a pagetree using a directory listing. For more on this technique, see @secref["Using_the_dashboard" #:doc '(lib "pollen/scribblings/pollen.scrbl")].
+When you're using the project server to view the files in a directory, the server will first look for a file called @filepath{index.ptree}. If it finds this pagetree file, it will use it to build the dashboard. If not, then it will synthesize a pagetree using a directory listing. For more on this technique, see @secref["The_project_dashboard"].
 
 @section{Using pagetrees with @exec{raco pollen render}}
 

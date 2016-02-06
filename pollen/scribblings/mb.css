@@ -1,13 +1,15 @@
 /* special styles for custom @fileblock function in mb-tools.rkt */
 
 .noskip .refcolumn {
-    background: #998;
+    background: #666;
+    border-color: #333;
     color: white;
     padding-top: 0.6rem;
 }
 
 .noskip .refcontent p {
     font-size: 110%;
+    font-weight: bolder;
     line-height: 1.4;    
 }
 

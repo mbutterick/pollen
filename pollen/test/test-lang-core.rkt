@@ -19,4 +19,4 @@
   (define-meta zing "bam")
   (select 'zing metas))
 (require (prefix-in markdown: 'markdown))
-(check-equal? markdown:doc '(root (p () "bam")))
+(check-equal? markdown:doc '(root (p "bam")))

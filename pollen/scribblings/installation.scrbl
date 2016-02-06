@@ -14,7 +14,7 @@ Pollen will run on OS X, Linux, or Windows.
 
 Pollen is not a self-contained GUI program like Adobe InDesign. It's a software package that runs atop the Racket language environment (also a free download).
 
-Your three main tools in Pollen will be a text editor (for those starting out, I recommend @other-doc['(lib "scribblings/drracket/drracket.scrbl")]), a terminal window, and a web browser. The terminal commands you'll be using are simple, but if you haven't used your terminal window before, this is the moment to learn where it is.
+Your three main tools in Pollen will be a text editor (for those starting out, I recommend @other-doc['(lib "scribblings/drracket/drracket.scrbl")]), a terminal window, and a web browser. The terminal commands you'll be using are simple, but if you haven't used your terminal window before, this is the moment to learn where it is. (On OS X, your terminal window is called Terminal; on Windows it's called the Windows Command Processor.)
 
 After the initial download, Pollen does not require a network connection.
 
@@ -37,24 +37,37 @@ Welcome to Racket v.@(version).
 
 Type @exec{ctrl+D} to exit.
 
-}
+But if you get an error like this:
 
-@item{Windows users, when you see instructions that reference @exec{raco} — like the one below — I'll trust you to convert into the appropriate command for your system — assuming defaults, it's likely to be @filepath{C:\Program Files\Racket\raco} (include the surrounding quotes in the command).}
+@terminal{Unrecognized command: racket}
+
+You have a deeper problem with your Racket installation that needs adjustment before continuing (usually a misconfiguration of @code{PATH}).
+
+}
 
 @item{Then, from the command line, install Pollen:
 @commandline{raco pkg install pollen}
 
-To check that it worked, try typing @exec{raco pollen version} on the command line, and you should see something like this:
+To check that it worked, try typing @exec{raco pollen test} on the command line, and you should see this:
 
-@terminal{~ : raco pollen version
-@|pollen:version|
+@terminal{~ : raco pollen test
+raco pollen is installed correctly
 ~ :
 }
 
+But if you get:
+
+@terminal{raco: Unrecognized command: pollen}
+
+You'll need to fix the problem before proceeding, most likely by reinstalling Pollen.
+
+
+@margin-note{Windows users, when you see instructions that reference @exec{raco}, I'll trust you to convert into the appropriate command for your system. Assuming defaults, it's likely to be @filepath{C:\Program Files\Racket\raco} (include the surrounding quotes in the command).}
+
 
 }
 
-@item{Alternatively, you can install Pollen from inside DrRacket with the @onscreen{File > Install Package ...} command.}
+@item{Alternatively, you can install Pollen from inside DrRacket with the @menuitem["File" "Install Package ..."] command.}
 
 @item{Either way, Pollen's documentation will be automatically installed.}
 

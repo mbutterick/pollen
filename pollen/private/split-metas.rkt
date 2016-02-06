@@ -7,21 +7,21 @@
   (define (meta? x)  ; meta has form (define-meta key value)
     (and (list? x) (>= (length x) 3) (eq? (car x) meta-key)))
   
-  (define (non-meta?/gather x)
-    (or (not (meta? x))
-        (and (set! matches (cons x matches)) #f)))
-  
   (define rest
     (let loop ([x (if (list? tree) tree (list tree))])
-      (if (list? x)
-          (map loop (filter non-meta?/gather x))
-          x)))
+      (cond
+        [(meta? x) (set! matches (cons x matches)) #f]
+        [(list? x) (filter (λ(x) x) (map loop x))]
+        [else x])))
   
-  (values (apply hasheq (apply append (map cdr matches))) rest))
+  (values (apply hasheq (apply append (reverse (map cdr matches)))) rest))
 
 (module+ test
   (require rackunit)
-  (define x '(root (div (define-meta foo "bar") "hi") "zim" "zam"))
-  (define-values (metas rest) (split-metas x 'define-meta))
-  (check-equal? metas '#hasheq((foo . "bar")))
-  (check-equal? rest '(root (div "hi") "zim" "zam")))
+  (let-values ([(metas rest) (split-metas '(root (div (define-meta foo "bar") "hi") "zim" (define-meta foo "boing") "zam") 'define-meta)])
+    (check-equal? metas '#hasheq((foo . "boing")))
+    (check-equal? rest '(root (div "hi") "zim" "zam")))
+  (let-values ([(metas rest) (split-metas '(root (define-meta dog "Roxy") (define-meta dog "Lex")) 'define-meta)])
+    (check-equal? metas '#hasheq((dog . "Lex"))))
+  (let-values ([(metas rest) (split-metas '(root (define-meta dog "Roxy") (div (define-meta dog "Lex"))) 'define-meta)])
+    (check-equal? metas '#hasheq((dog . "Lex")))))

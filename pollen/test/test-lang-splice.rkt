@@ -14,4 +14,4 @@
 (module markdown pollen/markdown
   "Hello" (when #t (@ "Splice")) "" (when/splice #t "Splice") "World")
 (require (prefix-in markdown: 'markdown))
-(check-equal? markdown:doc '(root (p () "HelloSpliceSpliceWorld")))
+(check-equal? markdown:doc '(root (p "HelloSpliceSpliceWorld")))

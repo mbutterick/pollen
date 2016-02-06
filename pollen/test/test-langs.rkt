@@ -22,7 +22,7 @@
 (module test-markdown pollen/markdown
   "hello world")
 (require (prefix-in markdown: 'test-markdown))
-(check-equal? markdown:doc '(root (p () "hello world")))
+(check-equal? markdown:doc '(root (p "hello world")))
 
 
 (module test-ptree pollen/ptree

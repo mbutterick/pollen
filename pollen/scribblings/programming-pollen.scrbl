@@ -24,25 +24,25 @@ The @seclink["third-tutorial"]{third tutorial} introduced you to the idea that @
 
 @item{Every Pollen tag calls a function with the same name.}
 
-@item{The input values for that function are the attributes and content of the tag.}
+@item{The input values for that function are the attributes and elements of the tag.}
 
-@item{The whole tag — tag name, attributes, and content — is replaced with the return value of the called function.}
+@item{The whole tag — tag name, attributes, and elements — is replaced with the return value of the called function.}
 ]
 
 @subsection{Tag-function syntax}
 
-To be safe, let's review what we mean by @italic{tag}, @italic{attributes}, and @italic{content}, in Pollen-mode syntax:
+To be safe, let's review what we mean by @italic{tag}, @italic{attributes}, and @italic{elements}, in Pollen-mode syntax:
 
 @codeblock[#:keep-lang-line? #f]{
 #lang pollen 
 A tag alone: ◊get-author-name[]
 
-A tag with content: Adding ◊em{emphasis to words}.
+A tag with elements: Adding ◊em{emphasis to words}.
 
-A tag with attributes and content: 
+A tag with attributes and elements: 
 ◊div['((attr1 "val1")(attr2 "val2"))]{My nice div.}
 
-A tag with attributes and content (alternate syntax):
+A tag with attributes and elements (alternate syntax):
 ◊div[#:attr1 "val1" #:attr2 "val2"]{My nice div.}
 }
 
@@ -52,13 +52,13 @@ Let's also recall that these commands can be written in Racket mode equivalently
 #lang pollen 
 A tag alone: ◊(get-author-name)
 
-A tag with content: Adding ◊(em "emphasis to words").
+A tag with elements: Adding ◊(em "emphasis to words").
 
-A tag with attributes and content: 
+A tag with attributes and elements: 
 ◊(div '((attr1 "val1")(attr2 "val2")) "My nice div.")
 }
 
-Let's also remember that a tag without attributes or content is interpreted as a value. If that's what you want — for instance, when you @racket[define] a tag to hold a value — then great. But if you @racket[define] a tag as a function, you need to add square brackets to signal that you want to evaluate the function:
+Let's also remember that a tag without attributes or elements is interpreted as a value. If that's what you want — for instance, when you @racket[define] a tag to hold a value — then great. But if you @racket[define] a tag as a function, you need to add square brackets to signal that you want to evaluate the function:
 
 @codeblock[#:keep-lang-line? #f]{
 #lang pollen 

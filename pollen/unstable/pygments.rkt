@@ -10,7 +10,8 @@
          rackjure/str
           xml
          (only-in html read-html-as-xml)
-         "../private/debug.rkt")
+         "../private/debug.rkt"
+         "../private/splice.rkt")
 
 (provide highlight make-highlight-css)
 
@@ -151,7 +152,7 @@ if zero is False:
 (define (highlight lang . codelines)
   (define code (string-append* codelines))
   `(div ((class "highlight"))
-      ,@(pygmentize code lang)))
+      ,@(strip-empty-attrs (pygmentize code lang))))
 
 ;; Other CSS options available from http://richleland.github.io/pygments-css/ 
 

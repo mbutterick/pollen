@@ -47,11 +47,11 @@ Displays a list of available commands.
 
 @section{@exec{raco pollen start}}
 
-Start the project server from the current directory using the default port, which is the value of the parameter @racket[current-server-port] (by default, port @(format "~a" default-project-server-port)).
+Start the project server from the current directory using the default port, which is the value of the parameter @racket[current-server-port] (by default, port @id[default-project-server-port]).
 
 This command can be invoked with two optional arguments.
 
-@racket[raco pollen start _path] will start the project server in @racket[_path] rather than the current directory.
+@racket[raco pollen start _path] will start the project server from @racket[_path] rather than the current directory (making @racket[_path] its root directory).
 
 @terminal{
 > raco pollen start ~/path/to/project/}
@@ -107,7 +107,7 @@ Make a copy of the project directory on the desktop, but without any source file
 
 If you're already in your project directory and want to publish somewhere other than the desktop, use @racket[raco pollen publish _. _dest-dir].
 
-You can determine the files that get filtered out in a particular project by using @racket[setup:unpublished-path?].
+You can determine the files that get filtered out in a particular project by overriding @racket[default-unpublished-path?].
 
 
 @section{@exec{raco pollen setup}}
@@ -150,4 +150,5 @@ rendering: /test.txt.pp as /test.txt
 Result is DEBUG
 
 }
+
 

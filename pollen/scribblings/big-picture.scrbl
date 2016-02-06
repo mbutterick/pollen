@@ -2,7 +2,7 @@
 
 @title[#:tag "big-picture"]{The big picture}
 
-A summary of the key components & concepts of the Pollen publishing system and how they fit together. If you've completed the @secref["quick-tour"], this will lend some context to what you saw. The next tutorials will make more sense if you read this first.
+A summary of the key components & concepts of the Pollen publishing system and how they fit together. If you've completed the @secref["quick-tour"], this will lend some context to what you saw. The upcoming @seclink["first-tutorial"]{tutorials} will make more sense if you read this first.
 
 
 @section[#:tag "the-book-is-a-program"]{The book is a program}
@@ -35,13 +35,13 @@ This is the core design principle of Pollen. Consistent with this principle, Pol
 
 @section{Development environment}
 
-The Pollen development environment has three main pieces: the DrRacket code editor, the project server, and the command-line tool.
+The Pollen development environment has three main pieces: the DrRacket code editor, the project server, and the command line.
 
 @itemlist[
 
 @item{@bold{Edit source files with DrRacket.} DrRacket is Racket's GUI code editor. Sure, you can also use a generic text editor. But DrRacket lets you immediately run your source and see if it works.} 
 
-@item{@bold{Preview & test web pages with the Pollen project server.} Pollen has a built-in development web server called the @defterm{project server}. After you start the project server, you can preview your web pages within any web browser, allowing you to test them with maximum accuracy.}
+@item{@bold{Preview & test web pages with the Pollen project server.} Pollen has a built-in development web server called the @seclink["Using_the_project_server"]{@defterm{project server}}. After you start the project server, you can preview your web pages within any web browser, allowing you to test them with maximum accuracy.}
 
 @item{@bold{Write the docs.} The project server can recognize and render Scribble files, so you can use it as a previewing tool while you're writing your documentation.}
 
@@ -53,7 +53,7 @@ The Pollen development environment has three main pieces: the DrRacket code edit
 
 @section{A special data structure for HTML}
 
-Unlike other programming languages, Pollen (and Racket) internally represent HTML with something called @secref["X-expressions" #:doc '(lib "pollen/scribblings/pollen.scrbl")]. An X-expression is simply a list that represents an HTML @defterm{element}, meaning a thing with an opening tag, a closing tag, and content in between. Like HTML elements, X-expressions can be nested. Unlike HTML elements, X-expressions have no closing tag, they use parentheses to denote the start and end, and text elements are put inside quotes.
+Unlike other programming languages, Pollen (and Racket) internally represent HTML with something called @secref["X-expressions"]. An X-expression is simply a list that represents an HTML @defterm{element}, meaning a thing with an opening tag, a closing tag, and content in between. Like HTML elements, X-expressions can be nested. Unlike HTML elements, X-expressions have no closing tag, they use parentheses to denote the start and end, and text elements are put inside quotes.
 
 For example, consider this HTML element:
 
@@ -63,7 +63,7 @@ As a Racket X-expression, this would be written:
 
 @nested[#:style 'code-inset]{@verbatim{(body (h1 "Hello world") (p "Nice to " (i "see") " you."))}}
 
-More will be said about X-expressions. But a couple advantages should be evident already. First, without the redundant angle brackets, the X-expression is arguably more readable than the equivalent HTML. Second, an X-expression is preferable to treating HTML as a simple string, because it preserves the internal structure of the element. 
+More will be said about X-expressions. But a several advantages should be evident already. First, without the redundant angle brackets, the X-expression is arguably more readable than the equivalent HTML. Second, an X-expression is preferable to treating HTML as a simple string, because it preserves the internal structure of the element. Third, an X-expression is a native data type in Racket.
 
 
 @section{Pollen command syntax}
@@ -75,10 +75,10 @@ As mentioned above, a Pollen source file is not code with text embedded in it, b
 @item{@bold{If you can write text, you can program in Pollen.} Really. As you already found out in the @secref["quick-tour"], this is a valid Pollen program:
 @codeblock{
 #lang pollen
-Hello setup: how are you on this fine summer day?
+Bonjour, tout le monde: comment ça va?
 }}
 
-@item{@bold{Commands start with ◊.} A simple rule: if a piece of text starts with @litchar{◊}, it's treated as a command; otherwise it's treated as ordinary text.}
+@item{@bold{Commands start with ◊.} A simple rule: if something in a Pollen source file starts with @litchar{◊}, it's treated as a command; otherwise it's treated as ordinary text.}
 
 @item{@bold{Write commands in Pollen mode or Racket mode.} Commands can use two equivalent notation systems: either Pollen's text-oriented command syntax, or standard Racket syntax.}
 
@@ -108,7 +108,7 @@ If you want to apply a particular page format to multiple sources of content —
 
 @itemlist[
 
-@item{@bold{Templates can be any format.} Usually Pollen templates will be HTML. But they don't have to be.}
+@item{@bold{Templates can be any format.} Usually Pollen templates will be HTML. But they don't have to be. Templates can generate any kind of file — either text-based (XML) or not (PDF).}
 
 @item{@bold{Markdown authoring mode.} Pollen has a built-in Markdown parser, so you can import Markdown sources into a Pollen publication.}
 

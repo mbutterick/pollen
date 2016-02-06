@@ -1,10 +1,8 @@
 #lang scribble/manual
 
-
-
 @title{Backstory}
 
-I created Pollen to overcome limitations & frustrations I repeatedly encountered with existing web-publishing tools. 
+I created Pollen to overcome limitations & frustrations I repeatedly encountered with existing web-publishing tools.
 
 If you agree with my characterization of those problems, then you'll probably like the solution that Pollen offers. If not, then you probably won't.
 
@@ -16,13 +14,13 @@ If you weren't around then, you didn't miss much. Everything about the web was h
 
 That's no longer true. The web is now more than 20 years old. During that time, most parts of the web have improved dramatically — for instance, the connections are faster, the browsers are more sophisticated, and the screens have more pixels. 
 
-But one part hasn't improved much: the way we make web pages. Over the years, tools promising to simplify web development have come and mostly gone — from @link["http://www.macobserver.com/reviews/pagemill2.shtml"]{PageMill} to @link["http://www.adobe.com/products/dreamweaver.html"]{Dreamweaver} to @link["http://wordpress.org"]{WordPress} to @link["http://jekyllrb.com"]{Jekyll}. Meanwhile, true web jocks have remained loyal to the original HTML power tool: the humble text editor.
+But one part hasn't improved much: the way we make web pages. Over the years, tools promising to simplify web development have come and mostly gone — from @link["http://www.macobserver.com/reviews/pagemill2.shtml"]{PageMill} to @link["http://www.adobe.com/products/dreamweaver.html"]{Dreamweaver} to @link["http://www.squarespace.com"]{Squarespace}. Meanwhile, serious web jocks have remained loyal to the original HTML power tool: the humble text editor. 
 
-In one way, this makes sense. Web pages are mostly made of text-based data — HTML, CSS, JavaScript, and so on — and the simplest way to mainpulate this data is with a text editor. While HTML and CSS are @link["http://programmers.stackexchange.com/questions/28098/why-does-it-matter-that-html-and-css-are-not-programming-languages"]{not} programming languages, they lend themselves to semantic and logical structure that's most easily expressed by editing them as text. Furthermore, text-based editing makes debugging and performance improvements easier.
+In one way, this makes sense. Web pages are made mostly of text-based data — HTML, CSS, JavaScript, and so on — and the simplest way to mainpulate this data is with a text editor. While HTML and CSS are not programming languages — you can't even compute 1 + 1 — they lend themselves to semantic and logical structure that's most easily expressed by editing them as text. Furthermore, text-based editing makes debugging and performance improvements easier.
 
-But text-based editing is also limited. Though the underlying description of a web page is notionally human-readable, it's optimized to be readable by other software — namely, web browsers. HTML in particular is verbose and easily mistyped. And isn't it fatally dull to manage all the boilerplate, like surrounding every paragraph with @code{<p>...</p>}? Yes, it is.
+But text-based editing is also limited. Though the underlying description of a web page is notionally human-readable, it's optimized to be readable by other software — namely, web browsers. HTML in particular is verbose and easily mistyped. And isn't it fatally dull to manage all the boilerplate, like surrounding every paragraph with @code{<p>...</p>}? Yes, it is.
 
-For these reasons, much of web development should lend itself to @italic{abstraction} & @italic{automation}. Abstraction means consolidating repetitive, complex patterns into simpler, parameterized forms. Automation means avoiding the manual drudgery of generating the output files. But in practice, tools that enable this abstraction & automation have been slow to arrive, and most have come hobbled with unacceptable deficiencies. 
+For these reasons, much of web development should've lent itself to @italic{abstraction} & @italic{automation}. Abstraction means consolidating repetitive, complex patterns into simpler, more generalized forms. Automation means avoiding the drudgery and potential for error inherent in generating output files by hand. In other words, it starts to look a lot like programming.
 
 @section{The better idea: a programming model}
 
@@ -36,7 +34,13 @@ On the early web, the text-editing model was appealingly precise and quick. On s
 
 What followed was a steady stream of products, frameworks, tools, and content management systems that claimed to bring a programming model to web development. Some were better than others. But none of them displaced the text editor as the preferred tool of web developers. And none of them matched the power and flexibility you get from any reasonable programming language.
 
-Why not? These tools always promised a great leap forward in solving the web-development problem. In practice, however, they simply redistributed the pain. I needn't bore you by enumerating the deficiencies of specific tools, because they've tended to fail in the thematic ways:
+Why not? These tools always promised a great leap forward in solving the web-development problem. In practice, however, they simply redistributed the pain. 
+
+Today, for instance, it's possible to find multiple preprocessors for @link["http://haml.info"]{HTML}, @link["http://sass-lang.com"]{CSS}, and @link["http://coffeescript.org"]{JavaScript}. But they're all separate tools, with different syntax and functions. Good luck finding a single preprocessor that can handle all your web files simultaneously.
+
+This kind of thinking — from the edges inward, rather than from the center out — has been the thematic failure of web-publishing tools. Each is like the blind man of proverb with a single @link["http://www.jainworld.com/literature/story25.htm"]{hand on the elephant} — addressing a specific concern while missing the broader context. 
+
+Likewise, even web-publishing systems ostensibly based on general-purpose programming languages — like @link["https://wordpress.org"]{WordPress} or @link["https://www.djangoproject.com"]{Django} — suffer from recurring deficiencies:
 
 @itemlist[
 
@@ -59,7 +63,7 @@ In 2008, I launched a website called @link["http://typographyforlawyers.com"]{@i
 
 So I used @link["http://wordpress.org"]{WordPress}. The major chore became scraping out all the crap that typically lives in blog templates. It ended up looking simpler & cleaner than the usual WordPress website. Largely because of this, people @link["http://ma.tt/2010/04/typography-for-lawyers/"]{liked it}.
 
-Eventually, a publisher offered to release it as @link["http://typo.la/amzn"]{a paperback}, which came out in 2010.
+Eventually, a publisher offered to release it as @link["http://typo.la/amzn"]{a paperback}, which came out in 2010 (the second edition was released in 2015).
 
 Later came the inevitable request to make it into a Kindle book. As a fan of typography, I hate the Kindle. The layout controls are coarse, and so is the reading experience. But I didn't run and hide. Basically a Kindle book is a little website made with 1995-era HTML. So I coded up some tools in Perl to convert my book to Kindle format while preserving the formatting and images as well as possible.
 
@@ -75,7 +79,7 @@ Did it work? Sort of. Source code went in; web pages came out. But it was also c
 
 I had come across Racket while researching languages suitable for HTML/XML processing. I had unexpectedly learned about the @link["http://www.defmacro.org/ramblings/lisp.html"]{secret kinship} of XML and Lisp: though XML is not a programming language, it uses a variant of Lisp syntax. Thus Lisp languages are particularly adept at handling XMLish structures. That was interesting.
 
-After comparing some of the Lisp & Scheme variants, @link["http://practicaltypography.com/why-racket-why-lisp.html"]{Racket stood out} because it had a text-based dialect called Scribble. Scribble could be used to embed code within textual content. That was interesting too. Among other things, this meant Scribble could be used as a general-purpose preprocessor. So I thought I'd see if I could add it to Pollen.
+After comparing some of the Lisp & Scheme variants, @link["http://practicaltypography.com/why-racket-why-lisp.html"]{Racket stood out} because it had a text-based dialect called  @seclink["getting-started" #:doc '(lib "scribblings/scribble/scribble.scrbl")]{Scribble}. Scribble could be used to embed code within textual content. That was interesting too. Among other things, this meant Scribble could be used as a @seclink["text" #:doc '(lib "scribblings/scribble/scribble-pp.scrbl")]{general-purpose preprocessor}. So I thought I'd see if I could add it to Pollen.
 
 It worked. So well, in fact, that I started thinking about whether I could reimplement other parts of Pollen in Racket. Then I started thinking about reimplementing all of it in Racket.
 
@@ -83,7 +87,7 @@ So I did. And here we are.
 
 @section{What is Pollen?}
 
-Pollen is a publishing system built on top of Scribble and Racket. So far, I've optimized Pollen for digital books, because that's mainly what I use it for. But it can be used for small projects too.
+Pollen is a publishing system built on top of Scribble and Racket. So far, I've optimized Pollen for web-based books, because that's mainly what I use it for. But it can be used for small projects too, and non-webby things like @seclink["Adding_support_for_PDF_output"]{PDF}.
 
 As a publishing system, Pollen includes:
 
@@ -102,7 +106,7 @@ Pollen addresses the deficiencies I experienced with other tools:
 
 @itemlist[
 
-@item{@bold{Yes, we have a native data structure for HTML.} Racket represents HTML structures as @secref["X-expressions" #:doc '(lib "pollen/scribblings/pollen.scrbl")], which are a variant of the standard Racket data structure, called @italic{S-expressions}. In other words, not only is there a native representation for HTML, but it's represented the same way as everything else in the language.}
+@item{@bold{Yes, we have a native data structure for HTML.} Racket represents HTML structures as @secref["X-expressions"], which are a variant of the standard Racket data structure, called @italic{S-expressions}. In other words, not only is there a native representation for HTML, but it's represented the same way as everything else in the language.}
 
 @item{@bold{Flexible blending of code, presentation, and content.} Pollen is a text-based language. So a Pollen source file might have no code at all. But as a dialect of Scribble & Racket, if you want to mix code with content, you can.}
 

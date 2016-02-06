@@ -189,7 +189,7 @@ Suppose you want to change the inset to 30%. Without a preprocessor, you'd have 
 
 The @code{◊} character is called a @italic{lozenge}. In Pollen, the lozenge is a special character used to denote anything that Pollen should interpret as a command (rather than plain text). 
 
-If you're using DrRacket, you can insert a lozenge by clicking the @onscreen{Insert command char ◊} button at the top of your source window. (If you're not using DrRacket, see @seclink["The_lozenge_glyph____"]{these instructions}.)
+If you're using DrRacket, you can insert a lozenge by clicking the @onscreen{Insert command char ◊} button at the top of your source window. (If you're not using DrRacket, see @seclink["the-lozenge"]{these instructions}.)
 
 Thus, the command @code{◊(define my-inset "30%")} means ``create the variable @code{my-inset} and assign it the value @racket{30%}.''
 
@@ -276,7 +276,7 @@ But what if you wanted to use Pollen as a preprocessor that outputs a Markdown f
 
 @section{Pollen markup}
 
-If all you need to do is produce basic HTML, Markdown is fine. But if you need to do semantic markup or other kinds of custom markup, it's @seclink["The_case_against_Markdown"]{not flexible enough}. 
+If all you need to do is produce basic HTML, Markdown is fine. But if you need to do semantic markup or other kinds of custom markup, it's @seclink["the-case-against-markdown"]{not flexible enough}. 
 
 In that case, you can use a different authoring mode, called @defterm{Pollen markup}. To use Pollen markup, insert @code{#lang pollen} as the first line of your source as usual, but this time add a @filepath{.pm} file extension.
 
@@ -381,7 +381,7 @@ Now you've seen the key features of Pollen. What do you think?
 
 @item{@italic{``What about pairing a Python template system and Python web server?''} Good idea. I even tried it. But Python template systems don't offer you Python — they offer you limited dialects that aren't very Pythonic. Also, Python's handing of XML-ish data is cumbersome.}
 
-@item{@italic{``Haven't you heard of Jekyll?''} Yes. If everything you need to write is expressible in Markdown, it's great. If you need more than that, you're stuck. (See also @seclink["The_case_against_Markdown"]{my objections to Markdown for books}.)}
+@item{@italic{``Haven't you heard of Jekyll?''} Yes. If everything you need to write is expressible in Markdown, it's great. If you need more than that, you're stuck. (See also @seclink["the-case-against-markdown"]{my objections to Markdown for books}.)}
 
 @item{@italic{``Sounds a lot like LaTeX. Why not use that?''} Also a good idea. LaTeX gets a lot of things right. But it's also missing a lot — for instance, Unicode and web publishing.}
 
