@@ -237,7 +237,7 @@ Let's look at each kind of use.
 
 @subsubsection{Invoking tag functions}
 
-By default, Pollen treats every command name as a @italic{tag function}. The default tag function creates a  @seclink["What_s_a_txexpr_" #:doc '(lib "txexpr/scribblings/txexpr.scrbl")]{tagged X-expression} with the command name as the tag, and the text body as the content.
+By default, Pollen treats every command name as a @italic{tag function}. The default tag function creates a  @seclink["what-is-a-txexpr" #:doc '(lib "txexpr/scribblings/txexpr.scrbl")]{tagged X-expression} with the command name as the tag, and the text body as the content.
 
 @codeblock{
 #lang pollen
