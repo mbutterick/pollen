@@ -1,7 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base racket/syntax))
 (require racket/path)
-(require "../setup.rkt" sugar/define sugar/file sugar/string sugar/coerce sugar/test)
+(require "../setup.rkt" sugar/define sugar/file sugar/coerce sugar/test)
 
 
 ;; because it comes up all the time
@@ -291,6 +291,11 @@
 (define (unsaved-source? path-string)
   ((substring (->string path-string) 0 7) . equal? . "unsaved"))
 
+
+(define (ends-with? str ender)
+  (define pat (regexp (format "~a$" ender)))
+  (and (regexp-match pat str) #t))
+  
 
 (define+provide (magic-directory? path)
   (and (directory-exists? path) 

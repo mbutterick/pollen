@@ -246,7 +246,7 @@
   (define starting-dir
     (if (directory-exists? starting-path)
         starting-path
-        (get-enclosing-dir starting-path)))
+        (dirname starting-path)))
   (->output-path (find-relative-path (->complete-path starting-dir) (->complete-path path))))
 
 

@@ -5,7 +5,7 @@
 (require web-server/http/request-structs)
 (require web-server/http/response-structs)
 (require 2htdp/image)
-(require "../setup.rkt" "../render.rkt" sugar txexpr "file-utils.rkt" "debug.rkt" "../pagetree.rkt" "../cache.rkt")
+(require "../setup.rkt" "../render.rkt" sugar sugar/unstable/string sugar/unstable/misc sugar/unstable/container txexpr "file-utils.rkt" "debug.rkt" "../pagetree.rkt" "../cache.rkt")
 
 (module+ test (require rackunit))
 
@@ -132,10 +132,10 @@
 
 ;; dashboard route
 (define (dashboard dashboard-ptree)
-  (define dashboard-dir (get-enclosing-dir dashboard-ptree))
+  (define dashboard-dir (dirname dashboard-ptree))
   (define (in-project-root?)
     (directories-equal? dashboard-dir (current-project-root)))
-  (define parent-dir (and (not (in-project-root?)) (get-enclosing-dir dashboard-dir)))
+  (define parent-dir (and (not (in-project-root?)) (dirname dashboard-dir)))
   (define empty-cell (cons #f #f))
   (define (make-link-cell href+text)
     (match-define (cons href text) href+text) 
