@@ -125,7 +125,7 @@ The @racket[_txexpr-proc], @racket[_block-txexpr-proc], and @racket[_inline-txex
 
 @examples[#:eval my-eval
 (define tx '(div "Please" (em "mind the gap") (h1 "Tuesdays only"))) 
-(define add-ns (λ(tx) (make-txexpr 
+(define add-ns (λ(tx) (txexpr 
     (string->symbol (format "ns:~a" (get-tag tx))) 
     (get-attrs tx) 
     (get-elements tx))))

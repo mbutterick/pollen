@@ -706,7 +706,7 @@ We change this by giving @racket[decode-elements] the name of a processing funct
 #lang pollen
 ◊(require pollen/decode txexpr)
 ◊(define (root . elements)
-   (make-txexpr 'root empty (decode-elements elements
+   (txexpr 'root empty (decode-elements elements
      #:txexpr-elements-proc decode-paragraphs)))
 
 The first line of the 'first' paragraph.
@@ -740,7 +740,7 @@ Of course, in practice you wouldn't put your decoding function in a single sourc
 (require pollen/decode txexpr)
 (provide root)
 (define (root . elements)
-   (make-txexpr 'root empty (decode-elements elements
+   (txexpr 'root empty (decode-elements elements
      #:txexpr-elements-proc decode-paragraphs)))
 }]
 
@@ -775,7 +775,7 @@ This time, however, we're going to attach them to another part of @racket[decode
 (require pollen/decode pollen/misc/tutorial txexpr)
 (provide root)
 (define (root . elements)
-   (make-txexpr 'root empty (decode-elements elements
+   (txexpr 'root empty (decode-elements elements
      #:txexpr-elements-proc decode-paragraphs
      #:string-proc (compose1 smart-quotes smart-dashes))))
 }]
@@ -817,7 +817,7 @@ Here, we'll use the @filepath{pollen.rkt} we devised in the previous section to 
 (require pollen/decode pollen/misc/tutorial txexpr)
 (provide root)
 (define (root . elements)
-   (make-txexpr 'root empty (decode-elements elements
+   (txexpr 'root empty (decode-elements elements
      #:txexpr-elements-proc decode-paragraphs
      #:string-proc (compose smart-quotes smart-dashes))))
 }]
