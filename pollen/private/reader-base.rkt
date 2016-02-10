@@ -1,6 +1,6 @@
 #lang racket/base
-(require racket/syntax syntax/strip-context racket/class (for-syntax racket/base racket/syntax))
-(require (only-in scribble/reader make-at-reader) "../setup.rkt" "project.rkt" racket/function)
+(require racket/syntax syntax/strip-context racket/class (for-syntax racket/base))
+(require (only-in scribble/reader make-at-reader) "../setup.rkt" "project.rkt")
 (provide (rename-out [reader-module-begin #%module-begin]) (all-from-out "../setup.rkt"))
 
 (define (path-string->here-path path-string)
