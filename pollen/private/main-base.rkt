@@ -11,17 +11,17 @@
       (syntax-case stx ()
         [(_ EXPR (... ...))
          (let-values ([(meta-hash expr-without-metas) (split-metas (syntax->datum #'(EXPR (... ...))) (setup:define-meta-name))])
-           (with-syntax ([META-HASH (datum->syntax #'(EXPR (... ...)) meta-hash)]
-                         [(EXPR-WITHOUT-METAS (... ...)) (datum->syntax #'(EXPR (... ...)) expr-without-metas)]
-                         [METAS (format-id #'(EXPR (... ...)) "~a" (setup:meta-export))]
+           (with-syntax ([META-HASH (datum->syntax #f meta-hash)]
+                         [(EXPR-WITHOUT-METAS (... ...)) (datum->syntax #f expr-without-metas)]
+                         [METAS (format-id #f "~a" (setup:meta-export))]
                          [META-MOD (format-symbol "~a" (setup:meta-export))]
-                         [ROOT (format-id #'(EXPR (... ...)) "~a" (setup:main-root-node))]
-                         [NEWLINE (datum->syntax #'(EXPR (... ...)) (setup:newline))]
-                         [MODE-PAGETREE (datum->syntax #'(EXPR (... ...)) default-mode-pagetree)]
-                         [MODE-MARKUP (datum->syntax #'(EXPR (... ...)) default-mode-markup)]
-                         [MODE-MARKDOWN (datum->syntax #'(EXPR (... ...)) default-mode-markdown)]
-                         [SPLICING_TAG (datum->syntax #'(EXPR (... ...)) (setup:splicing-tag))]
-                         [DOC (format-id #'(EXPR (... ...)) "~a" (setup:main-export))]
+                         [ROOT (format-id #f "~a" (setup:main-root-node))]
+                         [NEWLINE (datum->syntax #f (setup:newline))]
+                         [MODE-PAGETREE (datum->syntax #f default-mode-pagetree)]
+                         [MODE-MARKUP (datum->syntax #f default-mode-markup)]
+                         [MODE-MARKDOWN (datum->syntax #f default-mode-markdown)]
+                         [SPLICING_TAG (datum->syntax #f (setup:splicing-tag))]
+                         [DOC (format-id #f "~a" (setup:main-export))]
                          [DOC-RAW (generate-temporary 'pollen-)]); prevents conflicts with other imported Pollen sources
              (replace-context #'(EXPR (... ...))
                               #'(#%module-begin
