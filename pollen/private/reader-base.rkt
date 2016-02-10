@@ -29,7 +29,7 @@
                                                        [(eq? here-ext (setup:markdown-source-ext)) default-mode-markdown]
                                                        [else default-mode-preproc])])
                             auto-computed-mode)
-                          default-mode-auto))
+                          (current-reader-mode)))
   (define post-parser-syntax
     (with-syntax ([HERE-KEY (format-id #f "~a" (setup:here-path-key))]
                   [HERE-PATH (datum->syntax #f reader-here-path)]
