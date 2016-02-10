@@ -3,34 +3,38 @@
 (require (only-in scribble/reader make-at-reader) "../setup.rkt" "project.rkt" racket/function)
 (provide (rename-out [reader-module-begin #%module-begin]) (all-from-out "../setup.rkt"))
 
-(define current-reader-mode (make-parameter #f))
+(define (path-string->here-path path-string)
+  (cond
+    [(symbol? path-string) (symbol->string path-string)]
+    [(equal? path-string "unsaved editor") path-string]
+    [else (path->string path-string)]))
 
+
+(define (infer-parser-mode reader-mode reader-here-path)
+  (if (eq? reader-mode default-mode-auto)
+      (let* ([file-ext-pattern (pregexp "\\w+$")]
+             [here-ext (string->symbol (car (regexp-match file-ext-pattern reader-here-path)))]
+             [auto-computed-mode (cond
+                                   [(eq? here-ext (setup:pagetree-source-ext)) default-mode-pagetree]
+                                   [(eq? here-ext (setup:markup-source-ext)) default-mode-markup]
+                                   [(eq? here-ext (setup:markdown-source-ext)) default-mode-markdown]
+                                   [else default-mode-preproc])])
+        auto-computed-mode)
+      reader-mode))
 
 (define (custom-read p)
   (syntax->datum (custom-read-syntax (object-name p) p)))
 
 
-(define (custom-read-syntax path-string p)
-  (define read-inner (make-at-reader 
-                      #:command-char (setup:command-char)
-                      #:syntax? #t 
-                      #:inside? #t))
-  (define source-stx (read-inner path-string p))
-  (define reader-here-path (cond
-                             [(symbol? path-string) (symbol->string path-string)]
-                             [(equal? path-string "unsaved editor") path-string]
-                             [else (path->string path-string)]))
-  (define parser-mode (if (eq? (current-reader-mode) default-mode-auto)
-                          (let* ([file-ext-pattern (pregexp "\\w+$")]
-                                 [here-ext (string->symbol (car (regexp-match file-ext-pattern reader-here-path)))]
-                                 [auto-computed-mode (cond
-                                                       [(eq? here-ext (setup:pagetree-source-ext)) default-mode-pagetree]
-                                                       [(eq? here-ext (setup:markup-source-ext)) default-mode-markup]
-                                                       [(eq? here-ext (setup:markdown-source-ext)) default-mode-markdown]
-                                                       [else default-mode-preproc])])
-                            auto-computed-mode)
-                          (current-reader-mode)))
-  (define post-parser-syntax
+(define (custom-read-syntax #:reader-mode [reader-mode #f] path-string p)
+  (define source-stx (let ([read-inner (make-at-reader 
+                                        #:command-char (setup:command-char)
+                                        #:syntax? #t 
+                                        #:inside? #t)])
+                       (read-inner path-string p)))
+  (define reader-here-path (path-string->here-path path-string))
+  (define parser-mode (infer-parser-mode reader-mode reader-here-path))
+  (define parsed-syntax
     (with-syntax ([HERE-KEY (format-id #f "~a" (setup:here-path-key))]
                   [HERE-PATH (datum->syntax #f reader-here-path)]
                   [POLLEN-MOD (format-symbol "~a" (gensym))] ; prevents conflicts with other imported Pollen sources
@@ -51,7 +55,7 @@
            (require (submod pollen/private/runtime-config show) 'POLLEN-MOD)
            (provide (all-from-out 'POLLEN-MOD))
            (show DOC inner:parser-mode HERE-PATH))))) ; HERE-PATH acts as "local" runtime config
-  (syntax-property post-parser-syntax
+  (syntax-property parsed-syntax
                    'module-language
                    `#(pollen/private/language-info get-language-info ,reader-here-path))) ; reader-here-path acts as "top" runtime config
 
@@ -81,15 +85,9 @@
             (my-make-drracket-buttons my-command-char)])]
         [else default]))))
 
-(define-syntax (reader-module-begin stx)
-  (syntax-case stx ()
-    [(_ mode expr-to-ignore ...)
-     (with-syntax ([cr (generate-temporary)]
-                   [crs (generate-temporary)]
-                   [cgi (generate-temporary)])
-     #'(#%module-begin
-         (current-reader-mode mode)
-         (define cgi custom-get-info)
-         (define cr custom-read)
-         (define crs custom-read-syntax)
-         (provide (rename-out [cr read][crs read-syntax][cgi get-info]))))]))
+(define-syntax-rule (reader-module-begin mode expr-to-ignore ...)
+  (#%module-begin
+   (define cgi custom-get-info) ; stash hygienic references to local funcs with new identifiers
+   (define cr custom-read)
+   (define (crs ps p) (custom-read-syntax #:reader-mode mode ps p))
+   (provide (rename-out [cr read][crs read-syntax][cgi get-info]))))
