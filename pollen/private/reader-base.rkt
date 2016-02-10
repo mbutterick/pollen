@@ -1,7 +1,7 @@
 #lang racket/base
 (require racket/syntax syntax/strip-context racket/class (for-syntax racket/base racket/syntax))
 (require (only-in scribble/reader make-at-reader) "../setup.rkt" "project.rkt" racket/function)
-(provide define+provide-reader-in-mode (all-from-out "../setup.rkt"))
+(provide (rename-out [reader-module-begin #%module-begin]) (all-from-out "../setup.rkt"))
 
 (define current-reader-mode (make-parameter #f))
 
@@ -81,13 +81,13 @@
             (my-make-drracket-buttons my-command-char)])]
         [else default]))))
 
-(define-syntax (define+provide-reader-in-mode stx)
+(define-syntax (reader-module-begin stx)
   (syntax-case stx ()
-    [(_ mode)
+    [(_ mode expr-to-ignore ...)
      (with-syntax ([cr (generate-temporary)]
                    [crs (generate-temporary)]
                    [cgi (generate-temporary)])
-     #'(begin
+     #'(#%module-begin
          (current-reader-mode mode)
          (define cgi custom-get-info)
          (define cr custom-read)

@@ -3,6 +3,5 @@
 
 (define+provide-module-begin-in-mode default-mode-pagetree)
 
-(module reader racket/base
-  (require pollen/private/reader-base)
-  (define+provide-reader-in-mode default-mode-pagetree))
+(module reader "private/reader-base.rkt"
+  default-mode-pagetree)
