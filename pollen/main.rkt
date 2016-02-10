@@ -1,7 +1,5 @@
-#lang racket/base
-(require "private/main-base.rkt")
+(module main "private/main-base.rkt"
+  default-mode-preproc
 
-(define+provide-module-begin-in-mode default-mode-preproc) ; because default mode in submodule is preproc
-
-(module reader "private/reader-base.rkt"
-  default-mode-auto)
+  (module reader "private/reader-base.rkt"
+    default-mode-auto))

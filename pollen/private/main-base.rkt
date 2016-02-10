@@ -1,10 +1,14 @@
 #lang racket/base
 (require (for-syntax racket/base syntax/strip-context racket/syntax "../setup.rkt" "split-metas.rkt")
-         "to-string.rkt" "../pagetree.rkt" "splice.rkt" "../setup.rkt" ) ; need world here to resolve PARSER-MODE-ARG
-(provide (all-defined-out))
+         "to-string.rkt" "../pagetree.rkt" "splice.rkt" "../setup.rkt")
+(require "../setup.rkt")
+(provide (except-out (all-from-out racket/base) #%module-begin)
+         (all-from-out "../setup.rkt")
+         (rename-out [dialect-module-begin #%module-begin]))
 
-(define-syntax-rule (define+provide-module-begin-in-mode PARSER-MODE-ARG)
+(define-syntax-rule (make-pollen-module-begin PARSER-MODE-IN)
   (begin
+    (require racket/base)
     (provide (except-out (all-from-out racket/base) #%module-begin)
              (rename-out [pollen-module-begin #%module-begin]))
     (define-syntax (pollen-module-begin stx)
@@ -40,7 +44,7 @@
                                  
                                  (define DOC
                                    (let* ([parser-mode-undefined? (procedure? inner:parser-mode)] ; if undefined, #%top makes it a procedure
-                                          [parser-mode (if parser-mode-undefined? PARSER-MODE-ARG inner:parser-mode)]
+                                          [parser-mode (if parser-mode-undefined? PARSER-MODE-IN inner:parser-mode)]
                                           [proc (cond
                                                   [(eq? parser-mode 'MODE-PAGETREE) decode-pagetree]
                                                   [(eq? parser-mode 'MODE-MARKUP) (λ(xs) (apply ROOT xs))] ; if `root` undefined, it becomes a default tag function
@@ -52,4 +56,9 @@
                                           [doc-elements-spliced (splice doc-elements 'SPLICING_TAG)])
                                      (proc doc-elements-spliced)))
                                  
-                                 (provide DOC METAS (except-out (all-from-out 'inner) DOC-RAW #%top))))))])))) ; hide internal exports
+                                 (provide DOC METAS (except-out (all-from-out 'inner) DOC-RAW #%top))))))]))))
+
+(define-syntax-rule (dialect-module-begin MODE EXPR ...)
+  (#%module-begin
+   (make-pollen-module-begin MODE)
+   EXPR ...))
