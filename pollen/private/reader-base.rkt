@@ -1,15 +1,16 @@
 #lang racket/base
 (require racket/syntax syntax/strip-context racket/class)
-(require (only-in scribble/reader make-at-reader) pollen/setup "project.rkt" racket/list)
+(require (only-in scribble/reader make-at-reader) pollen/setup "project.rkt" racket/function)
 (provide define+provide-reader-in-mode (all-from-out pollen/setup))
 
-
-(define (make-custom-read custom-read-syntax-proc) 
-  (λ(p) (syntax->datum (custom-read-syntax-proc (object-name p) p))))
+(define current-reader-mode (make-parameter #f))
 
 
-(define (make-custom-read-syntax reader-mode)
-  (λ (path-string p)
+(define (custom-read p)
+  (syntax->datum (custom-read-syntax (object-name p) p)))
+
+
+(define (custom-read-syntax path-string p)
     (define read-inner (make-at-reader 
                         #:command-char (setup:command-char)
                         #:syntax? #t 
@@ -19,7 +20,7 @@
                                [(symbol? path-string) (symbol->string path-string)]
                                [(equal? path-string "unsaved editor") path-string]
                                [else (path->string path-string)]))
-    (define parser-mode (if (eq? reader-mode default-mode-auto)
+    (define parser-mode (if (eq? (current-reader-mode) default-mode-auto)
                             (let* ([file-ext-pattern (pregexp "\\w+$")]
                                    [here-ext (string->symbol (car (regexp-match file-ext-pattern reader-here-path)))]
                                    [auto-computed-mode (cond
@@ -28,7 +29,7 @@
                                                          [(eq? here-ext (setup:markdown-source-ext)) default-mode-markdown]
                                                          [else default-mode-preproc])])
                               auto-computed-mode)
-                            reader-mode))
+                            default-mode-auto))
     (define post-parser-syntax
       (with-syntax ([HERE-KEY (format-id #f "~a" (setup:here-path-key))]
                     [HERE-PATH (datum->syntax #f reader-here-path)]
@@ -52,14 +53,9 @@
              (show DOC inner:parser-mode HERE-PATH))))) ; HERE-PATH acts as "local" runtime config
     (syntax-property post-parser-syntax
                      'module-language
-                     `#(pollen/private/language-info get-language-info ,reader-here-path)))) ; reader-here-path acts as "top" runtime config
+                     `#(pollen/private/language-info get-language-info ,reader-here-path))) ; reader-here-path acts as "top" runtime config
 
-(define-syntax-rule (define+provide-reader-in-mode mode)
-  (begin
-    (define reader-mode mode)
-    (define custom-read-syntax (make-custom-read-syntax reader-mode))
-    (define custom-read (make-custom-read custom-read-syntax))
-    (define (get-info in mod line col pos)
+(define (get-info in mod line col pos)
       ;; DrRacket caches source file information per session,
       ;; so we can do the same to avoid multiple searches for the command char.
       (let ([command-char-cache (make-hash)])
@@ -84,4 +80,8 @@
                 (define my-make-drracket-buttons (dynamic-require 'pollen/private/drracket-buttons 'make-drracket-buttons))
                 (my-make-drracket-buttons my-command-char)])]
             [else default]))))
+
+(define-syntax-rule (define+provide-reader-in-mode mode)
+  (begin
+    (current-reader-mode mode)
     (provide (rename-out [custom-read read] [custom-read-syntax read-syntax]) get-info)))
