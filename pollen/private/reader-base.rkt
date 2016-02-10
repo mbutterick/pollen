@@ -11,11 +11,7 @@
 (define (make-custom-read-syntax reader-mode)
   (λ (path-string p)
     (define read-inner (make-at-reader 
-                        #:command-char (if (or (eq? reader-mode default-mode-template) 
-                                               (and (string? path-string)
-                                                    (regexp-match (pregexp (format "\\.~a$" (setup:template-source-ext))) path-string)))
-                                           (setup:template-command-char)
-                                           (setup:command-char))
+                        #:command-char (setup:command-char)
                         #:syntax? #t 
                         #:inside? #t))
     (define source-stx (read-inner path-string p))
