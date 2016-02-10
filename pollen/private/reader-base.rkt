@@ -30,13 +30,13 @@
                               auto-computed-mode)
                             reader-mode))
     (define post-parser-syntax
-      (with-syntax ([HERE-KEY (format-id source-stx "~a" (setup:here-path-key))]
-                    [HERE-PATH (datum->syntax source-stx reader-here-path)]
+      (with-syntax ([HERE-KEY (format-id #f "~a" (setup:here-path-key))]
+                    [HERE-PATH (datum->syntax #f reader-here-path)]
                     [POLLEN-MOD (format-symbol "~a" (gensym))] ; prevents conflicts with other imported Pollen sources
                     [PARSER-MODE-VALUE (format-symbol "~a" parser-mode)]
-                    [DIRECTORY-REQUIRES (datum->syntax source-stx (require+provide-directory-require-files path-string))]
+                    [DIRECTORY-REQUIRES (datum->syntax #f (require+provide-directory-require-files path-string))]
                     [(SOURCE-LINE ...) source-stx]
-                    [DOC (format-id source-stx "~a" (setup:main-export))])
+                    [DOC (format-id #f "~a" (setup:main-export))])
         (replace-context
          source-stx
          #'(module runtime-wrapper racket/base
