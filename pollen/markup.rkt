@@ -1,8 +1,5 @@
-#lang racket/base
-(require "private/main-base.rkt")
+(module markup "private/main-base.rkt"
+  default-mode-markup
 
-(define+provide-module-begin-in-mode default-mode-markup)
-
-(module reader racket/base
-  (require pollen/private/reader-base)
-  (define+provide-reader-in-mode default-mode-markup))
+  (module reader "private/reader-base.rkt"
+    default-mode-markup))
