@@ -6,7 +6,7 @@
 
 @defmodulelang[pollen]
 
-Pollen is a publishing system that helps authors create functional and beautiful digital books.
+Pollen is a publishing system that helps authors make functional and beautiful digital books.
 
 I created Pollen so I could make my web-based books @link["http://practicaltypography.com"]{@italic{Butterick's Practical Typography}} and @link["http://typographyforlawyers.com"]{@italic{Typography for Lawyers}}. Sure, go take a look. Are they better than the last digital books you encountered? Yes they are. Would you like your next digital book to look like that? If so, keep reading.
 

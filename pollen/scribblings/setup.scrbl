@@ -47,7 +47,7 @@ For instance, suppose you wanted the main export of every Pollen source file to 
 
 Of course, you can restore the defaults simply by removing these defined values from @racket["pollen.rkt"].
 
-Every @racket[(setup:_name)] function will resolve the current value of that variable: it will return the value from the @racket[setup] submodule (if @racket[_name] was defined there), otherwise it will return the default value (which is directly available from @racket[default-]@racket[_name]). For instance, @racket[default-command-char] will always be @litchar{◊}, but in the example above, @racket[(setup:command-char)] would return @litchar{🎸}. 
+Every @racket[setup:]@racket[_name] function will resolve the current value of that variable: it will return the value from the @racket[setup] submodule (if @racket[_name] was defined there), otherwise it will return the default value (which is directly available from @racket[default-]@racket[_name]). For instance, @racket[default-command-char] will always be @litchar{◊}, but in the example above, @racket[(setup:command-char)] would return @litchar{🎸}. 
 
 @section{Values}
 

@@ -24,7 +24,7 @@
   (message (format "Project root is ~a" (current-project-root)))
   
   (define server-name (format "http://localhost:~a" (current-server-port)))
-  (message (format "Project server is ~a" server-name) "(Ctrl-C to exit)")
+  (message (format "Project server is ~a" server-name) "(Ctrl+C to exit)")
   (message (format "Project dashboard is ~a/~a" server-name (setup:main-pagetree)))
   (message "Ready to rock")
     

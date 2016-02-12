@@ -118,7 +118,7 @@ After a moment, you'll see the startup message:
 @terminal{
 Welcome to Pollen @|pollen:version| (Racket @(version))
 Project root is /path/to/your/directory
-Project server is http://localhost:8080 (Ctrl-C to exit)
+Project server is http://localhost:8080 (Ctrl+C to exit)
 Project dashboard is http://localhost:8080/index.ptree
 Ready to rock}
 
