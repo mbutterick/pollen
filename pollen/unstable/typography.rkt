@@ -1,5 +1,7 @@
 #lang racket/base
-(require racket/list sugar/define sugar/test txexpr racket/match sugar/unstable/container sugar/coerce sugar/unstable/len racket/string "../private/to-string.rkt" )
+(require racket/list sugar/define sugar/test txexpr racket/match sugar/unstable/container sugar/coerce sugar/unstable/len  "../private/whitespace.rkt")
+
+(provide whitespace? whitespace/nbsp?)
 
 (define (make-replacer query+replacement)
   (let ([queries (map car query+replacement)]

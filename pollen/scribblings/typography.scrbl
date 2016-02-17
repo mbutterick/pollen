@@ -70,3 +70,35 @@ Be warned: there are many edge cases this function does not handle well.
 (code:comment @#,t{Argh: this edge case is not handled properly})
 (wrap-hanging-quotes '(p "“" (em "What?") "We need to hang quotes?”"))
 ]
+
+@defproc[
+(whitespace?
+[v any/c])
+boolean?]
+A predicate that returns @racket[#t] for any stringlike @racket[_v] that's entirely whitespace, but also the empty string, as well as lists and vectors that are made only of @racket[whitespace?] members. Following the @racket[regexp-match] convention, @racket[whitespace?] does not return @racket[#t] for a nonbreaking space. If you prefer that behavior, use @racket[whitespace/nbsp?]. 
+
+
+@examples[#:eval my-eval
+(whitespace? "\n\n   ")
+(whitespace? (string->symbol "\n\n   "))
+(whitespace? "")
+(whitespace? '("" "  " "\n\n\n" " \n"))
+(define nonbreaking-space (format "~a" #\u00A0))
+(whitespace? nonbreaking-space)
+]
+
+@defproc[
+(whitespace/nbsp?
+[v any/c])
+boolean?]
+Like @racket[whitespace?], but also returns @racket[#t] for nonbreaking spaces.
+
+
+@examples[#:eval my-eval
+(whitespace/nbsp? "\n\n   ")
+(whitespace/nbsp? (string->symbol "\n\n   "))
+(whitespace/nbsp? "")
+(whitespace/nbsp? '("" "  " "\n\n\n" " \n"))
+(define nonbreaking-space (format "~a" #\u00A0))
+(whitespace/nbsp? nonbreaking-space)
+]
