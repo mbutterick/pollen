@@ -1,13 +1,9 @@
 #lang racket/base
 (require xml txexpr racket/list sugar/list sugar/define sugar/test)
-(require "setup.rkt"
-         "private/whitespace.rkt")
+(require "setup.rkt" "private/splice.rkt")
 
 (require "unstable/typography.rkt")
-(provide (all-from-out "unstable/typography.rkt")) ; bw compat
-
-(require "private/whitespace.rkt")
-(provide (all-from-out "private/whitespace.rkt")) ; bw compat
+(provide (all-from-out "unstable/typography.rkt")) ; bw compat, includes `whitespace?`
 
 (define (->list/tx x)
   ;; same as ->list but catches special case of single txexpr,
@@ -170,7 +166,7 @@
         xs))
   (define not-empty-string? (λ(x) (not (and (string? x) (= (string-length x) 0)))))
   (let loop ([x x])
-    (if (pair? x)
+    (if (and (pair? x) (not (attrs? x)))
         (let ([xs (map loop (filter not-empty-string? x))])
           (append-map merge-if-newlines (slicef xs newlines?)))
         x)))
@@ -178,7 +174,8 @@
 (module-test-external
  (require racket/list)
  (check-equal? (merge-newlines empty) empty)
- (check-equal? (merge-newlines '(p "\n" "" "\n")) '(p "\n\n"))
+(check-equal? (merge-newlines '((p ((id "")) "\n" "" "\n"))) '((p ((id "")) "\n\n")))
+ (check-equal? (merge-newlines '((p "\n" "" "\n"))) '((p "\n\n")))
  (check-equal? (merge-newlines '(p "\n" "\n" "foo" "\n" "\n\n" "bar" (em "\n" "\n" "\n"))) 
                '(p "\n\n" "foo" "\n\n\n" "bar" (em "\n\n\n"))))
 
