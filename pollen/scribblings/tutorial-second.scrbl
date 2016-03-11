@@ -865,7 +865,7 @@ Refresh @filepath{barticle.html} — because you're updating the template, you d
 
 @subsection{@tt{index.ptree} & the project server}
 
-One more thing before we wrap up this tutorial. Remember that the dashboard of the project server is at @link-tt{http://localhost:8080/index.ptree}? By default, the project server will generate a pagetree from an alphbetical directory listing. 
+One more thing before we wrap up this tutorial. Remember that the dashboard of the project server is at @link-tt{http://localhost:8080/index.ptree}? By default, the project server will generate a pagetree from an alphabetical directory listing. 
 
 But if you put your own @filepath{index.ptree} file in that directory, the project server will use that for the dashboard instead. In fact, visit @link-tt{http://localhost:8080/index.ptree} now and you'll see what I mean. Consistent with the @filepath{index.ptree} you made, you'll now see @filepath{carticle.html}, @filepath{article.html}, and @filepath{barticle.html}, but not @filepath{template.html.p} nor @filepath{styles.css} (even though they're still in the project directory).
 
