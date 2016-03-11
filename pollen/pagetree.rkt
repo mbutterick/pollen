@@ -91,14 +91,15 @@
   ;; in general we don't filter the directory list for the automatic pagetree.
   ;; this can be annoying sometimes but it's consistent with the policy of avoiding magic behavior.
   ;; certain files (leading dot) will be ignored by `directory-list` anyhow.
-  ;; we will, however, ignore Pollen's cache files, because those shouldn't be project-manipulated.
-  (define (not-pollen-cache? path)
-    (not (member (->string path) default-cache-names)))
+  ;; we will, however, ignore Pollen's cache files, and Racket's `compiled` dirs,
+  ;; because those shouldn't be project-manipulated.
+  (define (neither-compiled-nor-cache-dir? path)
+    (not (member (->string path) (cons "compiled" default-cache-names))))
   
   (unless (directory-exists? dir)
     (error 'directory->pagetree (format "directory ~v doesn't exist" dir)))
   
-  (decode-pagetree (map ->pagenode (unique-sorted-output-paths (filter not-pollen-cache? (directory-list dir)))))) 
+  (decode-pagetree (map ->pagenode (unique-sorted-output-paths (filter neither-compiled-nor-cache-dir? (directory-list dir)))))) 
 
 
 (define+provide/contract (get-pagetree source-path)
