@@ -5,6 +5,7 @@
 @(define my-eval (make-base-eval))
 @(my-eval `(require pollen pollen/file))
 
+@(define (short-version) (car (regexp-match #px"^\\d.\\d" (version))))
 
 @title{Installation}
 
@@ -24,11 +25,17 @@ After the initial download, Pollen does not require a network connection.
 
 @item{@link["http://download.racket-lang.org/"]{Download and install Racket}, which includes DrRacket. (Of course, you're welcome to use your preferred text editor, but the tutorials will assume you're using DrRacket.)}
 
-@item{Linux and OS X users: update your system @envvar{PATH} to include @filepath{/path-to-racket-installation/bin/}. Then, from the terminal, you'll be able to run @exec{racket} and @exec{raco} (see @other-doc['(lib "scribblings/raco/raco.scrbl")]).
+@item{Linux and OS X users: update your system @envvar{PATH} to include @filepath{/path-to-racket-installation/bin/}. Then, from the terminal, you'll be able to run @exec{racket} and @exec{raco} (see @other-doc['(lib "scribblings/raco/raco.scrbl")]).}
 
-@margin-note{OS X users who haven't altered your @envvar{PATH} before: don't panic. @link["http://architectryan.com/2012/10/02/add-to-the-path-on-mac-os-x-mountain-lion/"]{These instructions} are simple and accurate.}
 
-To check that you did it correctly, try typing @exec{racket} on your command line, and you should see something like this:
+@item{OS X users who haven't altered your @envvar{PATH} before: don't panic. You need to add the full path to Racket's @racket[bin] directory to the @filepath{/etc/paths} file on your system. You can do this with the following terminal command (which will ask you for your password):
+
+@terminal{sudo sh -c 'echo "/Applications/Racket v@(short-version)/bin" >> /etc/paths'}
+
+Of course, @filepath{/Applications/Racket v@(short-version)/bin} should be changed if necessary to represent the actual location and version of your Racket installation.}
+
+
+@item{To check that you did it correctly, try typing @exec{racket} on your command line, and you should see something like this:
 
 @terminal{~ : racket
 Welcome to Racket v.@(version).
@@ -44,6 +51,7 @@ But if you get an error like this:
 You have a deeper problem with your Racket installation that needs adjustment before continuing (usually a misconfiguration of @code{PATH}).
 
 }
+
 
 @item{Then, from the command line, install Pollen:
 @commandline{raco pkg install pollen}
