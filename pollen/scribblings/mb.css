@@ -34,10 +34,6 @@
     border-bottom: none;
 }
 
-.terminal .SIntrapara, .browser .SIntrapara {
-    margin: 0 0 0 0;
-}
-
 .terminal, .browser {
     margin-bottom: 1em;
     padding: 0.5em;
@@ -53,3 +49,6 @@
     color: #666;
 }
 
+.terminal .SIntrapara, .browser .SIntrapara, .foreign-code .SIntrapara {
+    margin: 0 0 0 0;
+}

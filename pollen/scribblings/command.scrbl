@@ -48,7 +48,6 @@ When you use DrRacket, you'll see a button in the toolbar that says @onscreen{In
 
 Courtesy of @link["https://github.com/maphew"]{Matt Wilkie}: ``Here's a working AHK script to have double-tap backtick send the lozenge character. It took way more time than I want to think about, once started I couldn't let go.''
 
-@fileblock["tick-tick-lozenge.ahk"]{
 @foreign-code{
 ;
 ; Double-tap backtick sends Pollen command character (◊)
@@ -81,7 +80,11 @@ TheKey:
 ; Regardless of which action above was triggered, reset the count to
 ; prepare for the next series of presses:
 winc_presses = 0
-return}}
+return}
+
+An alternative, courtesy of @link["http://www.barzilay.org"]{Eli Barzilay}: ``this turns M-\ to the lozenge'':
+
+@foreign-code{!\:: Send {U+25CA}}
 
 
 @subsubsection{Emacs script}
@@ -104,6 +107,11 @@ Courtesy of @link["https://github.com/lerichard95"]{Richard Le}: ``If you're usi
 
 ;; Bind key to M-\ a la DrRacket for lambda
 (global-set-key "\M-\\" 'insert-lozenge)}
+
+@link["http://www.barzilay.org"]{Eli Barzilay} offers an even more concise version:
+
+@foreign-code{(global-set-key "\M-\\" "◊")}
+
 
 @section[#:tag "the-two-command-styles"]{The two command styles: Pollen style & Racket style}
 
