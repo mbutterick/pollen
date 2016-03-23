@@ -16,12 +16,16 @@
 (define (splice x [splicing-tag splice-signal-tag])
   ;  (listof txexpr-elements?) . -> . (listof txexpr-elements?))
   (define spliceable? (λ(x) (and (pair? x) (eq? (car x) splicing-tag))))
-  (define not-null-string? (λ(x) (not (and (string? x) (= (string-length x) 0)))))
+  (define not-null-string? (λ(x) (not (and (string? x) (zero? (string-length x))))))
   (let loop ([x x])
-    (if (and (list? x) (not (attrs? x))) ; don't splice null strings inside attrs
-        (apply append (map (λ(x) ((if (spliceable? x)
-                                      cdr
-                                      list) (loop x))) (filter not-null-string? x)))
+    (if (list? x) ; don't exclude `attrs?` here, because it will exclude valid splice input like '((@ "foo"))
+        (apply append (map (λ(x) (let ([proc (if (spliceable? x) ; drop the splice-signal from front with `cdr`
+                                                 cdr
+                                                 list)]
+                                       [x (if (not (attrs? x)) ; don't recur on attributes, so null strings are not spliced within
+                                              (loop x)
+                                              x)])
+                                   (proc x))) (filter not-null-string? x)))
         x)))
 
 (module+ test
@@ -32,7 +36,8 @@
                 '(1 2 3 (div 4 5) 6 7))
   (check-equal? (splice `((,splice-signal-tag "foo" "" "bar"))) '("foo" "bar"))
   (check-equal? (splice null) null)
-  (check-equal? (splice '(a ((href "")(foo "bar")) "zam")) '(a ((href "")(foo "bar")) "zam")))
+  (check-equal? (splice '(a ((href "")(foo "bar")) "zam")) '(a ((href "")(foo "bar")) "zam"))
+  (check-equal? (splice `((,splice-signal-tag "str"))) '("str")))
 
 
 (define (strip-empty-attrs x)
