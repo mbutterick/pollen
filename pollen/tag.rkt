@@ -1,6 +1,6 @@
 #lang pollen/mode racket/base
 (require (for-syntax racket/base syntax/parse))
-(require txexpr racket/string racket/match)
+(require txexpr/base racket/string racket/match)
 (provide default-tag-function make-default-tag-function define-tag-function)
 
 (define first car)
@@ -51,7 +51,7 @@
 (define make-default-tag-function default-tag-function) ; bw compat
 
 (module+ test
-  (require rackunit)
+  (require rackunit txexpr/check)
   (define outerdiv (default-tag-function 'div #:class "outer" #:style "outer"))
   (check-txexprs-equal? (outerdiv "foo") '(div ((class "outer") (style "outer")) "foo"))
   (check-txexprs-equal? (outerdiv) '(div ((class "outer") (style "outer"))))

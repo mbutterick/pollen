@@ -1,6 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base "setup.rkt" "private/splice.rkt"))
-(require txexpr xml/path sugar/define sugar/coerce sugar/test racket/string)
+(require txexpr/base xml/path sugar/define sugar/coerce sugar/test racket/string)
 (require "private/file-utils.rkt"
          "setup.rkt"
          "cache.rkt"

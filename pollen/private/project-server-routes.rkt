@@ -5,7 +5,7 @@
 (require web-server/http/request-structs)
 (require web-server/http/response-structs)
 (require 2htdp/image)
-(require "../setup.rkt" "../render.rkt" sugar sugar/unstable/string sugar/unstable/misc sugar/unstable/container txexpr "file-utils.rkt" "debug.rkt" "../pagetree.rkt" "../cache.rkt")
+(require "../setup.rkt" "../render.rkt" sugar sugar/unstable/string sugar/unstable/misc sugar/unstable/container txexpr/base "file-utils.rkt" "debug.rkt" "../pagetree.rkt" "../cache.rkt")
 
 (module+ test (require rackunit))
 

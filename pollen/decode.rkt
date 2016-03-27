@@ -1,5 +1,5 @@
 #lang racket/base
-(require xml txexpr racket/list sugar/list sugar/define sugar/test)
+(require xml txexpr/base racket/list sugar/list sugar/define sugar/test)
 (require "setup.rkt" "private/splice.rkt")
 
 (require "unstable/typography.rkt")

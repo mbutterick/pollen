@@ -1,5 +1,5 @@
 #lang racket/base
-(require sugar txexpr racket/list racket/string pollen/setup xml html racket/file racket/match "html.rkt" net/url racket/port)
+(require sugar txexpr/base racket/list racket/string pollen/setup xml html racket/file racket/match "html.rkt" net/url racket/port)
 
 (define (attrs->pollen attrs)
   (string-join (flatten (map (λ(pair) (list (format "'~a:" (car pair)) (format "\"~a\"" (cadr pair)))) attrs)) " "))

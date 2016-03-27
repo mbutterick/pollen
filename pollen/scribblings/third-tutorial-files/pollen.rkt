@@ -1,5 +1,5 @@
 #lang racket/base
-(require pollen/decode pollen/misc/tutorial txexpr)
+(require pollen/decode pollen/misc/tutorial txexpr/base)
 (define (root . elements)
    (txexpr 'root null (decode-elements elements
      #:txexpr-elements-proc decode-paragraphs

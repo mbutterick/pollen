@@ -145,7 +145,6 @@
  (check-false (has-inner-poly-ext? "foo.poly"))
  (check-false (has-inner-poly-ext? "foo.wrong.pm")))
 
-
 (define-syntax (make-source-utility-functions stx)
   (syntax-case stx ()
     [(_ stem)

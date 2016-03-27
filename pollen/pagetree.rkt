@@ -1,5 +1,5 @@
 #lang racket/base
-(require racket/path racket/list sugar txexpr)
+(require racket/path racket/list sugar txexpr/base)
 (require "setup.rkt"
          "private/whitespace.rkt"
          "private/file-utils.rkt"

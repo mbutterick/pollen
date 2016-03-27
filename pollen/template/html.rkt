@@ -1,5 +1,5 @@
 #lang racket/base
-(require sugar/define sugar/test txexpr)
+(require sugar/define sugar/test txexpr/base)
 
 (define (trim-outer-tag html)
   (define matches (regexp-match #px"^<.*?>(.*)</.*?>$" html))
