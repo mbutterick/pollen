@@ -1,6 +1,6 @@
 ## Pollen: the book is a program [![Build Status](https://travis-ci.org/mbutterick/pollen.svg?branch=master)](https://travis-ci.org/mbutterick/pollen)
 
-A book-publishing system written in [Racket](http://racket-lang.org). This is the software I use to publish & maintain my web-based books [Practical Typography](http://practicaltypography.com) and [Typography for Lawyers](http://typographyforlawyers.com).
+A book-publishing system written in [Racket](http://racket-lang.org). This is the software I use to publish & maintain my web-based books [Practical Typography](http://practicaltypography.com), [Typography for Lawyers](http://typographyforlawyers.com), and the forthcoming [Beautiful Racket](http://beautifulracket.com).
 
 If you think documents should be programmable, you’ll love it.  
 If not, you can move along.
