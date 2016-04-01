@@ -39,10 +39,25 @@ My advice: don't knock the lozenge till you try it.
 
 @subsection{Lozenge helpers}
 
-@subsubsection{DrRacket}
+@subsubsection{DrRacket toolbar button}
 
 When you use DrRacket, you'll see a button in the toolbar that says @onscreen{Insert command char}. This will insert the lozenge (or whatever command character you've defined for your project).
 
+@subsubsection{DrRacket key shortcut}
+
+
+Courtesy of @link["https://github.com/interstar"]{Phil Jones}: ``I created a file called @filepath{keys.rkt} —
+
+@foreign-code{
+#lang s-exp framework/keybinding-lang
+
+(keybinding "c:<" (λ (editor evt) (send editor insert "◊")))
+}
+
+
+— and loaded it into DrRacket with @menuitem["Edit" "Keybindings | Add user-defined keybindings ..."]. Now I can use ctrl + shift + < to put the lozenge in.''
+
+See also @secref["defining-shortcuts" #:doc '(lib "scribblings/drracket/drracket.scrbl")] in the DrRacket documentation.
 
 @subsubsection{AHK script for Windows}
 

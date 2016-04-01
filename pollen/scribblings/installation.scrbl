@@ -75,7 +75,7 @@ You'll need to fix the problem before proceeding, most likely by reinstalling Po
 
 }
 
-@item{Alternatively, you can install Pollen from inside DrRacket with the @menuitem["File" "Install Package ..."] command.}
+@item{Alternatively, you can install Pollen from inside DrRacket with the @menuitem["File" "Install Package ..."] command, and then relaunching DrRacket.}
 
 @item{Either way, Pollen's documentation will be automatically installed.}
 
