@@ -16,46 +16,46 @@
      (syntax-case stx ()
        [(_ <expr> (... ...))
         (let-values ([(meta-hash expr-without-metas) (split-metas (syntax->datum #'(<expr> (... ...))) (setup:define-meta-name))])
-          (with-syntax ([<meta-hash> meta-hash]
-                        [(<expr-without-metas> (... ...)) expr-without-metas]
-                        [<metas> (format-id #f "~a" (setup:meta-export))]
-                        [<meta-mod> (format-symbol "~a" (setup:meta-export))]
-                        [<root> (format-id #f "~a" (setup:main-root-node))]
-                        [<newline> (datum->syntax #f (setup:newline))]
-                        [<mode-pagetree> default-mode-pagetree]
-                        [<mode-markup> default-mode-markup]
-                        [<mode-markdown> default-mode-markdown]
-                        [<splicing_tag> (setup:splicing-tag)]
-                        [<doc> (format-id #f "~a" (setup:main-export))]
-                        [<doc-raw> (generate-temporary 'pollen-)]); prevents conflicts with other imported Pollen sources
+          (with-syntax ([META-HASH meta-hash]
+                        [(EXPR-WITHOUT-METAS (... ...)) expr-without-metas]
+                        [METAS (format-id #f "~a" (setup:meta-export))]
+                        [META-MOD (format-symbol "~a" (setup:meta-export))]
+                        [ROOT (format-id #f "~a" (setup:main-root-node))]
+                        [NEWLINE (datum->syntax #f (setup:newline))]
+                        [MODE-PAGETREE default-mode-pagetree]
+                        [MODE-MARKUP default-mode-markup]
+                        [MODE-MARKDOWN default-mode-markdown]
+                        [SPLICING-TAG (setup:splicing-tag)]
+                        [DOC (format-id #f "~a" (setup:main-export))]
+                        [DOC-RAW (generate-temporary 'pollen-)]); prevents conflicts with other imported Pollen sources
             (replace-context #'(<expr> (... ...))
                              #'(#%module-begin
-                                (module <meta-mod> racket/base
-                                  (provide <metas>)
-                                  (define <metas> <meta-hash>))
+                                (module META-MOD racket/base
+                                  (provide METAS)
+                                  (define METAS META-HASH))
                                 
                                 (module inner pollen/private/doclang-raw
-                                  <doc-raw> ; positional arg for doclang-raw that sets name of export.
+                                  DOC-RAW ; positional arg for doclang-raw that sets name of export.
                                   (require pollen/top pollen/setup pollen/core)
-                                  (require (submod ".." <meta-mod>))
-                                  (provide (all-defined-out) #%top (all-from-out (submod ".." <meta-mod>) pollen/core))
-                                  <expr-without-metas> (... ...))
+                                  (require (submod ".." META-MOD))
+                                  (provide (all-defined-out) #%top (all-from-out (submod ".." META-MOD) pollen/core))
+                                  EXPR-WITHOUT-METAS (... ...))
                                 
                                 (require 'inner)
                                 
-                                (define <doc>
+                                (define DOC
                                   (let* ([parser-mode-undefined? (procedure? inner:parser-mode)] ; if undefined, #%top makes it a procedure
                                          [parser-mode (if parser-mode-undefined? <parser-mode-in> inner:parser-mode)]
                                          [proc (case parser-mode
-                                                 [(<mode-pagetree>) decode-pagetree]
-                                                 [(<mode-markup>) (λ(xs) (apply <root> xs))] ; if `root` undefined, it becomes a default tag function
-                                                 [(<mode-markdown>)
-                                                  (λ(xs) (apply <root> (map strip-empty-attrs ((dynamic-require 'markdown 'parse-markdown) (apply string-append (map to-string xs))))))]
+                                                 [(MODE-PAGETREE) decode-pagetree]
+                                                 [(MODE-MARKUP) (λ(xs) (apply ROOT xs))] ; if `root` undefined, it becomes a default tag function
+                                                 [(MODE-MARKDOWN)
+                                                  (λ(xs) (apply ROOT (map strip-empty-attrs ((dynamic-require 'markdown 'parse-markdown) (apply string-append (map to-string xs))))))]
                                                  [else (λ(xs) (apply string-append (map to-string xs)))])] ; string output for preprocessor
                                          ;; drop leading newlines, as they're often the result of `defines` and `requires`
-                                         [doc-elements (or (memf (λ(ln) (not (equal? ln <newline>))) <doc-raw>) null)]
-                                         [doc-elements-spliced (splice doc-elements '<splicing_tag>)])
+                                         [doc-elements (or (memf (λ(ln) (not (equal? ln NEWLINE))) DOC-RAW) null)]
+                                         [doc-elements-spliced (splice doc-elements 'SPLICING-TAG)])
                                     (proc doc-elements-spliced)))
                                 
-                                (provide <doc> <metas> (except-out (all-from-out 'inner) <doc-raw> #%top))))))]))
+                                (provide DOC METAS (except-out (all-from-out 'inner) DOC-RAW #%top))))))]))
    <outer-expr> ...))

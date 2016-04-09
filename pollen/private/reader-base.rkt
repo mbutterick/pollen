@@ -35,15 +35,14 @@
   (define reader-here-path (path-string->here-path path-string))
   (define parser-mode (infer-parser-mode reader-mode reader-here-path))
   (define parsed-syntax
-    (with-syntax ([HERE-KEY (format-id #f "~a" (setup:here-path-key))]
-                  [HERE-PATH (datum->syntax #f reader-here-path)]
-                  [POLLEN-MOD (format-symbol "~a" (gensym))] ; prevents conflicts with other imported Pollen sources
-                  [PARSER-MODE-VALUE (format-symbol "~a" parser-mode)]
-                  [DIRECTORY-REQUIRES (datum->syntax #f (require+provide-directory-require-files path-string))]
-                  [(SOURCE-LINE ...) source-stx]
-                  [DOC (format-id #f "~a" (setup:main-export))])
-      (replace-context
-       source-stx
+    (strip-context
+     (with-syntax ([HERE-KEY (format-id #f "~a" (setup:here-path-key))]
+                   [HERE-PATH reader-here-path]
+                   [POLLEN-MOD (format-symbol "~a" (gensym))] ; prevents conflicts with other imported Pollen sources
+                   [PARSER-MODE-VALUE (format-symbol "~a" parser-mode)]
+                   [DIRECTORY-REQUIRES (require+provide-directory-require-files path-string)]
+                   [(SOURCE-LINE ...) source-stx]
+                   [DOC (format-id #f "~a" (setup:main-export))])
        #'(module runtime-wrapper racket/base
            (module POLLEN-MOD pollen
              (define-meta HERE-KEY HERE-PATH) 
