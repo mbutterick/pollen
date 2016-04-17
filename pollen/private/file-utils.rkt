@@ -305,7 +305,7 @@
   (ormap (λ(cache-name) (ends-with? (path->string path) cache-name)) default-cache-names))
 
 
-(define+provide (pollen-related-file? file)
+(define+provide (unpublished-path? file)
   (ormap (λ(proc) (proc file)) (list
                                 preproc-source? 
                                 markup-source?

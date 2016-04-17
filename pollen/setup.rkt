@@ -101,7 +101,7 @@
 (define-runtime-path server-extras-dir "private/server-extras")
 (define+provide current-server-extras-path (make-parameter server-extras-dir))
 
-(define-settable publish-directory-name "publish")
+(define-settable publish-directory "publish")
 
 (define-settable extension-escape-char #\_)
 
@@ -110,6 +110,8 @@
 (define-settable compile-cache-max-size (* 10 1024 1024)) ; = 10 megabytes
 
 (define-settable unpublished-path? (λ(path) #f))
+(define-settable extra-published-path? (λ(path) #f))
+
 
 (define-settable here-path-key 'here-path)
 

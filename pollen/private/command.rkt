@@ -56,12 +56,12 @@ start   [dir] [port]   starts project server in dir (default is current dir)
 render  [dir] [dest]   render project in dir (default is current dir) 
                           to dest (default is desktop)
 render filename        render filename only (can be source or output name)
-publish                copy project to desktop without source files
+publish                copy project to ~a without source files
 publish [dir] [dest]   copy project in dir to dest without source files
                           (warning: overwrites existing dest dir)
 setup                  preload cache
 reset                  reset cache
-version                print the version" (current-server-port))))
+version                print the version" (current-server-port) (make-publish-dir-name))))
 
 
 (define (handle-version)
@@ -124,12 +124,20 @@ version                print the version" (current-server-port))))
     (displayln "Starting project server ...")
     ((dynamic-require 'pollen/private/project-server 'start-server))))
 
+(define (make-publish-dir-name [arg-command-name #f])
+  (let ([user-publish-path (expand-user-path (->path (setup:publish-directory)))])
+    (if (complete-path? user-publish-path)
+        user-publish-path       
+        (build-path (find-system-path 'desk-dir)
+                    (->path (if (equal? arg-command-name "clone") ; bw compat
+                                      "clone"
+                                      user-publish-path))))))
 
 (define (handle-publish directory-maybe rest-args arg-command-name)
   (define target-path
     (or 
      (and rest-args (not (null? rest-args)) (path->complete-path (string->path (car rest-args))))
-     (build-path (find-system-path 'desk-dir) (string->path (if (equal? arg-command-name "clone") "clone" (setup:publish-directory-name))))))
+     (make-publish-dir-name arg-command-name)))
   
   (define (delete-it path)
     (cond
@@ -157,7 +165,10 @@ version                print the version" (current-server-port))))
     (delete-directory/files target-dir))
   (copy-directory/files source-dir target-dir)
   (parameterize ([current-project-root (current-directory)])
-    (for-each delete-it (find-files pollen-related-file? target-dir)))
+    (define (delete-from-publish-dir? p)
+      (and (unpublished-path? p)
+           (not ((setup:extra-published-path?) p))))
+    (for-each delete-it (find-files delete-from-publish-dir? target-dir)))
   (displayln (format "completed to ~a" target-dir)))
 
 (define (handle-unknown command)
