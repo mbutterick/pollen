@@ -130,8 +130,8 @@ version                print the version" (current-server-port) (make-publish-di
         user-publish-path       
         (build-path (find-system-path 'desk-dir)
                     (->path (if (equal? arg-command-name "clone") ; bw compat
-                                      "clone"
-                                      user-publish-path))))))
+                                "clone"
+                                user-publish-path))))))
 
 (define (handle-publish directory-maybe rest-args arg-command-name)
   (define target-path
@@ -160,7 +160,7 @@ version                print the version" (current-server-port) (make-publish-di
     (error 'publish "aborted because target directory for publishing (~a) can't contain source directory (~a)" target-dir source-dir))
   (when (equal? target-dir (current-directory))
     (error 'publish "aborted because target directory for publishing (~a) can't be the same as current directory (~a)" target-dir (current-directory)))
-  (displayln "publishing ...")
+  (displayln (format "publishing to ~a ..." target-dir))
   (when (directory-exists? target-dir)
     (delete-directory/files target-dir))
   (copy-directory/files source-dir target-dir)
@@ -169,7 +169,7 @@ version                print the version" (current-server-port) (make-publish-di
       (and (unpublished-path? p)
            (not ((setup:extra-published-path?) p))))
     (for-each delete-it (find-files delete-from-publish-dir? target-dir)))
-  (displayln (format "completed to ~a" target-dir)))
+  (displayln "completed"))
 
 (define (handle-unknown command)
   (if (regexp-match #rx"(shit|fuck)" command)
