@@ -33,27 +33,27 @@
                                         #:inside? #t)])
                        (read-inner path-string p)))
   (define reader-here-path (path-string->here-path path-string))
-  (define parser-mode (infer-parser-mode reader-mode reader-here-path))
+  (define parser-mode-from-reader (infer-parser-mode reader-mode reader-here-path))
   (define parsed-syntax
     (strip-context
-     (with-syntax ([HERE-KEY (setup:here-path-key)]
-                   [HERE-PATH reader-here-path]
-                   [POLLEN-MOD-NAME 'pollen-module]
-                   [PARSER-MODE-VALUE parser-mode]
-                   [DIRECTORY-REQUIRES (require+provide-directory-require-files path-string)]
-                   [SOURCE-LINES source-stx]
-                   [DOC (setup:main-export)])
+     (with-syntax* ([HERE-KEY (setup:here-path-key)]
+                    [HERE-PATH reader-here-path]
+                    [POLLEN-MOD-NAME 'pollen-module]
+                    [DIRECTORY-REQUIRES (require+provide-directory-require-files path-string)]
+                    [SOURCE-LINES source-stx]
+                    [DOC (setup:main-export)]
+                    [PARSER-MODE-FROM-READER parser-mode-from-reader]
+                    [POLLEN-MODULE-SYNTAX (let ([mod-stx #'(module POLLEN-MOD-NAME pollen
+                                                               (define-meta HERE-KEY HERE-PATH) 
+                                                               (provide (all-defined-out))
+                                                               DIRECTORY-REQUIRES
+                                                               . SOURCE-LINES)])
+                                            (syntax-property mod-stx 'parser-mode-from-reader parser-mode-from-reader))])
        #'(module runtime-wrapper racket/base
-           (module POLLEN-MOD-NAME pollen
-             (define-meta HERE-KEY HERE-PATH) 
-             (define parser-mode 'PARSER-MODE-VALUE)
-             (provide (except-out (all-defined-out) parser-mode)
-                      (prefix-out inner: parser-mode)) ; avoids conflicts with importing modules
-             DIRECTORY-REQUIRES
-             . SOURCE-LINES)
+           POLLEN-MODULE-SYNTAX
            (require (submod pollen/private/runtime-config show) 'POLLEN-MOD-NAME)
            (provide (all-from-out 'POLLEN-MOD-NAME))
-           (show DOC inner:parser-mode HERE-PATH))))) ; HERE-PATH acts as "local" runtime config
+           (show DOC 'PARSER-MODE-FROM-READER HERE-PATH))))) ; HERE-PATH acts as "local" runtime config
   (syntax-property parsed-syntax
                    'module-language
                    `#(pollen/private/language-info get-language-info ,reader-here-path))) ; reader-here-path acts as "top" runtime config
