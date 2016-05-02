@@ -38,21 +38,21 @@
     (strip-context
      (with-syntax ([HERE-KEY (format-id #f "~a" (setup:here-path-key))]
                    [HERE-PATH reader-here-path]
-                   [POLLEN-MOD (format-symbol "~a" (gensym))] ; prevents conflicts with other imported Pollen sources
+                   [POLLEN-MOD-NAME 'pollen-module]
                    [PARSER-MODE-VALUE (format-symbol "~a" parser-mode)]
                    [DIRECTORY-REQUIRES (require+provide-directory-require-files path-string)]
                    [(SOURCE-LINE ...) source-stx]
                    [DOC (format-id #f "~a" (setup:main-export))])
        #'(module runtime-wrapper racket/base
-           (module POLLEN-MOD pollen
+           (module POLLEN-MOD-NAME pollen
              (define-meta HERE-KEY HERE-PATH) 
              (define parser-mode 'PARSER-MODE-VALUE)
              (provide (except-out (all-defined-out) parser-mode)
                       (prefix-out inner: parser-mode)) ; avoids conflicts with importing modules
              DIRECTORY-REQUIRES
              SOURCE-LINE ...)
-           (require (submod pollen/private/runtime-config show) 'POLLEN-MOD)
-           (provide (all-from-out 'POLLEN-MOD))
+           (require (submod pollen/private/runtime-config show) 'POLLEN-MOD-NAME)
+           (provide (all-from-out 'POLLEN-MOD-NAME))
            (show DOC inner:parser-mode HERE-PATH))))) ; HERE-PATH acts as "local" runtime config
   (syntax-property parsed-syntax
                    'module-language
