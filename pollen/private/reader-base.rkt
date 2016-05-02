@@ -36,13 +36,13 @@
   (define parser-mode (infer-parser-mode reader-mode reader-here-path))
   (define parsed-syntax
     (strip-context
-     (with-syntax ([HERE-KEY (format-id #f "~a" (setup:here-path-key))]
+     (with-syntax ([HERE-KEY (setup:here-path-key)]
                    [HERE-PATH reader-here-path]
                    [POLLEN-MOD-NAME 'pollen-module]
-                   [PARSER-MODE-VALUE (format-symbol "~a" parser-mode)]
+                   [PARSER-MODE-VALUE parser-mode]
                    [DIRECTORY-REQUIRES (require+provide-directory-require-files path-string)]
-                   [(SOURCE-LINE ...) source-stx]
-                   [DOC (format-id #f "~a" (setup:main-export))])
+                   [SOURCE-LINES source-stx]
+                   [DOC (setup:main-export)])
        #'(module runtime-wrapper racket/base
            (module POLLEN-MOD-NAME pollen
              (define-meta HERE-KEY HERE-PATH) 
@@ -50,7 +50,7 @@
              (provide (except-out (all-defined-out) parser-mode)
                       (prefix-out inner: parser-mode)) ; avoids conflicts with importing modules
              DIRECTORY-REQUIRES
-             SOURCE-LINE ...)
+             . SOURCE-LINES)
            (require (submod pollen/private/runtime-config show) 'POLLEN-MOD-NAME)
            (provide (all-from-out 'POLLEN-MOD-NAME))
            (show DOC inner:parser-mode HERE-PATH))))) ; HERE-PATH acts as "local" runtime config
@@ -76,9 +76,9 @@
            [(color-lexer)
             (define my-make-scribble-inside-lexer
               (dynamic-require 'syntax-color/scribble-lexer 'make-scribble-inside-lexer (λ () #f)))
-            (cond [my-make-scribble-inside-lexer
-                   (my-make-scribble-inside-lexer #:command-char my-command-char)]
-                  [else default])]
+            (if my-make-scribble-inside-lexer
+                (my-make-scribble-inside-lexer #:command-char my-command-char)
+                default)]
            [(drracket:toolbar-buttons)
             (define my-make-drracket-buttons (dynamic-require 'pollen/private/drracket-buttons 'make-drracket-buttons))
             (my-make-drracket-buttons my-command-char)])]
@@ -86,7 +86,7 @@
 
 (define-syntax-rule (reader-module-begin mode expr-to-ignore ...)
   (#%module-begin
-   (define cgi custom-get-info) ; stash hygienic references to local funcs with new identifiers
-   (define cr custom-read)
+   (define cgi custom-get-info) ; stash hygienic references to local funcs with macro-introduced identifiers
+   (define cr custom-read) ; so they can be provided out
    (define (crs ps p) (custom-read-syntax #:reader-mode mode ps p))
    (provide (rename-out [cr read][crs read-syntax][cgi get-info]))))
