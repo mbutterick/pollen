@@ -175,4 +175,7 @@ version                print the version" (current-server-port) (make-publish-di
   (if (regexp-match #rx"(shit|fuck)" command)
       (displayln (let ([responses '("Cursing at free software? Really?" "How uncouth." "Same to you, buddy.")])
                    (list-ref responses (random (length responses)))))
-      (displayln (format "unknown command ~a" command))))
+      (begin
+        (displayln (format "`~a` is an unknown command. Please try one of the following." command))
+        (displayln "")
+        (handle-help))))
