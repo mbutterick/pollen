@@ -176,6 +176,6 @@ version                print the version" (current-server-port) (make-publish-di
       (displayln (let ([responses '("Cursing at free software? Really?" "How uncouth." "Same to you, buddy.")])
                    (list-ref responses (random (length responses)))))
       (begin
-        (displayln (format "`~a` is an unknown command. Please try one of the following." command))
-        (displayln "")
+        (displayln (format "`~a` is an unknown command." command))
+        (display "These are the available ") ; ... "Pollen commands:"
         (handle-help))))
