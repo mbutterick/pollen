@@ -204,7 +204,7 @@ Now you can insert the variable into the HTML, this time using the special ◊ c
 </body>
 }]
 
-In your web browesr, reload @link["http://localhost:8080/margin.html"]{@filepath{margin.html}}. You'll see that the size of the margin has changed (because of the change to the @code{style} attribute) and so has the text of the HTML. If you like, try editing @code{my-inset} with different values and reloading the page. You can also try using @racket[define] to create another variable (for instance, to change the color of the box border).
+In your web browser, reload @link["http://localhost:8080/margin.html"]{@filepath{margin.html}}. You'll see that the size of the margin has changed (because of the change to the @code{style} attribute) and so has the text of the HTML. If you like, try editing @code{my-inset} with different values and reloading the page. You can also try using @racket[define] to create another variable (for instance, to change the color of the box border).
 
 Still, this is the tiniest tip of the iceberg. The Pollen preprocessor gives you access to everything in the Racket programming language — including string manipulation, math functions, and so on.
 
@@ -305,7 +305,7 @@ Pollen markup You @bold{wanted} it — you @italic{got} it. https://google.com/
 
 That's not right. What happened?
 
-We marked up the source using a combination of standard HTML tags (@code{strong}, @code{em}) and nonstandard ones (@code{headline}, @code{items}, @code{item}, @code{link}). This is valid Pollen markup. (In fact, if you look at @link["http://localhost:8080/out/markup.html"]{the generated source}, you'll see that they didn't disappear.) But since we're targeting HTML, we need to convert our custom tags into valid HTML tags.
+We marked up the source using a combination of standard HTML tags (@code{strong}, @code{em}) and nonstandard ones (@code{headline}, @code{items}, @code{item}, @code{link}). This is valid Pollen markup. (In fact, if you look at @link["http://localhost:8080/out/uptown.html"]{the generated source}, you'll see that they didn't disappear.) But since we're targeting HTML, we need to convert our custom tags into valid HTML tags.
 
 For that, we'll make a special file called @filepath{pollen.rkt}. This is a file in the standard Racket language that provides helper functions to decode the source. The definitions won't make sense yet. But this is the quick tour, so all you need to do is copy, paste, and save:
 
