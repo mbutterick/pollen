@@ -204,7 +204,7 @@ Now you can insert the variable into the HTML, this time using the special ◊ c
 </body>
 }]
 
-In your web browesr, reload @link["http://localhost:8080/margin.html"]{@filepath{margin.html}}. You'll see that the size of the margin has changed (because of the change to the @code{style} attribute) and so has the text of the HTML. If you like, try editing @code{my-inset} with different values and reloading the page. You can also try using @racket[define] to create another variable (for instance, to change the color of the box border).
+In your web browser, reload @link["http://localhost:8080/margin.html"]{@filepath{margin.html}}. You'll see that the size of the margin has changed (because of the change to the @code{style} attribute) and so has the text of the HTML. If you like, try editing @code{my-inset} with different values and reloading the page. You can also try using @racket[define] to create another variable (for instance, to change the color of the box border).
 
 Still, this is the tiniest tip of the iceberg. The Pollen preprocessor gives you access to everything in the Racket programming language — including string manipulation, math functions, and so on.
 
