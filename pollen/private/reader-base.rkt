@@ -82,6 +82,8 @@
            [(drracket:toolbar-buttons)
             (define my-make-drracket-buttons (dynamic-require 'pollen/private/drracket-buttons 'make-drracket-buttons))
             (my-make-drracket-buttons my-command-char)])]
+        [(drracket:indentation)
+            (dynamic-require 'scribble/private/indentation 'determine-spaces)]
         [else default]))))
 
 (define-syntax-rule (reader-module-begin mode expr-to-ignore ...)
