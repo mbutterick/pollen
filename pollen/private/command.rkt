@@ -80,11 +80,14 @@ version                print the version" (current-server-port) (make-publish-di
 
 (define (handle-render)
   (define render-target-wanted (make-parameter (current-poly-target)))
+  (define render-recursively? (make-parameter #f))
   (define parsed-args (command-line #:program "raco pollen render"
                                     #:argv (vector-drop (current-command-line-arguments) 1) ; snip the 'render' from the front
                                     #:once-each
                                     [("-t" "--target") target-arg "Render target for poly sources"
                                                        (render-target-wanted (->symbol target-arg))]
+                                    [("-r" "--recursive") "Render subdirectories"
+                                                          (render-recursively? #t)]
                                     #:args other-args
                                     other-args))  
   (define path-args (if (empty? parsed-args)
@@ -92,13 +95,14 @@ version                print the version" (current-server-port) (make-publish-di
                         parsed-args))
   (parameterize ([current-directory (current-project-root)]
                  [current-poly-target (render-target-wanted)])
-    (define first-arg (car path-args))
-    (if (directory-exists? first-arg)
-        (let ([dir first-arg]) ; now we know it's a dir
+    (define first-path-or-path-string (car path-args))
+    (if (directory-exists? first-path-or-path-string)
+        (let render-one-dir ([dir (->complete-path first-path-or-path-string)])
           (parameterize ([current-directory dir]
                          [current-project-root dir])
-            (define preprocs (filter preproc-source? (directory-list dir)))
-            (define static-pagetrees (filter pagetree-source? (directory-list dir)))
+            (define dirlist (directory-list dir))
+            (define preprocs (filter preproc-source? dirlist))
+            (define static-pagetrees (filter pagetree-source? dirlist))
             ;; if there are no static pagetrees, use make-project-pagetree
             ;; (which will synthesize a pagetree if needed, which includes all sources)
             (define preprocs-and-static-pagetrees (append preprocs static-pagetrees))
@@ -111,7 +115,12 @@ version                print the version" (current-server-port) (make-publish-di
                      [else
                       (displayln (format "rendering preproc & pagetree files in directory ~a" dir))
                       preprocs-and-static-pagetrees])))
-            (apply render-batch batch-to-render)))
+            (apply render-batch batch-to-render)
+            (when (render-recursively?)
+              (for ([path (in-list dirlist)]
+                    #:when (and (directory-exists? path)
+                                (not (unpublished-path? path))))
+                   (render-one-dir (->complete-path path))))))
         (begin ; first arg is a file
           (displayln (format "rendering ~a" (string-join (map ->string path-args) " ")))
           (apply render-batch path-args)))))

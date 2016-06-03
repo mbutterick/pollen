@@ -73,7 +73,7 @@ Render all preprocessor source files and then all pagetree files found in the cu
 
 This command can be invoked with extra arguments.
 
-@racket[raco pollen render _directory] will perform the render described above, but in the specified directory.
+@racket[raco pollen render _directory] will perform the render described above, but in the specified directory. By default, only files in the immediate directory are rendered. Adding the optional @exec{-r} or @exec{--recursive} switch will also render subdirectories recursively.
 
 Alternatively, the command can take a variable number of path arguments. @racket[raco pollen render _path ...] will render only the paths specified in @racket[_path ...]. Consistent with the usual command-line idiom, this can be a single path, a list of paths, or a pattern:
 
@@ -89,6 +89,7 @@ Paths can also be specified as output rather than input paths, and the correspon
 > raco pollen render foo.html bar.html zam.css}
 
 The optional @exec{-t} or @exec{--target} switch specifies the render target for multi-output source files. If the target is omitted, the renderer will use whatever target appears first in @racket[(setup:poly-targets)].
+
 
 @terminal{
 > raco pollen render -t pdf foo.poly.pm}
