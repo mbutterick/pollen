@@ -47,7 +47,7 @@ When you run this file, you should see something like this, with the parsed synt
 }
 }
 
-@item{To get highlighting, you'll still need to add styles to your CSS to change the appearance of the code. If you look at the @link["http://unitscale.com/mb/technique/styles.css.pp.html"]{CSS source in my demo article}, I just pasted a Pygments theme at the bottom (that @link["https://github.com/richleland/pygments-css,"]{I picked up} and then edited with some variable values.)
+@item{To get highlighting, you'll still need to add styles to your CSS to change the appearance of the code. If you look at the @link["http://unitscale.com/mb/technique/styles.css.pp.html"]{CSS source in my demo article}, I just pasted a Pygments theme at the bottom (that @link["https://github.com/richleland/pygments-css"]{I picked up} and then edited with some variable values).
 }
 
 ]
