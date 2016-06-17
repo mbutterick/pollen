@@ -110,7 +110,7 @@ If you're already in your project directory and want to publish somewhere other 
 
 You can determine the default publishing destination for a project by overriding @racket[default-publish-directory].
 
-You can determine the files that get filtered out in a project by overriding @racket[default-unpublished-path?]. You can override these filters — that is, force a path to be published — by overriding @racket[default-extra-published-path?].
+You can determine the files that get filtered out in a project by overriding @racket[default-omitted-path?]. You can override these filters — that is, force a path to be published — by overriding @racket[default-extra-path?].
 
 
 @section{@exec{raco pollen setup}}

@@ -119,7 +119,7 @@ version                print the version" (current-server-port) (make-publish-di
             (when (render-recursively?)
               (for ([path (in-list dirlist)]
                     #:when (and (directory-exists? path)
-                                (not (unpublished-path? path))))
+                                (not (omitted-path? path))))
                    (render-one-dir (->complete-path path))))))
         (begin ; first arg is a file
           (displayln (format "rendering ~a" (string-join (map ->string path-args) " ")))
@@ -175,8 +175,7 @@ version                print the version" (current-server-port) (make-publish-di
   (copy-directory/files source-dir target-dir)
   (parameterize ([current-project-root (current-directory)])
     (define (delete-from-publish-dir? p)
-      (and (unpublished-path? p)
-           (not ((setup:extra-published-path?) p))))
+      (and (omitted-path? p) (not (extra-path? p))))
     (for-each delete-it (find-files delete-from-publish-dir? target-dir)))
   (displayln "completed"))
 

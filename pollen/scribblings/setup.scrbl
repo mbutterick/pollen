@@ -118,9 +118,13 @@ Default separators used in decoding. The first two are initialized to @racket["\
 
 @defoverridable[publish-directory (or/c path-string? path-for-some-system?)]{Default target for @secref{raco_pollen_publish}. A complete path is used as is; a relative path is published to the desktop. Default is @racket["publish"].}
 
-@defoverridable[unpublished-path? (path? . -> . boolean?)]{Predicate that determines whether a path is omitted from @secref{raco_pollen_publish} operations. If the predicate evaluated to @racket[#t], then the path is omitted. The default predicate, therefore, is @racket[(lambda (path) #f)].}
+@defoverridable[unpublished-path? (path? . -> . boolean?)]{Deprecated. Please use @racket[omitted-path?].}
 
-@defoverridable[extra-published-path? (path? . -> . boolean?)]{Predicate that determines if path is published, overriding @racket[(setup:unpublished-path?)] above, and Pollen's default publish settings. For instance, Pollen automatically omits files with a @racket[.rkt] extension. If you wanted to force a @racket[.rkt] file to be published, you could include it here. Default is @racket[(lambda (path) #f)].}
+@defoverridable[omitted-path? (path? . -> . boolean?)]{Predicate that determines whether a path is omitted from @secref{raco_pollen_render} and @secref{raco_pollen_publish} operations. If the predicate evaluated to @racket[#t], then the path is omitted. The default predicate, therefore, is @racket[(lambda (path) #f)].}
+
+@defoverridable[extra-published-path? (path? . -> . boolean?)]{Deprecated. Please use @racket[extra-path?].}
+
+@defoverridable[extra-path? (path? . -> . boolean?)]{Predicate that determines if path is rendered & published, overriding @racket[(setup:omitted-path?)] above, and Pollen's default publish settings. For instance, Pollen automatically omits files with a @racket[.rkt] extension. If you wanted to force a @racket[.rkt] file to be published, you could include it here. Default is @racket[(lambda (path) #f)].}
 
 
 @defoverridable[splicing-tag symbol?]{Key used to signal that an X-expression should be spliced into its containing X-expression. Default is @val[default-splicing-tag].}

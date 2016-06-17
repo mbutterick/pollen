@@ -294,7 +294,7 @@
 (define (ends-with? str ender)
   (define pat (regexp (format "~a$" ender)))
   (and (regexp-match pat str) #t))
-  
+
 
 (define+provide (magic-directory? path)
   (and (directory-exists? path) 
@@ -305,7 +305,7 @@
   (ormap (λ(cache-name) (ends-with? (path->string path) cache-name)) default-cache-names))
 
 
-(define+provide (unpublished-path? file)
+(define+provide (omitted-path? file)
   (ormap (λ(proc) (proc file)) (list
                                 preproc-source? 
                                 markup-source?
@@ -316,4 +316,10 @@
                                 racket-source?
                                 magic-directory?
                                 cache-file?
+                                (setup:omitted-path?)
                                 (setup:unpublished-path?))))
+
+(define+provide (extra-path? file)
+  (ormap (λ(proc) (proc file)) (list
+                                (setup:extra-path?)
+                                (setup:extra-published-path?))))
