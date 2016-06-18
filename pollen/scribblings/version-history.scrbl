@@ -24,6 +24,18 @@ Beyond keeping the commit history available, I make no promise to maintain the p
 
 @section{Changelog}
 
+@subsection{Version 1.1} 
+
+@bold{New features}
+
+@seclink["raco-pollen" #:doc '(lib "pollen/scribblings/pollen.scrbl")]{@racketfont{raco pollen}}: Added @racket[--recursive] option to @secref["raco_pollen_render" #:doc '(lib "pollen/scribblings/pollen.scrbl")].
+
+@racketmodname[pollen/setup]: @racket[setup:omitted-path?] replaces @racket[setup:unpublished-path?], and @racket[setup:extra-path?] replaces @racket[setup:extra-published-path?]. These settings are used during both render and publish operations. (The old names will still work, however.)
+
+Added @racket[setup:publish-directory], which can be used to set a default publish directory.
+
+
+
 @subsection{Version 1.0} 
 
 @bold{New features}

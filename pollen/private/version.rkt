@@ -4,7 +4,7 @@
 (define-runtime-path ts-file "ts.rktd")
 
 (define major-version 1)
-(define minor-version 0)
+(define minor-version 1)
 
 (define pollen:version-strict (format "~a.~a" major-version minor-version))
 

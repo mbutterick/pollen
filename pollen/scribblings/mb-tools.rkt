@@ -1,7 +1,7 @@
 #lang at-exp racket/base
-(require (for-syntax racket/base racket/syntax) scribble/core scribble/base scribble/manual racket/list scribble/private/manual-sprop scribble/decode scribble/html-properties racket/runtime-path racket/string racket/format)
+(require (for-syntax racket/base racket/syntax) scribble/core scribble/manual scribble/private/manual-sprop scribble/decode scribble/html-properties racket/runtime-path racket/format "../private/manual-history.rkt")
 
-(provide (all-defined-out) (all-from-out racket/runtime-path))
+(provide (all-defined-out) (all-from-out racket/runtime-path "../private/manual-history.rkt"))
 
 (define-runtime-path mb-css "mb.css")
 

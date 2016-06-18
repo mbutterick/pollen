@@ -1,7 +1,7 @@
 #lang info
 (define collection 'multi)
 
-(define version "1.0")
+(define version "1.1")
 (define deps '("base" ["txexpr" #:version "0.2"] ["sugar" #:version "0.2"] ["markdown" #:version "0.18"] "htdp"
                "at-exp-lib" "html-lib" "rackjure" "web-server-lib" "scribble-text-lib" "rackunit-lib"
                "gui-lib"))
