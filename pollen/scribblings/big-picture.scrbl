@@ -63,7 +63,7 @@ As a Racket X-expression, this would be written:
 
 @nested[#:style 'code-inset]{@verbatim{(body (h1 "Hello world") (p "Nice to " (i "see") " you."))}}
 
-More will be said about X-expressions. But a several advantages should be evident already. First, without the redundant angle brackets, the X-expression is arguably more readable than the equivalent HTML. Second, an X-expression is preferable to treating HTML as a simple string, because it preserves the internal structure of the element. Third, an X-expression is a native data type in Racket.
+More will be said about X-expressions. But several advantages should be evident already. First, without the redundant angle brackets, the X-expression is arguably more readable than the equivalent HTML. Second, an X-expression is preferable to treating HTML as a simple string, because it preserves the internal structure of the element. Third, an X-expression is a native data type in Racket.
 
 
 @section{Pollen command syntax}
