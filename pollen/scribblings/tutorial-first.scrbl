@@ -536,7 +536,7 @@ The border is too.
 </body>
 </html>}]
 
-Then look at @link-tt{http://localhost:8080/poem.html}} again. Does it look the same? Not a trick question — it should. If you click the @onscreen{Out} link on the dashboard, you'll see this:
+Then look at @link-tt{http://localhost:8080/poem.html} again. Does it look the same? Not a trick question — it should. If you click the @onscreen{Out} link on the dashboard, you'll see this:
 
 @terminal{
 <!DOCTYPE html>
