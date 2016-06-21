@@ -819,7 +819,7 @@ Here, we'll use the @filepath{pollen.rkt} we devised in the previous section to 
 (define (root . elements)
    (txexpr 'root empty (decode-elements elements
      #:txexpr-elements-proc decode-paragraphs
-     #:string-proc (compose smart-quotes smart-dashes))))
+     #:string-proc (compose1 smart-quotes smart-dashes))))
 }]
 
 
