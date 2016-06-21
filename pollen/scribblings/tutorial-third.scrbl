@@ -495,7 +495,7 @@ The hyperbolic sine of π is close to ◊(number->string (sinh pi)).
 The result:
 
 @repl-output{
-'(root "Pi is close to " "3.141592653589793" "." "\n" "The hyperbolic sine of pi is close to " "11.548739357257748" ".")}
+'(root "π is close to " "3.141592653589793" "." "\n" "The hyperbolic sine of π is close to " "11.548739357257748" ".")}
 
 One caveat — you're still in a Pollen markup file, so the return value of whatever function you call has to produce a string or an X-expression, so it can be merged into the document. That's why we have @racket[number->string] wrapping the numerical values. (This is similar to the restriction introduced in the @seclink["Setting_up_a_preprocessor_source_file"]{first tutorial} where functions used in preprocessor files had to produce text.)
 
@@ -511,7 +511,7 @@ The hyperbolic sine of π is close to ◊(sinh pi).
 This will produce an error in DrRacket:
 
 @errorblock{
-pollen markup error: in '(root "Pi is close to " 3.141592653589793 "." "\n" "The hyperbolic sine of pi is close to " 11.548739357257748 "."), 3.141592653589793 is not a valid element (must be txexpr, string, symbol, XML char, or cdata)}
+pollen markup error: in '(root "π is close to " 3.141592653589793 "." "\n" "The hyperbolic sine of π is close to " 11.548739357257748 "."), 3.141592653589793 is not a valid element (must be txexpr, string, symbol, XML char, or cdata)}
 
 This code would not, however, produce an error if it were being run as a Pollen preprocessor file, because the prepreocessor automatically converts numbers to strings. If you'd like to verify this, change the suffix to @code{.pp} and run the file again.
 
