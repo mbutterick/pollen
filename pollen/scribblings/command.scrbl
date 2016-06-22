@@ -365,7 +365,7 @@ You aren't limited to functions you define. Any function from Racket, or any Rac
 
 @repl-output{'(range 1 20)}
 
-Hold on — that's not what we want. Where's the list of numbers? The problem here is that we for to import the @racketmodname[racket/list] library, which contains the definition for @racket[range]. (If you need to find out what library contains a certain function, the Racket documentation will tell you.) Without @racketmodname[racket/list], Pollen just thinks we're trying to use @code{range} as a tag function (and if we had been, then @val['(range 1 20)] would've been the right result). 
+Hold on — that's not what we want. Where's the list of numbers? The problem here is that we forgot to import the @racketmodname[racket/list] library, which contains the definition for @racket[range]. (If you need to find out what library contains a certain function, the Racket documentation will tell you.) Without @racketmodname[racket/list], Pollen just thinks we're trying to use @code{range} as a tag function (and if we had been, then @val['(range 1 20)] would've been the right result). 
 
 We fix this by using the @racket[require] command to bring in the @racketmodname[racket/list] library, which contains the @racket[range]  we want:
 
