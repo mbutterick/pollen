@@ -296,13 +296,20 @@
   (and (regexp-match pat str) #t))
 
 
-(define+provide (magic-directory? path)
-  (and (directory-exists? path) 
-       (or (ends-with? (path->string path) "compiled"))))
+(define (special-path? path)
+  (define special-paths (append default-cache-names '("compiled" ".git" ".gitignore" ".hg" ".svn" "CVS")))
+  (and (member (path->string (last (explode-path path))) special-paths) #t))
 
-
-(define+provide (cache-file? path)
-  (ormap (λ(cache-name) (ends-with? (path->string path) cache-name)) default-cache-names))
+(module-test-internal
+ (require sugar/coerce)
+ (check-true (special-path? (string->path "foo/pollen-cache")))
+ (check-false (special-path? (string->path "foo/bar-pollen-cache")))
+ (check-true (special-path? (string->path "compiled")))
+ (check-true (special-path? (string->path "foo/compiled")))
+ (check-false (special-path? (string->path "foo/rcompiled")))
+ (check-true (special-path? (string->path ".git")))
+ (check-true (special-path? (string->path "foo/.git")))
+ (check-false (special-path? (string->path "foo/robot.git"))))
 
 
 (define+provide (omitted-path? file)
@@ -314,12 +321,11 @@
                                 scribble-source?
                                 null-source?
                                 racket-source?
-                                magic-directory?
-                                cache-file?
+                                special-path?
                                 (setup:omitted-path?)
-                                (setup:unpublished-path?))))
+                                (setup:unpublished-path?)))) ; deprecated name
 
 (define+provide (extra-path? file)
   (ormap (λ(proc) (proc file)) (list
                                 (setup:extra-path?)
-                                (setup:extra-published-path?))))
+                                (setup:extra-published-path?))))  ; deprecated name

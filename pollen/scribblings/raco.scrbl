@@ -73,7 +73,9 @@ Render all preprocessor source files and then all pagetree files found in the cu
 
 This command can be invoked with extra arguments.
 
-@racket[raco pollen render _directory] will perform the render described above, but in the specified directory. By default, only files in the immediate directory are rendered. Adding the optional @exec{-r} or @exec{--recursive} switch will also render subdirectories recursively.
+@racket[raco pollen render _directory] will perform the render described above, but in the specified directory. By default, only files in the immediate directory are rendered. 
+
+Adding the optional @exec{-r} or @exec{--recursive} switch will also render subdirectories recursively. Certain directories are automatically omitted from recursive renders, including Pollen caches and source-control directories (like @tt{.git} and @tt{.svn}). You can omit other paths by overriding @racket[default-omitted-path?]. You can override these omissions — that is, force a path to be included in a recursive render — by overriding @racket[default-extra-path?].
 
 Alternatively, the command can take a variable number of path arguments. @racket[raco pollen render _path ...] will render only the paths specified in @racket[_path ...]. Consistent with the usual command-line idiom, this can be a single path, a list of paths, or a pattern:
 
@@ -110,7 +112,7 @@ If you're already in your project directory and want to publish somewhere other 
 
 You can determine the default publishing destination for a project by overriding @racket[default-publish-directory].
 
-You can determine the files that get filtered out in a project by overriding @racket[default-omitted-path?]. You can override these filters — that is, force a path to be published — by overriding @racket[default-extra-path?].
+Certain files and directories are automatically omitted from the published directory, including Racket and Pollen sources, Pollen caches, and source-control directories (like @tt{.git} and @tt{.svn}). You can omit other files by overriding @racket[default-omitted-path?]. You can override these omissions — that is, force a path to be published — by overriding @racket[default-extra-path?].
 
 
 @section{@exec{raco pollen setup}}
