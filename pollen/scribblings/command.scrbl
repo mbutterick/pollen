@@ -560,19 +560,19 @@ The value of edge is ◊|edge| pixels}
 
 @subsubsection{Inserting metas}
 
-@italic{Metas} are key–value pairs embedded in a source file that are not included in the main output when the source is compiled. Rather, they're gathered and exported as a separate hash table called, unsurprisingly, @id{metas}. This hashtable is a good place to store information about the document that you might want to use later (for instance, a list of topic categories that the document belongs to).
+@italic{Metas} are key–value pairs embedded in a source file that are not included in the main output when the source is compiled. Rather, they're gathered and exported as a separate @deftech{hash table} called, unsurprisingly, @id{metas}. This hash table is a good place to store information about the document that you might want to use later (for instance, a list of topic categories that the document belongs to).
 
 @margin-note{Pollen occasionally uses metas internally. For instance, the @racket[get-template-for] function will look in the metas of a source file to see if a template is explicitly specified. The @racketmodname[pollen/core] module also contains functions for working with metas, such as @racket[select-from-metas].}
 
-To make a meta, you create a tag with the special @racket[define-meta] name. Then you have two choices: you can either embed the key-value pair as an attribute, or as a tagged X-expression within the meta (using the key as the tag, and the value as the body):
+To make a meta, you create a tag with the special @racket[define-meta] name, followed by a key name, and then a value that's a single X-expression:
 
 @codeblock{
 #lang pollen
 
 ◊define-meta[dog]{Roxy} ; Pollen-style syntax
-◊some-tag[#:key "value"]{Normal tag}
+◊some-tag[#:foo "bar"]{Normal tag}
 ◊(define-meta cat "Chopper") ; equivalent Racket-style syntax
-◊some-tag[#:key "value"]{Another normal tag}
+◊some-tag[#:zim "zam"]{Another normal tag}
 }
 
 When you run a source file with metas in it, two things happen. First, the metas are removed from the output:
@@ -628,6 +628,15 @@ Though there are two metas named @id{dog}, only the second one persists:
 '#hasheq((dog . "Lex") (here-path . "unsaved-editor"))
 }
 
+What if you want to use a sequence of X-expression elements as a meta value? You can convert them into a single X-expression by wrapping them in a containing tag. You can use a new tag, or even just the @racket[@] splicing tag:
+
+#lang pollen/markup
+◊(define-meta title ◊@{Conclusion to ◊em{Infinity War}})
+
+The title is ◊(select-from-metas 'title metas)
+}
+
+@repl-output{'(root "The title is " "Conclusion to " (em "Infinity War"))}
 
 
 @subsubsection{Retrieving metas}
