@@ -560,7 +560,7 @@ The value of edge is ◊|edge| pixels}
 
 @subsubsection{Inserting metas}
 
-@italic{Metas} are key–value pairs embedded in a source file that are not included in the main output when the source is compiled. Rather, they're gathered and exported as a separate @deftech{hash table} called, unsurprisingly, @id{metas}. This hash table is a good place to store information about the document that you might want to use later (for instance, a list of topic categories that the document belongs to).
+@italic{Metas} are key–value pairs embedded in a source file that are not included in the main output when the source is compiled. Rather, they're gathered and exported as a separate @tech[#:doc '(lib "scribblings/guide/guide.scrbl")]{hash table} called, unsurprisingly, @id{metas}. This hash table is a good place to store information about the document that you might want to use later (for instance, a list of topic categories that the document belongs to).
 
 @margin-note{Pollen occasionally uses metas internally. For instance, the @racket[get-template-for] function will look in the metas of a source file to see if a template is explicitly specified. The @racketmodname[pollen/core] module also contains functions for working with metas, such as @racket[select-from-metas].}
 
