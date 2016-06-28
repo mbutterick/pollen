@@ -628,13 +628,14 @@ Though there are two metas named @id{dog}, only the second one persists:
 '#hasheq((dog . "Lex") (here-path . "unsaved-editor"))
 }
 
-What if you want to use a sequence of X-expression elements as a meta value? You can convert them into a single X-expression by wrapping them in a containing tag. You can use a new tag, or even just the @racket[@] splicing tag:
+What if you want to use a sequence of X-expression elements as a meta value? You can convert them into a single X-expression by wrapping them in a containing tag. You can use a new tag, or even just the @racket[\@] splicing tag:
 
+@codeblock|{
 #lang pollen/markup
 ◊(define-meta title ◊@{Conclusion to ◊em{Infinity War}})
 
 The title is ◊(select-from-metas 'title metas)
-}
+}|
 
 @repl-output{'(root "The title is " "Conclusion to " (em "Infinity War"))}
 
