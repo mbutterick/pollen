@@ -16,17 +16,17 @@
 (define+provide define-meta identity) ;; stub so it will be picked up for docs
 
 
-(define+provide/contract (select* key value-source)
-  (coerce/symbol? (or/c is-meta-value? is-doc-value? pagenode? pathish?) . -> . (or/c #f txexpr-elements?))
-  (define metas-result (and (not (is-doc-value? value-source)) (select-from-metas key value-source)))
-  (define doc-result  (and (not (is-meta-value? value-source)) (select-from-doc key value-source)))
+(define+provide/contract (select* key value-source [caller 'select*])
+  ((coerce/symbol? (or/c is-meta-value? is-doc-value? pagenode? pathish?)) (symbol?) . ->* . (or/c #f txexpr-elements?))
+  (define metas-result (and (not (is-doc-value? value-source)) (select-from-metas key value-source caller)))
+  (define doc-result  (and (not (is-meta-value? value-source)) (select-from-doc key value-source caller)))
   (define result (filter not-false? (apply append (map ->list (list metas-result doc-result)))))
   (and (pair? result) result))
 
 
 (define+provide/contract (select key value-source)
   (coerce/symbol? (or/c is-meta-value? is-doc-value? pagenode? pathish?) . -> . (or/c #f txexpr-element?))
-  (define result (select* key value-source))
+  (define result (select* key value-source 'select))
   (and (pair? result) (car result)))
 
 
@@ -51,13 +51,13 @@
    (check-false (select 'absent-key  doc))))
 
 
-(define+provide/contract (select-from-metas key metas-source)
+(define+provide/contract (select-from-metas key metas-source [caller 'select-from-metas])
   ;; output contract is a single txexpr-element
   ;; because metas is a hash, and a hash has only one value for a key.
-  (coerce/symbol? (or/c is-meta-value? pagenode? pathish?) . -> . (or/c #f txexpr-element?))
+  ((coerce/symbol? (or/c is-meta-value? pagenode? pathish?)) (symbol?) . ->* . (or/c #f txexpr-element?))
   (define metas (if (is-meta-value? metas-source)
                     metas-source
-                    (get-metas metas-source)))
+                    (get-metas metas-source caller)))
   (and (hash-has-key? metas key) (hash-ref metas key)))
 
 (module-test-external
@@ -66,13 +66,13 @@
    (check-false (select-from-metas 'absent-key  metas))))
 
 
-(define+provide/contract (select-from-doc key doc-source)
+(define+provide/contract (select-from-doc key doc-source [caller 'select-from-doc])
   ;; output contract is a list of elements
   ;; because doc is a txexpr, and a txexpr can have multiple values for a key
-  (coerce/symbol? (or/c is-doc-value? pagenode? pathish?) . -> . (or/c #f txexpr-elements?))
+  ((coerce/symbol? (or/c is-doc-value? pagenode? pathish?)) (symbol?) . ->* . (or/c #f txexpr-elements?))
   (define doc (if (is-doc-value? doc-source)
                   doc-source
-                  (get-doc doc-source)))
+                  (get-doc doc-source caller)))
   (define result (se-path*/list (list key) doc))
   (and (pair? result) result))
 
@@ -89,18 +89,19 @@
                               (build-path (current-project-root) (symbol->string pagenode-or-path))
                               pagenode-or-path))])
     (unless path
-      (error (format "~a no source found for '~a' in directory ~a" caller path (current-directory))))
+      ;; use `pagenode-or-path` in error message because at this point `path` is #f
+      (error (format "~a: no source found for '~a' in directory ~a" caller pagenode-or-path (current-directory))))
     path))
 
 
-(define+provide/contract (get-metas pagenode-or-path)
-  ((or/c pagenode? pathish?) . -> . is-meta-value?) 
-  (cached-metas (convert+validate-path pagenode-or-path 'get-metas)))
+(define+provide/contract (get-metas pagenode-or-path [caller 'get-metas])
+  (((or/c pagenode? pathish?)) (symbol?) . ->* . is-meta-value?) 
+  (cached-metas (convert+validate-path pagenode-or-path caller)))
 
 
-(define+provide/contract (get-doc pagenode-or-path)
-  ((or/c pagenode? pathish?) . -> . (or/c is-doc-value? string?))
-  (cached-doc (convert+validate-path pagenode-or-path 'get-doc)))
+(define+provide/contract (get-doc pagenode-or-path [caller 'get-doc])
+  (((or/c pagenode? pathish?)) (symbol?) . ->* . (or/c is-doc-value? string?))
+  (cached-doc (convert+validate-path pagenode-or-path caller)))
 
 
 ;; This `@` definition is here to provide a hook for the docs.
