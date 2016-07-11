@@ -53,7 +53,7 @@
 
 (define+provide (validate-pagetree x)
   (and (txexpr? x)
-       (let ([pagenodes (pagetree->list x)])
+       (let ([pagenodes (pagetree-strict->list x)])
          (for ([p (in-list pagenodes)]
                #:when (not (pagenode? p)))
               (error 'validate-pagetree (format "\"~a\" is not a valid pagenode" p)))
@@ -175,11 +175,17 @@
  (check-false (siblings 'invalid-key test-pagetree)))
 
 
+;; private helper function.
+;; only takes pt as input.
+;; used by `pagetree?` predicate, so can't use `pagetree?` contract.
+(define (pagetree-strict->list pt)
+  (flatten (cdr pt)))
+
 ;; flatten tree to sequence
 (define+provide/contract (pagetree->list pt-or-path)
   ((or/c pagetree? pathish?) . -> . pagenodes?)
   ; use cdr to get rid of root tag at front
-  (flatten (cdr (get-pagetree pt-or-path)))) 
+  (pagetree-strict->list (get-pagetree pt-or-path))) 
 
 (module-test-external
  (define test-pagetree `(pagetree-main foo bar (one (two three))))
