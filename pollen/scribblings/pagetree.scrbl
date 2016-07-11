@@ -319,7 +319,7 @@ A parameter that defines the default pagetree used by pagetree navigation functi
 @defproc[
 (parent
 [p (or/c #f pagenodeish?)]
-[pagetree pagetree? (current-pagetree)])
+[pagetree (or/c pagetree? pathish?) (current-pagetree)])
 (or/c #f pagenode?)]
 Find the parent pagenode of @racket[_p] within @racket[_pagetree]. Return @racket[#f] if there isn't one, or if you reach the root of the pagetree.
 
@@ -334,7 +334,7 @@ Find the parent pagenode of @racket[_p] within @racket[_pagetree]. Return @racke
 @defproc[
 (children
 [p (or/c #f pagenodeish?)]
-[pagetree pagetree? (current-pagetree)])
+[pagetree (or/c pagetree? pathish?) (current-pagetree)])
 (or/c #f pagenode?)]
 Find the child pagenodes of @racket[_p] within @racket[_pagetree]. Return @racket[#f] if there aren't any.
 
@@ -350,7 +350,7 @@ Find the child pagenodes of @racket[_p] within @racket[_pagetree]. Return @racke
 @defproc[
 (siblings
 [p (or/c #f pagenodeish?)]
-[pagetree pagetree? (current-pagetree)])
+[pagetree (or/c pagetree? pathish?) (current-pagetree)])
 (or/c #f pagenode?)]
 Find the sibling pagenodes of @racket[_p] within @racket[_pagetree]. The list will include @racket[_p] itself. But the function will still return @racket[#f] if @racket[_pagetree] is @racket[#f].
 
@@ -367,13 +367,13 @@ Find the sibling pagenodes of @racket[_p] within @racket[_pagetree]. The list wi
 @defproc[
 (previous
 [p (or/c #f pagenodeish?)]
-[pagetree pagetree? (current-pagetree)])
+[pagetree (or/c pagetree? pathish?) (current-pagetree)])
 (or/c #f pagenode?)]
 
 @defproc[
 (previous*
 [p (or/c #f pagenodeish?)]
-[pagetree pagetree? (current-pagetree)])
+[pagetree (or/c pagetree? pathish?) (current-pagetree)])
 (or/c #f (listof pagenode?))]
 )]
 Return the pagenode immediately before @racket[_p]. For @racket[previous*], return all the pagenodes before @racket[_p], in sequence. In both cases, return @racket[#f] if there aren't any pagenodes. The root pagenode is ignored.
@@ -393,13 +393,13 @@ Return the pagenode immediately before @racket[_p]. For @racket[previous*], retu
 @defproc[
 (next
 [p (or/c #f pagenodeish?)]
-[pagetree pagetree? (current-pagetree)])
+[pagetree (or/c pagetree? pathish?) (current-pagetree)])
 (or/c #f pagenode?)]
 
 @defproc[
 (next*
 [p (or/c #f pagenodeish?)]
-[pagetree pagetree? (current-pagetree)])
+[pagetree (or/c pagetree? pathish?) (current-pagetree)])
 (or/c #f (listof pagenode?))]
 )]
 Return the pagenode immediately after @racket[_p]. For @racket[next*], return all the pagenodes after @racket[_p], in sequence. In both cases, return @racket[#f] if there aren't any pagenodes. The root pagenode is ignored.
@@ -419,15 +419,15 @@ Return the pagenode immediately after @racket[_p]. For @racket[next*], return al
 
 @defproc[
 (get-pagetree
-[pagetree-source pathish?])
+[pagetree-source (or/c pagetree? pathish?)])
 pagetree?
 ]
-Get a pagetree from a @ext[default-pagetree-source-ext] source file, namely @racket[_pagetree-source].
+Get a pagetree from a @ext[default-pagetree-source-ext] source file, namely @racket[_pagetree-source]. If @racket[_pagetree-source] is already a pagetree, just pass it through.
 
 
 @defproc[
 (pagetree->list
-[pagetree pagetree?])
+[pagetree (or/c pagetree? pathish?)])
 list?
 ]
 Convert @racket[_pagetree] to a simple list. Uses @racket[flatten], and is thus equivalent to a pre-order depth-first traversal of @racket[_pagetree].
@@ -440,8 +440,8 @@ Convert @racket[_pagetree] to a simple list. Uses @racket[flatten], and is thus 
 
 @defproc[
 (in-pagetree?
-[pagenode pagenode?]
-[pagetree pagetree? (current-pagetree)])
+[pagenode pagenodeish?]
+[pagetree (or/c pagetree? pathish?) (current-pagetree)])
 boolean?
 ]
 Report whether @racket[_pagenode] is in @racket[_pagetree].

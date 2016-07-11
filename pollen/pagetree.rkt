@@ -103,8 +103,8 @@
 
 
 (define+provide/contract (get-pagetree source-path)
-  (pathish? . -> . pagetree?)
-  (cached-doc source-path))
+  ((or/c pagetree? pathish?) . -> . pagetree?)
+  (if (pagetree? source-path) source-path (cached-doc source-path)))
 
 (define+provide load-pagetree get-pagetree) ; bw compat
 
@@ -117,12 +117,13 @@
     (load-pagetree pagetree-source)))
 
 
-(define+provide/contract (parent pnish [pt (current-pagetree)] #:allow-root [allow-root? #f])
-  (((or/c #f pagenodeish?)) (pagetree? #:allow-root boolean?) . ->* . (or/c #f pagenode?))
+(define+provide/contract (parent pnish [pt-or-path (current-pagetree)] #:allow-root [allow-root? #f])
+  (((or/c #f pagenodeish?)) ((or/c pagetree? pathish?) #:allow-root boolean?) . ->* . (or/c #f pagenode?))
   (define subtree? list?)
   (define (topmost-node x) (if (subtree? x) (car x) x))
+  (define pt (get-pagetree pt-or-path))
   (define result
-    (and pt pnish
+    (and pnish
          (let loop ([pagenode (->pagenode pnish)][subtree pt])
            (define current-parent (car subtree))
            (define current-children (cdr subtree))
@@ -142,10 +143,11 @@
  (check-false (parent 'nonexistent-name test-pagetree)))
 
 
-(define+provide/contract (children p [pt (current-pagetree)])
-  (((or/c #f pagenodeish?)) (pagetree?) . ->* . (or/c #f pagenodes?))  
-  (and pt p 
-       (let ([pagenode (->pagenode p)])
+(define+provide/contract (children p [pt-or-path (current-pagetree)])
+  (((or/c #f pagenodeish?)) ((or/c pagetree? pathish?)) . ->* . (or/c #f pagenodes?))  
+  (and pt-or-path p 
+       (let ([pagenode (->pagenode p)]
+             [pt (get-pagetree pt-or-path)])
          (if (eq? pagenode (car pt))
              (map (λ(x) (if (list? x) (car x) x)) (cdr pt))
              (ormap (λ(x) (children pagenode x)) (filter list? pt))))))
@@ -159,8 +161,9 @@
  (check-false (children 'fooburger test-pagetree)))
 
 
-(define+provide/contract (siblings pnish [pt (current-pagetree)])
-  (((or/c #f pagenodeish?)) (pagetree?) . ->* . (or/c #f pagenodes?))  
+(define+provide/contract (siblings pnish [pt-or-path (current-pagetree)])
+  (((or/c #f pagenodeish?)) ((or/c pagetree? pathish?)) . ->* . (or/c #f pagenodes?))  
+  (define pt (get-pagetree pt-or-path))
   (children (parent #:allow-root #t pnish pt) pt))
 
 (module-test-external
@@ -183,12 +186,12 @@
  (check-equal? (pagetree->list test-pagetree) '(foo bar one two three)))
 
 
-(define (adjacents side pnish [pt (current-pagetree)])
+(define (adjacents side pnish [pt-or-path (current-pagetree)])
   #;(symbol? pagenodeish? pagetree? . -> . pagenodes?)
-  (and pt pnish
+  (and pt-or-path pnish
        (let* ([pagenode (->pagenode pnish)]
               [proc (if (eq? side 'left) takef takef-right)]
-              [pagetree-nodes (pagetree->list pt)]
+              [pagetree-nodes (pagetree->list (get-pagetree pt-or-path))]
               ;; using `in-pagetree?` would require another flattening
               [in-tree? (memq pagenode pagetree-nodes)] 
               [result (and in-tree? (proc pagetree-nodes (λ(x) (not (eq? pagenode x)))))])
@@ -200,9 +203,9 @@
  (check-false (adjacents 'right 'node-not-in-pagetree '(pagetree-index one two three))))
 
 
-(define+provide/contract (previous* pnish [pt (current-pagetree)]) 
-  (((or/c #f pagenodeish?)) (pagetree?) . ->* . (or/c #f pagenodes?))
-  (adjacents 'left pnish pt))
+(define+provide/contract (previous* pnish [pt-or-path (current-pagetree)]) 
+  (((or/c #f pagenodeish?)) ((or/c pagetree? pathish?)) . ->* . (or/c #f pagenodes?))
+  (adjacents 'left pnish (get-pagetree pt-or-path)))
 
 (module-test-external
  (define test-pagetree `(pagetree-main foo bar (one (two three))))
@@ -211,14 +214,15 @@
  (check-false (previous* 'foo test-pagetree)))
 
 
-(define+provide/contract (next* pnish [pt (current-pagetree)]) 
-  (((or/c #f pagenodeish?)) (pagetree?) . ->* . (or/c #f pagenodes?))
-  (adjacents 'right pnish pt))
+(define+provide/contract (next* pnish [pt-or-path (current-pagetree)]) 
+  (((or/c #f pagenodeish?)) ((or/c pagetree? pathish?)) . ->* . (or/c #f pagenodes?))
+  (adjacents 'right pnish (get-pagetree pt-or-path)))
 
 
-(define+provide/contract (previous pnish [pt (current-pagetree)])
-  (((or/c #f pagenodeish?)) (pagetree?) . ->* . (or/c #f pagenode?))
-  (let ([result (previous* pnish pt)])
+(define+provide/contract (previous pnish [pt-or-path (current-pagetree)])
+  (((or/c #f pagenodeish?)) ((or/c pagetree? pathish?)) . ->* . (or/c #f pagenode?))
+  (let* ([pt (get-pagetree pt-or-path)]
+         [result (previous* pnish pt)])
     (and result (last result))))
 
 (module-test-external
@@ -230,9 +234,10 @@
 
 
 
-(define+provide/contract (next pnish [pt (current-pagetree)])
-  (((or/c #f pagenodeish?)) (pagetree?) . ->* . (or/c #f pagenode?))
-  (let ([result (next* pnish pt)])
+(define+provide/contract (next pnish [pt-or-path (current-pagetree)])
+  (((or/c #f pagenodeish?)) ((or/c pagetree? pathish?)) . ->* . (or/c #f pagenode?))
+  (let* ([pt (get-pagetree pt-or-path)]
+         [result (next* pnish pt)])
     (and result (first result))))
 
 (module-test-external
@@ -251,6 +256,6 @@
   (->output-path (find-relative-path (->complete-path starting-dir) (->complete-path path))))
 
 
-(define+provide/contract (in-pagetree? pnish [pt (current-pagetree)])
-  (((or/c #f pagenodeish?)) (pagetree?) . ->* . boolean?)
-  (and pnish (memq pnish (pagetree->list pt)) #t))
+(define+provide/contract (in-pagetree? pnish [pt-or-path (current-pagetree)])
+  (((or/c #f pagenodeish?)) ((or/c pagetree? pathish?)) . ->* . boolean?)
+  (and pnish (memq pnish (pagetree->list (get-pagetree pt-or-path))) #t))
