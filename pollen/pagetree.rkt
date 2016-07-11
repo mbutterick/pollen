@@ -176,10 +176,10 @@
 
 
 ;; flatten tree to sequence
-(define+provide/contract (pagetree->list pt)
-  (pagetree? . -> . pagenodes?)
+(define+provide/contract (pagetree->list pt-or-path)
+  ((or/c pagetree? pathish?) . -> . pagenodes?)
   ; use cdr to get rid of root tag at front
-  (flatten (cdr pt))) 
+  (flatten (cdr (get-pagetree pt-or-path)))) 
 
 (module-test-external
  (define test-pagetree `(pagetree-main foo bar (one (two three))))
