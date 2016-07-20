@@ -78,7 +78,8 @@
  (require sugar/coerce)
  (check-equal? (escape-last-ext "foo") (->path "foo"))
  (check-equal? (escape-last-ext "foo.html") (->path "foo_html"))
- (check-equal? (escape-last-ext "foo.html" #\$) (->path "foo$html")))
+ (check-equal? (escape-last-ext "foo.html" #\$) (->path "foo$html"))
+ (check-equal? (escape-last-ext "foo_bar.html") (->path "foo_bar_html")))
 
 (define second cadr)
 (define third caddr)
@@ -90,6 +91,10 @@
   (->path
    (cond
      [dir? x]
+     ;; if x has a standard extension, it can't also have an escapable extension, so we're done.
+     ;; saves us the trouble of handling this case in the regexp below,
+     ;; which otherwise would catch things like foo_bar.html (reasoning that _bar.html is all an extension)
+     [(get-ext x) x] 
      [else
       (define x-parts (explode-path x))
       (define filename (last x-parts))
@@ -117,6 +122,8 @@
  (check-equal? (unescape-ext "foo_dir/bar_html") (->path "foo_dir/bar.html"))
  (check-equal? (unescape-ext "foo$html" #\$) (->path "foo.html"))
  (check-equal? (unescape-ext "foo_bar__html") (->path "foo_bar_.html"))
+ (check-equal? (unescape-ext "foo_bar.html") (->path "foo_bar.html"))
+ (check-equal? (unescape-ext (escape-last-ext "foo_bar.html")) (->path "foo_bar.html"))
  (check-equal? (unescape-ext "foo$bar$$html" #\$) (->path "foo$bar$.html")))
 
 
