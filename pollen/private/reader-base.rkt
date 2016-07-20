@@ -42,15 +42,19 @@
                     [DIRECTORY-REQUIRES (require+provide-directory-require-files path-string)]
                     [SOURCE-LINES source-stx]
                     [DOC (setup:main-export)]
+                    [META-MOD (setup:meta-export)]
                     [PARSER-MODE-FROM-READER parser-mode-from-reader]
                     [POLLEN-MODULE-SYNTAX (let ([mod-stx #'(module POLLEN-MOD-NAME pollen
-                                                               (define-meta HERE-KEY HERE-PATH) 
-                                                               (provide (all-defined-out))
-                                                               DIRECTORY-REQUIRES
-                                                               . SOURCE-LINES)])
+                                                             (define-meta HERE-KEY HERE-PATH) 
+                                                             (provide (all-defined-out))
+                                                             DIRECTORY-REQUIRES
+                                                             . SOURCE-LINES)])
                                             (syntax-property mod-stx 'parser-mode-from-reader parser-mode-from-reader))])
        #'(module runtime-wrapper racket/base
            POLLEN-MODULE-SYNTAX
+           (module META-MOD racket/base
+             (require (submod ".." POLLEN-MOD-NAME META-MOD))
+             (provide (all-from-out (submod ".." POLLEN-MOD-NAME META-MOD))))
            (require (submod pollen/private/runtime-config show) 'POLLEN-MOD-NAME)
            (provide (all-from-out 'POLLEN-MOD-NAME))
            (show DOC 'PARSER-MODE-FROM-READER HERE-PATH))))) ; HERE-PATH acts as "local" runtime config
@@ -83,7 +87,7 @@
             (define my-make-drracket-buttons (dynamic-require 'pollen/private/drracket-buttons 'make-drracket-buttons))
             (my-make-drracket-buttons my-command-char)])]
         [(drracket:indentation)
-            (dynamic-require 'scribble/private/indentation 'determine-spaces)]
+         (dynamic-require 'scribble/private/indentation 'determine-spaces)]
         [else default]))))
 
 (define-syntax-rule (reader-module-begin mode expr-to-ignore ...)
