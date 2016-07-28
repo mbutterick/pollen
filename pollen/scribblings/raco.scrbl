@@ -124,7 +124,7 @@ Can also be invoked as @racket[raco pollen setup _directory], which will set up 
 
 @section{@exec{raco pollen reset}}
 
-Resets Pollen's @seclink["Cache" #:doc '(lib "pollen/scribblings/pollen.scrbl")] by deleting the cache directories.
+Resets Pollen's @seclink["Cache" #:doc '(lib "pollen/scribblings/pollen.scrbl")] by deleting the cache directories, including @tt{compiled} directories created by Racket. Use this when you need a fresh start in life.
 
 Can also be invoked as @racket[raco pollen reset _directory], which will reset a different project @racket[_directory].
 
