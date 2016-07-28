@@ -11,10 +11,13 @@
 (define+provide (reset-cache [starting-dir (current-project-root)])
   (unless (and (path-string? starting-dir) (directory-exists? starting-dir))
     (raise-argument-error 'reset-cache "path-string to existing directory" starting-dir))
-  
+
   (for ([path (in-directory starting-dir)]
         #:when (and (directory-exists? path)
-                    (equal? (path->string (car (reverse (explode-path path)))) (setup:cache-dir-name))))
+                    (let* ([last (compose1 car reverse)]
+                           [last-path-element (path->string (last (explode-path path)))])
+                      (or (equal? last-path-element (setup:cache-dir-name))
+                          (equal? last-path-element "compiled")))))
        (message (format "removing cache directory: ~a" path))
        (delete-directory/files path)))
 
