@@ -15,9 +15,9 @@
 (define (start-server)
   (define-values (pollen-servlet _)
     (dispatch-rules
-     [((string-arg) ... (? pagetree-source?)) route-dashboard]
-     [((string-arg) ... "in" (string-arg)) route-in]
-     [((string-arg) ... "out" (string-arg)) route-out]
+     [((? pagetree-source?)) route-dashboard]
+     [("in" (string-arg) ...) route-in]
+     [("out" (string-arg) ...) route-out]
      [else route-default]))
   
   (message (format "Welcome to Pollen ~a" pollen:version) (format "(Racket ~a)" (version)))
