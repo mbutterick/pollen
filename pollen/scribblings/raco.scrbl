@@ -110,6 +110,8 @@ Make a copy of the project directory on the desktop, but without any source file
 
 If you're already in your project directory and want to publish somewhere other than the desktop, use @racket[raco pollen publish _. _dest-dir].
 
+By default, this command will automatically overwrite the destination directory. Adding the optional @exec{-c} or @exec{--confirm} switch will ask for confirmation if the destination already exists.
+
 You can determine the default publishing destination for a project by overriding @racket[default-publish-directory].
 
 Certain files and directories are automatically omitted from the published directory, including Racket and Pollen sources, Pollen caches, and source-control directories (like @tt{.git} and @tt{.svn}). You can omit other files by overriding @racket[default-omitted-path?]. You can override these omissions — that is, force a path to be published — by overriding @racket[default-extra-path?].

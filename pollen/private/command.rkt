@@ -36,10 +36,7 @@
     [("version") (handle-version)]
     [("reset") (handle-reset (get-first-arg-or-current-dir))]
     [("setup") (handle-setup (get-first-arg-or-current-dir))]
-    [("clone" "publish") (define rest-args
-                           (with-handlers ([exn:fail? (λ _ #f)])
-                             (cddr (vector->list (current-command-line-arguments)))))
-                         (handle-publish (get-first-arg-or-current-dir) rest-args command-name)]
+    [("clone" "publish") (handle-publish)]
     [else (handle-unknown command-name)]))
 
 (define (very-nice-path x)
@@ -58,7 +55,7 @@ render  [dir] [dest]   render project in dir (default is current dir)
 render filename        render filename only (can be source or output name)
 publish                copy project to ~a without source files
 publish [dir] [dest]   copy project in dir to dest without source files
-                          (warning: overwrites existing dest dir)
+                          (warning: overwrites existing dest)
 setup                  preload cache
 reset                  reset cache
 version                print the version" (current-server-port) (make-publish-dir-name))))
@@ -142,12 +139,30 @@ version                print the version" (current-server-port) (make-publish-di
                                 "clone"
                                 user-publish-path))))))
 
-(define (handle-publish directory-maybe rest-args arg-command-name)
-  (define target-path
-    (or 
-     (and rest-args (not (null? rest-args)) (path->complete-path (string->path (car rest-args))))
-     (make-publish-dir-name arg-command-name)))
+(define (handle-publish)
+  (define command-name ; either "publish" or "clone"
+    (vector-ref (current-command-line-arguments) 0))
+  (define force-target-overwrite? (make-parameter #t))
+  (define fake-command-line (command-line
+                             ;; drop command name
+                             #:argv (vector-drop (current-command-line-arguments) 1)
+                             #:once-each
+                             [("-c" "--confirm") "Confirm overwrite of existing dest dir"
+                                                 (force-target-overwrite? #f)]
+                             #:args other-args
+                             (cons command-name other-args)))
+  ;; fake-command-line looks like
+  ;; command-name [maybe-source-dir-arg] [maybe-dest-dir-arg]
+  (define source-dir
+    (simplify-path (get-first-arg-or-current-dir (list->vector fake-command-line))))
   
+  (define dest-dir
+    (simplify-path
+     (or 
+      (and (>= (length fake-command-line) 3)
+           (path->complete-path (string->path (third fake-command-line))))
+      (make-publish-dir-name command-name))))
+
   (define (delete-it path)
     (cond
       [(directory-exists? path) (delete-directory/files path)]
@@ -159,34 +174,37 @@ version                print the version" (current-server-port) (make-publish-di
            (andmap equal? prefix (take xs (length prefix)))))
     ((explode-path possible-subdir) . has-prefix? . (explode-path possible-superdir)))
   
-  (define source-dir (simplify-path directory-maybe))
   (when (not (directory-exists? source-dir))
     (error 'publish (format "source directory ~a does not exist" source-dir)))
-  (define target-dir (simplify-path target-path))
-  (when (source-dir . contains-directory? . target-dir)
-    (error 'publish "aborted because target directory for publishing (~a) can't be inside source directory (~a)" target-dir source-dir))
-  (when (target-dir . contains-directory? . source-dir)
-    (error 'publish "aborted because target directory for publishing (~a) can't contain source directory (~a)" target-dir source-dir))
-  (when (equal? target-dir (current-directory))
-    (error 'publish "aborted because target directory for publishing (~a) can't be the same as current directory (~a)" target-dir (current-directory)))
+  
+  (when (source-dir . contains-directory? . dest-dir)
+    (error 'publish "aborted because destination directory for publishing (~a) can't be inside source directory (~a)" dest-dir source-dir))
+  
+  (when (dest-dir . contains-directory? . source-dir)
+    (error 'publish "aborted because destination directory for publishing (~a) can't contain source directory (~a)" dest-dir source-dir))
+  
+  (when (equal? dest-dir (current-directory))
+    (error 'publish "aborted because destination directory for publishing (~a) can't be the same as current directory (~a)" dest-dir (current-directory)))
+  
   (display (format "publishing from ~a " source-dir))
-  (displayln (format "to ~a ..." target-dir))
+  (displayln (format "to ~a ..." dest-dir))
   (define do-publish-operation?
-    (or (not (directory-exists? target-dir))
+    (or (not (directory-exists? dest-dir))
+        (force-target-overwrite?)
         (begin
-          (display (format "target directory ~a exists. Overwrite? [yes/no] " target-dir))
+          (display (format "destination directory ~a exists. Overwrite? [yes/no] " dest-dir))
           (case (read)
             [(y yes) #t]
             [else #f]))))
   (cond
     [do-publish-operation?
-     (when (directory-exists? target-dir)
-       (delete-directory/files target-dir))
-     (copy-directory/files source-dir target-dir)
+     (when (directory-exists? dest-dir)
+       (delete-directory/files dest-dir))
+     (copy-directory/files source-dir dest-dir)
      (parameterize ([current-project-root (current-directory)])
        (define (delete-from-publish-dir? p)
          (and (omitted-path? p) (not (extra-path? p))))
-       (for-each delete-it (find-files delete-from-publish-dir? target-dir)))
+       (for-each delete-it (find-files delete-from-publish-dir? dest-dir)))
      (displayln "publish completed")]
     [else (displayln "publish aborted")]))
 
