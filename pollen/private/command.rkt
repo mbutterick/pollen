@@ -169,15 +169,26 @@ version                print the version" (current-server-port) (make-publish-di
     (error 'publish "aborted because target directory for publishing (~a) can't contain source directory (~a)" target-dir source-dir))
   (when (equal? target-dir (current-directory))
     (error 'publish "aborted because target directory for publishing (~a) can't be the same as current directory (~a)" target-dir (current-directory)))
-  (displayln (format "publishing to ~a ..." target-dir))
-  (when (directory-exists? target-dir)
-    (delete-directory/files target-dir))
-  (copy-directory/files source-dir target-dir)
-  (parameterize ([current-project-root (current-directory)])
-    (define (delete-from-publish-dir? p)
-      (and (omitted-path? p) (not (extra-path? p))))
-    (for-each delete-it (find-files delete-from-publish-dir? target-dir)))
-  (displayln "completed"))
+  (display (format "publishing from ~a " source-dir))
+  (displayln (format "to ~a ..." target-dir))
+  (define do-publish-operation?
+    (or (not (directory-exists? target-dir))
+        (begin
+          (display (format "target directory ~a exists. Overwrite? [yes/no] " target-dir))
+          (case (read)
+            [(y yes) #t]
+            [else #f]))))
+  (cond
+    [do-publish-operation?
+     (when (directory-exists? target-dir)
+       (delete-directory/files target-dir))
+     (copy-directory/files source-dir target-dir)
+     (parameterize ([current-project-root (current-directory)])
+       (define (delete-from-publish-dir? p)
+         (and (omitted-path? p) (not (extra-path? p))))
+       (for-each delete-it (find-files delete-from-publish-dir? target-dir)))
+     (displayln "publish completed")]
+    [else (displayln "publish aborted")]))
 
 (define (handle-unknown command)
   (if (regexp-match #rx"(shit|fuck)" command)
