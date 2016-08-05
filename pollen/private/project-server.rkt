@@ -15,7 +15,7 @@
 (define (start-server)
   (define-values (pollen-servlet _)
     (dispatch-rules
-     [((? pagetree-source?)) route-dashboard]
+     [((string-arg) ... (? pagetree-source?)) route-dashboard]
      [("in" (string-arg) ...) route-in]
      [("out" (string-arg) ...) route-out]
      [else route-default]))
