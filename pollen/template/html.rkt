@@ -1,33 +1,43 @@
 #lang racket/base
-(require sugar/define sugar/test txexpr/base)
+(require sugar/define sugar/test txexpr/base pollen/private/splice)
 
 (define (trim-outer-tag html)
   (define matches (regexp-match #px"^<.*?>(.*)</.*?>$" html))
   (define paren-match (cadr matches))
   paren-match)
 
+(define (has-outer-splice-tag? x)
+  (and (pair? x) (eq? (get-tag x) splice-signal-tag)))
 
-(define+provide/contract (->html x-arg #:tag [tag #f] #:attrs [attrs #f] #:splice? [splice? #f] #:splice [bwc-splice? #f])
+(define+provide/contract (->html x-arg-maybe-spliced #:tag [tag #f] #:attrs [attrs #f] #:splice? [new-splice-arg? #f] #:splice [backward-compatible-splice-arg? #f])
   (((or/c txexpr-element? txexpr-elements?)) (#:tag (or/c #f txexpr-tag?) #:attrs (or/c #f txexpr-attrs?) #:splice? boolean? #:splice boolean?) . ->* . string?)
-  
-  (define x (cond
-              [(txexpr? x-arg) x-arg]
-              [(list? x-arg) (cons 'html x-arg)]
-              [else x-arg]))
+
+  ;; handle an outer splice tag specially, because `splice` will leave it
+  (define x-arg (if (has-outer-splice-tag? x-arg-maybe-spliced)
+                    (cdr x-arg-maybe-spliced)
+                    x-arg-maybe-spliced))
+
+  ;; x is an X-expression
+  (define x (if (list? x-arg)
+                (splice (if (txexpr? x-arg)
+                            x-arg
+                            (cons 'html x-arg))) ; list of txexpr-elements
+                x-arg))
   
   (when (and (not (txexpr? x)) attrs (not tag))
     (raise-argument-error '->html "can't use attribute list without a #:tag argument" tag))
-  
+
+  (define splice? (or new-splice-arg? backward-compatible-splice-arg?))
   (cond
     [(or tag (txexpr? x))
      (define html-tag (or tag (get-tag x)))
      (define html-attrs (or attrs (and (txexpr? x) (get-attrs x)) null))
      (define html-elements (or (and (txexpr? x) (get-elements x)) (list x)))
      (define html (xexpr->html (txexpr html-tag html-attrs html-elements)))
-     (if (or splice? bwc-splice? (and (list? x-arg) (not (txexpr? x-arg)) (not tag)))
+     (if (or splice? (and (list? x-arg) (not (txexpr? x-arg)) (not tag)))
          (trim-outer-tag html)
          html)]
-     [else (xexpr->html x)]))
+    [else (xexpr->html x)]))
 
 (module-test-external
  (define tx '(root (p "hello")))
@@ -48,4 +58,6 @@
  (define xs '("hello " (em "you") " " 42))
  (check-equal? (->html xs) "hello <em>you</em> &#42;")
  (check-equal? (->html #:splice? #t xs) "hello <em>you</em> &#42;")
- (check-equal? (->html #:tag 'div xs) "<div>hello <em>you</em> &#42;</div>"))
+ (check-equal? (->html #:tag 'div xs) "<div>hello <em>you</em> &#42;</div>")
+ (check-equal? (->html '(@ "Markup in " (@ "italic"))) "Markup in italic")
+ (check-equal? (->html '("Markup in " (@ "italic"))) "Markup in italic"))
