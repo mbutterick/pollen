@@ -136,6 +136,9 @@ Default separators used in decoding. The first two are initialized to @racket["\
 @defoverridable[poly-targets (listof symbol?)]{List of symbols that denotes the possible targets of a @racket['poly] source file. Default is @racket['(html)].}
 
 
+@defoverridable[index-pages (listof string?)]{List of strings that the project server will use as directory default pages, in order of priority. Has no effect on command-line rendering operations. Also has no effect on your live web server (usually  that's a setting you need to make in an @tt{.htaccess} configuration file). Default is @racket['("index.html")].}
+
+
 @section{Parameters}
 
 I mean @italic{parameters} in the Racket sense, i.e. values that can be fed to @racket[parameterize]. 

@@ -15,6 +15,7 @@
 (define (start-server)
   (define-values (pollen-servlet _)
     (dispatch-rules
+     [((string-arg) ... (? (λ(x) (equal? "" x)))) route-index] ; last element of a "/"-terminated url is ""
      [((string-arg) ... (? pagetree-source?)) route-dashboard]
      [("in" (string-arg) ...) route-in]
      [("out" (string-arg) ...) route-out]

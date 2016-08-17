@@ -4,6 +4,7 @@
 (require net/url)
 (require web-server/http/request-structs)
 (require web-server/http/response-structs)
+(require web-server/http/redirect)
 (require 2htdp/image)
 (require "../setup.rkt" "../render.rkt" sugar sugar/unstable/string sugar/unstable/misc sugar/unstable/container txexpr/base "file-utils.rkt" "debug.rkt" "../pagetree.rkt" "../cache.rkt")
 
@@ -13,7 +14,7 @@
 ;;; separated out for ease of testing
 ;;; because it's tedious to start the server just to check a route.
 
-(provide route-dashboard route-default route-404 route-in route-out)
+(provide route-dashboard route-default route-404 route-in route-out route-index)
 
 (define (response/xexpr+doctype xexpr)
   (response/xexpr #:preamble #"<!DOCTYPE html>" xexpr))
@@ -35,6 +36,7 @@
   (make-request #"GET" (string->url u) empty
                 (delay empty) #f "1.2.3.4" 80 "4.3.2.1"))
 
+
 ;; print message to console about a request
 (define/contract (logger req)
   (request? . -> . void?) 
@@ -42,7 +44,9 @@
   (define localhost-client "::1")
   (define url-string (url->string (request-uri req)))
   (when (not (ends-with? url-string "favicon.ico"))
-    (message "request:" (string-replace url-string (setup:main-pagetree) " dashboard")
+    (message "request:" (if (regexp-match #rx"/$" url-string)
+                            (string-append url-string " directory default page")
+                            (string-replace url-string (setup:main-pagetree) " dashboard"))
              (if (not (equal? client localhost-client)) (format "from ~a" client) ""))))
 
 ;; pass string args to route, then
@@ -268,13 +272,23 @@
   (render-from-source-or-output-path (req->path req))
   (next-dispatcher))
 
+;; index route
+(define (route-index req . string-args)
+  (logger req)
+  (or (for*/first ([index-dir (in-value (simplify-path (req->path req)))]
+                   [possible-idx-page (in-list (setup:index-pages index-dir))]
+                   [possible-idx-path (in-value (build-path index-dir possible-idx-page))]
+                   [_ (in-value (render-from-source-or-output-path possible-idx-path))]
+                   #:when (file-exists? possible-idx-path))
+                  (redirect-to (path->string (find-relative-path index-dir possible-idx-path)) temporarily))
+      (route-404 req)))
 
 ;; 404 route
 (define/contract (route-404 req)
   (request? . -> . response?)
-  (define missing-path (->string (req->path req)))
-  (message (format "route-404: Can't find ~a" missing-path))
+  (define missing-path-string (path->string (simplify-path (req->path req))))
+  (message (format "route-404: Can't find ~a" missing-path-string))
   (response/xexpr+doctype
    `(html 
      (head (title "404 error") (link ((href "/error.css") (rel "stylesheet"))))
-     (body (div ((class "section")) (div ((class "title")) "404 error") (p ,(format "~v" missing-path) " was not found"))))))
+     (body (div ((class "section")) (div ((class "title")) "404 error") (p ,(format "~v" missing-path-string) " was not found"))))))

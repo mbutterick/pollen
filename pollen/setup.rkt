@@ -20,9 +20,9 @@
   (define starting-dir (if (directory-exists? file-or-dir) file-or-dir (dirname file-or-dir)))
   (let loop ([dir starting-dir][path file-with-config-submodule])
     (and dir ; dir is #f when it hits the top of the filesystem
-         (let ([completed-path (path->complete-path path starting-dir)])
-           (if (file-exists? completed-path)
-               (simplify-path completed-path)
+         (let ([simplified-path (simplify-path (path->complete-path path starting-dir))])
+           (if (file-exists? simplified-path)
+               simplified-path
                (loop (dirname dir) (build-path 'up path)))))))
 
 
@@ -124,3 +124,5 @@
 (define-settable poly-source-ext 'poly) ; extension that signals source can be used for multiple output targets
 (define-settable poly-targets '(html)) ; current target applied to multi-output source files
 (define+provide current-poly-target (make-parameter (car (poly-targets))))
+
+(define-settable index-pages '("index.html"))
