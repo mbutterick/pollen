@@ -17,8 +17,8 @@
     (dispatch-rules
      [((string-arg) ... (? (λ(x) (equal? "" x)))) route-index] ; last element of a "/"-terminated url is ""
      [((string-arg) ... (? pagetree-source?)) route-dashboard]
-     [("in" (string-arg) ...) route-in]
-     [("out" (string-arg) ...) route-out]
+     [((string-arg) ... "in" (string-arg) ...) route-in]
+     [((string-arg) ... "out" (string-arg) ...) route-out]
      [else route-default]))
   
   (message (format "Welcome to Pollen ~a" pollen:version) (format "(Racket ~a)" (version)))

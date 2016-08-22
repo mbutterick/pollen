@@ -56,7 +56,9 @@
 (define/contract (route-wrapper route-proc)
   (procedure? . -> . procedure?)
   (λ(req . string-args) 
-    (logger req) 
+    (logger req)
+    ;; `flatten` here because servlet's route matcher might send a list of lists
+    ;; for "before and after" matches, like `((string-arg) ... "in" (string-arg) ...)`
     (define path (apply build-path (current-project-root) (flatten string-args)))
     (response/xexpr+doctype (route-proc path))))
 
