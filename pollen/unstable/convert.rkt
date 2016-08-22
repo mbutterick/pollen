@@ -2,7 +2,7 @@
 (require sugar txexpr/base racket/list racket/string pollen/setup xml html racket/file racket/match "html.rkt" net/url racket/port)
 
 (define (attrs->pollen attrs)
-  (string-join (flatten (map (λ(pair) (list (format "'~a:" (car pair)) (format "\"~a\"" (cadr pair)))) attrs)) " "))
+  (string-join (flatten (map (λ(pair) (list (format "#:~a" (car pair)) (format "\"~a\"" (cadr pair)))) attrs)) " "))
 
 
 (define/contract+provide (xexpr->pollen x #:p-breaks [p-breaks #f])
@@ -10,11 +10,17 @@
   
   (let loop ([x x])
     (cond
-      [(and p-breaks (txexpr? x) (equal? (car x) 'p) (apply string-append `("\n" ,@(map ->string (map loop (get-elements x))) "\n")))]
-      [(txexpr? x) (apply string-append 
+      [(and p-breaks (txexpr? x) (equal? (car x) 'p) (empty? (get-attrs x)) (apply string-append `("\n" ,@(map ->string (map loop (get-elements x))) "\n")))]
+      [(and (txexpr? x)
+            (or (not (empty? (get-attrs x)))
+                (not (empty? (get-elements x)))))
+       (apply string-append 
                           (map ->string  `(,(setup:command-char) ,(get-tag x) 
                                                                  ,@(if (not (null? (get-attrs x))) `("[" ,(attrs->pollen (get-attrs x)) "]") null) 
                                                                  ,@(if (not (null? (get-elements x))) `("{" ,@(map loop (get-elements x)) "}" ) null))))]
+      [(txexpr? x)
+       ;; no attrs or tag, so needs parens
+       (format "~a(~a)" (setup:command-char) (get-tag x))]
       [(symbol? x) (loop (entity->integer x))]
       [(number? x) (format "~a" (integer->char x))]
       [else x])))
