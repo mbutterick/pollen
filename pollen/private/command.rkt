@@ -48,11 +48,10 @@
 (define (handle-help)
   (displayln (format "Pollen commands:
 help                   show this message
-start   [dir] [port]   starts project server in dir (default is current dir) 
+start [dir] [port]     starts project server in dir (default is current dir) 
                           (default port is ~a)
-render  [dir] [dest]   render project in dir (default is current dir) 
-                          to dest (default is desktop)
-render filename        render filename only (can be source or output name)
+render [dir]           render project in dir (default is current dir) 
+render path ...        render one or more paths (can be source or output name)
 publish                copy project to ~a without source files
 publish [dir] [dest]   copy project in dir to dest without source files
                           (warning: overwrites existing dest)
