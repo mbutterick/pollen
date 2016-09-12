@@ -83,6 +83,10 @@ This refers to the function as a value (not usually what you want):
 
 I want to attend ◊em{RacketCon ◊strong{this} year}.}]
 
+Yielding:
+
+@repl-output{'(root "I want to attend " (em "RacketCon " "BAP" " year") ".")}
+
 @subsection{Multiple input values & rest arguments} Sometimes a tag will have only one word or string that becomes its input. More likely, however, it will have multiple values (this is inevitable with nested tags, because the results aren't concatenated). For instance, if we attach our function to @racket[em] rather than @racket[strong]:
 
 @fileblock["article.html.pm" @codeblock{

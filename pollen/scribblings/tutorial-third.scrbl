@@ -522,7 +522,7 @@ This code would not, however, produce an error if it were being run as a Pollen 
 
 As you get more comfortable attaching behavior to tags using tag functions, you'll likely want to create some functions that can be shared between multiple source files. The @filepath{pollen.rkt} file is a special file that is automatically imported by Pollen source files in the same directory (including subdirectories). So every function and value provided by @filepath{pollen.rkt} can be used in these Pollen files.
 
-First, using @filepath{pollen.rkt} isn't mandatory. Within a Pollen source file, you can always import functions and values with @racket[require] (as seen in the previous section). @filepath{pollen.rkt} just makes it easier to propagate a set of common definitions to every every Pollen source file in your project.
+First, using @filepath{pollen.rkt} isn't mandatory. Within a Pollen source file, you can always import functions and values with @racket[require] (as seen in the previous section). @filepath{pollen.rkt} just makes it easier to propagate a set of common definitions to every Pollen source file in your project.
 
 Second, notice from the @filepath{.rkt} suffix that @filepath{pollen.rkt} is a source file containing Racket code, not Pollen code. This is the default because while Pollen's notation is more convenient for text-based source files, Racket's notation is more convenient when you're just dealing with code.
 
