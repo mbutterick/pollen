@@ -34,7 +34,7 @@
     (define p (place ch
                      (define path (place-channel-get ch))
                      (define-values (path-dir path-name _) (split-path path))
-                     (message (format "compiling: ~a" path-name))
+                     (message (format "compiling: ~a" path))
                      ;; use #f to signal compile error. Otherwise allow errors to pass.
                      (define result (with-handlers ([exn:fail? (λ _ (message (format "compile failed: ~a" path-name)) #f)])
                                       (path->hash path)))
