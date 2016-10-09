@@ -29,6 +29,7 @@
  (define ps "/users/nobody/project/source.html.pm")
  (check-equal? (key->source-path (paths->key ps)) ps))
 
+
 (define-namespace-anchor cache-utils-module-ns)
 (define (path->hash path)
   ;; new namespace forces dynamic-require to re-instantiate 'path'
@@ -47,7 +48,10 @@
              ;; the savings of avoiding two cache fetches at the outset outweighs
              ;; the benefit of not reloading doc when you just need metas.
              (namespace-attach-module (namespace-anchor->namespace cache-utils-module-ns) 'pollen/setup) ; brings in params
-             (list doc-key (dynamic-require path doc-key) meta-key (dynamic-require path meta-key))))))
+             (define doc-missing-thunk (λ () ""))
+             (define metas-missing-thunk (λ () (hasheq)))
+             (list doc-key (dynamic-require path doc-key doc-missing-thunk)
+                   meta-key (dynamic-require path meta-key metas-missing-thunk))))))
 
 (define (my-make-directory* dir)
   (let-values ([(base name dir?) (split-path dir)])
