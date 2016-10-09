@@ -8,3 +8,4 @@ An ``unstable'' module is safe to use. But it's not part of the settled public i
 
 @include-section["pygments.scrbl"]
 @include-section["typography.scrbl"]
+@include-section["convert.scrbl"]
