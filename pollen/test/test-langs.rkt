@@ -1,5 +1,10 @@
 #lang at-exp racket/base
-(require rackunit racket/port racket/system racket/runtime-path compiler/find-exe)
+(require rackunit
+         racket/port
+         racket/system
+         racket/runtime-path
+         compiler/find-exe
+         pollen/render)
 
 (module test-default pollen
   "hello world")
@@ -38,6 +43,8 @@
 (define-runtime-path test.html.pmd "data/test.html.pmd")
 (define-runtime-path test.html.pp "data/test.html.pp")
 (define-runtime-path test.no-ext "data/test.no-ext")
+(define-runtime-path test.pp "data/test.pp")
+(define-runtime-path test.pm "data/test.pm")
 
 
 ;; `find-exe` avoids reliance on $PATH of the host system
@@ -51,4 +58,11 @@
   (check-equal? (run test-import.html.pm) @string-append{'(root "test" "\n" "====" "\n" (root "This is sample 01."))})
   (check-equal? (run test.html.pmd) "'(root (h1 ((id \"test\")) \"test\"))")
   (check-equal? (run test.html.pp) "test\n====")
-  (check-equal? (run test.no-ext) "test\n===="))
+  (check-equal? (run test.no-ext) "test\n====")
+  (check-equal? (run test.pm) "'(root \"test\" \"\\n\" \"====\")")
+  (check-equal? (run test.pp) "test\n====")
+  (check-equal? (render test.html.pm) "<html><head><meta charset=\"UTF-8\"/></head><body><root>test\n====</root></body></html>")
+  (check-equal? (render test.html.pmd) "<html><head><meta charset=\"UTF-8\"/></head><body><root><h1 id=\"test\">test</h1></root></body></html>")
+  (check-equal? (render test.html.pp) "test\n====")
+  (check-equal? (render test.pm) "<html><head><meta charset=\"UTF-8\"/></head><body><root>test\n====</root></body></html>")
+  (check-equal? (render test.pp) "test\n===="))

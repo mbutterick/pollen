@@ -120,7 +120,10 @@
   (define template-path (or maybe-template-path (get-template-for source-path output-path)))
   (message (format "rendering: /~a as /~a" (find-relative-path (current-project-root) source-path)
                    (find-relative-path (current-project-root) output-path)))
-  (define render-result (parameterize ([current-poly-target (->symbol (get-ext output-path))])
+  ;; output-path and template-path may not have an extension, so check them in order with fallback
+  (define render-result (parameterize ([current-poly-target (->symbol (or (get-ext output-path)
+                                                                          (and template-path (get-ext template-path))
+                                                                          (current-poly-target)))])
                           (apply render-proc (list source-path template-path output-path))))
   ;; wait till last possible moment to store mod dates, because render-proc may also trigger its own subrenders
   ;; e.g., of a template. 
@@ -210,7 +213,7 @@
   (define (get-template)
     (define source-dir (dirname source-path))
     (define output-path (or maybe-output-path (->output-path source-path)))
-    (define output-path-ext (get-ext output-path))
+    (define output-path-ext (or (get-ext output-path) (current-poly-target))) ; output-path may not have an extension
     (define (get-template-from-metas)
       (with-handlers ([exn:fail:contract? (λ _ #f)]) ; in case source-path doesn't work with cached-require
         (parameterize ([current-directory (current-project-root)])
