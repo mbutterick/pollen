@@ -55,7 +55,7 @@ You are kitty}")
 (define (conjoin . fs)
   (λ(x) (andmap (λ(f) (f x)) fs)))
 
-(define/contract (html->xexpr html-string)
+(define/contract+provide (html->xexpr html-string)
   (string? . -> . xexpr?)
   (use-html-spec #f)
   (define xexpr-results 

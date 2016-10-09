@@ -4,7 +4,9 @@
          racket/system
          racket/runtime-path
          compiler/find-exe
-         pollen/render)
+         pollen/render
+         pollen/unstable/convert
+         txexpr)
 
 (module test-default pollen
   "hello world")
@@ -61,8 +63,8 @@
   (check-equal? (run test.no-ext) "test\n====")
   (check-equal? (run test.pm) "'(root \"test\" \"\\n\" \"====\")")
   (check-equal? (run test.pp) "test\n====")
-  (check-equal? (render test.html.pm) "<html><head><meta charset=\"UTF-8\"/></head><body><root>test\n====</root></body></html>")
-  (check-equal? (render test.html.pmd) "<html><head><meta charset=\"UTF-8\"/></head><body><root><h1 id=\"test\">test</h1></root></body></html>")
-  (check-equal? (render test.html.pp) "test\n====")
-  (check-equal? (render test.pm) "<html><head><meta charset=\"UTF-8\"/></head><body><root>test\n====</root></body></html>")
-  (check-equal? (render test.pp) "test\n===="))
+  (check-txexprs-equal? (html->xexpr (render test.html.pm)) (html->xexpr "<html><head><meta charset=\"UTF-8\"/></head><body><root>test\n====</root></body></html>"))
+  (check-txexprs-equal? (html->xexpr (render test.html.pmd)) (html->xexpr "<html><head><meta charset=\"UTF-8\"/></head><body><root><h1 id=\"test\">test</h1></root></body></html>"))
+  (check-txexprs-equal? (render test.html.pp) "test\n====")
+  (check-txexprs-equal? (html->xexpr (render test.pm)) (html->xexpr "<html><head><meta charset=\"UTF-8\"/></head><body><root>test\n====</root></body></html>"))
+  (check-txexprs-equal? (render test.pp) "test\n===="))
