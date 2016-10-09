@@ -114,8 +114,6 @@ Default separators used in decoding. The first two are initialized to @racket["\
 
 @defoverridable[compile-cache-max-size exact-positive-integer?]{Maximum size of the compile cache. Default is 10 megabytes.}
 
-(define-settable publish-directory "publish")
-
 @defoverridable[publish-directory (or/c path-string? path-for-some-system?)]{Default target for @secref{raco_pollen_publish}. A complete path is used as is; a relative path is published to the desktop. Default is @racket["publish"]. @pollen-history[#:added "1.1"]}
 
 @defoverridable[unpublished-path? (path? . -> . boolean?)]{@pollen-history[#:changed "1.1" @elem{Deprecated. Please use @racket[setup:omitted-path?].}]}
