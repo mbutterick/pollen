@@ -13,10 +13,6 @@
 (define-runtime-path downtown.html "data/quick-tour/downtown/downtown.html")
 (define-runtime-path uptown.html "data/quick-tour/uptown/uptown.html")
 
-(define-runtime-path pollen-cache "data/quick-tour/pollen-cache")
-(define-runtime-path pollen-cache-uptown "data/quick-tour/uptown/pollen-cache")
-(define-runtime-path pollen-cache-downtown "data/quick-tour/downtown/pollen-cache")
-
 ;; test makes sure that quick tour files work 
 (parameterize ([current-output-port (open-output-string)]
                [current-directory quick-tour-dir]
@@ -31,4 +27,3 @@
   (check-true (file-exists? uptown.html)))
 
 (for-each delete-file (list hello.txt margin.html downtown.html uptown.html))
-(for-each delete-directory/files (list pollen-cache pollen-cache-uptown pollen-cache-downtown))

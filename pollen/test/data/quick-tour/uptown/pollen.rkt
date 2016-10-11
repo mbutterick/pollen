@@ -6,3 +6,8 @@
 (define items (make-default-tag-function 'ul))
 (define item (make-default-tag-function 'li 'p))
 (define (link url text) `(a [[href ,url]] ,text))
+
+(module setup racket/base
+  (provide (all-defined-out))
+  (define compile-cache-active #f)
+  (define render-cache-active #f))
