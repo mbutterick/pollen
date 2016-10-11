@@ -10,8 +10,9 @@
 (define-runtime-path cache-dir "data/pathup/subdir/pollen-cache")
 (define-runtime-path other-cache-dir "data/pathup/subdir/subdir/pollen-cache")
 (define-runtime-path up-pollen "pollen.rkt")
+(define-runtime-path test-pathup.rkt "test-pathup.rkt")
   
-(check-equal? (get-directory-require-files "test-pathup.rkt") (list up-pollen))
+(check-equal? (get-directory-require-files test-pathup.rkt) (list up-pollen))
 (check-equal? (get-directory-require-files pathup-one) (list dr-top))
 (check-equal? (get-directory-require-files pathup-two) (list dr-sub))
 (check-equal? (get-template-for pathup-one) template)
