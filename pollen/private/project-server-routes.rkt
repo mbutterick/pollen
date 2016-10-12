@@ -188,13 +188,14 @@
                                              (cons filename filename)])])
                            
                            (cons (car main-cell)
-                                 (let ([cell-content (cdr main-cell)]
-                                       [indent-string (make-string (* 2 indent-level) #\u00A0)])
+                                 (let* ([cell-content (cdr main-cell)]
+                                       [indent-padding (+ 1 indent-level)]
+                                       [padding-attr `(style ,(format "display:block;padding-left:~vem" indent-padding))])
                                    (cond
-                                     [(string? cell-content) (string-append indent-string cell-content)]
+                                     [(string? cell-content) `(span (,padding-attr) ,cell-content)]
                                      [(txexpr? cell-content)
                                       ;; indent link text by depth in pagetree
-                                      `(,(get-tag cell-content) ,(cons '(class "indented-link") (get-attrs cell-content)) ,indent-string (span ((class "indented-link-text")) ,@(get-elements cell-content)))]
+                                      `(,(get-tag cell-content) ,(cons padding-attr (get-attrs cell-content)) ,@(get-elements cell-content))]
                                      [else (error 'make-path-row (format "mysterious cell data: ~v" cell-content))]))))
                          
                          (cond ; 'in' cell
