@@ -121,7 +121,7 @@
        #'(if COND
              (with-handlers ([exn:fail? (λ(exn) (error (format "within when/splice, ~a" (exn-message exn))))])
                (SPLICING-TAG BODY ...)) 
-             ""))]))
+             '()))]))
 
 
 (provide when/block) ; bw compat
