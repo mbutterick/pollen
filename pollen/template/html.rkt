@@ -1,13 +1,15 @@
 #lang racket/base
-(require sugar/define sugar/test txexpr/base pollen/private/splice)
+(require sugar/define sugar/test txexpr/base pollen/private/splice pollen/setup)
 
 (define (trim-outer-tag html)
   (define matches (regexp-match #px"^<.*?>(.*)</.*?>$" html))
   (define paren-match (cadr matches))
   paren-match)
 
+(define splicing-tag (setup:splicing-tag))
+
 (define (has-outer-splice-tag? x)
-  (and (pair? x) (eq? (get-tag x) splice-signal-tag)))
+  (and (pair? x) (eq? (get-tag x) splicing-tag)))
 
 (define+provide/contract (->html x-arg-maybe-spliced #:tag [tag #f] #:attrs [attrs #f] #:splice? [new-splice-arg? #f] #:splice [backward-compatible-splice-arg? #f])
   (((or/c txexpr-element? txexpr-elements?)) (#:tag (or/c #f txexpr-tag?) #:attrs (or/c #f txexpr-attrs?) #:splice? boolean? #:splice boolean?) . ->* . string?)
@@ -21,7 +23,7 @@
   (define x (if (list? x-arg)
                 (splice (if (txexpr? x-arg)
                             x-arg
-                            (cons 'html x-arg))) ; list of txexpr-elements
+                            (cons 'html x-arg)) splicing-tag) ; list of txexpr-elements
                 x-arg))
   
   (when (and (not (txexpr? x)) attrs (not tag))
