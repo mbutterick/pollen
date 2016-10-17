@@ -1,5 +1,7 @@
 #lang racket/base
-(require scribble/text
+(require (only-in scribble/text/syntax-utils include/text)
+         (only-in "output.rkt" output)
+         racket/list
          (for-syntax racket/base
                      racket/list
                      syntax/parse)

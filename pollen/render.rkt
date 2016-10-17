@@ -184,8 +184,7 @@
        ,(require-directory-require-files source-path)
        (parameterize ([current-pagetree (make-project-pagetree ,(current-project-root))])
          (let ([,(setup:main-export source-path) (cached-doc ,(path->string source-path))]
-               [,(setup:meta-export source-path) (cached-metas ,(path->string source-path))]
-               [,(setup:splicing-tag source-path) (λ xs xs)]) ; splice behavior is different in textual context
+               [,(setup:meta-export source-path) (cached-metas ,(path->string source-path))])
            (local-require pollen/template pollen/top)
            (define here (path->pagenode
                          (or (select-from-metas ',(setup:here-path-key source-path) ,(setup:meta-export source-path)) 'unknown)))
