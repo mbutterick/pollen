@@ -16,8 +16,7 @@
         #:when (and (directory-exists? path)
                     (let* ([last (compose1 car reverse)]
                            [last-path-element (path->string (last (explode-path path)))])
-                      (or (equal? last-path-element (setup:cache-dir-name))
-                          (equal? last-path-element "compiled")))))
+                      (member last-path-element default-cache-names))))
        (message (format "removing cache directory: ~a" path))
        (delete-directory/files path)))
 

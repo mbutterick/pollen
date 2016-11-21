@@ -9,7 +9,7 @@
 (define-runtime-path template.txt "data/rerequire/template.txt")
 (define-runtime-path markup.txt.pm "data/rerequire/markup.txt.pm")
 (define-runtime-path markup.txt "data/rerequire/markup.txt")
-(define-runtime-path pollen-cache "data/rerequire/pollen-cache")
+(define-runtime-path pollen-cache "data/rerequire/compiled")
 
 (copy-file markup.txt.pm pre.txt.pp #t)
 

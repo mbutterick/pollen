@@ -7,8 +7,8 @@
 (define-runtime-path dr-sub "data/pathup/subdir/subdir/pollen.rkt")
 (define-runtime-path template "data/pathup/subdir/template.html")
 
-(define-runtime-path cache-dir "data/pathup/subdir/pollen-cache")
-(define-runtime-path other-cache-dir "data/pathup/subdir/subdir/pollen-cache")
+(define-runtime-path cache-dir "data/pathup/subdir/compiled")
+(define-runtime-path other-cache-dir "data/pathup/subdir/subdir/compiled")
 (define-runtime-path up-pollen "pollen.rkt")
 (define-runtime-path test-pathup.rkt "test-pathup.rkt")
   

@@ -63,7 +63,7 @@
 
 (define (make-cache-dirs path)
   (define path-dir (dirname path))
-  (define cache-dir (build-path path-dir (setup:cache-dir-name)))
+  (define cache-dir (build-path path-dir (setup:cache-dir-name) (setup:cache-subdir-name)))
   (define private-cache-dir (build-path cache-dir "private"))
   (my-make-directory* private-cache-dir) ; will also make cache-dir, if needed
   (values cache-dir private-cache-dir))

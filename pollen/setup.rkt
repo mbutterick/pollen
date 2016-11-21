@@ -60,9 +60,10 @@
 (define+provide default-mode-pagetree 'ptree)
 (define+provide default-mode-template 'template)
 
-(define-settable cache-filename "pollen.cache")
-(define-settable cache-dir-name "pollen-cache")
-(define+provide default-cache-names (list (cache-filename) (cache-dir-name)))
+(define-settable old-cache-names '("pollen.cache" "pollen-cache"))
+(define-settable cache-dir-name "compiled")
+(define-settable cache-subdir-name "pollen")
+(define+provide default-cache-names (list* (cache-dir-name) (old-cache-names)))
 
 (define-settable decodable-extensions (list (markup-source-ext) (pagetree-source-ext)))
 

@@ -11,7 +11,7 @@
 
 The slowest part of a Pollen @racket[render] is compiling a source file. Because Pollen allows source files to be edited and previewed dynamically, these files get recompiled a lot. Therefore, Pollen stores copies of the exports of source files — namely, whatever is stored in @code[(format "~a" default-main-export)] and @code[(format "~a" default-meta-export)] — in a cache so they can be reused.
 
-In each directory of your project, Pollen creates a subdirectory called @filepath{pollen-cache}. The files are stored on disk so they can be reused between sessions. If you delete files within a cache directory (or the whole thing), don't worry — everything will get regenerated. (However, you should not read or write to any @filepath{pollen-cache} directory, as the implementation details are subject to change.)
+In each directory of your project, Pollen writes cache files into a subdirectory called @filepath{compiled}. The files are stored on disk so they can be reused between sessions. If you delete files within a cache directory (or the whole thing), don't worry — everything will get regenerated. (However, I don't recommend trying to read or write directly to any @filepath{compiled} directory, as the implementation details of the cache are subject to change.)
 
 @section{Preloading and reseting}
 

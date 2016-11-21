@@ -93,13 +93,13 @@
   ;; certain files (leading dot) will be ignored by `directory-list` anyhow.
   ;; we will, however, ignore Pollen's cache files, and Racket's `compiled` dirs,
   ;; because those shouldn't be project-manipulated.
-  (define (neither-compiled-nor-cache-dir? path)
-    (not (member (->string path) (cons "compiled" default-cache-names))))
+  (define (not-cache-dir? path)
+    (not (member (->string path) default-cache-names)))
   
   (unless (directory-exists? dir)
     (error 'directory->pagetree (format "directory ~v doesn't exist" dir)))
   
-  (decode-pagetree (map ->pagenode (unique-sorted-output-paths (filter neither-compiled-nor-cache-dir? (directory-list dir)))))) 
+  (decode-pagetree (map ->pagenode (unique-sorted-output-paths (filter not-cache-dir? (directory-list dir)))))) 
 
 
 (define+provide/contract (get-pagetree source-path)
