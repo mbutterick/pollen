@@ -12,11 +12,11 @@
                          (vector-ref (current-command-line-arguments) 0)))
   (dispatch command-name))
 
-(define (get-first-arg-or-current-dir [clargs (current-command-line-arguments)])
+(define (get-first-arg-or-current-dir [args (cdr (vector->list (current-command-line-arguments)))]) ; cdr to strip command name from front
   (normalize-path
    (with-handlers ([exn:fail? (λ(exn) (current-directory))])
      ;; incoming path argument is handled as described in docs for current-directory
-     (very-nice-path (vector-ref clargs 1)))))
+     (very-nice-path (car args)))))
 
 (define-syntax-rule (polcom arg0 args ...)
   (parameterize ([current-command-line-arguments (list->vector (map symbol->string (list 'arg0 'args ...)))])
@@ -27,10 +27,7 @@
   (case command-name
     [("test" "xyzzy") (handle-test)]
     [(#f "help") (handle-help)]
-    [("start") (define port-arg
-                 (with-handlers ([exn:fail? (λ _ #f)])
-                   (string->number (vector-ref (current-command-line-arguments) 2))))
-               (handle-start (path->directory-path (get-first-arg-or-current-dir)) port-arg)]
+    [("start") (handle-start)] ; parses its own args
     ;; "second" arg is actually third in command line args, so use cddr not cdr
     [("render") (handle-render)] ; render parses its own args from current-command-line-arguments
     [("version") (handle-version)]
@@ -121,13 +118,26 @@ version                print the version" (current-server-port) (make-publish-di
           (displayln (format "rendering ~a" (string-join (map ->string path-args) " ")))
           (apply render-batch path-args)))))
 
-(define (handle-start directory-maybe [port #f])
-  (when (not (directory-exists? directory-maybe))
-    (error (format "~a is not a directory" directory-maybe)))
-  (parameterize ([current-project-root directory-maybe]
+(define (handle-start)
+  (define launch-wanted (make-parameter #f))
+  (define clargs (command-line #:program "raco pollen start"
+                               #:argv (vector-drop (current-command-line-arguments) 1) ; snip the 'start' from the front
+                               #:once-each
+                               [("--launch" "-l") "Launch browser after start"
+                                                  (launch-wanted #t)]
+                               #:args other-args
+                               other-args))
+  (define dir (path->directory-path (get-first-arg-or-current-dir clargs)))
+  (when (not (directory-exists? dir))
+    (error (format "~a is not a directory" dir)))
+  (define port (with-handlers ([exn:fail? (λ (e) #f)])
+                 (string->number (cadr clargs))))
+  (when (and port (not (exact-positive-integer? port)))
+    (error (format "~a is not a valid port number" port)))
+  (parameterize ([current-project-root dir]
                  [current-server-port (or port default-project-server-port)])
     (displayln "Starting project server ...")
-    ((dynamic-require 'pollen/private/project-server 'start-server))))
+    ((dynamic-require 'pollen/private/project-server 'start-server) (format "/~a" (setup:main-pagetree dir)) (launch-wanted))))
 
 (define (make-publish-dir-name [arg-command-name #f])
   (let ([user-publish-path (expand-user-path (->path (setup:publish-directory)))])
@@ -142,25 +152,21 @@ version                print the version" (current-server-port) (make-publish-di
   (define command-name ; either "publish" or "clone"
     (vector-ref (current-command-line-arguments) 0))
   (define force-target-overwrite? (make-parameter #t))
-  (define fake-command-line (command-line
+  (define other-args (command-line
                              ;; drop command name
                              #:argv (vector-drop (current-command-line-arguments) 1)
                              #:once-each
                              [("-c" "--confirm") "Confirm overwrite of existing dest dir"
                                                  (force-target-overwrite? #f)]
                              #:args other-args
-                             (cons command-name other-args)))
-  ;; fake-command-line looks like
-  ;; command-name [maybe-source-dir-arg] [maybe-dest-dir-arg]
+                             other-args))
+  ;; other-args looks like (list [maybe-source-dir-arg] [maybe-dest-dir-arg])
   (define source-dir
-    (simplify-path (get-first-arg-or-current-dir (list->vector fake-command-line))))
-  
+    (simplify-path (get-first-arg-or-current-dir other-args)))
   (define dest-dir
     (simplify-path
-     (or 
-      (and (>= (length fake-command-line) 3)
-           (path->complete-path (string->path (third fake-command-line))))
-      (make-publish-dir-name command-name))))
+     (with-handlers ([exn:fail? (λ(exn) (make-publish-dir-name command-name))]) 
+       (path->complete-path (string->path (cadr other-args))))))
 
   (define (delete-it path)
     (cond

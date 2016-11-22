@@ -49,7 +49,7 @@ Displays a list of available commands.
 
 Start the project server from the current directory using the default port, which is the value of the parameter @racket[current-server-port] (by default, port @id[default-project-server-port]).
 
-This command can be invoked with two optional arguments.
+This command can be invoked with two optional arguments, and one optional switch.
 
 @racket[raco pollen start _path] will start the project server from @racket[_path] rather than the current directory (making @racket[_path] its root directory).
 
@@ -66,6 +66,8 @@ If you want to start in the current directory but with a different port, use @li
 
 @terminal{
 > raco pollen start . 8088}
+
+Adding the optional @exec{-l} or @exec{--launch} switch will open the main project dashboard in your web browser after the project server starts.
 
 @section{@exec{raco pollen render}}
 

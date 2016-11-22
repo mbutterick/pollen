@@ -12,7 +12,7 @@
 
 (provide start-server)
 
-(define (start-server)
+(define (start-server servlet-path [open-browser-window? #f])
   (define-values (pollen-servlet _)
     (dispatch-rules
      [((string-arg) ... (? (λ(x) (equal? "" x)))) route-index] ; last element of a "/"-terminated url is ""
@@ -31,6 +31,8 @@
     
   (parameterize ([error-print-width 1000])
     (serve/servlet pollen-servlet
+                   #:launch-browser? open-browser-window?
+                   #:servlet-path servlet-path
                    #:port (current-server-port)
                    #:listen-ip #f
                    #:servlet-regexp #rx"" ; respond to top level
