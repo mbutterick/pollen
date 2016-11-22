@@ -128,6 +128,41 @@ Courtesy of @link["https://github.com/lerichard95"]{Richard Le}: ``If you're usi
 @foreign-code{(global-set-key "\M-\\" "◊")}
 
 
+@subsubsection{Emacs input method}
+
+Courtesy of @link["https://github.com/LemmingAvalanche"]{Kristoffer Haugsbakk}: ``Press @exec{C-\ rfc1345 RET} to choose the @racket[rfc1345] input method and toggle
+it on. When this input method is toggled, @litchar{◊} can be produced by
+entering @exec{&LZ}. The input method can be toggled on and off with @exec{C-\}.''
+
+@subsubsection{Vim (and Evil) digraph sequence}
+
+Courtesy of @link["https://github.com/LemmingAvalanche"]{Kristoffer Haugsbakk}: ``While in insert mode in Vim, or insert state in Evil (Emacs), press
+@exec{C-k LZ} to enter @litchar{◊}. @exec{C-k} lets you enter a digraph (in
+Vim terminology) which maps to another character. In this case, the
+digraph @exec{LZ} maps to @litchar{◊}.
+
+To make another mapping for this character in Vim, execute the following
+command: @exec{:digraphs ll 9674} to (in this case) use the digraph @exec{ll}. @exec{9674} is the decimal representation of @litchar{◊} in Unicode.''
+
+@subsubsection{Compose key}
+
+Courtesy of @link["https://github.com/LemmingAvalanche"]{Kristoffer Haugsbakk}: ``When running Linux under X11, one has access to using the @link["https://en.wikipedia.org/wiki/Compose_key"]{compose key}. But it is unfortunately disabled by default. To use the Menu key as the compose key:
+
+@foreign-code{
+setxkbmap -option compose:menu
+}
+
+See @exec{man xkeyboard-config} for all the ready-made options for the
+compose key.
+
+Since the lozenge character does not exist in the default compose-mapping file, you either have to modify the file or copy it into the
+home directory and make sure that it is used on login. My compose key
+file is at @exec{/usr/share/X11/locale/en_US.UTF-8/Compose}, and I guess that is the default location. So if you want to use the sequence @exec{ll}, for example, then add this line somewhere in the file.''
+
+@foreign-code{
+   <Multi_key> <l> <l> : "◊"
+}
+
 @section[#:tag "the-two-command-styles"]{The two command styles: Pollen style & Racket style}
 
 Pollen commands can be entered in one of two styles: @italic{Pollen style} or @italic{Racket style}. Both styles start with a lozenge (@litchar["◊"]):
