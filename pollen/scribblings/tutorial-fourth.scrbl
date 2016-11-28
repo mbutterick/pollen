@@ -329,7 +329,7 @@ That's it. LaTeX achieved.
 
 Still not satisfied? Still want to see one more cute Pollen trick?
 
-OK, you win. Let's not stop at LaTeX — let's go all the way to PDF using the LaTeX PDF converter, known as @exec{pdflatex}. (This is a command-line program that must be installed on your machine for this trick to work. I made this example on OS X 10.9.5.)
+OK, you win. Let's not stop at LaTeX — let's go all the way to PDF using the LaTeX PDF converter, known as @exec{pdflatex}. (This is a command-line program that must be installed on your machine for this trick to work. I made this example on macOS 10.9.5.)
 
 How do we do this? We'll follow the pattern we've already established, but with one wrinkle. To make a PDF, we need to generate LaTeX output first. So we actually don't need to add new branches to our tag functions — we'll just let PDF piggyback on our LaTeX branches. The big difference will be in the template, where instead of returning a LaTeX source file, we'll send it through @exec{pdflatex} and get the binary PDF file that results.
 

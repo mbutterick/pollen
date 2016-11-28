@@ -25,7 +25,7 @@ I used @link["http://pygments.org/"]{Pygments} for syntax highlighting in @link[
 
 @itemlist[#:style 'ordered
 
-@item{Make sure you have @code{pygments} already installed. @link["http://pygments.org/download/"]{Instructions here.} Pretty easy — for instance, on my OS X machine, it simply require @code{easy_install pygments} at the command line.}
+@item{Make sure you have @code{pygments} already installed. @link["http://pygments.org/download/"]{Instructions here.} Pretty easy — for instance, on my macOS machine, it simply require @code{easy_install pygments} at the command line.}
 
 @item{The @racketmodname[pollen/unstable/pygments] helper module provides a function called @racket[highlight]. To make @racket[highlight] available in your source file, you can either add the line @code{◊(require pollen/unstable/pygments)} to the source file itself, or put it in @racket["pollen.rkt"] and @racket[provide] it from there.}
 

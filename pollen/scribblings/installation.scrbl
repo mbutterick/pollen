@@ -11,11 +11,11 @@
 
 @section{Prerequisites}
 
-Pollen will run on OS X, Linux, or Windows.
+Pollen will run on macOS, Linux, or Windows.
 
 Pollen is not a self-contained GUI program like Adobe InDesign. It's a software package that runs atop the Racket language environment (also a free download).
 
-Your three main tools in Pollen will be a text editor (for those starting out, I recommend @other-doc['(lib "scribblings/drracket/drracket.scrbl")]), a terminal window, and a web browser. The terminal commands you'll be using are simple, but if you haven't used your terminal window before, this is the moment to learn where it is. (On OS X, your terminal window is called Terminal; on Windows it's called the Windows Command Processor.)
+Your three main tools in Pollen will be a text editor (for those starting out, I recommend @other-doc['(lib "scribblings/drracket/drracket.scrbl")]), a terminal window, and a web browser. The terminal commands you'll be using are simple, but if you haven't used your terminal window before, this is the moment to learn where it is. (On macOS, your terminal window is called Terminal; on Windows it's called the Windows Command Processor.)
 
 After the initial download, Pollen does not require a network connection.
 
