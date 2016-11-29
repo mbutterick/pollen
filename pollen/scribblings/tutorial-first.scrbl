@@ -443,21 +443,17 @@ One caveat: because the preprocessor only deals with text, the Pollen commands y
 
 @fileblock["odd-values.html.pp" @codeblock{
 #lang pollen
-
-◊(void) ; this will become an empty string
+◊(void)◊; this will become an empty string
 ◊(string->path "foo")
 ◊#\C
-◊sqrt 
 ◊(sqrt 2) 
 ◊(list 1 2 3 4 5) 
 ◊(map sqrt (list 1 2 3 4 5))
  }]
 
 @repl-output{
-
 foo
 C
-#<procedure:sqrt>
 1.4142135623730951
 '(1 2 3 4 5)
 '(1 1.4142135623730951 1.7320508075688772 2 2.23606797749979)}
