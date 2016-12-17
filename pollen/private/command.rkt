@@ -98,16 +98,15 @@ version                print the version" (current-server-port) (make-publish-di
             (define static-pagetrees (filter pagetree-source? dirlist))
             ;; if there are no static pagetrees, use make-project-pagetree
             ;; (which will synthesize a pagetree if needed, which includes all sources)
-            (define preprocs-and-static-pagetrees (append preprocs static-pagetrees))
             (define batch-to-render
               (map very-nice-path
                    (cond
-                     [(null? preprocs-and-static-pagetrees)
+                     [(null? static-pagetrees)
                       (displayln (format "rendering generated pagetree for directory ~a" dir))
                       (cdr (make-project-pagetree dir))]
                      [else
                       (displayln (format "rendering preproc & pagetree files in directory ~a" dir))
-                      preprocs-and-static-pagetrees])))
+                      (append preprocs static-pagetrees)])))
             (apply render-batch batch-to-render)
             (when (render-recursively?)
               (for ([path (in-list dirlist)]
