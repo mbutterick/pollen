@@ -121,10 +121,9 @@
        (memq (get-tag x) (setup:block-tags))
        #t))
 
-
 (define+provide/contract (decode-linebreaks elems [maybe-linebreak-proc '(br)]
                                             #:separator [newline (setup:linebreak-separator)])
-  ((txexpr-elements?) ((or/c txexpr-element? (txexpr-element? txexpr-element? . -> . txexpr-element?)) #:separator string?) . ->* . txexpr-elements?)
+  ((txexpr-elements?) ((or/c #f txexpr-element? (txexpr-element? txexpr-element? . -> . (or/c #f txexpr-element?))) #:separator string?) . ->* . txexpr-elements?)
   (define linebreak-proc (if (procedure? maybe-linebreak-proc)
                              maybe-linebreak-proc
                              (λ (e1 e2) maybe-linebreak-proc)))
@@ -145,6 +144,7 @@
 
 (module-test-external
  (check-equal? (decode-linebreaks '("foo" "\n" "bar")) '("foo" (br) "bar"))
+ (check-equal? (decode-linebreaks '("foo" "\n" "bar") #f) '("foo" "bar"))
  (check-equal? (decode-linebreaks '("\n" "foo" "\n" "bar" "\n")) '("\n" "foo" (br) "bar" "\n"))
  (check-equal? (decode-linebreaks '((p "foo") "\n" (p "bar"))) '((p "foo") (p "bar")))
  (check-equal? (decode-linebreaks '("foo" "\n" (p "bar"))) '("foo" (p "bar")))

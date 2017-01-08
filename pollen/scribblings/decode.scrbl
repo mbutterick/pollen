@@ -282,16 +282,17 @@ Within @racket[_elements], merge sequential newline characters into a single ele
 @defproc[
 (decode-linebreaks
 [elements (listof xexpr?)]
-[linebreaker (or/c xexpr? (xexpr? xexpr? . -> . xexpr?)) '(br)])
+[linebreaker (or/c #f xexpr? (xexpr? xexpr? . -> . (or/c #f xexpr?))) '(br)])
 (listof xexpr?)]
 Within @racket[_elements], convert occurrences of the linebreak separator to @racket[_linebreaker], but only if the separator does not occur between blocks (see @racket[block-txexpr?]). Why? Because block-level elements automatically display on a new line, so adding @racket[_linebreaker] would be superfluous. In that case, the linebreak separator just disappears.
 
 The linebreak separator is controlled by @racket[setup:linebreak-separator], and defaults to @val[default-linebreak-separator].
 
-The @racket[_linebreaker] argument can either be an X-expression, or a function that takes two X-expressions and returns one. This function will receive the previous and next elements, to make contextual substitution possible.
+The @racket[_linebreaker] argument can either be @racket[#f] (which will delete the linebreaks), an X-expression (which will replace the linebreaks), or a function that takes two X-expressions and returns one. This function will receive the previous and next elements, to make contextual substitution possible.
 
 @examples[#:eval my-eval
 (decode-linebreaks '(div "Two items:" "\n" (em "Eggs") "\n" (em "Bacon")))
+(decode-linebreaks '(div "Two items:" "\n" (em "Eggs") "\n" (em "Bacon")) #f)
 (decode-linebreaks '(div "Two items:" "\n" (div "Eggs") "\n" (div "Bacon")))
 (decode-linebreaks '(div "Two items:" "\n" (em "Eggs") "\n" (em "Bacon"))
  (λ(prev next) (if (and (txexpr? prev) (member "Eggs" prev)) '(egg-br) '(br))))
