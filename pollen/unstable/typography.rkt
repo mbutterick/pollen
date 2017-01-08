@@ -43,7 +43,7 @@
      ;; convert the quotes as if the txexpr were a flat string, to get proximity right
      ;; then replace the actual strings with substrings from this converted result
      ;; todo: handle entities & chars correctly, for now they are ignored
-     (define flat-str (string-append* (filter string? (flatten (map remove-attrs x)))))
+     (define flat-str (string-append* (filter string? (flatten (remove-attrs x)))))
      (define char-vec (for/vector ([c (in-string (smart-quotes flat-str))])
                         c))
      (define offset 0)
