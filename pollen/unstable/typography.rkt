@@ -44,7 +44,8 @@
      ;; then replace the actual strings with substrings from this converted result
      ;; todo: handle entities & chars correctly, for now they are ignored
      (define flat-str (string-append* (filter string? (flatten (remove-attrs x)))))
-     (define char-vec (for/vector ([c (in-string (smart-quotes flat-str))])
+     (define char-vec (for/vector #:length (string-length flat-str)
+                        ([c (in-string (smart-quotes flat-str))])
                         c))
      (define offset 0)
      (let loop ([x x])
