@@ -1,5 +1,5 @@
 #lang racket/base
-(require racket/list sugar/define sugar/test txexpr/base racket/match sugar/unstable/container sugar/coerce sugar/unstable/len  "../private/whitespace.rkt")
+(require racket/list racket/string sugar/define sugar/test txexpr/base racket/match sugar/unstable/container sugar/coerce sugar/unstable/len  "../private/whitespace.rkt")
 
 (provide whitespace? whitespace/nbsp?)
 
@@ -22,20 +22,42 @@
  (check-equal? (smart-dashes "I had --- maybe 13 -- 20 --- hob-nobs.") "I had—maybe 13–20—hob-nobs.")
  (check-equal? (smart-quotes "\"Why,\" she could've asked, \"are we in O‘ahu watching 'Mame'?\"") 
                "“Why,” she could’ve asked, “are we in O‘ahu watching ‘Mame’?”")
- (check-equal? (smart-quotes "\"\'Impossible.\' Yes.\"") "“‘Impossible.’ Yes.”"))
+ (check-equal? (smart-quotes "\"\'Impossible.\' Yes.\"") "“‘Impossible.’ Yes.”")
+ (check-equal? (smart-quotes '(div "don'" (em "t"))) '(div "don’" (em "t")))
+ (check-equal? (smart-quotes '(div "do '" (em "not'"))) '(div "do ‘" (em "not’"))))
 
 
-(define+provide/contract (smart-quotes str)
-  (string? . -> . string?)
-  
+(define+provide/contract (smart-quotes x)
+  ((or/c string? txexpr?) . -> . (or/c string? txexpr?))
+
   (define quotes
     '((#px"(?<=\\w)'(?=\\w)" "’") ; apostrophe
       (#px"(?<!\\w)'(?=\\S)" "‘") ; single_at_beginning
       (#px"(?<=\\S)'(?!\\w)" "’") ; single_at_end
       (#px"(?<!\\w)\"(?=\\S)" "“") ; double_at_beginning
       (#px"(?<=\\S)\"(?!\\w)" "”"))) ; double_at_end
-  
-  ((make-replacer quotes) str))
+
+  (cond
+    [(string? x) ((make-replacer quotes) x)]
+    [(txexpr? x)
+     ;; convert the quotes as if the txexpr were a flat string, to get proximity right
+     ;; then replace the actual strings with substrings from this converted result
+     ;; todo: handle entities & chars correctly, for now they are ignored
+     (define flat-str (string-append* (filter string? (flatten (map remove-attrs x)))))
+     (define char-vec (for/vector ([c (in-string (smart-quotes flat-str))])
+                        c))
+     (define offset 0)
+     (let loop ([x x])
+       (cond
+         [(txexpr? x) (txexpr (get-tag x) (get-attrs x) (map loop (get-elements x)))]
+         [(string? x)
+          (define prev-offset offset)
+          (set! offset (+ prev-offset (string-length x)))
+          (list->string
+           (for/list ([c (in-vector char-vec prev-offset offset)])
+             c))]
+         [else x]))]
+    [else x]))
 
 ; wrap initial quotes for hanging punctuation
 ; todo: improve this

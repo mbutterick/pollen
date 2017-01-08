@@ -16,9 +16,9 @@ Quick & dirty utilities. I use them, but I haven't tested them with enough edge 
 
 @defproc[
 (smart-quotes
-[str string?])
-string?]
-Convert straight quotes in @racket[_str] to curly according to American English conventions.
+[xexpr (or/c string? txexpr?)])
+(or/c string? txexpr?)]
+Convert straight quotes in @racket[_xexepr] to curly according to American English conventions.
 
 @examples[#:eval my-eval
 (define tricky-string 
