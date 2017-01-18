@@ -1,10 +1,9 @@
 #lang racket/base
 (require pollen/setup scribble/reader)  
-(provide configure)
-(module+ show (provide show)) ; `show` submodule requested by module wrapper in "reader-base.rkt"
-  
+(provide (all-defined-out))
+
 (define current-top-path (make-parameter #f))
-  
+
 (define (show doc parser-mode here-path)
   ;; we only want the top doc to print in the runtime environment
   ;; otherwise if a Pollen source imports others, they will all print their docs in sequence.
@@ -18,10 +17,8 @@
                                                             ((dynamic-require 'racket/string 'string-join) (cdr ((dynamic-require 'racket/string 'string-split) (exn-message exn) ": ")) ": "))))])
                    ((dynamic-require 'txexpr/base 'validate-txexpr) doc)))))))
 
-
 (define (configure top-here-path)
-  ;; puts `show` into the right mode
-  (current-top-path top-here-path)
+  (current-top-path top-here-path)  ;; puts `show` into the right mode
 
   ;; wrap REPL interactions with pollen expression support
   (define old-read (current-read-interaction))
