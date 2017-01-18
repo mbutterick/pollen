@@ -1,26 +1,33 @@
 #lang racket/base
+(require pollen/setup scribble/reader)  
 (provide configure)
-
-(module show racket/base
-  (require pollen/setup)  
-  (provide show show-enabled)
+(module+ show (provide show)) ; `show` submodule requested by module wrapper in "reader-base.rkt"
   
-  (define show-enabled (make-parameter #f))
+(define current-top-path (make-parameter #f))
   
-  (define (show doc parser-mode here-path)
-    ;; we only want the top doc to print in the runtime environment
-    ;; otherwise if a Pollen source imports others, they will all print their docs in sequence.
-    ;; so only print if the current here-path is the top path, which is stored in the `show-enabled` parameter.
-    (when (and (show-enabled) (equal? here-path (show-enabled)))
-      (if (or (eq? parser-mode default-mode-preproc)
-              (eq? parser-mode default-mode-template))
+(define (show doc parser-mode here-path)
+  ;; we only want the top doc to print in the runtime environment
+  ;; otherwise if a Pollen source imports others, they will all print their docs in sequence.
+  ;; so only print if the current here-path is the top path, which is stored in the `current-top-path` parameter.
+  (let ([ctp (current-top-path)])
+    (when (and ctp (equal? here-path ctp))
+      (if (memq parser-mode (list default-mode-preproc default-mode-template))
           (display doc)
           ;; OK to use dynamic-require because runtime-config itself is dynamic-required
-          (print (with-handlers ([exn:fail? (λ(exn) ((error '|pollen markup error| ((dynamic-require 'racket/string 'string-join) (cdr ((dynamic-require 'racket/string 'string-split) (exn-message exn) ": ")) ": "))))])
+          (print (with-handlers ([exn:fail? (λ(exn) ((error '|pollen markup error|
+                                                            ((dynamic-require 'racket/string 'string-join) (cdr ((dynamic-require 'racket/string 'string-split) (exn-message exn) ": ")) ": "))))])
                    ((dynamic-require 'txexpr/base 'validate-txexpr) doc)))))))
 
-(require 'show)
 
 (define (configure top-here-path)
-  (show-enabled top-here-path))
+  ;; puts `show` into the right mode
+  (current-top-path top-here-path)
+
+  ;; wrap REPL interactions with pollen expression support
+  (define old-read (current-read-interaction))
+  (define pollen-readtable (make-at-readtable #:command-char (setup:command-char)))
+  (define (new-read src in)
+    (parameterize ([current-readtable pollen-readtable])
+      (old-read src in)))
+  (current-read-interaction new-read))
 
