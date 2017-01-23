@@ -201,7 +201,7 @@ six
 
 In situations where Pollen needs a pagetree but can't find one, it will automatically synthesize a pagetree from a listing of files in the directory. This arises most frequently when @secref["The_project_dashboard"] in a directory that doesn't contain an explicit @filepath{index.ptree}. This way, you can get going with a project without having to stop for @racketfont{.ptree} housekeeping.
 
-As usual, convenience has a cost. Pollen doesn't know anything about which files in your directory are relevant to the project, so it includes all of them. For instance, if you start your project server on a macOS desktop, you'll see things like @filepath{Thumbs.db} and @filepath{desktop.ini}. 
+As usual, convenience has a cost. Pollen doesn't know anything about which files in your directory are relevant to the project, so it includes all of them. For instance, if you start your project server on a Mac OS desktop, you'll see things like @filepath{Thumbs.db} and @filepath{desktop.ini}. 
 
 Also, though you can use pagetree-navigation functions like @racket[next] or @racket[siblings] with an automatic pagetree, the results of these functions are apt to include irrelevant files. So if you need to do pagetree navigation, that's probably the point where you want to start using an explicit pagetree.
 
