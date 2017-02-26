@@ -16,16 +16,29 @@ Quick & dirty utilities. I use them, but I haven't tested them with enough edge 
 
 @defproc[
 (smart-quotes
-[xexpr (or/c string? txexpr?)])
-(or/c string? txexpr?)]
-Convert straight quotes in @racket[_xexepr] to curly according to American English conventions.
+[xexpr (or/c string? txexpr?)]
+[#:apostophe apostrophe-str string? "’"]
+[#:single-open single-open-str string? "‘"]
+[#:single-close single-close-str string? "’"]
+[#:double-open double-open-str string? "“"]
+[#:double-close double-close-str string? "”"])
+(or/c string? txexpr?)]{
+
+Convert straight quotes in @racket[xexpr] to curly. By default, American English curly quotes are used. The optional keyword arguments can be used to set different quotes suited to other languages or script systems. 
 
 @examples[#:eval my-eval
 (define tricky-string 
 "\"Why,\" she could've asked, \"are we in O‘ahu watching 'Mame'?\"")
 (display tricky-string)
 (display (smart-quotes tricky-string))
+(display (smart-quotes tricky-string
+                      #:double-open "«" #:double-close "»"
+                      #:single-open "‹" #:single-close "›"))
+(display (smart-quotes tricky-string
+                      #:double-open "„" #:double-close "”"
+                      #:single-open "‚" #:single-close "’"))
 ]
+}
 
 @defproc[
 (smart-dashes

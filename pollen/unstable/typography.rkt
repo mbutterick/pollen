@@ -20,22 +20,38 @@
 
 (module-test-external
  (check-equal? (smart-dashes "I had --- maybe 13 -- 20 --- hob-nobs.") "I had—maybe 13–20—hob-nobs.")
- (check-equal? (smart-quotes "\"Why,\" she could've asked, \"are we in O‘ahu watching 'Mame'?\"") 
+ (define tricky-string "\"Why,\" she could've asked, \"are we in O‘ahu watching 'Mame'?\"")
+ (check-equal? (smart-quotes tricky-string) 
                "“Why,” she could’ve asked, “are we in O‘ahu watching ‘Mame’?”")
+ (check-equal? (smart-quotes tricky-string
+                             #:apostrophe "zing"
+                             #:double-open "«" #:double-close "»"
+                             #:single-open "‹" #:single-close "›")
+               "«Why,» she couldzingve asked, «are we in O‘ahu watching ‹Mame›?»")
  (check-equal? (smart-quotes "\"\'Impossible.\' Yes.\"") "“‘Impossible.’ Yes.”")
  (check-equal? (smart-quotes '(div "don'" (em "t"))) '(div "don’" (em "t")))
  (check-equal? (smart-quotes '(div "do '" (em "not'"))) '(div "do ‘" (em "not’"))))
 
 
-(define+provide/contract (smart-quotes x)
-  ((or/c string? txexpr?) . -> . (or/c string? txexpr?))
+(define+provide/contract (smart-quotes x
+                                       #:apostrophe [apostrophe-str "’"]
+                                       #:single-open [single-open-str "‘"]
+                                       #:single-close [single-close-str "’"]
+                                       #:double-open [double-open-str "“"]
+                                       #:double-close [double-close-str "”"])
+  (((or/c string? txexpr?))
+   (#:apostrophe string?
+    #:single-open string?
+    #:single-close string?
+    #:double-open string?
+    #:double-close string?) . ->* . (or/c string? txexpr?))
 
   (define quotes
-    '((#px"(?<=\\w)'(?=\\w)" "’") ; apostrophe
-      (#px"(?<!\\w)'(?=\\S)" "‘") ; single_at_beginning
-      (#px"(?<=\\S)'(?!\\w)" "’") ; single_at_end
-      (#px"(?<!\\w)\"(?=\\S)" "“") ; double_at_beginning
-      (#px"(?<=\\S)\"(?!\\w)" "”"))) ; double_at_end
+    `((#px"(?<=\\w)'(?=\\w)" ,apostrophe-str) ; apostrophe
+      (#px"(?<!\\w)'(?=\\S)" ,single-open-str) ; single_at_beginning
+      (#px"(?<=\\S)'(?!\\w)" ,single-close-str) ; single_at_end
+      (#px"(?<!\\w)\"(?=\\S)" ,double-open-str) ; double_at_beginning
+      (#px"(?<=\\S)\"(?!\\w)" ,double-close-str))) ; double_at_end
 
   (cond
     [(string? x) ((make-replacer quotes) x)]
