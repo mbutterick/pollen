@@ -128,13 +128,15 @@ if zero is False:
      (stop)
      (old-exit-handler v))))
 
-(define (pygmentize code lang) ;; string? string? -> (listof xexpr?)
+(define (pygmentize code lang [hl-lines null]) ;; string? string? (listof number?) -> (listof xexpr?)
   (define (default code)
     `((pre () (code () ,code))))
   (unless (running?)
     (start))
   (cond [(running?)
+         ;; order of writing arguments is significant: cooperates with pipe.py
          (displayln lang pyg-out)
+         (displayln (string-join (map number->string hl-lines) " ") pyg-out)
          (displayln code pyg-out)
          (displayln "__END__" pyg-out)
          (let loop ([s ""])
@@ -149,10 +151,11 @@ if zero is False:
 ;;;;;;;;;;;;;;;;;;
 
 
-(define (highlight lang . codelines)
+(define (highlight #:lines [hl-lines null]
+                   lang . codelines)
   (define code (string-append* codelines))
   `(div ((class "highlight"))
-      ,@(strip-empty-attrs (pygmentize code lang))))
+      ,@(strip-empty-attrs (pygmentize code lang hl-lines))))
 
 ;; Other CSS options available from http://richleland.github.io/pygments-css/ 
 
