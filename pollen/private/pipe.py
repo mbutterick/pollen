@@ -31,7 +31,7 @@ parser.add_option('--cssclass', default="source", dest="cssclass")
 
 lexer = ""
 code = ""
-lines-to-highlight = ""
+lines_to_highlight = ""
 py_version = sys.version_info.major
 sys.stdout.write("ready\n")
 sys.stdout.flush()
@@ -48,7 +48,7 @@ while 1:
         formatter = HtmlFormatter(linenos=options.linenos,
                           cssclass=options.cssclass,
                           encoding="utf-8",
-                          hl_lines=lines-to-highlight)
+                          hl_lines=lines_to_highlight)
         if py_version >= 3:
           sys.stdout.write(highlight(code, lexer, formatter).decode("utf-8"))
         else:
@@ -57,17 +57,17 @@ while 1:
         sys.stdout.flush()
         lexer = ""
         code = ""
-        lines-to-highlight = ""
+        lines_to_highlight = ""
     elif lexer == "":
         # Starting another lex. First line is the lexer name.
         try:
             lexer = get_lexer_by_name(line, encoding="guess")
         except ClassNotFound:
             lexer = get_lexer_by_name("text", encoding="guess")
-    elif lines-to-highlight == "":
+    elif lines_to_highlight == "":
         # Starting another lex. Second line is list of lines to highlight,
         # formatted as string of whitespace-separated integers
-        lines-to-highlight = [int(str) for str in line.split()]
+        lines_to_highlight = [int(str) for str in line.split()]
     else:
         # Accumulate more code
         # Use `line_raw`: Do want trailing space, \n, \r
