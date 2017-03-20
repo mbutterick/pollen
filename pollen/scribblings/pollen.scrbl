@@ -8,7 +8,7 @@
 
 Pollen is a publishing system that helps authors make functional and beautiful digital books.
 
-I created Pollen so I could make my web-based books @link["http://practicaltypography.com"]{@italic{Practical Typography}}, @link["http://typographyforlawyers.com"]{@italic{Typography for Lawyers}}, and the forthcoming @link["http://beautifulracket.com"]{@italic{Beautiful Racket}}. Sure, go take a look. Are they better than the last digital books you encountered? Yes they are. Would you like your next digital book to work like that? If so, keep reading.
+I created Pollen so I could make my web-based books @link["http://practicaltypography.com"]{@italic{Practical Typography}}, @link["http://typographyforlawyers.com"]{@italic{Typography for Lawyers}}, and @link["http://beautifulracket.com"]{@italic{Beautiful Racket}}. Sure, go take a look. Are they better than the last digital books you encountered? Yes they are. Would you like your next digital book to work like that? If so, keep reading.
 
 At the core of Pollen is an argument:
 
