@@ -25,9 +25,11 @@ If you're using DrRacket, you can use the @onscreen{Insert Command Char} button 
 
 If you're using a different editor, here's how you type it:
 
-@bold{Mac}: option + shift + V
-@(linebreak)@bold{Windows}: holding down alt, type 9674 on the num pad
-@(linebreak)@bold{Ubuntu}: ctrl + shift + U, then 25CA
+@bold{Mac}: Option + Shift + V
+@(linebreak)@bold{Windows}: holding down Alt, type 9674 on the num pad
+@(linebreak)@bold{GNU/Linux, BSD}: Type Ctrl + Shift + U, then 25CA, then Enter
+
+For more information on entering arbitrary Unicode glyphs, see @link["https://en.wikipedia.org/wiki/Unicode_input"]{Wikipedia}.
 
 @subsection{``But I don't want to use it ...''}
 
@@ -104,29 +106,9 @@ An alternative, courtesy of @link["http://www.barzilay.org"]{Eli Barzilay}: ``th
 
 @subsubsection{Emacs script}
 
-Courtesy of @link["https://github.com/lerichard95"]{Richard Le}: ``If you're using Emacs, I tried to write a tiny function that inserts the lozenge character. I chose M-\ because that's the key for the lambda character in DrRacket.''
-
-@foreign-code{
-;; Put this in your Emacs .init file:
-;; enable lozenge for Pollen
-;; ◊◊◊◊◊◊◊◊◊◊◊◊◊
-;; 'mule-unicode part from
-;; https://lists.gnu.org/archive/html//emacs-devel/2005-03/msg01187.html
-(defun insert-lozenge ()
-  "inserts the lozenge character for use with Pollen"
-  ;; enables function through M-x
-  (interactive)
-  ;; insert the proper character
-  (insert (make-char
-           'mule-unicode-2500-33ff 34 42)))
-
-;; Bind key to M-\ a la DrRacket for lambda
-(global-set-key "\M-\\" 'insert-lozenge)}
-
-@link["http://www.barzilay.org"]{Eli Barzilay} offers an even more concise version:
+Courtesy of @link["https://github.com/lerichard95"]{Richard Le}: ``I chose M-\ because that's the key for the lambda character in DrRacket.'' (@link["http://www.barzilay.org"]{Eli Barzilay} shortened it.)
 
 @foreign-code{(global-set-key "\M-\\" "◊")}
-
 
 @subsubsection{Emacs input method}
 
@@ -146,7 +128,7 @@ command: @exec{:digraphs ll 9674} to (in this case) use the digraph @exec{ll}. @
 
 @subsubsection{Compose key}
 
-Courtesy of @link["https://github.com/LemmingAvalanche"]{Kristoffer Haugsbakk}: ``When running Linux under X11, one has access to using the @link["https://en.wikipedia.org/wiki/Compose_key"]{compose key}. But it is unfortunately disabled by default. To use the Menu key as the compose key:
+Courtesy of @link["https://github.com/rrthomas"]{Reuben Thomas}: ``When using X11 (common on GNU/Linux and BSD systems), one can use the @link["https://en.wikipedia.org/wiki/Compose_key"]{Compose key}. It is often disabled by default; check your desktop environment's keyboard settings, or at a lower level, to use the Menu key as the Compose key:
 
 @foreign-code{
 setxkbmap -option compose:menu
@@ -155,13 +137,13 @@ setxkbmap -option compose:menu
 See @exec{man xkeyboard-config} for all the ready-made options for the
 compose key.
 
-Since the lozenge character does not exist in the default compose-mapping file, you either have to modify the file or copy it into the
-home directory and make sure that it is used on login. My compose key
-file is at @exec{/usr/share/X11/locale/en_US.UTF-8/Compose}, and I guess that is the default location. So if you want to use the sequence @exec{ll}, for example, then add this line somewhere in the file.''
+Since the lozenge character does not exist in the default compose-mapping file, you need to add this to your @filepath{~/.XCompose}:
 
 @foreign-code{
    <Multi_key> <l> <l> : "◊"
 }
+
+See @exec{man XCompose}, or for more details, including many additional Compose bindings, see @link["https://github.com/rrthomas/pointless-xcompose"]{pointless-xcompose}.''
 
 @section[#:tag "the-two-command-styles"]{The two command styles: Pollen style & Racket style}
 
