@@ -200,7 +200,7 @@ For handling markup-based data, X-expressions have some clear advantages over ot
 
 @item{@bold{A hybrid between a tree and a string.} Most programming languages represent markup-based data either as a string or as an XML tree. Neither is a good choice. The string captures none of the internal structure of the data. An XML tree captures the structure, but conceals the sequential nature of the data elements. The X-expression shows both.}
 
-@item{@bold{An ideal match for an expression-based programming language.} Aside from some notational details, X-expressions are just a subset of S-expressions generally, which are the building block of Racket. Processing X-expressions in Racket maximizes flexibility and minimizes @link["http://programmers.stackexchange.com/questions/34775/correct-definition-of-the-term-yak-shaving"]{yak-shaving}.}
+@item{@bold{An ideal match for an expression-based programming language.} Aside from some notational details, X-expressions are just a subset of S-expressions generally, which are the building block of Racket. Processing X-expressions in Racket maximizes flexibility and minimizes @link["https://projects.csail.mit.edu/gsb/old-archive/gsb-archive/gsb2000-02-11.html"]{yak-shaving}.}
 ]
 
 @margin-note{Given the close kinship between XML-ish data structures and Lisp-ish programming languages, I have no explanation why, during the Internet era, they have not been paired more often. They're like peanut butter and jelly.}
