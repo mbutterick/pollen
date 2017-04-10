@@ -105,13 +105,13 @@ As above, I concede that it would be more convenient to have Pollen automaticall
 
 @itemlist[#:style 'ordered
 
-@item{Download the @link["http://docs.mathjax.org/en/latest/start.html"]{MathJax} library if you want to run the library locally, without a network connection. You can also use the MathJax CDN and just link to the library across the network (I'll use this option in the example that follows).}
+@item{Download the @link["http://docs.mathjax.org/en/latest/start.html"]{MathJax} library if you want to run the library locally, without a network connection. You can also use a MathJax CDN like @link["https://cdnjs.com/"]{cdnjs} and just link to the library across the network (I'll use this option in the example that follows).}
 
 @item{Add these lines to the @code{<head>} section of your @filepath{template.html} (or other template). First, the MathJax library itself:
 
 @terminal{
 <script type="text/javascript"
-  src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
 </script>
 }
 
@@ -158,7 +158,7 @@ Putting it together, here's a minimal working example in two files (obviously in
 <html>
 <head>
 <script type="text/javascript"
-src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
 </script>
 <script type="text/x-mathjax-config">
 MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$']]}});
