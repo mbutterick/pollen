@@ -117,13 +117,15 @@ version                print the version" (current-server-port) (make-publish-di
           (displayln (format "rendering ~a" (string-join (map ->string path-args) " ")))
           (apply render-batch path-args)))))
 
+
 (define (handle-start)
-  (define launch-wanted (make-parameter #f))
+  (define launch-wanted #f)
+  (define localhost-wanted #f)
   (define clargs (command-line #:program "raco pollen start"
                                #:argv (vector-drop (current-command-line-arguments) 1) ; snip the 'start' from the front
                                #:once-each
-                               [("--launch" "-l") "Launch browser after start"
-                                                  (launch-wanted #t)]
+                               [("--launch" "-l") "Launch browser after start" (set! launch-wanted #t)]
+                               [("--local") "Restrict access to localhost" (set! localhost-wanted #t)]
                                #:args other-args
                                other-args))
   (define dir (path->directory-path (get-first-arg-or-current-dir clargs)))
@@ -134,9 +136,10 @@ version                print the version" (current-server-port) (make-publish-di
   (when (and port (not (exact-positive-integer? port)))
     (error (format "~a is not a valid port number" port)))
   (parameterize ([current-project-root dir]
-                 [current-server-port (or port default-project-server-port)])
+                 [current-server-port (or port (setup:project-server-port))]
+                 [current-server-listen-ip (and localhost-wanted "127.0.0.1")])
     (displayln "Starting project server ...")
-    ((dynamic-require 'pollen/private/project-server 'start-server) (format "/~a" (setup:main-pagetree dir)) (launch-wanted))))
+    ((dynamic-require 'pollen/private/project-server 'start-server) (format "/~a" (setup:main-pagetree dir)) launch-wanted)))
 
 (define (make-publish-dir-name [arg-command-name #f])
   (let ([user-publish-path (expand-user-path (->path (setup:publish-directory)))])
@@ -152,13 +155,13 @@ version                print the version" (current-server-port) (make-publish-di
     (vector-ref (current-command-line-arguments) 0))
   (define force-target-overwrite? (make-parameter #t))
   (define other-args (command-line
-                             ;; drop command name
-                             #:argv (vector-drop (current-command-line-arguments) 1)
-                             #:once-each
-                             [("-c" "--confirm") "Confirm overwrite of existing dest dir"
-                                                 (force-target-overwrite? #f)]
-                             #:args other-args
-                             other-args))
+                      ;; drop command name
+                      #:argv (vector-drop (current-command-line-arguments) 1)
+                      #:once-each
+                      [("-c" "--confirm") "Confirm overwrite of existing dest dir"
+                                          (force-target-overwrite? #f)]
+                      #:args other-args
+                      other-args))
   ;; other-args looks like (list [maybe-source-dir-arg] [maybe-dest-dir-arg])
   (define source-dir
     (simplify-path (get-first-arg-or-current-dir other-args)))

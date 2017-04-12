@@ -69,6 +69,9 @@ If you want to start in the current directory but with a different port, use @li
 
 Adding the optional @exec{-l} or @exec{--launch} switch will open the main project dashboard in your web browser after the project server starts.
 
+Adding the optional @exec{--local} switch will restrict the project server to responding to requests from localhost. (By default, the project server will respond to requests from any client.)
+
+
 @section{@exec{raco pollen render}}
 
 Render all preprocessor source files and then all pagetree files found in the current directory. If none of these files are found, a pagetree will be generated for the directory (which will include all source files) and then rendered.

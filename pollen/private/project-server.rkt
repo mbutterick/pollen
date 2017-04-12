@@ -28,13 +28,13 @@
   (message (format "Project server is ~a" server-name) "(Ctrl+C to exit)")
   (message (format "Project dashboard is ~a/~a" server-name (setup:main-pagetree)))
   (message "Ready to rock")
-    
+  
   (parameterize ([error-print-width 1000])
     (serve/servlet pollen-servlet
                    #:launch-browser? open-browser-window?
                    #:servlet-path servlet-path
                    #:port (current-server-port)
-                   #:listen-ip #f
+                   #:listen-ip (current-server-listen-ip)
                    #:servlet-regexp #rx"" ; respond to top level
                    #:command-line? #t
                    #:file-not-found-responder route-404

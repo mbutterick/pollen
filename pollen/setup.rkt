@@ -92,10 +92,10 @@
 
 (define-settable paths-excluded-from-dashboard (map string->path (list "poldash.css" "compiled")))
 
-
 (define-settable project-server-port 8080)
 
 (define+provide current-server-port (make-parameter (project-server-port)))
+(define+provide current-server-listen-ip (make-parameter #f))
 
 (define-settable dashboard-css "poldash.css")
 
