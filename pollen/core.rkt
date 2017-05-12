@@ -90,7 +90,10 @@
                               pagenode-or-path))])
     (unless path
       ;; use `pagenode-or-path` in error message because at this point `path` is #f
-      (error (format "~a: no source found for '~a' in directory ~a" caller pagenode-or-path (current-directory))))
+      (raise
+       (make-exn:fail:filesystem
+        (format "~a: no source found for '~a' in directory ~a" caller pagenode-or-path (current-directory))
+        (current-continuation-marks))))
     path))
 
 
