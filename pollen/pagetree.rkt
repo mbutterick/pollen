@@ -175,6 +175,23 @@
  (check-false (siblings 'invalid-key test-pagetree)))
 
 
+(define+provide/contract (other-siblings pnish [pt-or-path (current-pagetree)])
+  (((or/c #f pagenodeish?)) ((or/c pagetree? pathish?)) . ->* . (or/c #f pagenodes?))  
+  (define sibs (for/list ([sib (in-list (or (siblings pnish pt-or-path) empty))]
+                          #:unless (eq? sib (->pagenode pnish)))
+                         sib))
+  (and (pair? sibs) sibs))
+
+(module-test-external
+ (define test-pagetree `(pagetree-main foo bar (one (two three four))))
+ (check-equal? (other-siblings 'one test-pagetree) '(foo bar))
+ (check-equal? (other-siblings 'foo test-pagetree) '(bar one))
+ (check-equal? (other-siblings 'two test-pagetree) #f)
+ (check-equal? (other-siblings 'three test-pagetree) '(four))
+ (check-false (other-siblings #f test-pagetree))
+ (check-false (other-siblings 'invalid-key test-pagetree)))
+
+
 ;; private helper function.
 ;; only takes pt as input.
 ;; used by `pagetree?` predicate, so can't use `pagetree?` contract.
