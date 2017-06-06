@@ -236,7 +236,7 @@ From what you learned in the last section, it should be evident that this X-expr
 @terminal{<root><h1 id="deep-thought">Deep Thought</h1>
 <p>I am <strong>so</strong> happy to be writing this.</p></root>}
 
-``But what's this @code{root} tag? That's not HTML.'' An X-expression that holds other X-expressions must have a root tag. So in the spirit of obviousness, every X-expression produced by Pollen in authoring mode will start with @code{root}. If you don't need it, you can discard it (we'll cover this below, in  @secref["Templates"]). Though as you'll learn in the @seclink["third-tutorial"]{third tutorial}, @code{root} also creates a useful hook for further processing — it's not a superfluous accessory.
+``But what's this @code{root} tag? That's not HTML.'' An X-expression that holds other X-expressions must have a root tag. So in the spirit of obviousness, every X-expression produced by Pollen in authoring mode will start with @code{root}. If you don't need it, you can discard it (we'll cover this below, in  @secref[#:tag-prefixes '("tutorial-2")]{Templates}). Though as you'll learn in the @seclink["third-tutorial"]{third tutorial}, @code{root} also creates a useful hook for further processing — it's not a superfluous accessory.
 
 
 @subsection{Review: authoring mode vs. preprocessor mode}
