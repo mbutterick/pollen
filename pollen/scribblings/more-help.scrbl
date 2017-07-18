@@ -17,6 +17,10 @@ For general tips and how-to questions, use the @link["https://groups.google.com/
 
 @link["https://github.com/basus/pollen-mode"]{Pollen mode}: Emacs mode for Pollen by Shrutarshi Basu
 
+@link["https://docs.racket-lang.org/pollen-component/"]{Pollen Component}: Component-based development for Pollen by Leandro Facchinetti
+
+@link["https://docs.racket-lang.org/css-expr/"]{CSS-expressions}: S-expression-based CSS by Leandro Facchinetti
+
 
 @section{Can I see the source for Practical Typography or Typography for Lawyers?}
 
@@ -32,3 +36,5 @@ Yes, the source for @link["http://typographyforlawyers.com/"]{Typography for Law
 @link["https://github.com/fasiha/pollen-guide"]{A Poor Guide to Pollen} by Ahmed Fasih
 
 @link["https://youtu.be/20GGVNBykaw"]{The World's Most Dangerous Racket Programmer} and @link["https://youtu.be/IMz09jYOgoc"]{Like a Blind Squirrel in a Ferrari}: short talks about Pollen that I gave at RacketCons 2013 and 2014, respectively.
+
+@link["https://www.leafac.com/"]{Leandro Facchinetti's personal website} [@link["https://git.leafac.com/www.leafac.com/"]{source}]
