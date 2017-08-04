@@ -68,7 +68,7 @@
     (λ (key default)
       (case key
         [(color-lexer drracket:toolbar-buttons) ; only do source-path searching if we have one of these keys
-         (define maybe-source-path (with-handlers ([exn:fail? (λ(exn) #f)])
+         (define maybe-source-path (with-handlers ([exn:fail? (λ (exn) #f)])
                                      ;; Robert Findler does not endorse `get-filename` here,
                                      ;; because it's sneaky and may not always work.
                                      ;; OTOH Scribble relies on it, so IMO it's highly unlikely to change.

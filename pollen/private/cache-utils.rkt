@@ -15,7 +15,7 @@
   (define poly-flag (and (has-inner-poly-ext? source-path) (current-poly-target)))
   (define pollen-env (getenv default-env-name))
   (define path+mod-time-pairs
-    (map (λ(ps) (and ps (let ([cp (->complete-path ps)])
+    (map (λ (ps) (and ps (let ([cp (->complete-path ps)])
                           (cons (path->string cp) (with-handlers ([exn:fail? (λ _ 0)])
                                                     (file-or-directory-modify-seconds cp)))))) path-strings))
   (list* pollen-env poly-flag path+mod-time-pairs))

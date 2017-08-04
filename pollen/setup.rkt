@@ -110,11 +110,11 @@
 (define-settable render-cache-active #t)
 (define-settable compile-cache-max-size (* 10 1024 1024)) ; = 10 megabytes
 
-(define-settable unpublished-path? (λ(path) #f)) ; deprecated in favor of `omitted-path?`
-(define-settable omitted-path? (λ(path) #f))
+(define-settable unpublished-path? (λ (path) #f)) ; deprecated in favor of `omitted-path?`
+(define-settable omitted-path? (λ (path) #f))
 
-(define-settable extra-published-path? (λ(path) #f)) ; deprecated in favor of `extra-path?`
-(define-settable extra-path? (λ(path) #f))
+(define-settable extra-published-path? (λ (path) #f)) ; deprecated in favor of `extra-path?`
+(define-settable extra-path? (λ (path) #f))
 
 
 

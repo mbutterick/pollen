@@ -11,7 +11,7 @@
 (define-syntax (*module-begin stx)
   (syntax-case stx ()
     [(_ id . body)
-     (with-syntax ([post-process #'(λ(x) x)]
+     (with-syntax ([post-process #'(λ (x) x)]
                    [exprs #'()])
        #'(#%module-begin
           (doc-begin id post-process exprs . body)))]))

@@ -6,7 +6,7 @@
 
 (define (attrs? x)
   (and (list? x)
-       (andmap (λ(xi)
+       (andmap (λ (xi)
                  (and (list? xi)
                       (= (length xi) 2)
                       (symbol? (car xi))
@@ -15,11 +15,11 @@
 
 (define (splice x [splicing-tag splice-signal-tag])
   ;  (listof txexpr-elements?) . -> . (listof txexpr-elements?))
-  (define spliceable? (λ(x) (and (pair? x) (eq? (car x) splicing-tag))))
-  (define not-null-string? (λ(x) (not (and (string? x) (zero? (string-length x))))))
+  (define spliceable? (λ (x) (and (pair? x) (eq? (car x) splicing-tag))))
+  (define not-null-string? (λ (x) (not (and (string? x) (zero? (string-length x))))))
   (let loop ([x x])
     (if (list? x) ; don't exclude `attrs?` here, because it will exclude valid splice input like '((@ "foo"))
-        (apply append (map (λ(x) (let ([proc (if (spliceable? x) ; drop the splice-signal from front with `cdr`
+        (apply append (map (λ (x) (let ([proc (if (spliceable? x) ; drop the splice-signal from front with `cdr`
                                                  cdr
                                                  list)]
                                        [x (if (not (attrs? x)) ; don't recur on attributes, so null strings are not spliced within
@@ -45,7 +45,7 @@
     (if (list? x)
         ;; this will strip all empty lists.
         ;; in practice, they would only appear in attrs position 
-        (map loop (filter (λ(x) (not (null? x))) x))
+        (map loop (filter (λ (x) (not (null? x))) x))
         x)))
 
 

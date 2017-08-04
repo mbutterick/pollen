@@ -52,7 +52,7 @@
  (define x "hello")
  (check-equal? (->html x) "hello")
  (check-equal? (->html #:tag 'brennan x) "<brennan>hello</brennan>")
- (check-exn exn:fail? (λ() (->html #:attrs '((id "dale")) x) "hello")) ;; won't work without tag
+ (check-exn exn:fail? (λ () (->html #:attrs '((id "dale")) x) "hello")) ;; won't work without tag
  (check-equal? (->html #:splice? #t x) "hello")
  (check-equal? (->html #:tag 'brennan #:attrs '((id "dale")) x) "<brennan id=\"dale\">hello</brennan>")
  (check-equal? (->html #:tag 'brennan #:attrs '((id "dale")) #:splice? #t x) "hello")

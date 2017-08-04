@@ -288,4 +288,4 @@
                         (hearts . 9829)
                         (diams . 9830)))
 
-(define chars (make-hash (hash-map entities (λ(k v) (cons v k))))) ; flip the hash
+(define chars (make-hash (hash-map entities (λ (k v) (cons v k))))) ; flip the hash

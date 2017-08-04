@@ -53,7 +53,7 @@ You are kitty}")
   (check-equal? (xexpr->pollen '(p ((class "foo")) "You are " (em "so") " puppy")) "◊p[#:class \"foo\"]{You are ◊em{so} puppy}"))
 
 (define (conjoin . fs)
-  (λ(x) (andmap (λ(f) (f x)) fs)))
+  (λ (x) (andmap (λ (f) (f x)) fs)))
 
 (define/contract+provide (html->xexpr html-string)
   (string? . -> . xexpr?)

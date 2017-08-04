@@ -10,7 +10,7 @@
 
 (define is-meta-value? hash?)
 (define is-doc-value? txexpr?)
-(define identity (λ(x) x))
+(define identity (λ (x) x))
 (define not-false? identity)
 
 (define+provide define-meta identity) ;; stub so it will be picked up for docs
@@ -122,7 +122,7 @@
     [(_ COND BODY ...)
      (with-syntax ([SPLICING-TAG (datum->syntax stx (setup:splicing-tag))])
        #'(if COND
-             (with-handlers ([exn:fail? (λ(exn) (error (format "within when/splice, ~a" (exn-message exn))))])
+             (with-handlers ([exn:fail? (λ (exn) (error (format "within when/splice, ~a" (exn-message exn))))])
                (SPLICING-TAG BODY ...)) 
              (SPLICING-TAG)))]))
 

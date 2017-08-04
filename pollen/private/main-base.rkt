@@ -49,11 +49,11 @@
                   (let* ([parser-mode (or 'PARSER-MODE-FROM-READER-PROPERTY PARSER-MODE-FROM-EXPANDER)]
                          [proc (case parser-mode
                                  [(MODE-PAGETREE) decode-pagetree]
-                                 [(MODE-MARKUP) (λ(xs) (apply ROOT xs))] ; if `root` undefined, it becomes a default tag function
-                                 [(MODE-MARKDOWN) (λ(xs) (apply ROOT (map strip-empty-attrs ((dynamic-require 'markdown 'parse-markdown) (apply string-append (map to-string xs))))))]
-                                 [else (λ(xs) (apply string-append (map to-string xs)))])] ; string output for preprocessor
+                                 [(MODE-MARKUP) (λ (xs) (apply ROOT xs))] ; if `root` undefined, it becomes a default tag function
+                                 [(MODE-MARKDOWN) (λ (xs) (apply ROOT (map strip-empty-attrs ((dynamic-require 'markdown 'parse-markdown) (apply string-append (map to-string xs))))))]
+                                 [else (λ (xs) (apply string-append (map to-string xs)))])] ; string output for preprocessor
                          ;; drop leading newlines, as they're often the result of `defines` and `requires`
-                         [doc-elements (or (memf (λ(ln) (not (equal? ln NEWLINE))) DOC-RAW) null)]
+                         [doc-elements (or (memf (λ (ln) (not (equal? ln NEWLINE))) DOC-RAW) null)]
                          [doc-elements-spliced (splice doc-elements 'SPLICING-TAG)])
                     (proc doc-elements-spliced)))
                 

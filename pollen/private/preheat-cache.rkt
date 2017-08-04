@@ -18,7 +18,7 @@
   ;; if a file is already in the cache, no need to hit it again.
   ;; this allows partially completed preheat jobs to resume.
   (define uncached-paths (filter
-                          (λ(path)
+                          (λ (path)
                             ;; #t = not cached; #f = already cached
                             ;; seems like it would be slow to load cache.rktd but it's not.
                             (define-values (_ private-cache-dir) (make-cache-dirs path))

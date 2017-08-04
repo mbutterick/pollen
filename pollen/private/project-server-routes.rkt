@@ -55,7 +55,7 @@
 ;; todo: fix outbound contract to be proc with (request? #:rest args . -> . response?)
 (define/contract (route-wrapper route-proc)
   (procedure? . -> . procedure?)
-  (λ(req . string-args) 
+  (λ (req . string-args) 
     (logger req)
     ;; `flatten` here because servlet's route matcher might send a list of lists
     ;; for "before and after" matches, like `((string-arg) ... "in" (string-arg) ...)`
@@ -104,7 +104,7 @@
   `(div  
     (p "filename =" ,(->string relative-path))
     (p "size = " ,(bytecount->string (file-size path)))
-    (ul ,@(map (λ(i) `(li ,(~a i))) ziplist))))
+    (ul ,@(map (λ (i) `(li ,(~a i))) ziplist))))
 
 
 
@@ -155,10 +155,10 @@
     (define dirs (cons title (if (not (equal? (current-project-root) dashboard-dir))
                                  (explode-path (find-relative-path (current-project-root) dashboard-dir))
                                  null)))
-    (define dirlinks (cons "/" (map (λ(ps) (format "/~a/" (apply build-path ps)))  
+    (define dirlinks (cons "/" (map (λ (ps) (format "/~a/" (apply build-path ps)))  
                                     (for/list ([i (in-range (length (cdr dirs)))])
                                               (take (cdr dirs) (add1 i))))))
-    `(tr (th ((colspan "3")) ,@(add-between (map (λ(dir dirlink) `(a ((href ,(format "~a~a" dirlink (setup:main-pagetree)))) ,(->string dir))) dirs dirlinks) "/"))))
+    `(tr (th ((colspan "3")) ,@(add-between (map (λ (dir dirlink) `(a ((href ,(format "~a~a" dirlink (setup:main-pagetree)))) ,(->string dir))) dirs dirlinks) "/"))))
   
   (define (make-path-row filename source indent-level)
     `(tr ,@(map make-link-cell 
@@ -175,8 +175,8 @@
                                              (cond ; multi source. expand to multiple output files.
                                                [(and source-second-ext (equal? source-second-ext (->string (setup:poly-source-ext (->complete-path source)))))
                                                 (define source-base (remove-ext source-minus-ext))
-                                                (define output-names (map (λ(ext) (->string (add-ext source-base ext))) (setup:poly-targets (->complete-path source))))
-                                                (cons #f `(span ,@(map (λ(on) `(a ((href ,on)) ,on (span ((class "file-ext")) "." ,source-first-ext ,(format " (from ~a)" (->string (find-relative-path dashboard-dir source)))))) output-names)))]
+                                                (define output-names (map (λ (ext) (->string (add-ext source-base ext))) (setup:poly-targets (->complete-path source))))
+                                                (cons #f `(span ,@(map (λ (on) `(a ((href ,on)) ,on (span ((class "file-ext")) "." ,source-first-ext ,(format " (from ~a)" (->string (find-relative-path dashboard-dir source)))))) output-names)))]
                                                [else
                                                 (define extra-row-string
                                                   (if (equal? source-minus-ext (remove-ext source)) ; escaped and unescaped versions are equal
@@ -229,7 +229,7 @@
                             [(not (null? project-paths))
                              (define path-source-pairs
                                (map
-                                (λ(p) (define source
+                                (λ (p) (define source
                                         (let ([possible-source (get-source (build-path dashboard-dir p))])
                                           (and possible-source (->string (find-relative-path dashboard-dir possible-source)))))
                                   (cons p source))
@@ -257,7 +257,7 @@
 (define (get-query-value url key)
   ; query is parsed as list of pairs, key is symbol, value is string
   ; '((key . "value") ... )
-  (let ([result (memf (λ(x) (equal? (car x) key)) (url-query url))])
+  (let ([result (memf (λ (x) (equal? (car x) key)) (url-query url))])
     (and result (cdar result))))
 
 

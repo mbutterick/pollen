@@ -14,7 +14,7 @@
 
 (define (get-first-arg-or-current-dir [args (cdr (vector->list (current-command-line-arguments)))]) ; cdr to strip command name from front
   (normalize-path
-   (with-handlers ([exn:fail? (λ(exn) (current-directory))])
+   (with-handlers ([exn:fail? (λ (exn) (current-directory))])
      ;; incoming path argument is handled as described in docs for current-directory
      (very-nice-path (car args)))))
 
@@ -167,7 +167,7 @@ version                print the version" (current-server-port) (make-publish-di
     (simplify-path (get-first-arg-or-current-dir other-args)))
   (define dest-dir
     (simplify-path
-     (with-handlers ([exn:fail? (λ(exn) (make-publish-dir-name command-name))]) 
+     (with-handlers ([exn:fail? (λ (exn) (make-publish-dir-name command-name))]) 
        (path->complete-path (string->path (cadr other-args))))))
 
   (define (delete-it path)

@@ -37,8 +37,8 @@ Intractable problem, unavoiable limitation.
       (match data
         [(vector mod sym data2)
          ((dynamic-require mod sym) data2)]
-        [_ (λ(key default) default)]))
-    (λ(key default)
+        [_ (λ (key default) default)]))
+    (λ (key default)
       (case key
         [(configure-runtime)
          (define config-vec '#[(submod pollen/mode runtime-config) configure #f])
@@ -66,7 +66,7 @@ Intractable problem, unavoiable limitation.
     (make-meta-reader
      'pollen/mode
      "language path"
-     (λ(bstr)
+     (λ (bstr)
        (let* ([str (bytes->string/latin-1 bstr)]
               [sym (string->symbol str)])
          (and (module-path? sym)
@@ -76,18 +76,18 @@ Intractable problem, unavoiable limitation.
                ;; fall back to /lang/reader:
                (string->symbol (string-append str "/lang/reader"))))))
      wrap-reader
-     (λ(orig-read-syntax)
+     (λ (orig-read-syntax)
        (define read-syntax (wrap-reader orig-read-syntax))
        (λ args
          (define stx (apply read-syntax args))
          (define old-prop (syntax-property stx 'module-language))
          (define new-prop `#((submod pollen/mode language-info) get-language-info ,old-prop))
          (syntax-property stx 'module-language new-prop)))
-     (λ(proc)
-       (λ(key defval)
+     (λ (proc)
+       (λ (key defval)
          (define (fallback) (if proc (proc key defval) defval))
          (define (try-dynamic-require mod export)
-           (or (with-handlers ([exn:fail? (λ(x) #f)])
+           (or (with-handlers ([exn:fail? (λ (x) #f)])
                  (dynamic-require mod export))
                (fallback)))
          (case key

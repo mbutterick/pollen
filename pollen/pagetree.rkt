@@ -28,12 +28,12 @@
 
 
 (define+provide (pagenodeish? x)
-  (with-handlers ([exn:fail? (λ(e) #f)]) 
+  (with-handlers ([exn:fail? (λ (e) #f)]) 
     (and (->pagenode x) #t)))
 
 
 (define+provide (->pagenode x)
-  (with-handlers ([exn:fail? (λ(e) (raise-argument-error '->pagenode "can't convert input to pagenode" x))]) 
+  (with-handlers ([exn:fail? (λ (e) (raise-argument-error '->pagenode "can't convert input to pagenode" x))]) 
     (->symbol x)))
 
 
@@ -47,7 +47,7 @@
                                 (list x)))))
   (validate-pagetree 
    (decode (cons pt-root-tag xs)
-           #:txexpr-elements-proc (compose1 splice-nested-pagetree (λ(xs) (filter-not whitespace? xs))) 
+           #:txexpr-elements-proc (compose1 splice-nested-pagetree (λ (xs) (filter-not whitespace? xs))) 
            #:string-proc string->symbol))) ; because faster than ->pagenode
 
 
@@ -57,13 +57,13 @@
          (for ([p (in-list pagenodes)]
                #:when (not (pagenode? p)))
               (error 'validate-pagetree (format "\"~a\" is not a valid pagenode" p)))
-         (with-handlers ([exn:fail? (λ(e) (error 'validate-pagetree (format "~a" (exn-message e))))])
+         (with-handlers ([exn:fail? (λ (e) (error 'validate-pagetree (format "~a" (exn-message e))))])
            (members-unique?/error pagenodes))
          x)))
 
 
 (define+provide (pagetree? x)
-  (with-handlers ([exn:fail? (λ(e) #f)]) 
+  (with-handlers ([exn:fail? (λ (e) #f)]) 
     (and (validate-pagetree x) #t)))
 
 (module-test-external
@@ -81,7 +81,7 @@
   (define (unique-sorted-output-paths xs)
     (define output-paths (map ->output-path xs))
     (define all-paths (filter path-visible? (remove-duplicates output-paths)))
-    (define path-is-directory? (λ(f) (directory-exists? (build-path dir f))))
+    (define path-is-directory? (λ (f) (directory-exists? (build-path dir f))))
     (define-values (subdirectories files) (partition path-is-directory? all-paths))
     (define-values (pagetree-sources other-files) (partition pagetree-source? files))
     (define (sort-names xs) (sort xs #:key ->string string<?))
@@ -112,7 +112,7 @@
 ;; Try loading from pagetree file, or failing that, synthesize pagetree.
 (define+provide/contract (make-project-pagetree project-dir)
   (pathish? . -> . pagetree?)
-  (with-handlers ([exn:fail? (λ(exn) (directory->pagetree project-dir))])
+  (with-handlers ([exn:fail? (λ (exn) (directory->pagetree project-dir))])
     (define pagetree-source (build-path project-dir (setup:main-pagetree)))
     (load-pagetree pagetree-source)))
 
@@ -129,7 +129,7 @@
            (define current-children (cdr subtree))
            (if (memq pagenode (map topmost-node current-children))
                current-parent
-               (ormap (λ(st) (loop pagenode st)) (filter subtree? current-children))))))
+               (ormap (λ (st) (loop pagenode st)) (filter subtree? current-children))))))
   (if (eq? result (car pt))
       (and allow-root? result)
       result))
@@ -149,8 +149,8 @@
        (let ([pagenode (->pagenode p)]
              [pt (get-pagetree pt-or-path)])
          (if (eq? pagenode (car pt))
-             (map (λ(x) (if (list? x) (car x) x)) (cdr pt))
-             (ormap (λ(x) (children pagenode x)) (filter list? pt))))))
+             (map (λ (x) (if (list? x) (car x) x)) (cdr pt))
+             (ormap (λ (x) (children pagenode x)) (filter list? pt))))))
 
 (module-test-external
  (define test-pagetree `(pagetree-main foo bar (one (two three))))
@@ -217,7 +217,7 @@
               [pagetree-nodes (pagetree->list (get-pagetree pt-or-path))]
               ;; using `in-pagetree?` would require another flattening
               [in-tree? (memq pagenode pagetree-nodes)] 
-              [result (and in-tree? (proc pagetree-nodes (λ(x) (not (eq? pagenode x)))))])
+              [result (and in-tree? (proc pagetree-nodes (λ (x) (not (eq? pagenode x)))))])
          (and (not (empty? result)) result))))
 
 (module-test-internal

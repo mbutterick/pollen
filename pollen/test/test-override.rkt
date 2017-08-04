@@ -25,7 +25,7 @@
   (when racket-path
     (define (run path)
       (define cmd-string (format "'~a' ~a" racket-path path))
-      (with-output-to-string (λ() (system cmd-string))))
+      (with-output-to-string (λ () (system cmd-string))))
     ;; raco is in same dir as racket
     (define path-to-raco (path->string (simplify-path (build-path (find-exe) 'up "raco"))))
     ;; files with ordinary extensions will not be recognized in override dir, and thus behave like preproc

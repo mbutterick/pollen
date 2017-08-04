@@ -54,7 +54,7 @@
 (when racket-path
   (define (run path)
     (define cmd-string (format "'~a' ~a" racket-path path))
-    (with-output-to-string (λ() (system cmd-string))))
+    (with-output-to-string (λ () (system cmd-string))))
   (check-equal? (run test.ptree) "'(pagetree-root test ====)")
     (check-equal? (run test.html.pm) @string-append{'(root "test" "\n" "====")})
   (check-equal? (run test-import.html.pm) @string-append{'(root "test" "\n" "====" "\n" (root "This is sample 01."))})

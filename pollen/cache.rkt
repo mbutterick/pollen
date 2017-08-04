@@ -23,8 +23,8 @@
 (define-namespace-anchor cache-module-ns)
 (define cached-require-base
   (let ([ram-cache (make-hash)])
-    (λ(path-or-path-string subkey caller-name)
-      (define path (with-handlers ([exn:fail? (λ(e) (raise-argument-error caller-name "valid path or path-string" path-or-path-string))])
+    (λ (path-or-path-string subkey caller-name)
+      (define path (with-handlers ([exn:fail? (λ (e) (raise-argument-error caller-name "valid path or path-string" path-or-path-string))])
                      (path->complete-path (if (path? path-or-path-string)
                                               path-or-path-string
                                               (string->path path-or-path-string)))))

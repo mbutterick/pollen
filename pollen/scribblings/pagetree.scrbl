@@ -110,7 +110,7 @@ Because a pagetree is just an X-expression, you can synthesize a pagetree using 
 (require pollen/pagetree)
 (define node-names '(index introduction main_argument conclusion))
 (define pt `(pagetree-root 
-  ,@"@"(map (λ(n) (string->symbol (format "~a.html" n))) node-names)))
+  ,@"@"(map (λ (n) (string->symbol (format "~a.html" n))) node-names)))
 (if (pagetree? pt) pt "Oops, not a pagetree")
 }]
 

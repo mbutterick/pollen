@@ -30,7 +30,7 @@
 (define+provide (sourceish? x)
   ;(any/c . -> . coerce/boolean?)
   (define sourceish-extensions (list "svg"))
-  (with-handlers ([exn:fail? (λ(e) #f)])
+  (with-handlers ([exn:fail? (λ (e) #f)])
     (and (member (get-ext x) sourceish-extensions) #t)))
 
 (module-test-external
@@ -60,7 +60,7 @@
 (define+provide (visible-files dir)
   (let ([dir (->path dir)])
     (filter path-visible? 
-            (map (λ(p) (find-relative-path dir p)) 
+            (map (λ (p) (find-relative-path dir p)) 
                  (filter file-exists? 
                          (directory-list dir #:build? #t))))))
 
@@ -178,7 +178,7 @@
            
            ;; it's a file-ext source file, or a file that's the result of a file-ext source
            (define+provide (has/is-stem-source? x)
-             (->boolean (and (pathish? x) (ormap (λ(proc) (proc (->path x))) (list stem-source? get-stem-source)))))
+             (->boolean (and (pathish? x) (ormap (λ (proc) (proc (->path x))) (list stem-source? get-stem-source)))))
            
            ;; get first possible source path (does not check filesystem)
            (define+provide/contract (->stem-source-path x)
@@ -222,7 +222,7 @@
 (define+provide (->source+output-paths source-or-output-path)
   ;(complete-path? . -> . (values complete-path? complete-path?))
   ;; file-proc returns two values, but ormap only wants one
-  (define file-proc (ormap (λ(test file-proc) (and (test source-or-output-path) file-proc))
+  (define file-proc (ormap (λ (test file-proc) (and (test source-or-output-path) file-proc))
                            (list has/is-null-source? has/is-preproc-source? has/is-markup-source? has/is-scribble-source? has/is-markdown-source? )
                            (list ->null-source+output-paths ->preproc-source+output-paths ->markup-source+output-paths ->scribble-source+output-paths ->markdown-source+output-paths )))
   (file-proc source-or-output-path))
@@ -267,7 +267,7 @@
 
 (define+provide/contract (get-source path)
   (coerce/path? . -> . (or/c #f path?))
-  (ormap (λ(proc) (proc path)) (list get-markup-source get-markdown-source get-preproc-source get-null-source get-scribble-source)))
+  (ormap (λ (proc) (proc path)) (list get-markup-source get-markdown-source get-preproc-source get-null-source get-scribble-source)))
 
 ;; for backward compatibility
 (define+provide ->source-path get-source)
@@ -286,7 +286,7 @@
 
 (define+provide (project-files-with-ext ext)
   ;(coerce/symbol? . -> . complete-paths?)
-  (map ->complete-path (filter (λ(i) (has-ext? i (->symbol ext))) (directory-list (current-project-root)))))
+  (map ->complete-path (filter (λ (i) (has-ext? i (->symbol ext))) (directory-list (current-project-root)))))
 
 
 (define (racket-source? x)
@@ -320,7 +320,7 @@
 
 
 (define+provide (omitted-path? file)
-  (ormap (λ(proc) (proc file)) (list
+  (ormap (λ (proc) (proc file)) (list
                                 preproc-source? 
                                 markup-source?
                                 markdown-source?
@@ -333,6 +333,6 @@
                                 (setup:unpublished-path?)))) ; deprecated name
 
 (define+provide (extra-path? file)
-  (ormap (λ(proc) (proc file)) (list
+  (ormap (λ (proc) (proc file)) (list
                                 (setup:extra-path?)
                                 (setup:extra-published-path?))))  ; deprecated name

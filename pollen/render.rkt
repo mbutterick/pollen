@@ -25,7 +25,7 @@
  (require racket/runtime-path)
  (define-runtime-path sample-dir "test/data/samples")
  (define samples (parameterize ([current-directory sample-dir])
-                   (map path->complete-path (filter (λ(name) (regexp-match "sample-" name)) (directory-list ".")))))
+                   (map path->complete-path (filter (λ (name) (regexp-match "sample-" name)) (directory-list ".")))))
  (define-values (sample-01 sample-02 sample-03) (apply values samples)))
 
 
@@ -53,7 +53,7 @@
   ;; And with render, they would be rendered repeatedly.
   ;; Using reset-modification-dates is sort of like session control.
   (reset-mod-date-hash) 
-  (for-each (λ(x) ((if (pagetree-source? x)
+  (for-each (λ (x) ((if (pagetree-source? x)
                        render-pagenodes
                        render-from-source-or-output-path) x)) xs))
 
@@ -71,7 +71,7 @@
   (pathish? . -> . void?)
   (let ([so-path (->complete-path so-pathish)])  ; so-path = source or output path (could be either) 
     (cond
-      [(ormap (λ(test) (test so-path)) (list has/is-null-source? has/is-preproc-source? has/is-markup-source? has/is-scribble-source? has/is-markdown-source?)) 
+      [(ormap (λ (test) (test so-path)) (list has/is-null-source? has/is-preproc-source? has/is-markup-source? has/is-scribble-source? has/is-markdown-source?)) 
        (let-values ([(source-path output-path) (->source+output-paths so-path)])
          (render-to-file-if-needed source-path #f output-path))]
       [(pagetree-source? so-path) (render-pagenodes so-path)]))
@@ -111,7 +111,7 @@
   ((complete-path?) ((or/c #f complete-path?) (or/c #f complete-path?)) . ->* . (or/c string? bytes?))
   (define render-proc 
     (cond
-      [(ormap (λ(test render-proc) (and (test source-path) render-proc))
+      [(ormap (λ (test render-proc) (and (test source-path) render-proc))
               (list has/is-null-source? has/is-preproc-source? has/is-markup-source? has/is-scribble-source? has/is-markdown-source?)
               (list render-null-source render-preproc-source render-markup-or-markdown-source render-scribble-source render-markup-or-markdown-source))] 
       [else (error (format "render: no rendering function found for ~a" source-path))]))
@@ -202,12 +202,12 @@
   (or (markup-source? path) (markdown-source? path)))
 
 
-(define identity (λ(x) x))
+(define identity (λ (x) x))
 (define+provide/contract (get-template-for source-path [maybe-output-path #f])
   ((complete-path?)((or/c #f complete-path?)) . ->* . (or/c #f complete-path?))
   
   (define (file-exists-or-has-source? p) ; p could be #f
-    (and p (ormap (λ(proc) (file-exists? (proc p))) (list identity ->preproc-source-path ->null-source-path)) p))
+    (and p (ormap (λ (proc) (file-exists? (proc p))) (list identity ->preproc-source-path ->null-source-path)) p))
   
   (define (get-template)
     (define source-dir (dirname source-path))
@@ -221,7 +221,7 @@
                  [template-name (cond
                                   [(list? template-name-or-names)
                                    (define result
-                                     (memf (λ(tn) (eq? (get-ext tn) output-path-ext)) template-name-or-names)) ; #f or list
+                                     (memf (λ (tn) (eq? (get-ext tn) output-path-ext)) template-name-or-names)) ; #f or list
                                    (and result (car result))]
                                   [else template-name-or-names])])
             (and template-name (build-path source-dir template-name))))))

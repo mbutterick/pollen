@@ -15,7 +15,7 @@
     [else (list x)]))
 
 (define decode-proc-output-contract (or/c txexpr-element? txexpr-elements?))
-(define identity (λ(x) x))
+(define identity (λ (x) x))
 
 ;; decoder wireframe
 (define+provide/contract (decode tx-in
@@ -45,7 +45,7 @@
   (let loop ([x tx-in])
     (cond
       [(txexpr? x) (let-values([(tag attrs elements) (txexpr->values x)]) 
-                     (if (or (member tag excluded-tags) (ormap (λ(attr) (member attr excluded-attrs)) attrs)) 
+                     (if (or (member tag excluded-tags) (ormap (λ (attr) (member attr excluded-attrs)) attrs)) 
                          x ; because it's excluded
                          ;; we apply processing here rather than do recursive descent on the pieces
                          ;; because if we send them back through loop, certain element types are ambiguous
@@ -68,7 +68,7 @@
  (define (doubletag x) (txexpr (string->symbol (format "~a~a" (get-tag x) (get-tag x))) (get-attrs x) (get-elements x)))
  (check-equal? (decode #:txexpr-elements-proc identity '(p "foo")) '(p "foo"))
  ;; can't use doubler on txexpr-elements because it needs a list, not list of lists
- (check-equal? (decode #:txexpr-elements-proc (λ(elems) (append elems elems)) '(p "foo")) '(p "foo" "foo"))
+ (check-equal? (decode #:txexpr-elements-proc (λ (elems) (append elems elems)) '(p "foo")) '(p "foo" "foo"))
  (check-equal? (decode #:block-txexpr-proc identity '(p "foo")) '(p "foo"))
  (check-equal? (decode #:block-txexpr-proc doubler '(p "foo")) (list '(p "foo") '(p "foo")))
  (check-equal? (decode #:block-txexpr-proc doubler '(p "foo")) (list '(p "foo") '(p "foo")))
@@ -164,7 +164,7 @@
     (if (newlines? (car xs))
         (list (apply string-append xs))
         xs))
-  (define not-empty-string? (λ(x) (not (and (string? x) (= (string-length x) 0)))))
+  (define not-empty-string? (λ (x) (not (and (string? x) (= (string-length x) 0)))))
   (let loop ([x x])
     (if (and (pair? x) (not (attrs? x)))
         (let ([xs (map loop (filter not-empty-string? x))])
@@ -204,7 +204,7 @@
 
   (define wrap-proc (if (procedure? maybe-wrap-proc)
                         maybe-wrap-proc
-                        (λ(elems) (list* maybe-wrap-proc elems))))
+                        (λ (elems) (list* maybe-wrap-proc elems))))
 
   (define (wrap-paragraph elems)
     (if (andmap block-txexpr? elems)
@@ -214,7 +214,7 @@
   (let ([elements (prep-paragraph-flow elements)])
     (if (ormap explicit-or-implicit-paragraph-break? elements) ; need this condition to prevent infinite recursion
         ;; use append-map on wrap-paragraph rather than map to permit return of multiple elements
-        (append-map wrap-paragraph (append-map (λ(es) (filter-split es paragraph-break?)) (slicef elements block-txexpr?))) ; split into ¶¶, using both implied and explicit paragraph breaks
+        (append-map wrap-paragraph (append-map (λ (es) (filter-split es paragraph-break?)) (slicef elements block-txexpr?))) ; split into ¶¶, using both implied and explicit paragraph breaks
         (if force-paragraph
             (append-map wrap-paragraph (slicef elements block-txexpr?)) ; upconverts non-block elements to paragraphs
             elements))))                
@@ -231,7 +231,7 @@
  (check-equal? (decode-paragraphs '("First para" "\n\n" "Second para") 'ns:p)
                '((ns:p "First para") (ns:p "Second para")))
  (check-equal? (decode-paragraphs '("First para" "\n\n" "Second para" "\n" "Second line")
-                                  #:linebreak-proc (λ(x) (decode-linebreaks x '(newline))))
+                                  #:linebreak-proc (λ (x) (decode-linebreaks x '(newline))))
                '((p "First para") (p "Second para" (newline) "Second line")))
  (check-equal? (decode-paragraphs '("foo" "\n\n" (div "bar") (div "zam")))
                '((p "foo") (div "bar") (div "zam")))

@@ -25,15 +25,15 @@ Another example is conversion of output into a particular data format. Most Poll
 @defproc[
 (decode
 [tagged-xexpr txexpr?]
-[#:txexpr-tag-proc txexpr-tag-proc (txexpr-tag? . -> . txexpr-tag?) (λ(tag) tag)]
-[#:txexpr-attrs-proc txexpr-attrs-proc (txexpr-attrs? . -> . txexpr-attrs?) (λ(attrs) attrs)]
-[#:txexpr-elements-proc txexpr-elements-proc (txexpr-elements? . -> . txexpr-elements?) (λ(elements) elements)]
-[#:txexpr-proc txexpr-proc (txexpr? . -> . (or/c xexpr? (listof xexpr?))) (λ(tx) tx)]
-[#:block-txexpr-proc block-txexpr-proc (block-txexpr? . -> . (or/c xexpr? (listof xexpr?))) (λ(tx) tx)]
-[#:inline-txexpr-proc inline-txexpr-proc (txexpr? . -> . (or/c xexpr? (listof xexpr?))) (λ(tx) tx)]
-[#:string-proc string-proc (string? . -> . (or/c xexpr? (listof xexpr?))) (λ(str) str)]
-[#:entity-proc entity-proc ((or/c symbol? valid-char?) . -> . (or/c xexpr? (listof xexpr?))) (λ(ent) ent)]
-[#:cdata-proc cdata-proc (cdata? . -> . (or/c xexpr? (listof xexpr?))) (λ(cdata) cdata)]
+[#:txexpr-tag-proc txexpr-tag-proc (txexpr-tag? . -> . txexpr-tag?) (λ (tag) tag)]
+[#:txexpr-attrs-proc txexpr-attrs-proc (txexpr-attrs? . -> . txexpr-attrs?) (λ (attrs) attrs)]
+[#:txexpr-elements-proc txexpr-elements-proc (txexpr-elements? . -> . txexpr-elements?) (λ (elements) elements)]
+[#:txexpr-proc txexpr-proc (txexpr? . -> . (or/c xexpr? (listof xexpr?))) (λ (tx) tx)]
+[#:block-txexpr-proc block-txexpr-proc (block-txexpr? . -> . (or/c xexpr? (listof xexpr?))) (λ (tx) tx)]
+[#:inline-txexpr-proc inline-txexpr-proc (txexpr? . -> . (or/c xexpr? (listof xexpr?))) (λ (tx) tx)]
+[#:string-proc string-proc (string? . -> . (or/c xexpr? (listof xexpr?))) (λ (str) str)]
+[#:entity-proc entity-proc ((or/c symbol? valid-char?) . -> . (or/c xexpr? (listof xexpr?))) (λ (ent) ent)]
+[#:cdata-proc cdata-proc (cdata? . -> . (or/c xexpr? (listof xexpr?))) (λ (cdata) cdata)]
 [#:exclude-tags tags-to-exclude (listof txexpr-tag?) null]
 [#:exclude-attrs attrs-to-exclude txexpr-attrs? null]
 )
@@ -64,7 +64,7 @@ This illustrates another important point: even though @racket[decode] presents a
 (decode tx)
 ]
 
-Right — nothing. That's because the default value for the decoding arguments is the identity function, @racket[(λ(x)x)]. So all the input gets passed through intact unless another action is specified.
+Right — nothing. That's because the default value for the decoding arguments is the identity function, @racket[(λ (x)x)]. So all the input gets passed through intact unless another action is specified.
 
 The @racket[_*-proc] arguments of @racket[decode] take procedures that are applied to specific categories of elements within @racket[_txexpr].
 
@@ -73,7 +73,7 @@ The @racket[_txexpr-tag-proc] argument is a procedure that handles X-expression 
 @examples[#:eval my-eval
 (define tx '(p "I'm from a strange" (strong "namespace")))
 (code:comment @#,t{Tags are symbols, so a tag-proc should return a symbol})
-(decode tx #:txexpr-tag-proc (λ(t) (string->symbol (format "ns:~a" t))))
+(decode tx #:txexpr-tag-proc (λ (t) (string->symbol (format "ns:~a" t))))
 ]
 
 The @racket[_txexpr-attrs-proc] argument is a procedure that handles lists of X-expression attributes. (The @racketmodname[txexpr] module, included at no extra charge with Pollen, includes useful helper functions for dealing with these attribute lists.)
@@ -81,7 +81,7 @@ The @racket[_txexpr-attrs-proc] argument is a procedure that handles lists of X-
 @examples[#:eval my-eval
 (define tx '(p ((id "first")) "If I only had a brain."))
 (code:comment @#,t{Attrs is a list, so cons is OK for simple cases})
-(decode tx #:txexpr-attrs-proc (λ(attrs) (cons '[class "PhD"] attrs )))
+(decode tx #:txexpr-attrs-proc (λ (attrs) (cons '[class "PhD"] attrs )))
 ]
 
 Note that @racket[_txexpr-attrs-proc] will change the attributes of every tagged X-expression, even those that don't have attributes. This is useful, because sometimes you want to add attributes where none existed before. But be careful, because the behavior may make your processing function overinclusive.
@@ -90,10 +90,10 @@ Note that @racket[_txexpr-attrs-proc] will change the attributes of every tagged
 (define tx '(div (p ((id "first")) "If I only had a brain.") 
 (p "Me too.")))
 (code:comment @#,t{This will insert the new attribute everywhere})
-(decode tx #:txexpr-attrs-proc (λ(attrs) (cons '[class "PhD"] attrs )))
+(decode tx #:txexpr-attrs-proc (λ (attrs) (cons '[class "PhD"] attrs )))
 (code:comment @#,t{This will add the new attribute only to non-null attribute lists})
 (decode tx #:txexpr-attrs-proc 
-(λ(attrs) (if (null? attrs) attrs (cons '[class "PhD"] attrs ))))
+(λ (attrs) (if (null? attrs) attrs (cons '[class "PhD"] attrs ))))
 ]
 
 
@@ -102,10 +102,10 @@ The @racket[_txexpr-elements-proc] argument is a procedure that operates on the 
 @examples[#:eval my-eval
 (define tx '(div "Double" "\n" "toil" amp "trouble")) 
 (code:comment @#,t{Every element gets doubled ...})
-(decode tx #:txexpr-elements-proc (λ(es) (append-map (λ(e) (list e e)) es)))
+(decode tx #:txexpr-elements-proc (λ (es) (append-map (λ (e) (list e e)) es)))
 (code:comment @#,t{... but only strings get capitalized})
-(decode tx #:txexpr-elements-proc (λ(es) (append-map (λ(e) (list e e)) es))
-#:string-proc (λ(s) (string-upcase s)))
+(decode tx #:txexpr-elements-proc (λ (es) (append-map (λ (e) (list e e)) es))
+#:string-proc (λ (s) (string-upcase s)))
 ]
 
 So why do you need @racket[_txexpr-elements-proc]? Because some types of element decoding depend on context, thus it's necessary to handle the elements as a group. For instance, paragraph decodeion. The behavior is not merely a @racket[map] across each element, because elements are being removed and altered contextually:
@@ -125,7 +125,7 @@ The @racket[_txexpr-proc], @racket[_block-txexpr-proc], and @racket[_inline-txex
 
 @examples[#:eval my-eval
 (define tx '(div "Please" (em "mind the gap") (h1 "Tuesdays only"))) 
-(define add-ns (λ(tx) (txexpr 
+(define add-ns (λ (tx) (txexpr 
     (string->symbol (format "ns:~a" (get-tag tx))) 
     (get-attrs tx) 
     (get-elements tx))))
@@ -144,7 +144,7 @@ The @racket[_string-proc], @racket[_entity-proc], and @racket[_cdata-proc] argum
 @examples[#:eval my-eval
 (code:comment @#,t{A div with string, entity, and cdata elements})
 (define tx `(div "Moe" amp 62 ,(cdata #f #f "3 > 2;")))
-(define rulify (λ(x) '(hr)))
+(define rulify (λ (x) '(hr)))
 (code:comment @#,t{The rulify function is selectively applied to each})
 (print (decode tx #:string-proc rulify))
 (print (decode tx #:entity-proc rulify))
@@ -155,9 +155,9 @@ Note that entities come in two flavors — symbolic and numeric — and @racket
 
 @examples[#:eval my-eval
 (define tx `(div amp 62))
-(define symbolic-detonate (λ(x) (if (symbol? x) 'BOOM x)))
+(define symbolic-detonate (λ (x) (if (symbol? x) 'BOOM x)))
 (print (decode tx #:entity-proc symbolic-detonate))
-(define numeric-detonate (λ(x) (if (valid-char? x) 'BOOM x)))
+(define numeric-detonate (λ (x) (if (valid-char? x) 'BOOM x)))
 (print (decode tx #:entity-proc numeric-detonate))
 ] 
 
@@ -168,7 +168,7 @@ For instance, earlier we saw how to double elements by using @racket[_txexpr-ele
 @examples[#:eval my-eval
 (code:comment @#,t{A div with string, entity, and inline-txexpr elements})
 (define tx `(div "Axl" amp (span "Slash")))
-(define doubler (λ(x) (list x x)))
+(define doubler (λ (x) (list x x)))
 (code:comment @#,t{The doubler function is selectively applied to each type of element})
 (print (decode tx #:string-proc doubler))
 (print (decode tx #:entity-proc doubler))
@@ -183,12 +183,12 @@ Caution: when returning list values, it's possible to trip over the unavoidable 
 (and (txexpr-elements? amb) (txexpr? amb))
 (code:comment @#,t{Ambiguity in context})
 (define x '(gnr "Izzy" "Slash"))
-(define rockit (λ(str) (list 'guitar str)))
+(define rockit (λ (str) (list 'guitar str)))
 (code:comment @#,t{Expecting '(gnr guitar "Izzy" guitar "Slash") from next line,
 but return value will be treated as tagged X-expression})
 (decode x #:string-proc rockit)
 (code:comment @#,t{Changing the order makes it unambiguous})
-(define rockit2 (λ(str) (list str 'guitar)))
+(define rockit2 (λ (str) (list str 'guitar)))
 (decode x #:string-proc rockit2)
 ] 
 
@@ -221,15 +221,15 @@ Finally, the @racket[_attrs-to-exclude] argument works the same way as @racket[_
 @defproc[
 (decode-elements
 [elements txexpr-elements?]
-[#:txexpr-tag-proc txexpr-tag-proc (txexpr-tag? . -> . txexpr-tag?) (λ(tag) tag)]
-[#:txexpr-attrs-proc txexpr-attrs-proc (txexpr-attrs? . -> . txexpr-attrs?) (λ(attrs) attrs)]
-[#:txexpr-elements-proc txexpr-elements-proc (txexpr-elements? . -> . txexpr-elements?) (λ(elements) elements)]
-[#:txexpr-proc txexpr-proc (txexpr? . -> . (or/c xexpr? (listof xexpr?))) (λ(tx) tx)]
-[#:block-txexpr-proc block-txexpr-proc (block-txexpr? . -> . (or/c xexpr? (listof xexpr?))) (λ(tx) tx)]
-[#:inline-txexpr-proc inline-txexpr-proc (txexpr? . -> . (or/c xexpr? (listof xexpr?))) (λ(tx) tx)]
-[#:string-proc string-proc (string? . -> . (or/c xexpr? (listof xexpr?))) (λ(str) str)]
-[#:entity-proc entity-proc ((or/c symbol? valid-char?) . -> . (or/c xexpr? (listof xexpr?))) (λ(ent) ent)]
-[#:cdata-proc cdata-proc (cdata? . -> . (or/c xexpr? (listof xexpr?))) (λ(cdata) cdata)]
+[#:txexpr-tag-proc txexpr-tag-proc (txexpr-tag? . -> . txexpr-tag?) (λ (tag) tag)]
+[#:txexpr-attrs-proc txexpr-attrs-proc (txexpr-attrs? . -> . txexpr-attrs?) (λ (attrs) attrs)]
+[#:txexpr-elements-proc txexpr-elements-proc (txexpr-elements? . -> . txexpr-elements?) (λ (elements) elements)]
+[#:txexpr-proc txexpr-proc (txexpr? . -> . (or/c xexpr? (listof xexpr?))) (λ (tx) tx)]
+[#:block-txexpr-proc block-txexpr-proc (block-txexpr? . -> . (or/c xexpr? (listof xexpr?))) (λ (tx) tx)]
+[#:inline-txexpr-proc inline-txexpr-proc (txexpr? . -> . (or/c xexpr? (listof xexpr?))) (λ (tx) tx)]
+[#:string-proc string-proc (string? . -> . (or/c xexpr? (listof xexpr?))) (λ (str) str)]
+[#:entity-proc entity-proc ((or/c symbol? valid-char?) . -> . (or/c xexpr? (listof xexpr?))) (λ (ent) ent)]
+[#:cdata-proc cdata-proc (cdata? . -> . (or/c xexpr? (listof xexpr?))) (λ (cdata) cdata)]
 [#:exclude-tags tags-to-exclude (listof txexpr-tag?) null]
 [#:exclude-attrs attrs-to-exclude txexpr-attrs? null]
 )
@@ -295,7 +295,7 @@ The @racket[_linebreaker] argument can either be @racket[#f] (which will delete 
 (decode-linebreaks '(div "Two items:" "\n" (em "Eggs") "\n" (em "Bacon")) #f)
 (decode-linebreaks '(div "Two items:" "\n" (div "Eggs") "\n" (div "Bacon")))
 (decode-linebreaks '(div "Two items:" "\n" (em "Eggs") "\n" (em "Bacon"))
- (λ(prev next) (if (and (txexpr? prev) (member "Eggs" prev)) '(egg-br) '(br))))
+ (λ (prev next) (if (and (txexpr? prev) (member "Eggs" prev)) '(egg-br) '(br))))
 ]
 
 @defproc[
@@ -332,14 +332,14 @@ The @racket[_paragraph-wrapper] argument can either be an X-expression, or a fun
 @examples[#:eval my-eval
 (decode-paragraphs '("First para" "\n\n" "Second para") 'ns:p)
 (decode-paragraphs '("First para" "\n\n" "Second para") 
- (λ(elems) `(ns:p ,@elems "!?!")))
+ (λ (elems) `(ns:p ,@elems "!?!")))
 ]
 
 The @racket[_linebreak-proc] argument allows you to use a different linebreaking procedure other than the usual @racket[decode-linebreaks].
 
 @examples[#:eval my-eval
 (decode-paragraphs '("First para" "\n\n" "Second para" "\n" "Second line")
-#:linebreak-proc (λ(x) (decode-linebreaks x '(newline))))
+#:linebreak-proc (λ (x) (decode-linebreaks x '(newline))))
 ]
 
 The @racket[#:force?] option will wrap a paragraph tag around @racket[_elements], even if no explicit or implicit paragraph breaks are found. The @racket[#:force?] option is useful for when you want to guarantee that you always get a list of blocks.

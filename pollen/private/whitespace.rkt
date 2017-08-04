@@ -17,7 +17,7 @@
   (whitespace-base x #:nbsp-is-white? #f))
 
 
-(define not-whitespace? (λ(x) (not (whitespace? x))))
+(define not-whitespace? (λ (x) (not (whitespace? x))))
 
 
 (define (whitespace/nbsp? x)

@@ -7,7 +7,7 @@
   (let ([queries (map car query+replacement)]
         [replacements (map second query+replacement)])
     ;; reverse because first in list should be first applied to str (and compose1 works right-to-left)
-    (apply compose1 (reverse (map (λ(query replacement) (λ(str) (regexp-replace* query str replacement))) queries replacements)))))
+    (apply compose1 (reverse (map (λ (query replacement) (λ (str) (regexp-replace* query str replacement))) queries replacements)))))
 
 (define+provide/contract (smart-dashes str)
   (string? . -> . string?)
@@ -84,7 +84,7 @@
                                               #:double-prepend  [double-pp '(dquo)])
   ((txexpr?) (#:single-prepend list? #:double-prepend list?) . ->* . txexpr?)
   
-  (define two-or-more-char-string? (λ(i) (and (string? i) (>= (string-length i) 2))))
+  (define two-or-more-char-string? (λ (i) (and (string? i) (>= (string-length i) 2))))
   (define-values (tag attr elements) (txexpr->values nx))
   (make-txexpr tag attr
                (if (and (list? elements) (not (empty? elements)))
@@ -117,7 +117,7 @@
 ;; insert nbsp between last two words
 (define+provide/contract (nonbreaking-last-space x #:nbsp [nbsp (->string #\u00A0)] 
                                                  #:minimum-word-length [minimum-word-length 6]
-                                                 #:last-word-proc [last-word-proc (λ(x) x)])
+                                                 #:last-word-proc [last-word-proc (λ (x) x)])
   ((txexpr?) (#:nbsp string? #:minimum-word-length integer? #:last-word-proc procedure?) . ->* . txexpr?)
   
   ;; todo: parameterize this, as it will be different for each project
@@ -128,7 +128,7 @@
         (let ([reversed-str-list (reverse (string->list str))]
               [reversed-nbsp (reverse (string->list (->string nbsp)))])
           (define-values (last-word-chars other-chars) 
-            (splitf-at reversed-str-list (λ(i) (not (eq? i #\space)))))
+            (splitf-at reversed-str-list (λ (i) (not (eq? i #\space)))))
           
           (define front-chars (if (< (len last-word-chars) minimum-word-length) ; OK for long words to be on their own line
                                   ; first char of other-chars will be the space, so use cdr

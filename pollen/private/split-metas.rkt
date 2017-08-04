@@ -12,7 +12,7 @@
     (let loop ([x (if (list? tree) tree (list tree))])
       (cond
         [(meta? x) (set! matches (cons x matches)) missing-sym]
-        [(list? x) (filter (λ(x) (not (eq? x missing-sym))) (map loop x))]
+        [(list? x) (filter (λ (x) (not (eq? x missing-sym))) (map loop x))]
         [else x])))
   
   (values (apply hasheq (apply append (reverse (map cdr matches)))) rest))

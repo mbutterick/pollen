@@ -28,7 +28,7 @@
 
 (define+provide (make-datestamp)
   (define date (current-date))
-  (define date-fields (map (λ(x) (zero-fill x 2)) 
+  (define date-fields (map (λ (x) (zero-fill x 2)) 
                            (list
                             (date-day date)
                             (list-ref months (sub1 (date-month date)))
@@ -38,7 +38,7 @@
 
 (define+provide (make-timestamp)  
   (define date (current-date))
-  (define time-fields (map (λ(x) (zero-fill x 2)) 
+  (define time-fields (map (λ (x) (zero-fill x 2)) 
                            (list
                             ; (date-day date)
                             ; (list-ref months (sub1 (date-month date)))
@@ -66,7 +66,7 @@
        #'(begin
            ;; does file have particular extension
            (define+provide (message-stem . items)
-             (log-pollen-stem (string-join `(,(make-debug-timestamp) ,@(map (λ(x)(if (string? x) x (format "~v" x))) items)))))))]))
+             (log-pollen-stem (string-join `(,(make-debug-timestamp) ,@(map (λ (x)(if (string? x) x (format "~v" x))) items)))))))]))
 
 (make-message-logger-functions fatal)
 (make-message-logger-functions error)
@@ -75,4 +75,4 @@
 (make-message-logger-functions debug)
 
 (define+provide (message . items)
-             (displayln (string-join `(,@(map (λ(x)(if (string? x) x (format "~v" x))) items)))))
+             (displayln (string-join `(,@(map (λ (x)(if (string? x) x (format "~v" x))) items)))))

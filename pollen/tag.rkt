@@ -34,7 +34,7 @@
                                                           (let ([attr-name maybe-attr-name][attr-value (second xs)])
                                                             (cons (list attr-name attr-value) (parse-one-colon-attr (cddr xs))))
                                                           (list xs))))
-          (define kw-symbols (map (λ(kw) (string->symbol (string-trim (keyword->string kw) "#:"))) kws))
+          (define kw-symbols (map (λ (kw) (string->symbol (string-trim (keyword->string kw) "#:"))) kws))
           (define attrs (append (map list kw-symbols kw-args) colon-attrs leading-attrs))
           
           ;; construct the xexpr result "manually" (i.e., not with `make-txexpr` because it may not be a legit txexpr for now
