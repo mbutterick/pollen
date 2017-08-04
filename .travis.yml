@@ -39,5 +39,10 @@ before_install:
 
 script:
  - cd ..   # Travis did a cd into the dir. Back up, for the next:
+  # don't rely on package server for dependencies
+ - travis_retry raco pkg install --deps search-auto https://github.com/mbutterick/sugar.git
+ - raco test -p sugar
+ - travis_retry raco pkg install --deps search-auto https://github.com/mbutterick/txexpr.git
+ - raco test -p txexpr
  - travis_retry raco pkg install --deps search-auto --link pollen
  - raco test -p pollen
