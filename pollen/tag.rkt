@@ -3,52 +3,59 @@
 (require txexpr/base racket/string racket/match)
 (provide default-tag-function make-default-tag-function define-tag-function)
 
-(define first car)
-(define second cadr)
+
+(define (parse-leading-attrs xs)
+  (match xs
+    [(cons (? txexpr-attrs? leading-attrs) tail) (values leading-attrs tail)]
+    [else (values null xs)]))
+
+
+(define (parse-colon-attrs xs)
+  (define (colon-attr-name? x)
+    (and (symbol? x)
+         (let ([result (regexp-match #rx".*?(?=:$)" (symbol->string x))])
+           (and (pair? result) (string->symbol (car result))))))
+  (let parse-next ([xs xs][colon-attrs empty])
+    (match xs
+      [(list* (? colon-attr-name? name) (? string? val) xs)
+       (parse-next xs (cons (list (colon-attr-name? name) val) colon-attrs))]
+      [else (values colon-attrs xs)])))
+
+
+(define (parse-kw-attrs kw-symbols-in kw-args)
+  (define kw-symbols (map (λ (kw) (string->symbol (string-trim (keyword->string kw) "#:"))) kw-symbols-in))
+  (map list kw-symbols kw-args))
+
+
+(define (make-one-tag-function outer-kws outer-kw-args id)
+  (make-keyword-procedure
+   (λ (inner-kws inner-kw-args . xs)
+     ;; Three possible sources of attrs:
+     ;; 1) normal attrs, in a list at the front of the args
+     (let*-values ([(leading-attrs xs) (parse-leading-attrs xs)]
+                   ;; 2) colon attrs, using special 'key: "value" syntax, also at the front of the args
+                   [(colon-attrs xs) (parse-colon-attrs xs)]
+                   ;; 3) keyword attrs
+                   [(kw-attrs) (parse-kw-attrs (append outer-kws inner-kws) (append outer-kw-args inner-kw-args))])
+       ;; construct the xexpr result "manually" (i.e., not with `make-txexpr` because it may not be a legit txexpr for now
+       ;; (but it may become one through further processing, so no need to be finicky)
+       ;; however, don't show empty attrs.
+       (define attrs (append kw-attrs colon-attrs leading-attrs))
+       (cons id (if (null? attrs)
+                    xs
+                    (cons attrs xs)))))))
+
+
 (define default-tag-function
   (make-keyword-procedure
-   (λ (outer-kws outer-kw-args . ids)
-     (define (make-one-tag id)
-       (make-keyword-procedure
-        (λ (inner-kws inner-kw-args . attrs+xs)
-          
-          ;; Three possible sources of attrs:
-          ;; 1) normal attrs, in a list at the front of the args
-          ;; 2) colon args, using special 'key: "value" syntax, also at the front of the args
-          ;; 3) keyword args.
-          
-          (define-values (leading-attrs xs) (if (and (pair? attrs+xs) (txexpr-attrs? (car attrs+xs)))
-                                                (values (car attrs+xs) (cdr attrs+xs))
-                                                (values null attrs+xs)))                                               
-          
-          (define-values (kws kw-args) (values (append outer-kws inner-kws) (append outer-kw-args inner-kw-args)))
-          
-          (match-define (list colon-attrs ... body) (let parse-one-colon-attr ([xs xs])
-                                                      (define (colon-attr-name? x) (let ([result (regexp-match #rx".*?(?=:$)" (symbol->string x))])
-                                                                                     (and result (string->symbol (car result))))) ; return name or #f
-                                                      (define maybe-attr-name (and (>= (length xs) 2) 
-                                                                                   (symbol? (first xs)) 
-                                                                                   (string? (second xs)) ; accept strings only as attr value
-                                                                                   (colon-attr-name? (first xs))))
-                                                      (if maybe-attr-name
-                                                          (let ([attr-name maybe-attr-name][attr-value (second xs)])
-                                                            (cons (list attr-name attr-value) (parse-one-colon-attr (cddr xs))))
-                                                          (list xs))))
-          (define kw-symbols (map (λ (kw) (string->symbol (string-trim (keyword->string kw) "#:"))) kws))
-          (define attrs (append (map list kw-symbols kw-args) colon-attrs leading-attrs))
-          
-          ;; construct the xexpr result "manually" (i.e., not with `make-txexpr` because it may not be a legit txexpr for now
-          ;; (but it may become one through further processing, so no need to be finicky)
-          ;; however, don't show empty attrs.
-          (list* id (if (null? attrs)
-                        body
-                        (list* attrs body))))))
-     
-     (let ([tag-proc (apply compose1 (map make-one-tag ids))]
+   (λ (outer-kws outer-kw-args . ids)     
+     (let ([tag-proc (apply compose1 (for/list ([id (in-list ids)])
+                                               (make-one-tag-function outer-kws outer-kw-args id)))]
            [tag-proc-name (string->symbol (format "pollen-tag:~a" (string-join (map symbol->string ids) "+")))])
        (procedure-rename tag-proc tag-proc-name)))))
 
 (define make-default-tag-function default-tag-function) ; bw compat
+
 
 (module+ test
   (require rackunit txexpr/check)
