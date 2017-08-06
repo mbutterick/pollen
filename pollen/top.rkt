@@ -8,12 +8,12 @@
 ;; To suppress this behavior, use def/c to wrap any name.
 ;; If that name isn't already defined, you'll get the usual syntax error.
 
-(define-syntax-rule (top~ . id)
-  (make-default-tag-function 'id))
+(define-syntax-rule (top~ . ID)
+  (make-default-tag-function 'ID))
 
 (define-syntax (def/c stx)
   (syntax-case stx ()
-    [(_ x)
-     (if (identifier-binding #'x )
-         #'x
-         #'(#%top . x))]))
+    [(_ X)
+     (if (identifier-binding #'X )
+         #'X
+         #'(#%top . X))]))
