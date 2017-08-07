@@ -8,17 +8,19 @@
 ;; The cache is a hash with paths as keys.
 ;; The cache values are also hashes, with key/value pairs for that path.
 
+(define (cache-directory? path)
+  (and (directory-exists? path)
+       (let* ([last (compose1 car reverse)]
+              [last-path-element (path->string (last (explode-path path)))])
+         (member last-path-element default-cache-names))))
+
 (define+provide (reset-cache [starting-dir (current-project-root)])
   (unless (and (path-string? starting-dir) (directory-exists? starting-dir))
     (raise-argument-error 'reset-cache "path-string to existing directory" starting-dir))
-
   (for ([path (in-directory starting-dir)]
-        #:when (and (directory-exists? path)
-                    (let* ([last (compose1 car reverse)]
-                           [last-path-element (path->string (last (explode-path path)))])
-                      (member last-path-element default-cache-names))))
-       (message (format "removing cache directory: ~a" path))
-       (delete-directory/files path)))
+        #:when (cache-directory? path))
+    (message (format "removing cache directory: ~a" path))
+    (delete-directory/files path)))
 
 (define-namespace-anchor cache-module-ns)
 (define cached-require-base
@@ -35,7 +37,7 @@
       (cond
         [(setup:compile-cache-active path)
          (define key (paths->key path))
-         (hash-ref (hash-ref! ram-cache key (λ _ (cache-ref! key (λ _ (path->hash path))))) subkey)]
+         (hash-ref (hash-ref! ram-cache key (λ () (cache-ref! key (λ () (path->hash path))))) subkey)]
         [else (parameterize ([current-namespace (make-base-namespace)])
                 (namespace-attach-module (namespace-anchor->namespace cache-module-ns) 'pollen/setup) ; brings in params
                 (dynamic-require path subkey))]))))
