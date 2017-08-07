@@ -185,8 +185,10 @@
 
 (define (render-preproc-source source-path . _)
   (time (parameterize ([current-directory (->complete-path (dirname source-path))])
-          (render-through-eval #`(begin (require pollen/cache)
-                                        (cached-doc #,source-path))))))
+          (render-through-eval (syntax->datum
+                                (with-syntax ([SOURCE-PATH source-path])
+                                #`(begin (require pollen/cache)
+                                        (cached-doc SOURCE-PATH))))))))
 
 
 (define (render-markup-or-markdown-source source-path [maybe-template-path #f] [maybe-output-path #f]) 
@@ -198,8 +200,9 @@
   (unless template-path
     (raise-argument-error 'render-markup-or-markdown-source "valid template path" template-path))
   (render-from-source-or-output-path template-path) ; because template might have its own preprocessor source
-  (define stx-to-eval
-    (with-syntax ([DIRECTORY-REQUIRE-FILES (require-directory-require-files source-path)]
+  (define expr-to-eval
+    (syntax->datum
+     (with-syntax ([DIRECTORY-REQUIRE-FILES (require-directory-require-files source-path)]
                   [DOC-ID (setup:main-export source-path)]
                   [META-ID (setup:meta-export source-path)]
                   [SOURCE-PATH-STRING (path->string source-path)]
@@ -222,10 +225,10 @@
             (define here (path->pagenode (or (select-from-metas 'HERE-PATH-KEY META-ID) 'unknown)))
             (if (bytes? DOC-ID) ; if main export is binary, just pass it through
                 DOC-ID
-                (include-template #:command-char COMMAND-CHAR (file TEMPLATE-PATH)))))))
+                (include-template #:command-char COMMAND-CHAR (file TEMPLATE-PATH))))))))
   ;; set current-directory because include-template wants to work relative to source location
   (time (parameterize ([current-directory (->complete-path source-dir)]) 
-          (render-through-eval stx-to-eval))))
+          (render-through-eval expr-to-eval))))
 
 
 (define (templated-source? path)
