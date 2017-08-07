@@ -14,7 +14,6 @@
          "pagetree.rkt"
          "template.rkt"
          "core.rkt"
-         "private/rerequire.rkt"
          "setup.rkt")
 
 ;; used to track renders according to modification dates of component files
