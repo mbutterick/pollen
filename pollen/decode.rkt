@@ -1,8 +1,14 @@
 #lang racket/base
-(require xml txexpr/base racket/list sugar/list sugar/define sugar/test)
-(require "setup.rkt" "private/splice.rkt")
+(require xml
+         txexpr/base
+         racket/list
+         sugar/list
+         sugar/define
+         sugar/test
+         "setup.rkt"
+         "private/splice.rkt"
+         "unstable/typography.rkt")
 
-(require "unstable/typography.rkt")
 (provide (all-from-out "unstable/typography.rkt")) ; bw compat, includes `whitespace?`
 
 (define (->list/tx x)
@@ -32,31 +38,32 @@
                                  #:exclude-attrs [excluded-attrs empty])
   ((xexpr/c)  
    (#:txexpr-tag-proc (txexpr-tag? . -> . txexpr-tag?)
-                      #:txexpr-attrs-proc (txexpr-attrs? . -> . txexpr-attrs?)
-                      #:txexpr-elements-proc (txexpr-elements? . -> . txexpr-elements?)
-                      #:txexpr-proc (txexpr? . -> . decode-proc-output-contract)
-                      #:block-txexpr-proc (block-txexpr? . -> . decode-proc-output-contract)
-                      #:inline-txexpr-proc (txexpr? . -> . decode-proc-output-contract)
-                      #:string-proc (string? . -> . decode-proc-output-contract)
-                      #:entity-proc ((or/c symbol? valid-char?) . -> . decode-proc-output-contract)
-                      #:cdata-proc (cdata? . -> . decode-proc-output-contract)
-                      #:exclude-tags txexpr-tags?
-                      #:exclude-attrs txexpr-attrs?) . ->* . decode-proc-output-contract)
+    #:txexpr-attrs-proc (txexpr-attrs? . -> . txexpr-attrs?)
+    #:txexpr-elements-proc (txexpr-elements? . -> . txexpr-elements?)
+    #:txexpr-proc (txexpr? . -> . decode-proc-output-contract)
+    #:block-txexpr-proc (block-txexpr? . -> . decode-proc-output-contract)
+    #:inline-txexpr-proc (txexpr? . -> . decode-proc-output-contract)
+    #:string-proc (string? . -> . decode-proc-output-contract)
+    #:entity-proc ((or/c symbol? valid-char?) . -> . decode-proc-output-contract)
+    #:cdata-proc (cdata? . -> . decode-proc-output-contract)
+    #:exclude-tags txexpr-tags?
+    #:exclude-attrs txexpr-attrs?) . ->* . decode-proc-output-contract)
   (let loop ([x tx-in])
     (cond
       [(txexpr? x) (let-values([(tag attrs elements) (txexpr->values x)]) 
-                     (if (or (member tag excluded-tags) (ormap (λ (attr) (member attr excluded-attrs)) attrs)) 
+                     (if (or (member tag excluded-tags) (for/or ([attr (in-list attrs)])
+                                                          (member attr excluded-attrs))) 
                          x ; because it's excluded
                          ;; we apply processing here rather than do recursive descent on the pieces
                          ;; because if we send them back through loop, certain element types are ambiguous
                          ;; e.g., ((p "foo")) tests out as both txexpr-attrs and txexpr-elements
-                         (let ([decoded-txexpr 
-                                (apply make-txexpr (list (txexpr-tag-proc tag) 
-                                                         (txexpr-attrs-proc attrs) 
-                                                         (txexpr-elements-proc (append-map (compose1 ->list/tx loop) elements))))])
-                           ((compose1 txexpr-proc (if (block-txexpr? decoded-txexpr)
-                                                      block-txexpr-proc
-                                                      inline-txexpr-proc)) decoded-txexpr))))]
+                         (let* ([decoded-txexpr (make-txexpr (txexpr-tag-proc tag) 
+                                                             (txexpr-attrs-proc attrs) 
+                                                             (txexpr-elements-proc (append-map (compose1 ->list/tx loop) elements)))]
+                                [proc (compose1 txexpr-proc (if (block-txexpr? decoded-txexpr)
+                                                                block-txexpr-proc
+                                                                inline-txexpr-proc))])
+                           (proc decoded-txexpr))))]
       [(string? x) (string-proc x)]
       [(or (symbol? x) (valid-char? x)) (entity-proc x)]
       [(cdata? x) (cdata-proc x)]
@@ -94,16 +101,16 @@
 (define+provide/contract decode-elements 
   ((txexpr-elements?)  
    (#:txexpr-tag-proc (txexpr-tag? . -> . txexpr-tag?)
-                      #:txexpr-attrs-proc (txexpr-attrs? . -> . txexpr-attrs?)
-                      #:txexpr-elements-proc (txexpr-elements? . -> . txexpr-elements?)
-                      #:txexpr-proc (txexpr? . -> . decode-proc-output-contract)
-                      #:block-txexpr-proc (block-txexpr? . -> . decode-proc-output-contract)
-                      #:inline-txexpr-proc (txexpr? . -> . decode-proc-output-contract)
-                      #:string-proc (string? . -> . decode-proc-output-contract)
-                      #:entity-proc ((or/c symbol? valid-char?) . -> . decode-proc-output-contract)
-                      #:cdata-proc (cdata? . -> . decode-proc-output-contract)
-                      #:exclude-tags txexpr-tags?
-                      #:exclude-attrs txexpr-attrs?) . ->* . decode-proc-output-contract)
+    #:txexpr-attrs-proc (txexpr-attrs? . -> . txexpr-attrs?)
+    #:txexpr-elements-proc (txexpr-elements? . -> . txexpr-elements?)
+    #:txexpr-proc (txexpr? . -> . decode-proc-output-contract)
+    #:block-txexpr-proc (block-txexpr? . -> . decode-proc-output-contract)
+    #:inline-txexpr-proc (txexpr? . -> . decode-proc-output-contract)
+    #:string-proc (string? . -> . decode-proc-output-contract)
+    #:entity-proc ((or/c symbol? valid-char?) . -> . decode-proc-output-contract)
+    #:cdata-proc (cdata? . -> . decode-proc-output-contract)
+    #:exclude-tags txexpr-tags?
+    #:exclude-attrs txexpr-attrs?) . ->* . decode-proc-output-contract)
   (make-keyword-procedure
    (λ (kws kwargs . args)
      (define temp-tag (gensym "temp-tag"))
@@ -129,18 +136,18 @@
                              (λ (e1 e2) maybe-linebreak-proc)))
   (define elems-vec (list->vector elems))
   (filter identity
-          (for/list ([(item i) (in-indexed elems-vec)])
-                    (cond
-                      [(or (= i 0) (= i (sub1 (vector-length elems-vec)))) item] ; pass through first & last items
-                      [(equal? item newline)
-                       (let ([prev (vector-ref elems-vec (sub1 i))]
-                             [next (vector-ref elems-vec (add1 i))])
-                         ;; only convert if neither adjacent tag is a block
-                         ;; (because blocks automatically force a newline before & after)
-                         (if (or (block-txexpr? prev) (block-txexpr? next))
-                             #f ; flag for filtering
-                             (linebreak-proc prev next)))]
-                      [else item]))))
+          (for/list ([(elem idx) (in-indexed elems-vec)])
+            (cond
+              [(or (= idx 0) (= idx (sub1 (vector-length elems-vec)))) elem] ; pass through first & last items
+              [(equal? elem newline)
+               (let ([prev (vector-ref elems-vec (sub1 idx))]
+                     [next (vector-ref elems-vec (add1 idx))])
+                 ;; only convert if neither adjacent tag is a block
+                 ;; (because blocks automatically force a newline before & after)
+                 (if (or (block-txexpr? prev) (block-txexpr? next))
+                     #f ; flag for filtering
+                     (linebreak-proc prev next)))]
+              [else elem]))))
 
 (module-test-external
  (check-equal? (decode-linebreaks '("foo" "\n" "bar")) '("foo" (br) "bar"))
@@ -174,7 +181,7 @@
 (module-test-external
  (require racket/list)
  (check-equal? (merge-newlines empty) empty)
-(check-equal? (merge-newlines '((p ((id "")) "\n" "" "\n"))) '((p ((id "")) "\n\n")))
+ (check-equal? (merge-newlines '((p ((id "")) "\n" "" "\n"))) '((p ((id "")) "\n\n")))
  (check-equal? (merge-newlines '((p "\n" "" "\n"))) '((p "\n\n")))
  (check-equal? (merge-newlines '(p "\n" "\n" "foo" "\n" "\n\n" "bar" (em "\n" "\n" "\n"))) 
                '(p "\n\n" "foo" "\n\n\n" "bar" (em "\n\n\n"))))
