@@ -1,5 +1,6 @@
 #lang racket/base
-(require sugar/define
+(require racket/syntax
+         sugar/define
          sugar/coerce
          "../setup.rkt"
          "file-utils.rkt")
@@ -8,24 +9,21 @@
   (pathish? . -> . (or/c #f (λ (xs) (and (list? xs) (andmap complete-path? xs)))))
   (define source-path (->path source-arg))  
   (define require-filenames (list default-directory-require))
-  (define identity (λ (x) x))
-  (define possible-requires (filter identity (map (λ (f) (find-upward-from source-path f)) require-filenames)))
+  (define possible-requires (for*/list ([rf (in-list require-filenames)]
+                                        [p (in-value (find-upward-from source-path rf))]
+                                        #:when p)
+                                       p))
   (and (pair? possible-requires) possible-requires))
 
 
-(define+provide/contract (require+provide-directory-require-files here-arg #:provide [provide #t])
-  (pathish? . -> . list?)
+(define+provide/contract (require+provide-directory-require-files here-arg #:provide [provide? #t])
+  (pathish? . -> . syntax?)
   (define here-path (->path here-arg))  
-  (define (put-file-in-require-form file) `(file ,(path->string file)))  
-  (define directory-require-files (get-directory-require-files here-path))
-  (if directory-require-files
-      (let ([files-in-require-form (map put-file-in-require-form directory-require-files)])
-        `(begin
-           (require ,@files-in-require-form)
-           ,@(if provide
-                 (list `(provide (all-from-out ,@files-in-require-form)))
-                 null)))
-      '(begin)))
+  (with-syntax* ([(DRF ...) (map path->string (or (get-directory-require-files here-path) null))]
+                 [(PROVIDE-DRF ...) (if provide? #'(DRF ...) #'())])
+    #'(begin
+        (require (file DRF)) ...
+        (provide (all-from-out (file PROVIDE-DRF))) ...)))
 
 
 (define+provide (require-directory-require-files here-path)
