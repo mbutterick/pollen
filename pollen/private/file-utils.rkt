@@ -29,9 +29,9 @@
 ;; but have a textual representation separate from their display.
 (define+provide (sourceish? x)
   ;(any/c . -> . coerce/boolean?)
-  (define sourceish-extensions (list "svg"))
-  (with-handlers ([exn:fail? (λ (e) #f)])
-    (and (member (get-ext x) sourceish-extensions) #t)))
+  (define sourceish-extensions '("svg"))
+  (for/or ([ext (in-list sourceish-extensions)])
+          (equal? (get-ext x) ext)))
 
 (module-test-external
  (check-true (sourceish? "foo.svg"))
@@ -52,17 +52,9 @@
 (define (paths? x) (and (list? x) (andmap path? x)))
 (define (complete-paths? x) (and (list? x) (andmap complete-path? x)))
 
-(define+provide (path-visible? path)
-  ;; make paths absolute to test whether files exist,
-  ;; then convert back to relative
-  (not (regexp-match #rx"^\\." (path->string path))))
 
-(define+provide (visible-files dir)
-  (let ([dir (->path dir)])
-    (filter path-visible? 
-            (map (λ (p) (find-relative-path dir p)) 
-                 (filter file-exists? 
-                         (directory-list dir #:build? #t))))))
+(define+provide (path-visible? path)
+  (not (regexp-match #rx"^\\." (path->string path))))
 
 
 (define+provide (escape-last-ext x [escape-char (setup:extension-escape-char)])
@@ -87,7 +79,7 @@
 (define+provide (unescape-ext x [escape-char (setup:extension-escape-char)])
   ;((coerce/string?) (char?) . ->* . coerce/path?)
   ;; if x has an escaped extension, unescape it.
-  (define-values (base name dir?) (split-path x))
+  (define-values (base _ dir?) (split-path x))
   (->path
    (cond
      [dir? x]
@@ -152,81 +144,99 @@
  (check-false (has-inner-poly-ext? "foo.poly"))
  (check-false (has-inner-poly-ext? "foo.wrong.pm")))
 
-(define-syntax (make-source-utility-functions stx)
+(define-syntax (define-utility-functions stx)
   (syntax-case stx ()
-    [(_ stem)
-     (with-syntax ([setup:stem-source-ext (format-id stx "setup:~a-source-ext" #'stem)]
-                   [stem-source? (format-id stx "~a-source?" #'stem)]
-                   [get-stem-source (format-id stx "get-~a-source" #'stem)]
-                   [has/is-stem-source? (format-id stx "has/is-~a-source?" #'stem)]
-                   [->stem-source-path (format-id stx "->~a-source-path" #'stem)]
-                   [->stem-source-paths (format-id stx "->~a-source-paths" #'stem)]
-                   [->stem-source+output-paths (format-id stx "->~a-source+output-paths" #'stem)])
+    [(_ STEM)
+     (with-syntax ([SETUP:STEM-SOURCE-EXT (format-id stx "setup:~a-source-ext" #'STEM)]
+                   [STEM-SOURCE? (format-id stx "~a-source?" #'STEM)]
+                   [GET-STEM-SOURCE (format-id stx "get-~a-source" #'STEM)]
+                   [HAS/IS-STEM-SOURCE? (format-id stx "has/is-~a-source?" #'STEM)]
+                   [->STEM-SOURCE-PATH (format-id stx "->~a-source-path" #'STEM)]
+                   [->STEM-SOURCE-PATHS (format-id stx "->~a-source-paths" #'STEM)]
+                   [->STEM-SOURCE+OUTPUT-PATHS (format-id stx "->~a-source+output-paths" #'STEM)])
        #`(begin
            ;; does file have particular extension
-           (define+provide/contract (stem-source? x)
+           (define+provide/contract (STEM-SOURCE? x)
              (any/c . -> . boolean?)
-             (and (pathish? x) (has-ext? (->path x) (setup:stem-source-ext)) #t))
+             (and (pathish? x) (has-ext? (->path x) (SETUP:STEM-SOURCE-EXT)) #t))
            
            ;; non-theoretical: want the first possible source that exists in the filesystem
-           (define+provide/contract (get-stem-source x)
+           (define+provide/contract (GET-STEM-SOURCE x)
              (coerce/path? . -> . (or/c #f path?))
-             (let ([source-paths (->stem-source-paths x)])
-               (and source-paths (for/first ([sp (in-list source-paths)]
-                                             #:when (file-exists? sp))
-                                            sp))))
+             (define source-paths (or (->STEM-SOURCE-PATHS x) null))
+             (for/first ([sp (in-list source-paths)]
+                         #:when (file-exists? sp))
+                        sp))
            
            ;; it's a file-ext source file, or a file that's the result of a file-ext source
-           (define+provide (has/is-stem-source? x)
-             (->boolean (and (pathish? x) (ormap (λ (proc) (proc (->path x))) (list stem-source? get-stem-source)))))
+           (define+provide (HAS/IS-STEM-SOURCE? x)
+             (->boolean (and (pathish? x) (ormap (λ (proc) (proc (->path x))) (list STEM-SOURCE? GET-STEM-SOURCE)))))
            
            ;; get first possible source path (does not check filesystem)
-           (define+provide/contract (->stem-source-path x)
+           (define+provide/contract (->STEM-SOURCE-PATH x)
              (pathish? . -> . (or/c #f path?))
-             (define paths (->stem-source-paths x))
+             (define paths (->STEM-SOURCE-PATHS x))
              (and paths (car paths)))
            
            ;; get all possible source paths (does not check filesystem)
-           (define (->stem-source-paths x)
-             (define results (if (stem-source? x) 
-                                 (list x) ; already has the source extension
-                                 #,(if (eq? (syntax->datum #'stem) 'scribble)
-                                       #'(if (x . has-ext? . 'html) ; different logic for scribble sources
-                                             (list (add-ext (remove-ext* x) (setup:stem-source-ext)))
-                                             #f)
-                                       #'(let ([x-ext (get-ext x)]
-                                               [source-ext (setup:stem-source-ext)])
-                                           (append
-                                            (list (add-ext x source-ext)) ; standard
-                                            (if x-ext ; has existing ext, therefore needs escaped version
-                                                (append
-                                                 (list (add-ext (escape-last-ext x) source-ext))
-                                                 (if (ext-in-poly-targets? x-ext x) ; needs multi + escaped multi
-                                                     (let ([x-multi (add-ext (remove-ext x) (setup:poly-source-ext))])
-                                                       (list
-                                                        (add-ext x-multi (setup:stem-source-ext))
-                                                        (add-ext (escape-last-ext x-multi) source-ext)))
-                                                     null))
-                                                null))))))
+           (define (->STEM-SOURCE-PATHS x)
+             (define results
+               (if (STEM-SOURCE? x) 
+                   (list x) ; already has the source extension
+                   #,(if (eq? (syntax->datum #'STEM) 'scribble)
+                         #'(if (x . has-ext? . 'html) ; different logic for scribble sources
+                               (list (add-ext (remove-ext* x) (SETUP:STEM-SOURCE-EXT)))
+                               #f)
+                         #'(let ([x-ext (get-ext x)]
+                                 [source-ext (SETUP:STEM-SOURCE-EXT)])
+                             (cons
+                              (add-ext x source-ext) ; standard
+                              (if x-ext ; has existing ext, therefore needs escaped version
+                                  (cons
+                                   (add-ext (escape-last-ext x) source-ext)
+                                   (if (ext-in-poly-targets? x-ext x) ; needs multi + escaped multi
+                                       (let ([x-multi (add-ext (remove-ext x) (setup:poly-source-ext))])
+                                         (list
+                                          (add-ext x-multi (SETUP:STEM-SOURCE-EXT))
+                                          (add-ext (escape-last-ext x-multi) source-ext)))
+                                       null))
+                                  null))))))
              (and results (map ->path results)))
            
            ;; coerce either a source or output file to both
-           (define+provide (->stem-source+output-paths path)
+           (define+provide (->STEM-SOURCE+OUTPUT-PATHS path)
              ;(pathish? . -> . (values path? path?))
              ;; get the real source path if available, otherwise a theoretical path
-             (values (->complete-path (or (get-stem-source path) (->stem-source-path path)))
+             (values (->complete-path (or (GET-STEM-SOURCE path) (->STEM-SOURCE-PATH path)))
                      (->complete-path (->output-path path))))))]))
 
-(make-source-utility-functions preproc)
+(define-utility-functions preproc)
+(define-utility-functions null)
+(define-utility-functions pagetree)
+(define-utility-functions markup)
+(define-utility-functions markdown)
+(define-utility-functions scribble)
+
 
 (define+provide (->source+output-paths source-or-output-path)
   ;(complete-path? . -> . (values complete-path? complete-path?))
   ;; file-proc returns two values, but ormap only wants one
-  (define file-proc (ormap (λ (test file-proc) (and (test source-or-output-path) file-proc))
-                           (list has/is-null-source? has/is-preproc-source? has/is-markup-source? has/is-scribble-source? has/is-markdown-source? )
-                           (list ->null-source+output-paths ->preproc-source+output-paths ->markup-source+output-paths ->scribble-source+output-paths ->markdown-source+output-paths )))
+  (define tests (list
+                 has/is-null-source?
+                 has/is-preproc-source?
+                 has/is-markup-source?
+                 has/is-scribble-source?
+                 has/is-markdown-source?))
+  (define file-procs (list ->null-source+output-paths
+                           ->preproc-source+output-paths
+                           ->markup-source+output-paths
+                           ->scribble-source+output-paths
+                           ->markdown-source+output-paths))  
+  (define file-proc (for/first ([test (in-list tests)]
+                                [file-proc (in-list file-procs)]
+                                #:when (test source-or-output-path))
+                               file-proc))
   (file-proc source-or-output-path))
-
 
 
 (module-test-internal
@@ -235,26 +245,14 @@
  (check-equal? (->preproc-source-paths (->path "foo.html")) (list (->path "foo.html.pp") (->path "foo_html.pp")
                                                                   (->path "foo.poly.pp") (->path "foo_poly.pp")))
  (check-equal? (->preproc-source-paths "foo") (list (->path "foo.pp")))
- (check-equal? (->preproc-source-paths 'foo) (list (->path "foo.pp"))))
-
-(make-source-utility-functions null)
-
-(make-source-utility-functions pagetree)
-
-(make-source-utility-functions markup)
-
-(module-test-internal
- (require sugar/coerce)
+ (check-equal? (->preproc-source-paths 'foo) (list (->path "foo.pp")))
+ 
  (check-equal? (->markup-source-paths (->path "foo.pm")) (list (->path "foo.pm")))
  (check-equal? (->markup-source-paths (->path "foo.html")) (list (->path "foo.html.pm") (->path "foo_html.pm")
                                                                  (->path "foo.poly.pm") (->path "foo_poly.pm")))
  (check-equal? (->markup-source-paths "foo") (list (->path "foo.pm")))
- (check-equal? (->markup-source-paths 'foo) (list (->path "foo.pm"))))
-
-(make-source-utility-functions markdown)
-
-(module-test-internal
- (require sugar/coerce)
+ (check-equal? (->markup-source-paths 'foo) (list (->path "foo.pm")))
+ 
  (check-equal? (->markdown-source-paths (->path "foo.pmd")) (list (->path "foo.pmd")))
  (check-equal? (->markdown-source-paths (->path "foo.html")) (list (->path "foo.html.pmd") (->path "foo_html.pmd")
                                                                    (->path "foo.poly.pmd") (->path "foo_poly.pmd")))
@@ -262,7 +260,6 @@
  (check-equal? (->markdown-source-paths 'foo) (list (->path "foo.pmd"))))
 
 
-(make-source-utility-functions scribble)
 
 
 (define+provide/contract (get-source path)
@@ -320,19 +317,21 @@
 
 
 (define+provide (omitted-path? file)
-  (ormap (λ (proc) (proc file)) (list
-                                preproc-source? 
-                                markup-source?
-                                markdown-source?
-                                pagetree-source?
-                                scribble-source?
-                                null-source?
-                                racket-source?
-                                special-path?
-                                (setup:omitted-path?)
-                                (setup:unpublished-path?)))) ; deprecated name
+  (for/or ([proc (in-list (list
+                           preproc-source? 
+                           markup-source?
+                           markdown-source?
+                           pagetree-source?
+                           scribble-source?
+                           null-source?
+                           racket-source?
+                           special-path?
+                           (setup:omitted-path?)
+                           (setup:unpublished-path?)))])
+          (proc file)))
 
 (define+provide (extra-path? file)
-  (ormap (λ (proc) (proc file)) (list
-                                (setup:extra-path?)
-                                (setup:extra-published-path?))))  ; deprecated name
+  (for/or ([proc (in-list (list
+                           (setup:extra-path?)
+                           (setup:extra-published-path?)))])
+          (proc file)))
