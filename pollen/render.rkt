@@ -134,7 +134,7 @@
   (define render-proc (for/first ([test (in-list tests)]
                                   [render-proc (in-list render-procs)]
                                   #:when (test source-path))
-                        render-proc))
+                                 render-proc))
   (unless render-proc
     (raise-argument-error 'render (format "valid rendering function for ~a" source-path) render-proc))
   
@@ -162,18 +162,20 @@
 
 (define (render-scribble-source source-path . _)
   ;((complete-path?) #:rest any/c . ->* . string?)
-  (define scribble-render (parameterize ([current-namespace (make-base-namespace)])
-                            (dynamic-require 'scribble/render 'render)))
-  (time (parameterize ([current-directory (->complete-path (dirname source-path))])
-          ;; if there's a compiled zo file for the Scribble file,
-          ;; (as is usually the case in existing packages)
-          ;; it will foul up the render
-          ;; so recompile first to avoid "can't redefine a constant" errors.
-          (managed-compile-zo source-path)
+  (local-require scribble/core scribble/manual (prefix-in scribble- scribble/render))
+  (define source-dir (dirname source-path))
+  ;; make fresh namespace for scribble rendering (avoids dep/zo caching)
+  (time (parameterize ([current-namespace (make-base-namespace)]
+                       [current-directory (->complete-path source-dir)])
+          (namespace-attach-module (namespace-anchor->namespace render-module-ns) 'scribble/core)
+          (namespace-attach-module (namespace-anchor->namespace render-module-ns) 'scribble/manual)
+          
           ;; scribble/lp files have their doc export in a 'doc submodule, so check both locations
-          (define doc (dynamic-require source-path 'doc
-                                       (λ () (dynamic-require `(submod ,source-path doc) 'doc
-                                                              (λ () #f)))))
+          (define doc
+            [cond
+              [(dynamic-require source-path 'doc (λ () #f))]
+              [(dynamic-require `(submod ,source-path doc) 'doc (λ () #f))]
+              [else #f]])
           ;; BTW this next action has side effects: scribble will copy in its core files if they don't exist.
           (when doc
             (scribble-render (list doc) (list source-path)))))
@@ -186,8 +188,8 @@
   (time (parameterize ([current-directory (->complete-path (dirname source-path))])
           (render-through-eval (syntax->datum
                                 (with-syntax ([SOURCE-PATH source-path])
-                                #`(begin (require pollen/cache)
-                                        (cached-doc SOURCE-PATH))))))))
+                                  #`(begin (require pollen/cache)
+                                           (cached-doc SOURCE-PATH))))))))
 
 
 (define (render-markup-or-markdown-source source-path [maybe-template-path #f] [maybe-output-path #f]) 
@@ -202,29 +204,29 @@
   (define expr-to-eval
     (syntax->datum
      (with-syntax ([DIRECTORY-REQUIRE-FILES (require-directory-require-files source-path)]
-                  [DOC-ID (setup:main-export source-path)]
-                  [META-ID (setup:meta-export source-path)]
-                  [SOURCE-PATH-STRING (path->string source-path)]
-                  [CPR (current-project-root)]
-                  [HERE-PATH-KEY (setup:here-path-key source-path)]
-                  [COMMAND-CHAR (setup:command-char source-path)]
-                  [TEMPLATE-PATH (->string template-path)])
-      #'(begin 
-          (require (for-syntax racket/base)
-                   pollen/private/include-template
-                   pollen/cache
-                   pollen/private/debug
-                   pollen/pagetree
-                   pollen/core)
-          DIRECTORY-REQUIRE-FILES
-          (parameterize ([current-pagetree (make-project-pagetree CPR)])
-            (define DOC-ID (cached-doc SOURCE-PATH-STRING))
-            (define META-ID (cached-metas SOURCE-PATH-STRING))
-            (local-require pollen/template pollen/top)
-            (define here (path->pagenode (or (select-from-metas 'HERE-PATH-KEY META-ID) 'unknown)))
-            (if (bytes? DOC-ID) ; if main export is binary, just pass it through
-                DOC-ID
-                (include-template #:command-char COMMAND-CHAR (file TEMPLATE-PATH))))))))
+                   [DOC-ID (setup:main-export source-path)]
+                   [META-ID (setup:meta-export source-path)]
+                   [SOURCE-PATH-STRING (path->string source-path)]
+                   [CPR (current-project-root)]
+                   [HERE-PATH-KEY (setup:here-path-key source-path)]
+                   [COMMAND-CHAR (setup:command-char source-path)]
+                   [TEMPLATE-PATH (->string template-path)])
+       #'(begin 
+           (require (for-syntax racket/base)
+                    pollen/private/include-template
+                    pollen/cache
+                    pollen/private/debug
+                    pollen/pagetree
+                    pollen/core)
+           DIRECTORY-REQUIRE-FILES
+           (parameterize ([current-pagetree (make-project-pagetree CPR)])
+             (define DOC-ID (cached-doc SOURCE-PATH-STRING))
+             (define META-ID (cached-metas SOURCE-PATH-STRING))
+             (local-require pollen/template pollen/top)
+             (define here (path->pagenode (or (select-from-metas 'HERE-PATH-KEY META-ID) 'unknown)))
+             (if (bytes? DOC-ID) ; if main export is binary, just pass it through
+                 DOC-ID
+                 (include-template #:command-char COMMAND-CHAR (file TEMPLATE-PATH))))))))
   ;; set current-directory because include-template wants to work relative to source location
   (time (parameterize ([current-directory (->complete-path source-dir)]) 
           (render-through-eval expr-to-eval))))
@@ -241,7 +243,7 @@
   (define (file-exists-or-has-source? p) ; p could be #f
     (and p (for/first ([proc (in-list (list identity ->preproc-source-path ->null-source-path))]
                        #:when (file-exists? (proc p)))
-             p)))
+                      p)))
   
   (define (get-template)
     (define source-dir (dirname source-path))
