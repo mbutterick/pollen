@@ -1,5 +1,15 @@
 #lang racket/base
-(require pollen/setup pollen/render racket/file racket/path sugar/coerce "file-utils.rkt" pollen/pagetree racket/string racket/list racket/vector racket/cmdline)
+(require racket/file
+         racket/path
+         racket/string
+         racket/list
+         racket/vector
+         racket/cmdline
+         sugar/coerce
+         "file-utils.rkt"
+         "../setup.rkt"
+         "../render.rkt"
+         "../pagetree.rkt")
 
 ;; The use of dynamic-require throughout this file is intentional:
 ;; this way, low-dependency raco commands (like "version") are faster.
@@ -12,16 +22,13 @@
                          (vector-ref (current-command-line-arguments) 0)))
   (dispatch command-name))
 
+
 (define (get-first-arg-or-current-dir [args (cdr (vector->list (current-command-line-arguments)))]) ; cdr to strip command name from front
   (normalize-path
    (with-handlers ([exn:fail? (λ (exn) (current-directory))])
      ;; incoming path argument is handled as described in docs for current-directory
      (very-nice-path (car args)))))
 
-(define-syntax-rule (polcom arg0 args ...)
-  (parameterize ([current-command-line-arguments (list->vector (map symbol->string (list 'arg0 'args ...)))])
-    (dispatch (with-handlers ([exn:fail? (λ _ #f)])
-                (vector-ref (current-command-line-arguments) 0)))))
 
 (define (dispatch command-name)
   (case command-name
@@ -129,7 +136,7 @@ version                print the version" (current-server-port) (make-publish-di
                                #:args other-args
                                other-args))
   (define dir (path->directory-path (get-first-arg-or-current-dir clargs)))
-  (when (not (directory-exists? dir))
+  (unless (directory-exists? dir)
     (error (format "~a is not a directory" dir)))
   (define port (with-handlers ([exn:fail? (λ (e) #f)])
                  (string->number (cadr clargs))))
@@ -150,6 +157,20 @@ version                print the version" (current-server-port) (make-publish-di
                                 "clone"
                                 user-publish-path))))))
 
+
+(define (delete-it path)
+  (cond
+    [(directory-exists? path) (delete-directory/files path)]
+    [(file-exists? path) (delete-file path)]))
+  
+
+(define (contains-directory? possible-superdir possible-subdir)
+  (define (has-prefix? xs prefix)
+    (and (>= (length xs) (length prefix))
+         (andmap equal? prefix (take xs (length prefix)))))
+  ((explode-path possible-subdir) . has-prefix? . (explode-path possible-superdir)))
+
+
 (define (handle-publish)
   (define command-name ; either "publish" or "clone"
     (vector-ref (current-command-line-arguments) 0))
@@ -163,25 +184,12 @@ version                print the version" (current-server-port) (make-publish-di
                       #:args other-args
                       other-args))
   ;; other-args looks like (list [maybe-source-dir-arg] [maybe-dest-dir-arg])
-  (define source-dir
-    (simplify-path (get-first-arg-or-current-dir other-args)))
-  (define dest-dir
-    (simplify-path
-     (with-handlers ([exn:fail? (λ (exn) (make-publish-dir-name command-name))]) 
-       (path->complete-path (string->path (cadr other-args))))))
-
-  (define (delete-it path)
-    (cond
-      [(directory-exists? path) (delete-directory/files path)]
-      [(file-exists? path) (delete-file path)]))
+  (define source-dir (simplify-path (get-first-arg-or-current-dir other-args)))
+  (define dest-dir (simplify-path
+                    (with-handlers ([exn:fail? (λ (exn) (make-publish-dir-name command-name))]) 
+                      (path->complete-path (string->path (cadr other-args))))))
   
-  (define (contains-directory? possible-superdir possible-subdir)
-    (define (has-prefix? xs prefix)
-      (and (>= (length xs) (length prefix))
-           (andmap equal? prefix (take xs (length prefix)))))
-    ((explode-path possible-subdir) . has-prefix? . (explode-path possible-superdir)))
-  
-  (when (not (directory-exists? source-dir))
+  (unless (directory-exists? source-dir)
     (error 'publish (format "source directory ~a does not exist" source-dir)))
   
   (when (source-dir . contains-directory? . dest-dir)
