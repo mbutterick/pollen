@@ -1,24 +1,26 @@
 #lang racket/base
-(require (for-syntax racket/base racket/syntax))
-(require racket/runtime-path)
+(require (for-syntax racket/base racket/syntax)
+         racket/runtime-path)
 
-(define-syntax-rule (define+provide id expr ...)
+(define-syntax-rule (define+provide ID EXPR ...)
   (begin
-    (provide id)
-    (define id expr ...)))
+    (provide ID)
+    (define ID EXPR ...)))
 
 (define+provide current-project-root (make-parameter (current-directory)))
 
 (define+provide default-directory-require "pollen.rkt")
 (define+provide default-env-name "POLLEN")
 
+(define (dirname path)
+  (let-values ([(dir name dir?) (split-path path)])
+    dir))
+
 (define (get-path-to-override [file-or-dir (current-directory)])
-  (define file-with-config-submodule default-directory-require)
-  (define (dirname path)
-    (let-values ([(dir name dir?) (split-path path)])
-      dir))
-  (define starting-dir (if (directory-exists? file-or-dir) file-or-dir (dirname file-or-dir)))
-  (let loop ([dir starting-dir][path file-with-config-submodule])
+  (define starting-dir (if (directory-exists? file-or-dir)
+                           file-or-dir
+                           (dirname file-or-dir)))
+  (let loop ([dir starting-dir][path default-directory-require])
     (and dir ; dir is #f when it hits the top of the filesystem
          (let ([simplified-path (simplify-path (path->complete-path path starting-dir))])
            (if (file-exists? simplified-path)
@@ -30,19 +32,19 @@
 (define-for-syntax world-submodule-name 'setup)
 (define-syntax (define-settable stx)
   (syntax-case stx ()
-    [(_ name default-value)
-     (with-syntax ([default-name (format-id stx "default-~a" #'name)]
-                   [name-thunked (format-id stx "~a" #'name)]
-                   [world-submodule (format-id stx "~a" world-submodule-name)]
-                   [name-fail-thunked (format-id stx "fail-thunk-~a" #'name)] )
+    [(_ NAME DEFAULT-VALUE)
+     (with-syntax ([DEFAULT-NAME (format-id stx "default-~a" #'NAME)]
+                   [NAME-THUNKED (format-id stx "~a" #'NAME)]
+                   [WORLD-SUBMOD (format-id stx "~a" world-submodule-name)]
+                   [NAME-FAIL-THUNKED (format-id stx "fail-thunk-~a" #'NAME)] )
        #'(begin
-           (provide (prefix-out setup: name-thunked) default-name)
-           (define default-name default-value)
-           (define name-fail-thunked (λ _ default-name))
+           (provide (prefix-out setup: NAME-THUNKED) DEFAULT-NAME)
+           (define DEFAULT-NAME DEFAULT-VALUE)
+           (define NAME-FAIL-THUNKED (λ _ DEFAULT-NAME))
            ;; can take a dir argument that sets start point for (get-path-to-override) search.
-           (define name-thunked (λ get-path-args
-                                  (with-handlers ([exn:fail? name-fail-thunked])
-                                    (dynamic-require `(submod ,(apply get-path-to-override get-path-args) world-submodule) 'name name-fail-thunked))))))]))
+           (define NAME-THUNKED (λ get-path-args
+                                  (with-handlers ([exn:fail? NAME-FAIL-THUNKED])
+                                    (dynamic-require `(submod ,(apply get-path-to-override get-path-args) WORLD-SUBMOD) 'NAME NAME-FAIL-THUNKED))))))]))
 
 (define-settable preproc-source-ext 'pp)
 (define-settable markup-source-ext 'pm)
