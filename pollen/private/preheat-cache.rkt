@@ -9,10 +9,11 @@
   (define max-places 8) ; number of parallel processes to spawn at a time
   
   (define paths-that-should-be-cached (for/list ([path (in-directory starting-dir)]
-                                                 #:when (or (preproc-source? path)
-                                                            (markup-source? path)
-                                                            (markdown-source? path)
-                                                            (pagetree-source? path)))
+                                                 #:when (for/or ([proc (in-list (list preproc-source?
+                                                                                      markup-source?
+                                                                                      markdown-source?
+                                                                                      pagetree-source?))])
+                                                                (proc path)))
                                                 path))
   
   ;; if a file is already in the cache, no need to hit it again.
