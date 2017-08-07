@@ -1,30 +1,38 @@
 #lang racket/base
-(require "file-utils.rkt" "../setup.rkt" "project.rkt" file/cache racket/file sugar/coerce compiler/cm)
+(require "file-utils.rkt"
+         "../setup.rkt"
+         "project.rkt"
+         file/cache
+         racket/file
+         sugar/coerce
+         sugar/test
+         compiler/cm)
 (provide (all-defined-out))
 
 (define (paths->key source-path [template-path #f])
-  ;; key is list of file + mod-time pairs, use #f for missing
-  (define path-strings (append (list source-path)
-                               ;; if template has a source file, track that instead
-                               (append (list (and template-path (or (get-source template-path) template-path)))
-                                       ;; is either list of files or (list #f)
-                                       (->list (get-directory-require-files source-path)))))
   ;; can't use relative paths for cache keys because source files include `here-path` which is absolute.
   ;; problem is that cache could appear valid on another filesystem (based on relative pathnames & mod dates)
   ;; but would actually be invalid (because the `here-path` names are wrong).
+  ;; key is list of file + mod-time pairs, use #f for missing
+  (define path-strings (list* source-path
+                              ;; if template has a source file, track that instead
+                              (and template-path (or (get-source template-path) template-path))
+                              ;; is either list of files or (list #f)
+                              (->list (get-directory-require-files source-path))))
   (define poly-flag (and (has-inner-poly-ext? source-path) (current-poly-target)))
   (define pollen-env (getenv default-env-name))
   (define path+mod-time-pairs
-    (map (λ (ps) (and ps (let ([cp (->complete-path ps)])
-                          (cons (path->string cp) (with-handlers ([exn:fail? (λ _ 0)])
-                                                    (file-or-directory-modify-seconds cp)))))) path-strings))
+    (for/list ([ps (in-list path-strings)])
+              (cond
+                [ps (define cp (->complete-path ps))
+                    (cons (path->string cp) (file-or-directory-modify-seconds cp #f (λ () 0)))]
+                [else #f])))
   (list* pollen-env poly-flag path+mod-time-pairs))
 
 
-(define (key->source-path key)
-  (car (caddr key)))
+(define (key->source-path key) (car (caddr key)))
 
-(require sugar/test)
+
 (module-test-internal
  (define ps "/users/nobody/project/source.html.pm")
  (check-equal? (key->source-path (paths->key ps)) ps))
@@ -32,14 +40,15 @@
 
 (define-namespace-anchor cache-utils-module-ns)
 (define (path->hash path)
-  ;; new namespace forces dynamic-require to re-instantiate 'path'
-  ;; otherwise it gets cached in current namespace.
-  (define drfs (get-directory-require-files path))
-  (for-each managed-compile-zo (or drfs null))
+  (for-each managed-compile-zo (or (get-directory-require-files path) null))
   (define path-dir (dirname path))
-  (apply hash
+  (apply hasheq
          (let ([doc-key (setup:main-export)]
                [meta-key (setup:meta-export)])
+           (unless (and (symbol? doc-key) (symbol? meta-key))
+             (raise-argument-error 'path->hash "symbols for doc and meta key" (cons doc-key meta-key)))
+           ;; new namespace forces `dynamic-require` to re-instantiate 'path'
+           ;; otherwise it gets cached in current namespace.
            (parameterize ([current-namespace (make-base-namespace)]
                           [current-directory path-dir])
              ;; I monkeyed around with using the metas submodule to pull out the metas (for speed)
@@ -54,12 +63,12 @@
                    meta-key (dynamic-require path meta-key metas-missing-thunk))))))
 
 (define (my-make-directory* dir)
-  (let-values ([(base name dir?) (split-path dir)])
-    (when (and (path? base) (not (directory-exists? base)))
-      (my-make-directory* base))
-    (unless (directory-exists? dir)
-      (with-handlers ([exn:fail:filesystem:exists? void])
-        (make-directory dir)))))
+  (define base (dirname dir))
+  (when (and (path? base) (not (directory-exists? base)))
+    (my-make-directory* base))
+  (unless (directory-exists? dir)
+    (with-handlers ([exn:fail:filesystem:exists? void])
+      (make-directory dir))))
 
 (define (make-cache-dirs path)
   (define path-dir (dirname path))
@@ -77,7 +86,7 @@
               #:exists-ok? #t
               key
               private-cache-dir
-              (λ _
+              (λ ()
                 (write-to-file (path-hash-thunk) dest-file #:exists 'replace))
               #:max-cache-size (setup:compile-cache-max-size))
   (file->value dest-file))
