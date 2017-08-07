@@ -1,7 +1,12 @@
 #lang racket/base
-(require racket/file racket/path compiler/cm)
-(require sugar/test sugar/define sugar/file sugar/coerce)
-(require "private/file-utils.rkt"
+(require racket/file
+         racket/path
+         compiler/cm
+         sugar/test
+         sugar/define
+         sugar/file
+         sugar/coerce
+         "private/file-utils.rkt"
          "cache.rkt"
          "private/debug.rkt"
          "private/project.rkt"
@@ -17,8 +22,7 @@
 
 ;; when you want to generate everything fresh. 
 ;; render functions will always go when no mod-date is found.
-(define (reset-mod-date-hash)
-  (set! mod-date-hash (make-hash)))
+(define (reset-mod-date-hash!) (set! mod-date-hash (make-hash)))
 
 
 (module-test-internal
@@ -36,7 +40,7 @@
 ;; can be used to test whether a render is obsolete.
 ;; create a new key with current files. If the key is in the hash, the render has happened.
 ;; if not, a new render is needed.
-(define (update-mod-date-hash source-path template-path)
+(define (update-mod-date-hash! source-path template-path)
   (hash-set! mod-date-hash (paths->key source-path template-path) #t))
 
 (define (mod-date-missing-or-changed? source-path template-path)
@@ -52,10 +56,10 @@
   ;; Because certain files will pass through multiple times (e.g., templates)
   ;; And with render, they would be rendered repeatedly.
   ;; Using reset-modification-dates is sort of like session control.
-  (reset-mod-date-hash) 
+  (reset-mod-date-hash!) 
   (for-each (λ (x) ((if (pagetree-source? x)
-                       render-pagenodes
-                       render-from-source-or-output-path) x)) xs))
+                        render-pagenodes
+                        render-from-source-or-output-path) x)) xs))
 
 
 (define+provide/contract (render-pagenodes pagetree-or-path)
@@ -77,48 +81,67 @@
       [(pagetree-source? so-path) (render-pagenodes so-path)]))
   (void))
 
-(define (validate-output-path op caller)
-  (unless op
-    (raise-argument-error caller "valid output path" op)))
 
-
-(define+provide/contract (render-to-file-if-needed source-path [maybe-template-path #f] [maybe-output-path #f])
-  ((complete-path?) ((or/c #f complete-path?) (or/c #f complete-path?)) . ->* . void?)
+;; note that output and template order is reversed from typical
+(define (render-to-file-base caller
+                             force?
+                             source-path
+                             maybe-output-path
+                             maybe-template-path)
   (define output-path (or maybe-output-path (->output-path source-path)))
-  (validate-output-path output-path 'render-to-file-if-needed)
+  (unless output-path
+    (raise-argument-error caller "valid output path" output-path))
   (define template-path (or maybe-template-path (get-template-for source-path output-path)))
   (define render-needed?
     (cond
+      [force?]
       [(not (file-exists? output-path)) 'file-missing]
       [(mod-date-missing-or-changed? source-path template-path) 'mod-key-missing-or-changed]
       [(not (setup:render-cache-active source-path)) 'render-cache-deactivated]
       [else #f]))
   (when render-needed?
-    (render-to-file source-path template-path output-path)))
+    (define render-result (render source-path template-path output-path)) ; will either be string or bytes
+    (display-to-file render-result output-path
+                     #:exists 'replace
+                     #:mode (if (string? render-result) 'text 'binary))))
+
+
+(define+provide/contract (render-to-file-if-needed source-path [maybe-template-path #f] [maybe-output-path #f])
+  ((complete-path?) ((or/c #f complete-path?) (or/c #f complete-path?)) . ->* . void?)
+  (render-to-file-base 'render-to-file-if-needed #f source-path maybe-output-path maybe-template-path))
 
 
 (define+provide/contract (render-to-file source-path [maybe-template-path #f] [maybe-output-path #f])
   ((complete-path?) ((or/c #f complete-path?) (or/c #f complete-path?)) . ->* . void?)
-  (define output-path (or maybe-output-path (->output-path source-path)))
-  (validate-output-path output-path 'render-to-file)
-  (define template-path (or maybe-template-path (get-template-for source-path output-path)))
-  (define render-result (render source-path template-path output-path)) ; will either be string or bytes
-  (display-to-file render-result output-path #:exists 'replace
-                   #:mode (if (string? render-result) 'text 'binary)))
+  (render-to-file-base 'render-to-file #t source-path maybe-output-path maybe-template-path))
 
 
 (define+provide/contract (render source-path [maybe-template-path #f] [maybe-output-path #f])
   ((complete-path?) ((or/c #f complete-path?) (or/c #f complete-path?)) . ->* . (or/c string? bytes?))
-  (define render-proc 
-    (cond
-      [(ormap (λ (test render-proc) (and (test source-path) render-proc))
-              (list has/is-null-source? has/is-preproc-source? has/is-markup-source? has/is-scribble-source? has/is-markdown-source?)
-              (list render-null-source render-preproc-source render-markup-or-markdown-source render-scribble-source render-markup-or-markdown-source))] 
-      [else (error (format "render: no rendering function found for ~a" source-path))]))
-  
   (define output-path (or maybe-output-path (->output-path source-path)))
+  (unless output-path
+    (raise-argument-error 'render "valid output path" output-path))
+  
+  (define tests (list has/is-null-source?
+                      has/is-preproc-source?
+                      has/is-markup-source?
+                      has/is-scribble-source?
+                      has/is-markdown-source?))
+  (define render-procs (list render-null-source
+                             render-preproc-source
+                             render-markup-or-markdown-source
+                             render-scribble-source
+                             render-markup-or-markdown-source))
+  (define render-proc (for/first ([test (in-list tests)]
+                                  [render-proc (in-list render-procs)]
+                                  #:when (test source-path))
+                        render-proc))
+  (unless render-proc
+    (raise-argument-error 'render (format "valid rendering function for ~a" source-path) render-proc))
+  
   (define template-path (or maybe-template-path (get-template-for source-path output-path)))
-  (message (format "rendering: /~a as /~a" (find-relative-path (current-project-root) source-path)
+  (message (format "rendering: /~a as /~a"
+                   (find-relative-path (current-project-root) source-path)
                    (find-relative-path (current-project-root) output-path)))
   ;; output-path and template-path may not have an extension, so check them in order with fallback
   (define render-result (parameterize ([current-poly-target (->symbol (or (get-ext output-path)
@@ -127,7 +150,7 @@
                           (apply render-proc (list source-path template-path output-path))))
   ;; wait till last possible moment to store mod dates, because render-proc may also trigger its own subrenders
   ;; e.g., of a template. 
-  (update-mod-date-hash source-path template-path) 
+  (update-mod-date-hash! source-path template-path) 
   render-result)
 
 
@@ -138,12 +161,11 @@
   (file->bytes source-path))
 
 
-(define (render-scribble-source source-path . ignored-paths)
+(define (render-scribble-source source-path . _)
   ;((complete-path?) #:rest any/c . ->* . string?)
-  (define source-dir (dirname source-path))
-  (dynamic-rerequire source-path) ; to suppress namespace caching by dynamic-require below
-  (define scribble-render (dynamic-require 'scribble/render 'render))
-  (time (parameterize ([current-directory (->complete-path source-dir)])
+  (define scribble-render (parameterize ([current-namespace (make-base-namespace)])
+                            (dynamic-require 'scribble/render 'render)))
+  (time (parameterize ([current-directory (->complete-path (dirname source-path))])
           ;; if there's a compiled zo file for the Scribble file,
           ;; (as is usually the case in existing packages)
           ;; it will foul up the render
@@ -151,8 +173,8 @@
           (managed-compile-zo source-path)
           ;; scribble/lp files have their doc export in a 'doc submodule, so check both locations
           (define doc (dynamic-require source-path 'doc
-                                       (λ _ (dynamic-require `(submod ,source-path doc) 'doc
-                                                             (λ _ #f)))))
+                                       (λ () (dynamic-require `(submod ,source-path doc) 'doc
+                                                              (λ () #f)))))
           ;; BTW this next action has side effects: scribble will copy in its core files if they don't exist.
           (when doc
             (scribble-render (list doc) (list source-path)))))
@@ -161,44 +183,52 @@
   result)
 
 
-(define (render-preproc-source source-path . ignored-paths)
-  ;((complete-path?) #:rest any/c . ->* . (or/c string? bytes?))
-  (define source-dir (dirname source-path))
-  (time (parameterize ([current-directory (->complete-path source-dir)])
-          (render-through-eval `(begin (require pollen/cache)
-                                       (cached-doc ,source-path))))))
+(define (render-preproc-source source-path . _)
+  (time (parameterize ([current-directory (->complete-path (dirname source-path))])
+          (render-through-eval #`(begin (require pollen/cache)
+                                        (cached-doc #,source-path))))))
 
 
 (define (render-markup-or-markdown-source source-path [maybe-template-path #f] [maybe-output-path #f]) 
-  ;((complete-path?) ((or/c #f complete-path?)(or/c #f complete-path?)) . ->* . (or/c string? bytes?))
   (define source-dir (dirname source-path))
   (define output-path (or maybe-output-path (->output-path source-path)))
+  (unless output-path
+    (raise-argument-error 'render-markup-or-markdown-source "valid output path" output-path))
   (define template-path (or maybe-template-path (get-template-for source-path output-path)))
   (unless template-path
-    (raise-result-error 'render-markup-or-markdown-source "valid template path" template-path))
+    (raise-argument-error 'render-markup-or-markdown-source "valid template path" template-path))
   (render-from-source-or-output-path template-path) ; because template might have its own preprocessor source
-  (define expr-to-eval 
-    `(begin 
-       (require (for-syntax racket/base))
-       (require pollen/private/include-template pollen/cache pollen/private/debug pollen/pagetree pollen/core)
-       ,(require-directory-require-files source-path)
-       (parameterize ([current-pagetree (make-project-pagetree ,(current-project-root))])
-         (let ([,(setup:main-export source-path) (cached-doc ,(path->string source-path))]
-               [,(setup:meta-export source-path) (cached-metas ,(path->string source-path))])
-           (local-require pollen/template pollen/top)
-           (define here (path->pagenode
-                         (or (select-from-metas ',(setup:here-path-key source-path) ,(setup:meta-export source-path)) 'unknown)))
-           (cond 
-             [(bytes? ,(setup:main-export source-path)) ,(setup:main-export source-path)] ; if main export is binary, just pass it through
-             [else
-              ;; `include-template` is the slowest part of the operation (the eval itself is cheap)
-              (include-template #:command-char ,(setup:command-char source-path) (file ,(->string (find-relative-path source-dir template-path))))])))))
-  (time (parameterize ([current-directory (->complete-path source-dir)]) ; because include-template wants to work relative to source location
-          (render-through-eval expr-to-eval))))
+  (define stx-to-eval
+    (with-syntax ([DIRECTORY-REQUIRE-FILES (require-directory-require-files source-path)]
+                  [DOC-ID (setup:main-export source-path)]
+                  [META-ID (setup:meta-export source-path)]
+                  [SOURCE-PATH-STRING (path->string source-path)]
+                  [CPR (current-project-root)]
+                  [HERE-PATH-KEY (setup:here-path-key source-path)]
+                  [COMMAND-CHAR (setup:command-char source-path)]
+                  [TEMPLATE-PATH (->string template-path)])
+      #'(begin 
+          (require (for-syntax racket/base)
+                   pollen/private/include-template
+                   pollen/cache
+                   pollen/private/debug
+                   pollen/pagetree
+                   pollen/core)
+          DIRECTORY-REQUIRE-FILES
+          (parameterize ([current-pagetree (make-project-pagetree CPR)])
+            (define DOC-ID (cached-doc SOURCE-PATH-STRING))
+            (define META-ID (cached-metas SOURCE-PATH-STRING))
+            (local-require pollen/template pollen/top)
+            (define here (path->pagenode (or (select-from-metas 'HERE-PATH-KEY META-ID) 'unknown)))
+            (if (bytes? DOC-ID) ; if main export is binary, just pass it through
+                DOC-ID
+                (include-template #:command-char COMMAND-CHAR (file TEMPLATE-PATH)))))))
+  ;; set current-directory because include-template wants to work relative to source location
+  (time (parameterize ([current-directory (->complete-path source-dir)]) 
+          (render-through-eval stx-to-eval))))
 
 
 (define (templated-source? path)
-  ;(complete-path? . -> . boolean?)
   (or (markup-source? path) (markdown-source? path)))
 
 
@@ -207,23 +237,22 @@
   ((complete-path?)((or/c #f complete-path?)) . ->* . (or/c #f complete-path?))
   
   (define (file-exists-or-has-source? p) ; p could be #f
-    (and p (ormap (λ (proc) (file-exists? (proc p))) (list identity ->preproc-source-path ->null-source-path)) p))
+    (and p (for/first ([proc (in-list (list identity ->preproc-source-path ->null-source-path))]
+                       #:when (file-exists? (proc p)))
+             p)))
   
   (define (get-template)
     (define source-dir (dirname source-path))
     (define output-path (or maybe-output-path (->output-path source-path)))
     (define output-path-ext (or (get-ext output-path) (current-poly-target))) ; output-path may not have an extension
     (define (get-template-from-metas)
-      (with-handlers ([exn:fail:contract? (λ _ #f)]) ; in case source-path doesn't work with cached-require
+      (with-handlers ([exn:fail:contract? (λ (e) #f)]) ; in case source-path doesn't work with cached-require
         (parameterize ([current-directory (current-project-root)])
           (let* ([source-metas (cached-metas source-path)]
                  [template-name-or-names (select-from-metas (setup:template-meta-key source-path) source-metas)] ; #f or atom or list
-                 [template-name (cond
-                                  [(list? template-name-or-names)
-                                   (define result
-                                     (memf (λ (tn) (eq? (get-ext tn) output-path-ext)) template-name-or-names)) ; #f or list
-                                   (and result (car result))]
-                                  [else template-name-or-names])])
+                 [template-name (if (list? template-name-or-names)
+                                    (findf (λ (tn) (eq? (get-ext tn) output-path-ext)) template-name-or-names)
+                                    template-name-or-names)])
             (and template-name (build-path source-dir template-name))))))
     
     (define (get-default-template)
@@ -262,9 +291,9 @@
    (check-false (get-template-for (->complete-path "foo.poly.pm")))
    (check-equal? (get-template-for (->complete-path "foo.html.pm")) fallback.html)))
 
+
 (define-namespace-anchor render-module-ns)
 (define (render-through-eval expr-to-eval)
-  ;(list? . -> . (or/c string? bytes?))
   (parameterize ([current-namespace (make-base-namespace)]
                  [current-output-port (current-error-port)])
     (namespace-attach-module (namespace-anchor->namespace render-module-ns) 'pollen/setup) ; brings in params
