@@ -6,7 +6,7 @@
   (unless (and (path-string? starting-dir) (directory-exists? starting-dir))
     (error 'preheat-cache (format "~a is not a directory" starting-dir)))
   
-  (define max-places 8) ; number of parallel processes to spawn at a time
+  (define max-places (processor-count)) ; number of parallel processes to spawn at a time
   
   (define paths-that-should-be-cached (for/list ([path (in-directory starting-dir)]
                                                  #:when (for/or ([proc (in-list (list preproc-source?
