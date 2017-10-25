@@ -9,9 +9,8 @@ b) incorporates the scribble/reader from 6.2
 so that everything will work correctly in 6.0.
 
 Note that pollen/mode uses default-command-char, NOT (setup:command-char),
-because doing so would create a loading loop if pollen/mode were used in "pollen.rkt"
-(which is a likely place to use it)
-Intractable problem, unavoiable limitation.
+because doing so would create a loading loop if pollen/mode were used in "pollen.rkt" (which is a likely place to use it)
+Intractable problem; unavoidable limitation.
 |#
 
 
@@ -93,10 +92,8 @@ Intractable problem, unavoiable limitation.
          (case key
            [(color-lexer)
             (try-dynamic-require 'syntax-color/scribble-lexer 'scribble-lexer)]
-           [(definitions-text-surrogate)
-            'scribble/private/indentation]
            [(drracket:indentation)
-            (dynamic-require 'scribble/private/indentation 'determine-spaces)]
+            (dynamic-require 'pollen/private/mode-indentation 'determine-spaces)]
            [else (fallback)]))))))
 
 (module at-reader racket/base
