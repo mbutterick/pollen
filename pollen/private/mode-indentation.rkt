@@ -11,8 +11,8 @@ Identical to scribble/private/indentation except it uses #\◊ rather than #\@ a
 In the unit tests, `scribble/base` became `pollen/markup`
 and `scribble/manual` became `pollen/markdown`
 to keep the number of characters consistent, and therefore the char positions within each sample.
-
 |#
+
 
 (provide determine-spaces paragraph-indentation keystrokes)
 
@@ -569,7 +569,7 @@ to keep the number of characters consistent, and therefore the char positions wi
 
 
 (define/contract (insert-them t . strs)
-  (->* ((is-a?/c text%)) #:rest (*list/c (and/c string? #rx"\n$") string?) void?)
+  (->* ((is-a?/c text%)) #:rest (cons/c (and/c string? #rx"\n$") (listof string?)) void?)
   (for ([str (in-list strs)])
     (define lp (send t last-position))
     (send t insert str lp lp))
