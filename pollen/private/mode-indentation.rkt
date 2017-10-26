@@ -576,7 +576,7 @@ to keep the number of characters consistent, and therefore the char positions wi
   (send t freeze-colorer)
   (send t thaw-colorer))
 
-(module+ test
+#;(module+ test
   (require rackunit framework)
   
   ;test start-skip-spaces
