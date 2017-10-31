@@ -148,14 +148,16 @@ version                print the version" (current-server-port) (make-publish-di
     (displayln "Starting project server ...")
     ((dynamic-require 'pollen/private/project-server 'start-server) (format "/~a" (setup:main-pagetree dir)) launch-wanted)))
 
-(define (make-publish-dir-name [arg-command-name #f])
-  (let ([user-publish-path (expand-user-path (->path (setup:publish-directory)))])
-    (if (complete-path? user-publish-path)
-        user-publish-path       
-        (build-path (find-system-path 'desk-dir)
-                    (->path (if (equal? arg-command-name "clone") ; bw compat
-                                "clone"
-                                user-publish-path))))))
+
+(define (make-publish-dir-name [project-root (current-directory)] [arg-command-name #f])
+  (define user-publish-path
+    (expand-user-path (->path (setup:publish-directory project-root))))
+  (if (complete-path? user-publish-path)
+      user-publish-path       
+      (build-path (find-system-path 'desk-dir)
+                  (->path (if (equal? arg-command-name "clone") ; bw compat
+                              "clone"
+                              user-publish-path)))))
 
 
 (define (delete-it path)
@@ -185,9 +187,11 @@ version                print the version" (current-server-port) (make-publish-di
                       other-args))
   ;; other-args looks like (list [maybe-source-dir-arg] [maybe-dest-dir-arg])
   (define source-dir (simplify-path (get-first-arg-or-current-dir other-args)))
-  (define dest-dir (simplify-path
-                    (with-handlers ([exn:fail? (λ (exn) (make-publish-dir-name command-name))]) 
-                      (path->complete-path (string->path (cadr other-args))))))
+  (define dest-dir
+    (simplify-path
+     ;; the source-dir might have its own pollen.rkt specifying a publish destination
+     (with-handlers ([exn:fail? (λ (exn) (make-publish-dir-name source-dir command-name))]) 
+       (path->complete-path (string->path (cadr other-args))))))
   
   (unless (directory-exists? source-dir)
     (error 'publish (format "source directory ~a does not exist" source-dir)))
@@ -216,7 +220,11 @@ version                print the version" (current-server-port) (make-publish-di
      (when (directory-exists? dest-dir)
        (delete-directory/files dest-dir))
      (copy-directory/files source-dir dest-dir)
-     (parameterize ([current-project-root (current-directory)])
+     ;; if source-dir is provided, we want it to be treated as current-directory.
+     ;; if no source-dir is provided, it is set to current-directory,
+     ;; so the parameterize is a no-op.
+     (parameterize* ([current-directory source-dir]
+                     [current-project-root (current-directory)])
        (define (delete-from-publish-dir? p)
          (and (omitted-path? p) (not (extra-path? p))))
        (for-each delete-it (find-files delete-from-publish-dir? dest-dir)))
