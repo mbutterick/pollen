@@ -10,9 +10,8 @@
 
 (define (cache-directory? path)
   (and (directory-exists? path)
-       (let* ([last (compose1 car reverse)]
-              [last-path-element (path->string (last (explode-path path)))])
-         (member last-path-element default-cache-names))))
+       (member (path->string (for/last ([p (in-list (explode-path path))])
+                               p)) default-cache-names)))
 
 (define+provide (reset-cache [starting-dir (current-project-root)])
   (unless (and (path-string? starting-dir) (directory-exists? starting-dir))
@@ -37,7 +36,10 @@
       (cond
         [(setup:compile-cache-active path)
          (define key (paths->key path))
-         (hash-ref (hash-ref! ram-cache key (λ () (cache-ref! key (λ () (path->hash path))))) subkey)]
+         (define (convert-path-to-cache-record) (path->hash path))
+         (define (get-cache-record) (cache-ref! key convert-path-to-cache-record))
+         (define ram-cache-record (hash-ref! ram-cache key get-cache-record))
+         (hash-ref ram-cache-record subkey)]
         [else (parameterize ([current-namespace (make-base-namespace)])
                 (namespace-attach-module (namespace-anchor->namespace cache-module-ns) 'pollen/setup) ; brings in params
                 (dynamic-require path subkey))]))))

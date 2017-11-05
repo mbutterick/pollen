@@ -80,6 +80,7 @@
       [(pagetree-source? so-path) (render-pagenodes so-path)]))
   (void))
 
+(define render-ram-cache (make-hash))
 
 ;; note that output and template order is reversed from typical
 (define (render-to-file-base caller
@@ -99,7 +100,20 @@
       [(not (setup:render-cache-active source-path)) 'render-cache-deactivated]
       [else #f]))
   (when render-needed?
-    (define render-result (render source-path template-path output-path)) ; will either be string or bytes
+    (define render-result
+      (let ([key (paths->key source-path template-path output-path)])
+      (hash-ref! render-ram-cache
+                 ;; within a session, this will prevent repeat players like "template.html.p"
+                 ;; from hitting the file cache repeatedly
+                 key
+                 (λ () 
+                   (cache-ref! key
+                               (λ () (render source-path template-path output-path))
+                               #:dest-path 'output
+                               #:notify-cache-use
+                               (λ (str)
+                                 (message (format "rendering: /~a (from cache)"
+                                                  (find-relative-path (current-project-root) output-path))))))))) ; will either be string or bytes
     (display-to-file render-result output-path
                      #:exists 'replace
                      #:mode (if (string? render-result) 'text 'binary))))
@@ -134,7 +148,7 @@
   (define render-proc (for/first ([test (in-list tests)]
                                   [render-proc (in-list render-procs)]
                                   #:when (test source-path))
-                                 render-proc))
+                        render-proc))
   (unless render-proc
     (raise-argument-error 'render (format "valid rendering function for ~a" source-path) render-proc))
   
@@ -243,7 +257,7 @@
   (define (file-exists-or-has-source? p) ; p could be #f
     (and p (for/first ([proc (in-list (list identity ->preproc-source-path ->null-source-path))]
                        #:when (file-exists? (proc p)))
-                      p)))
+             p)))
   
   (define (get-template)
     (define source-dir (dirname source-path))

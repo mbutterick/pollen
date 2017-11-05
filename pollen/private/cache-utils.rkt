@@ -4,33 +4,41 @@
          "project.rkt"
          file/cache
          racket/file
+         racket/list
          sugar/coerce
          sugar/test
          compiler/cm)
 (provide (all-defined-out))
 
-(define (paths->key source-path [template-path #f])
+(define (paths->key source-path [template-path #f] [output-path #f])
   ;; can't use relative paths for cache keys because source files include `here-path` which is absolute.
   ;; problem is that cache could appear valid on another filesystem (based on relative pathnames & mod dates)
   ;; but would actually be invalid (because the `here-path` names are wrong).
   ;; key is list of file + mod-time pairs, use #f for missing
-  (define path-strings (list* source-path
-                              ;; if template has a source file, track that instead
-                              (and template-path (or (get-source template-path) template-path))
-                              ;; is either list of files or (list #f)
-                              (->list (get-directory-require-files source-path))))
-  (define poly-flag (and (has-inner-poly-ext? source-path) (current-poly-target)))
+  
+  ;; we don't include output-path in path-strings-to-track
+  ;; because we don't want to attach a mod date
+  ;; because cache validity is not sensitive to mod date of output path
+  ;; (in fact we would expect it to be earlier, since we want to rely on an earlier version)
+  (define path-strings-to-track (list* source-path
+                                       ;; if template has a source file, track that instead
+                                       (and template-path (or (get-source template-path) template-path))
+                                       ;; is either list of files or (list #f)
+                                       (->list (get-directory-require-files source-path))))
   (define pollen-env (getenv default-env-name))
+  (define poly-flag (and (has-inner-poly-ext? source-path) (current-poly-target)))
   (define path+mod-time-pairs
-    (for/list ([ps (in-list path-strings)])
-              (cond
-                [ps (define cp (->complete-path ps))
-                    (cons (path->string cp) (file-or-directory-modify-seconds cp #f (λ () 0)))]
-                [else #f])))
-  (list* pollen-env poly-flag path+mod-time-pairs))
+    (for/list ([ps (in-list path-strings-to-track)])
+      (cond
+        [ps (define cp (->complete-path ps))
+            (cons (path->string cp) (file-or-directory-modify-seconds cp #f (λ () 0)))]
+        [else #f])))
+  (list* pollen-env poly-flag (and output-path (path->string output-path)) path+mod-time-pairs))
 
 
-(define (key->source-path key) (car (caddr key)))
+(define (key->source-path key) (car (fourth key)))
+
+(define (key->output-path key) (third key))
 
 
 (module-test-internal
@@ -77,16 +85,28 @@
   (my-make-directory* private-cache-dir) ; will also make cache-dir, if needed
   (values cache-dir private-cache-dir))
 
-(define (cache-ref! key path-hash-thunk)
-  (define path (key->source-path key))
-  (define-values (cache-dir private-cache-dir) (make-cache-dirs path))
-  (define-values (path-dir path-filename _) (split-path path))
-  (define dest-file (build-path cache-dir (format "~a.rktd" path-filename)))
+(define (cache-ref! key path-hash-thunk
+                    #:dest-path [path-for-dest 'source]
+                    #:notify-cache-use [notify-proc void])
+  (define dest-path ((case path-for-dest
+                       [(source) key->source-path]
+                       [(output) key->output-path]) key))
+  (define-values (cache-dir private-cache-dir) (make-cache-dirs dest-path))
+  (define-values (dest-path-dir dest-path-filename _) (split-path dest-path))
+  (define dest-file (build-path cache-dir (format "~a.rktd" dest-path-filename)))
+  (define (fetch-dest-file) (write-to-file (path-hash-thunk) dest-file #:exists 'replace))
+  #|
+`cache-file` looks for a file in private-cache-dir previously cached with key
+(which in this case carries modification dates and POLLEN env).
+If a cached file is found, copies it to dest-file (which must not exist already, unless exists-ok? is true)
+Otherwise, fetch-dest-file is called; if dest-file exists after calling fetch-dest-file,
+it is copied to private-cache-dir and recorded with key.
+|#
   (cache-file dest-file
               #:exists-ok? #t
               key
               private-cache-dir
-              (λ ()
-                (write-to-file (path-hash-thunk) dest-file #:exists 'replace))
+              fetch-dest-file
+              #:notify-cache-use notify-proc
               #:max-cache-size (setup:compile-cache-max-size))
   (file->value dest-file))
