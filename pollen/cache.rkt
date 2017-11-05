@@ -1,5 +1,6 @@
 #lang racket/base
 (require racket/file
+         racket/list
          sugar/define
          "private/cache-utils.rkt"
          "private/debug.rkt"
@@ -10,8 +11,7 @@
 
 (define (cache-directory? path)
   (and (directory-exists? path)
-       (member (path->string (for/last ([p (in-list (explode-path path))])
-                               p)) default-cache-names)))
+       (member (path->string (last (explode-path path))) default-cache-names)))
 
 (define+provide (reset-cache [starting-dir (current-project-root)])
   (unless (and (path-string? starting-dir) (directory-exists? starting-dir))
