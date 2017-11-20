@@ -11,8 +11,16 @@
 (define (has-outer-splice-tag? x)
   (and (pair? x) (eq? (get-tag x) splicing-tag)))
 
-(define+provide/contract (->html x-arg-maybe-spliced #:tag [tag #f] #:attrs [attrs #f] #:splice? [new-splice-arg? #f] #:splice [backward-compatible-splice-arg? #f])
-  (((or/c txexpr-element? txexpr-elements?)) (#:tag (or/c #f txexpr-tag?) #:attrs (or/c #f txexpr-attrs?) #:splice? boolean? #:splice boolean?) . ->* . string?)
+(define+provide/contract (->html x-arg-maybe-spliced
+                                 #:tag [tag #f]
+                                 #:attrs [attrs #f]
+                                 #:splice? [new-splice-arg? #f]
+                                 #:splice [backward-compatible-splice-arg? #f])
+  (((or/c txexpr-element? txexpr-elements?))
+   (#:tag (or/c #f txexpr-tag?)
+    #:attrs (or/c #f txexpr-attrs?)
+    #:splice? boolean?
+    #:splice boolean?) . ->* . string?)
 
   ;; handle an outer splice tag specially, because `splice` will leave it
   (define x-arg (if (has-outer-splice-tag? x-arg-maybe-spliced)
@@ -42,6 +50,7 @@
     [else (xexpr->html x)]))
 
 (module-test-external
+ (require txexpr)
  (define tx '(root (p "hello")))
  (check-equal? (->html tx) "<root><p>hello</p></root>")
  (check-equal? (->html #:tag 'brennan tx) "<brennan><p>hello</p></brennan>")
@@ -62,4 +71,5 @@
  (check-equal? (->html #:splice? #t xs) "hello <em>you</em> &#42;")
  (check-equal? (->html #:tag 'div xs) "<div>hello <em>you</em> &#42;</div>")
  (check-equal? (->html '(@ "Markup in " (@ "italic"))) "Markup in italic")
- (check-equal? (->html '("Markup in " (@ "italic"))) "Markup in italic"))
+ (check-equal? (->html '("Markup in " (@ "italic"))) "Markup in italic")
+ (check-equal? (->html `(div "<![CDATA[Foo < Bar]]>")) "<div><![CDATA[Foo < Bar]]></div>"))
