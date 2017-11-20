@@ -92,7 +92,9 @@ Intractable problem; unavoidable limitation.
          (case key
            [(color-lexer)
             (define lexer-maker (try-dynamic-require 'syntax-color/scribble-lexer 'make-scribble-lexer))
-            (lexer-maker #:command-char #\◊)]
+            (if lexer-maker
+                (lexer-maker #:command-char #\◊)
+                (fallback))]
            [(drracket:indentation)
             (dynamic-require 'pollen/private/mode-indentation 'determine-spaces)]
            [else (fallback)]))))))
