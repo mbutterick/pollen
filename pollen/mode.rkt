@@ -91,7 +91,7 @@ Intractable problem; unavoidable limitation.
                (fallback)))
          (case key
            [(color-lexer)
-            (define lexer-maker (dynamic-require 'syntax-color/scribble-lexer 'make-scribble-lexer #f))
+            (define lexer-maker (dynamic-require 'syntax-color/scribble-lexer 'make-scribble-lexer (λ () #f)))
             (if lexer-maker
                 (lexer-maker #:command-char #\◊)
                 (fallback))]
