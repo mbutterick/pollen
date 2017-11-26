@@ -20,12 +20,12 @@
   (let loop ([x x])
     (if (list? x) ; don't exclude `attrs?` here, because it will exclude valid splice input like '((@ "foo"))
         (apply append (map (λ (x) (let ([proc (if (spliceable? x) ; drop the splice-signal from front with `cdr`
-                                                 cdr
-                                                 list)]
-                                       [x (if (not (attrs? x)) ; don't recur on attributes, so null strings are not spliced within
-                                              (loop x)
-                                              x)])
-                                   (proc x))) (filter not-null-string? x)))
+                                                  cdr
+                                                  list)]
+                                        [x (if (not (attrs? x)) ; don't recur on attributes, so null strings are not spliced within
+                                               (loop x)
+                                               x)])
+                                    (proc x))) (filter not-null-string? x)))
         x)))
 
 (module+ test
@@ -53,3 +53,19 @@
   (check-equal? (strip-empty-attrs '(p ())) '(p))
   (check-equal? (strip-empty-attrs '(p () "foo")) '(p "foo"))
   (check-equal? (strip-empty-attrs '(p () (em () "foo") "bar")) '(p (em "foo") "bar")))
+
+
+;; used with pollen/markup to suppress void arguments,
+;; consistent with how pollen/pre and pollen/markdown handle them
+(define (remove-voids x)
+  (let loop ([x x])
+    (if (pair? x)
+        (for/list ([xi (in-list x)]
+                   #:unless (void? xi))
+                  (loop xi))
+        x)))
+
+(module+ test
+  (check-equal? (remove-voids (list 1 2 3 (void))) '(1 2 3))
+  (check-equal? (remove-voids (list 1 (void) 2 3 (list 4 5 6 (void)))) '(1 2 3 (4 5 6)))
+  (check-equal? (remove-voids (void)) (void)))

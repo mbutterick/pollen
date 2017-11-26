@@ -9,7 +9,7 @@
 (define (make-parse-proc parser-mode root-proc)
   (cond
     [(eq? parser-mode default-mode-pagetree) decode-pagetree]
-    [(eq? parser-mode default-mode-markup) (λ (xs) (apply root-proc xs))] 
+    [(eq? parser-mode default-mode-markup) (λ (xs) (apply root-proc (remove-voids xs)))] 
     [(eq? parser-mode default-mode-markdown)
      (λ (xs) (let* ([xs (stringify xs)]
                     [xs ((dynamic-require 'markdown 'parse-markdown) xs)]

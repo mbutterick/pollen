@@ -15,19 +15,22 @@
 
 
 (module test-pre pollen/pre
-  "hello world")
+  "hello world"
+  (void))
 (require (prefix-in pre: 'test-pre))
 (check-equal? pre:doc "hello world")
 
 
 (module test-markup pollen/markup
-  "hello world")
+  "hello world"
+  (void))
 (require (prefix-in markup: 'test-markup))
 (check-equal? markup:doc '(root "hello world"))
 
 
 (module test-markdown pollen/markdown
-  "hello world")
+  "hello world"
+  (void))
 (require (prefix-in markdown: 'test-markdown))
 (check-equal? markdown:doc '(root (p "hello world")))
 
