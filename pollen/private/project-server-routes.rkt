@@ -19,7 +19,7 @@
 (define (response/xexpr+doctype xexpr)
   (response/xexpr #:preamble #"<!DOCTYPE html>" xexpr))
 
-(define (body-wrapper content-xexpr #:title [title #f])
+(define (body-wrapper  #:title [title #f] . content-xexpr)
   `(html 
     (head
      (title ,(if title title "Pollen"))
@@ -28,7 +28,7 @@
             [type "text/css"] 
             [href ,(format "/~a" (setup:dashboard-css))])))
     (body
-     ,content-xexpr (div ((id "pollen-logo"))))))
+     ,@content-xexpr (div ((id "pollen-logo"))))))
 
 ;; to make dummy requests for debugging
 (define/contract (string->request u)
@@ -145,7 +145,7 @@
   (define empty-cell (cons #f #f))
   (define (make-link-cell href+text)
     (match-define (cons href text) href+text) 
-    (filter-not void? `(td ,(when text 
+    (filter-not void? `(cell ,(when text 
                               (if href 
                                   `(a ((href ,href)) ,text)
                                   text)))))
@@ -158,10 +158,10 @@
     (define dirlinks (cons "/" (map (λ (ps) (format "/~a/" (apply build-path ps)))  
                                     (for/list ([i (in-range (length (cdr dirs)))])
                                               (take (cdr dirs) (add1 i))))))
-    `(tr (th ((colspan "3")) ,@(add-between (map (λ (dir dirlink) `(a ((href ,(format "~a~a" dirlink (setup:main-pagetree)))) ,(->string dir))) dirs dirlinks) "/"))))
+    `(row (heading ((colspan "3")) ,@(add-between (map (λ (dir dirlink) `(a ((href ,(format "~a~a" dirlink (setup:main-pagetree)))) ,(->string dir))) dirs dirlinks) "/"))))
   
   (define (make-path-row filename source indent-level)
-    `(tr ,@(map make-link-cell 
+    `(row ,@(map make-link-cell 
                 (append (list                          
                          (let ([main-cell (cond ; main cell
                                             [(directory-exists? (build-path dashboard-dir filename)) ; links subdir to its dashboard
@@ -190,7 +190,7 @@
                            (cons (car main-cell)
                                  (let* ([cell-content (cdr main-cell)]
                                        [indent-padding (+ 1 indent-level)]
-                                       [padding-attr `(style ,(format "display:block;padding-left:~vem" indent-padding))])
+                                       [padding-attr `(class ,(format "indent_~a" indent-padding))])
                                    (cond
                                      [(string? cell-content) `(span (,padding-attr) ,cell-content)]
                                      [(txexpr? cell-content)
@@ -222,9 +222,8 @@
           (loop pn (add1 depth))
           depth)))
   
-  (body-wrapper #:title (format "~a" dashboard-dir)
-                `(table 
-                  ,@(cons (make-parent-row) 
+  (apply body-wrapper #:title (format "~a" dashboard-dir)
+                (cons (make-parent-row) 
                           (cond
                             [(not (null? project-paths))
                              (define path-source-pairs
@@ -249,7 +248,7 @@
                              (define indent-levels (map directory-pagetree-depth filenames))
                              (parameterize ([current-directory dashboard-dir])
                                (map make-path-row filenames sources indent-levels))]
-                            [else (list '(tr (td ((class "no-files")) "No files yet in this directory") (td) (td)))])))))
+                            [else (list '(row (cell ((class "no-files")) "No files yet in this directory") (td) (td)))]))))
 
 (define route-dashboard (route-wrapper dashboard))
 
