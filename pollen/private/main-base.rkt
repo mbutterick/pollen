@@ -4,9 +4,25 @@
 (provide (except-out (all-from-out racket/base) #%module-begin)
          (rename-out [dialect-module-begin #%module-begin]))
 
-(define (stringify xs) (apply string-append (map to-string xs)))
+;; PARSER-MODE-FROM-READER is used when Pollen is invoked as a specific dialect #lang, and the expander is the generic `pollen/main`.
+;; PARSER-MODE-FROM-EXPANDER is used when Pollen is invoked through an inline submodule,
+;; and the expander is a specific dialect: `pollen/markup`, `pollen/pre`, etc.
+;; they only differ in the `pollen/main` dialect, where the reader infers the dialect from the file extension.
+
+(define-syntax-rule (dialect-module-begin PARSER-MODE-FROM-EXPANDER READER-SUBMOD)
+  (#%module-begin
+   (require racket/base)
+   (provide (except-out (all-from-out racket/base) #%module-begin)
+            (rename-out [pmb #%module-begin]))
+   (define-syntax (pmb stx)
+     (syntax-case stx ()
+       [(_ . EXPRS) (with-syntax ([EXPRS (syntax-property #'EXPRS 'parser-mode-from-expander 'PARSER-MODE-FROM-EXPANDER)])
+                     #'(pollen-module-begin . EXPRS))]))
+   READER-SUBMOD))
+
 
 (define (make-parse-proc parser-mode root-proc)
+  (define (stringify xs) (apply string-append (map to-string xs)))
   (cond
     [(eq? parser-mode default-mode-pagetree) decode-pagetree]
     [(eq? parser-mode default-mode-markup) (λ (xs) (apply root-proc (remove-voids xs)))] 
@@ -17,56 +33,48 @@
                (apply root-proc xs)))]
     [else stringify])) ; preprocessor mode
 
+
 (define (strip-leading-newlines doc)
   ;; drop leading newlines, as they're often the result of `defines` and `requires`
   (or (memf (λ (ln) (not (equal? ln (setup:newline)))) doc) null))
 
-(define-for-syntax (make-pmb-macro parser-mode-from-expander)
-  (λ (stx)
-    (syntax-case stx ()
-      [(_ . EXPRS)
-       (let-values ([(meta-hash exprs-without-metas) (split-metas (syntax->datum #'EXPRS) (setup:define-meta-name))])
-         (with-syntax (;; 'parser-mode-from-reader will be #f for an inline submodule
-                       [PARSER-MODE-FROM-READER (syntax-property stx 'parser-mode-from-reader)]
-                       [PARSER-MODE-FROM-EXPANDER parser-mode-from-expander]
-                       [META-HASH meta-hash]
-                       [EXPRS-WITHOUT-METAS exprs-without-metas]
-                       [METAS-ID (setup:meta-export)]
-                       [META-MOD-ID (setup:meta-export)]
-                       [ROOT-ID (setup:main-root-node)]
-                       [DOC-ID (setup:main-export)]
-                       ;; prevents conflicts with other imported Pollen sources
-                       [DOC-RAW (datum->syntax #'here (syntax->datum (generate-temporary 'pollen-)))])
-           #'(#%module-begin
-              (require pollen/top) ; could be at top of this module, but better to contain it
+
+(define-syntax (pollen-module-begin stx)
+  (syntax-case stx ()
+    [(_ . EXPRS)
+     (let-values ([(meta-hash exprs-without-metas) (split-metas (syntax->datum #'EXPRS) (setup:define-meta-name))])
+       (with-syntax (;; 'parser-mode-from-reader will be #f for an inline submodule
+                     [PARSER-MODE-FROM-READER (syntax-property stx 'parser-mode-from-reader)]
+                     [PARSER-MODE-FROM-EXPANDER (syntax-property #'EXPRS 'parser-mode-from-expander)]
+                     [META-HASH meta-hash]
+                     [EXPRS-WITHOUT-METAS exprs-without-metas]
+                     [METAS-ID (setup:meta-export)]
+                     [META-MOD-ID (setup:meta-export)]
+                     [ROOT-ID (setup:main-root-node)]
+                     [DOC-ID (setup:main-export)]
+                     ;; prevents conflicts with other imported Pollen sources
+                     [DOC-RAW (datum->syntax #'here (syntax->datum (generate-temporary 'pollen-)))])
+         #'(#%module-begin
+            (require pollen/top) ; could be at top of this module, but better to contain it
               
-              (module META-MOD-ID racket/base
-                (provide METAS-ID)
-                (define METAS-ID META-HASH))
-              (require 'META-MOD-ID)
+            (module META-MOD-ID racket/base
+              (provide METAS-ID)
+              (define METAS-ID META-HASH))
+            (require 'META-MOD-ID)
                 
-              (module inner pollen/private/doclang-raw
-                DOC-RAW ; positional arg for doclang-raw that sets name of export
-                (require pollen/top pollen/core pollen/setup (submod ".." META-MOD-ID))
-                (provide (all-defined-out))
-                . EXPRS-WITHOUT-METAS)
-              (require 'inner)
-                
-              (define DOC-ID
-                ;; parser-mode must be resolved at runtime, not compile time
-                (let* ([parser-mode (or 'PARSER-MODE-FROM-READER PARSER-MODE-FROM-EXPANDER)]
-                       [proc (make-parse-proc parser-mode ROOT-ID)] 
-                       [doc-elements (strip-leading-newlines DOC-RAW)]
-                       [doc-elements-spliced (splice doc-elements (setup:splicing-tag))])
-                  (proc doc-elements-spliced)))
-                
-              (provide DOC-ID METAS-ID (except-out (all-from-out 'inner) DOC-RAW)))))])))
+            (module inner pollen/private/doclang-raw
+              DOC-RAW ; positional arg for doclang-raw that sets name of export
+              (require pollen/top pollen/core pollen/setup (submod ".." META-MOD-ID))
+              (provide (all-defined-out))
+              . EXPRS-WITHOUT-METAS)
+            (require 'inner)
 
-
-(define-syntax-rule (dialect-module-begin PARSER-MODE-FROM-EXPANDER . READER-SUBMOD-AND-OTHER-EXPRS)
-  (#%module-begin
-   (require racket/base)
-   (provide (except-out (all-from-out racket/base) #%module-begin)
-            (rename-out [pollen-module-begin #%module-begin]))
-   (define-syntax pollen-module-begin (make-pmb-macro 'PARSER-MODE-FROM-EXPANDER))
-   . READER-SUBMOD-AND-OTHER-EXPRS))
+            (define DOC-ID
+              ;; parser-mode must be resolved at runtime, not compile time
+              (let* ([parser-mode (or 'PARSER-MODE-FROM-READER PARSER-MODE-FROM-EXPANDER)]
+                     [proc (make-parse-proc parser-mode ROOT-ID)] 
+                     [doc-elements (strip-leading-newlines DOC-RAW)]
+                     [doc-elements-spliced (splice doc-elements (setup:splicing-tag))])
+                (proc doc-elements-spliced)))
+                
+            (provide DOC-ID METAS-ID (except-out (all-from-out 'inner) DOC-RAW)))))]))
