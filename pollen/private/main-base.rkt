@@ -60,12 +60,11 @@
             (module META-MOD-ID racket/base
               (provide METAS-ID)
               (define METAS-ID META-HASH))
-            (require 'META-MOD-ID)
                 
             (module inner pollen/private/doclang-raw
               DOC-RAW ; positional arg for doclang-raw that sets name of export
               (require pollen/top pollen/core pollen/setup (submod ".." META-MOD-ID))
-              (provide (all-defined-out))
+              (provide (all-defined-out) METAS-ID)
               . EXPRS-WITHOUT-METAS)
             (require 'inner)
 
@@ -77,4 +76,4 @@
                      [doc-elements-spliced (splice doc-elements (setup:splicing-tag))])
                 (proc doc-elements-spliced)))
                 
-            (provide DOC-ID METAS-ID (except-out (all-from-out 'inner) DOC-RAW)))))]))
+            (provide DOC-ID (except-out (all-from-out 'inner) DOC-RAW)))))]))
