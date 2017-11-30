@@ -15,8 +15,8 @@
           ;; #:newline option for `pretty-print` was introduced in 6.6.0.3,
           ;; so trim trailing newline manually
           (let ([pretty-print-proc (if (version<? (version) "6.7")
-                                       (λ (x) (print (string-trim #:left? #f (with-output-to-string (λ () (pretty-print x))) "\n")))
-                                       (λ (x) (pretty-print #:newline #f x)))])
+                                       (λ (x) (display (string-trim #:left? #f (with-output-to-string (λ () (pretty-print x))) "\n")))
+                                       (λ (x) (pretty-print #:newline? #f x)))])
             ;; OK to use dynamic-require because runtime-config itself is dynamic-required
             (pretty-print-proc (with-handlers ([exn:fail? (λ (exn) ((error '|pollen markup error|
                                                                            ((dynamic-require 'racket/string 'string-join) (cdr ((dynamic-require 'racket/string 'string-split) (exn-message exn) ": ")) ": "))))])
