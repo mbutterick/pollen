@@ -1,5 +1,5 @@
 #lang racket/base
-(require pollen/setup scribble/reader)  
+(require pollen/setup scribble/reader racket/pretty)  
 (provide (all-defined-out))
 
 (define current-top-path (make-parameter #f))
@@ -13,7 +13,7 @@
       (if (memq parser-mode (list default-mode-preproc default-mode-template))
           (display doc)
           ;; OK to use dynamic-require because runtime-config itself is dynamic-required
-          (print (with-handlers ([exn:fail? (λ (exn) ((error '|pollen markup error|
+          (pretty-print (with-handlers ([exn:fail? (λ (exn) ((error '|pollen markup error|
                                                             ((dynamic-require 'racket/string 'string-join) (cdr ((dynamic-require 'racket/string 'string-split) (exn-message exn) ": ")) ": "))))])
                    ((dynamic-require 'txexpr/base 'validate-txexpr) doc)))))))
 
