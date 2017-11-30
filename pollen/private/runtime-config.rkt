@@ -13,9 +13,10 @@
       (if (memq parser-mode (list default-mode-preproc default-mode-template))
           (display doc)
           ;; OK to use dynamic-require because runtime-config itself is dynamic-required
-          (pretty-print (with-handlers ([exn:fail? (λ (exn) ((error '|pollen markup error|
-                                                            ((dynamic-require 'racket/string 'string-join) (cdr ((dynamic-require 'racket/string 'string-split) (exn-message exn) ": ")) ": "))))])
-                   ((dynamic-require 'txexpr/base 'validate-txexpr) doc)))))))
+          (pretty-print #:newline? #f
+                        (with-handlers ([exn:fail? (λ (exn) ((error '|pollen markup error|
+                                                                    ((dynamic-require 'racket/string 'string-join) (cdr ((dynamic-require 'racket/string 'string-split) (exn-message exn) ": ")) ": "))))])
+                          ((dynamic-require 'txexpr/base 'validate-txexpr) doc)))))))
 
 (define (configure top-here-path)
   (current-top-path top-here-path)  ;; puts `show` into the right mode
