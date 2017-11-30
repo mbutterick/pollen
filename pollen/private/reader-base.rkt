@@ -35,18 +35,19 @@
   (define reader-here-path (path-string->here-path path-string))
   (define parser-mode-from-reader (infer-parser-mode reader-mode reader-here-path))
   (strip-context
-   (with-syntax* ([HERE-KEY (setup:here-path-key)]
+   (with-syntax* ([POLLEN-MOD-NAME 'pollen-module]
+                  ;; these exist only in the reader because they are specific to file-based Pollen sources.
+                  ;; an inline Pollen submodule doesn't have "pollen.rkt" or `here-path` 
+                  [POLLEN-REQUIRE-AND-PROVIDES (require+provide-directory-require-files path-string)]
+                  [HERE-KEY (setup:here-path-key)]
                   [HERE-PATH reader-here-path]
-                  [POLLEN-MOD-NAME 'pollen-module]
-                  [DIRECTORY-REQUIRES (require+provide-directory-require-files path-string)]
                   [SOURCE-LINES source-stx]
                   [DOC (setup:main-export)]
                   [META-MOD (setup:meta-export)]
                   [PARSER-MODE-FROM-READER parser-mode-from-reader]
                   [POLLEN-MODULE-SYNTAX (let ([mod-stx #'(module POLLEN-MOD-NAME pollen
-                                                           (define-meta HERE-KEY HERE-PATH) 
-                                                           (provide (all-defined-out))
-                                                           DIRECTORY-REQUIRES
+                                                           (define-meta HERE-KEY HERE-PATH)
+                                                           POLLEN-REQUIRE-AND-PROVIDES
                                                            . SOURCE-LINES)])
                                           (syntax-property mod-stx 'parser-mode-from-reader parser-mode-from-reader))])
      #'(module runtime-wrapper racket/base

@@ -55,7 +55,7 @@
                      ;; prevents conflicts with other imported Pollen sources
                      [DOC-RAW (datum->syntax #'here (syntax->datum (generate-temporary 'pollen-)))])
          #'(#%module-begin
-            (require pollen/top) ; could be at top of this module, but better to contain it
+            (require pollen/top) ; we could get this via 'inner, but then we'd have to avoid exporting it
               
             (module META-MOD-ID racket/base
               (provide METAS-ID)
