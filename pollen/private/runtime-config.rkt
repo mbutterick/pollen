@@ -1,5 +1,5 @@
 #lang racket/base
-(require pollen/setup scribble/reader racket/pretty)  
+(require pollen/setup scribble/reader racket/pretty version/utils racket/port racket/string)  
 (provide (all-defined-out))
 
 (define current-top-path (make-parameter #f))
@@ -12,11 +12,15 @@
     (when (and ctp (equal? here-path ctp))
       (if (memq parser-mode (list default-mode-preproc default-mode-template))
           (display doc)
-          ;; OK to use dynamic-require because runtime-config itself is dynamic-required
-          (pretty-print #:newline? #f
-                        (with-handlers ([exn:fail? (λ (exn) ((error '|pollen markup error|
-                                                                    ((dynamic-require 'racket/string 'string-join) (cdr ((dynamic-require 'racket/string 'string-split) (exn-message exn) ": ")) ": "))))])
-                          ((dynamic-require 'txexpr/base 'validate-txexpr) doc)))))))
+          ;; #:newline option for `pretty-print` was introduced in 6.6.0.3,
+          ;; so trim trailing newline manually
+          (let ([pretty-print-proc (if (version<? (version) "6.7")
+                                       (λ (x) (print (string-trim #:left? #f (with-output-to-string (λ () (pretty-print x))) "\n")))
+                                       (λ (x) (pretty-print #:newline #f x)))])
+            ;; OK to use dynamic-require because runtime-config itself is dynamic-required
+            (pretty-print-proc (with-handlers ([exn:fail? (λ (exn) ((error '|pollen markup error|
+                                                                           ((dynamic-require 'racket/string 'string-join) (cdr ((dynamic-require 'racket/string 'string-split) (exn-message exn) ": ")) ": "))))])
+                                 ((dynamic-require 'txexpr/base 'validate-txexpr) doc))))))))
 
 (define (configure top-here-path)
   (current-top-path top-here-path)  ;; puts `show` into the right mode
