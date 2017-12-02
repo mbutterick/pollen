@@ -108,7 +108,7 @@ The @racket[_txexpr-elements-proc] argument is a procedure that operates on the 
 #:string-proc (λ (s) (string-upcase s)))
 ]
 
-So why do you need @racket[_txexpr-elements-proc]? Because some types of element decoding depend on context, thus it's necessary to handle the elements as a group. For instance, paragraph decodeion. The behavior is not merely a @racket[map] across each element, because elements are being removed and altered contextually:
+So why do you need @racket[_txexpr-elements-proc]? Because some types of element decoding depend on context, thus it's necessary to handle the elements as a group. For instance, paragraph decoding. The behavior is not merely a @racket[map] across each element, because elements are being removed and altered contextually:
 
 @examples[#:eval my-eval
 (define (paras tx) (decode tx #:txexpr-elements-proc decode-paragraphs))
