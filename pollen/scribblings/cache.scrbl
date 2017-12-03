@@ -1,6 +1,6 @@
 #lang scribble/manual
 
-@(require "mb-tools.rkt" scribble/eval pollen/cache pollen/setup (for-label racket pollen/setup pollen/render pollen/file sugar txexpr))
+@(require "mb-tools.rkt" scribble/eval pollen/cache pollen/setup (for-label racket pollen/core pollen/setup pollen/render pollen/file sugar txexpr))
 
 @(define my-eval (make-base-eval))
 @(my-eval `(require pollen))
@@ -66,11 +66,13 @@ txexpr?]
 [source-path pathish?])
 hash-eq?]
 )]
-Try to retrieve the requested value out of the cache. If it's not there, or out of date, @racket[dynamic-require] is used to update it from the source.
+Attempt to retrieve the requested value out of the cache. If it's not there, or out of date, @racket[dynamic-require] is used to update it from the source.
+
+These functions are the lower-level cousins of @racket[get-doc] and @racket[get-metas], which have a more convenient interface. Unless you have a special reason, you're better off using those.
 
 Despite their names, these functions actually rely on @racket[setup:main-export] and @racket[setup:meta-export] (which default to @id[default-main-export] and @id[default-meta-export]). Thus, if you override those names, everything will still work as expected.
 
-If you want the speed benefit of the cache, you should @bold{always} use @racket[cached-doc] and @racket[cached-metas] to get data from Pollen source files. That doesn't mean you can't also use functions like @racket[require], @racket[local-require], and @racket[dynamic-require]. They'll just be slower.
+If you want the speed benefit of the cache, you should use @racket[cached-doc] and @racket[cached-metas] to get data from Pollen source files in preference to functions like @racket[require], @racket[local-require], and @racket[dynamic-require]. Those will also work. They'll just be slower.
 
 
 @defproc[
