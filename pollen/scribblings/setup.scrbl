@@ -52,13 +52,14 @@ Every @racket[setup:]@racket[_name] function will resolve the current value of t
 @section{Values}
 
 @defoverridable[project-server-port integer?]{
-Determines the default HTTP port for the project server. Initialized to @val[default-project-server-port].}
+Determines the default HTTP port for the project server.}
 
-@defoverridable[main-export symbol?]{The main X-expression exported from a compiled Pollen source file. Initialized to @racket[doc].}
 
-@defoverridable[meta-export symbol?]{The meta hashtable exported from a compiled Pollen source file. Initialized to @racket[metas].}
+@defoverridable[main-export symbol?]{The main X-expression exported from a compiled Pollen source file.}
 
-@defoverridable[extension-escape-char char?]{Character for escaping output-file extensions within source-file names. Initialized to @racket[#\_].}
+@defoverridable[meta-export symbol?]{The meta hashtable exported from a compiled Pollen source file.}
+
+@defoverridable[extension-escape-char char?]{Character for escaping output-file extensions within source-file names.}
 
 
 @deftogether[(
@@ -69,23 +70,14 @@ Determines the default HTTP port for the project server. Initialized to @val[def
 @defoverridable[pagetree-source-ext symbol?]
 @defoverridable[template-source-ext symbol?]
 @defoverridable[scribble-source-ext symbol?]
-)]
-File extensions for Pollen source files, initialized to the following values:
-
-@racket[default-preproc-source-ext] = @code[(format "'~a" default-preproc-source-ext)]
-@(linebreak)@racket[default-markup-source-ext] = @code[(format "'~a" default-markup-source-ext)]
-@(linebreak)@racket[default-markdown-source-ext] = @code[(format "'~a" default-markdown-source-ext)]
-@(linebreak)@racket[default-null-source-ext] = @code[(format "'~a" default-null-source-ext)]
-@(linebreak)@racket[default-pagetree-source-ext] = @code[(format "'~a" default-pagetree-source-ext)]
-@(linebreak)@racket[default-template-source-ext] = @code[(format "'~a" default-template-source-ext)]
-@(linebreak)@racket[default-scribble-source-ext] = @code[(format "'~a" default-scribble-source-ext)]
+)]{File extensions for Pollen source files.}
 
 
-@defoverridable[main-pagetree string?]{Pagetree that Pollen dashboard loads by default in each directory. Initialized to @filepath{index.ptree}.}
+@defoverridable[main-pagetree string?]{Pagetree that Pollen dashboard loads by default in each directory.}
 
 
 
-@defoverridable[main-root-node symbol?]{Name of the root node in a decoded @racket[doc]. Initialized to @code{'root}.}
+@defoverridable[main-root-node symbol?]{Name of the root node in a decoded @racket[doc].}
 
 @defoverridable[block-tags (listof symbol?)]{Tags that are treated as blocks by @racket[block-txexpr?]. Initialized to the @link["https://developer.mozilla.org/en-US/docs/Web/HTML/Block-level_elements"]{block-level elements in HTML5}, namely:
 
@@ -95,9 +87,9 @@ File extensions for Pollen source files, initialized to the following values:
 
 
 
-@defoverridable[command-char char?]{The magic character that indicates a Pollen command, function, or variable. Initialized to @racket[#\◊].}
+@defoverridable[command-char char?]{The magic character that indicates a Pollen command, function, or variable.}
 
-@defoverridable[template-prefix string?]{Prefix of the default template. Initialized to @code{"template"}.}
+@defoverridable[template-prefix string?]{Prefix of the default template.}
 
 
 @deftogether[(
@@ -105,51 +97,58 @@ File extensions for Pollen source files, initialized to the following values:
 @(defoverridable linebreak-separator string?)
 @(defoverridable paragraph-separator string?)
 )]    
-Default separators used in decoding. The first two are initialized to @racket["\n"]; the third to @racket["\n\n"].
+Default separators used in decoding.
 
 
-@defoverridable[render-cache-active boolean?]{Whether the render cache, which speeds up interactive sessions by reusing rendered versions of Pollen output files, is active. Default is active (@racket[#t]).}
+@defoverridable[render-cache-active boolean?]{Whether the render cache, which speeds up interactive sessions by reusing rendered versions of Pollen output files, is active.}
 
-@defoverridable[compile-cache-active boolean?]{Whether the compile cache, which speeds up interactive sessions by saving compiled versions of Pollen source files, is active. Default is active (@racket[#t]).}
+@defoverridable[compile-cache-active boolean?]{Whether the compile cache, which speeds up interactive sessions by saving compiled versions of Pollen source files, is active.}
 
-@defoverridable[compile-cache-max-size exact-positive-integer?]{Maximum size of the compile cache. Default is 10 megabytes.}
+@defoverridable[compile-cache-max-size exact-positive-integer?]{Maximum size of the compile cache.}
 
-@defoverridable[publish-directory (or/c path-string? path-for-some-system?)]{Default target for @secref{raco_pollen_publish}. A complete path is used as is; a relative path is published to the desktop. Default is @racket["publish"]. @pollen-history[#:added "1.1"]}
+@defoverridable[publish-directory (or/c path-string? path-for-some-system?)]{Default target for @secref{raco_pollen_publish}. A complete path is used as is; a relative path is published to the desktop.. @pollen-history[#:added "1.1"]}
 
 @defoverridable[unpublished-path? (path? . -> . boolean?)]{@pollen-history[#:changed "1.1" @elem{Deprecated. Please use @racket[setup:omitted-path?].}]}
 
-@defoverridable[omitted-path? (path? . -> . boolean?)]{Predicate that determines whether a path is omitted from @secref{raco_pollen_render} and @secref{raco_pollen_publish} operations. If the predicate evaluated to @racket[#t], then the path is omitted. The default predicate, therefore, is @racket[(lambda (path) #f)]. @pollen-history[#:added "1.1"]}
+
+@defoverridable[omitted-path? (path? . -> . boolean?)]{Predicate that determines whether a path is omitted from @secref{raco_pollen_render} and @secref{raco_pollen_publish} operations. If the predicate evaluated to @racket[#t], then the path is omitted. 
+
+@pollen-history[#:added "1.1"]}
 
 @defoverridable[extra-published-path? (path? . -> . boolean?)]{@pollen-history[#:changed "1.1" @elem{Deprecated. Please use @racket[setup:extra-path?].}]}
 
-@defoverridable[extra-path? (path? . -> . boolean?)]{Predicate that determines if path is rendered & published, overriding @racket[(setup:omitted-path?)] above, and Pollen's default publish settings. For instance, Pollen automatically omits files with a @racket[.rkt] extension. If you wanted to force a @racket[.rkt] file to be published, you could include it here. Default is @racket[(lambda (path) #f)]. @pollen-history[#:added "1.1"]}
+@defoverridable[extra-path? (path? . -> . boolean?)]{Predicate that determines if path is rendered & published, overriding @racket[(setup:omitted-path?)] above, and Pollen's default publish settings. For instance, Pollen automatically omits files with a @racket[.rkt] extension. If you wanted to force a @racket[.rkt] file to be published, you could include it here.
+
+@pollen-history[#:added "1.1"]}
 
 
-@defoverridable[splicing-tag symbol?]{Key used to signal that an X-expression should be spliced into its containing X-expression. Default is @val[default-splicing-tag].}
+@defoverridable[splicing-tag symbol?]{Key used to signal that an X-expression should be spliced into its containing X-expression.}
 
 
-@defoverridable[poly-source-ext symbol?]{Extension that indicates a source file can target multiple output types. Default is @racket['poly].}
+@defoverridable[poly-source-ext symbol?]{Extension that indicates a source file can target multiple output types.}
 
 
-@defoverridable[poly-targets (listof symbol?)]{List of symbols that denotes the possible targets of a @racket['poly] source file. Default is @racket['(html)].}
+@defoverridable[poly-targets (listof symbol?)]{List of symbols that denotes the possible targets of a @racket['poly] source file.}
 
 
-@defoverridable[index-pages (listof string?)]{List of strings that the project server will use as directory default pages, in order of priority. Has no effect on command-line rendering operations. Also has no effect on your live web server (usually  that's a setting you need to make in an @tt{.htaccess} configuration file). Default is @racket['("index.html")].}
+@defoverridable[index-pages (listof string?)]{List of strings that the project server will use as directory default pages, in order of priority. Has no effect on command-line rendering operations. Also has no effect on your live web server (usually  that's a setting you need to make in an @tt{.htaccess} configuration file).} But with this setting, you can simulate the behavior of your live server, so that internal index-page URLs work correctly.
 
 
 @section{Parameters}
 
 I mean @italic{parameters} in the Racket sense, i.e. values that can be fed to @racket[parameterize]. 
 
-@defparam[current-server-port port integer?]{
-A parameter that sets the HTTP port for the project server. Initialized to @racket[default-project-server-port].}
+@defparam[current-server-port port integer? #:value default-project-server-port]{
+A parameter that sets the HTTP port for the project server.}
 
 
 @defparam[current-project-root port path?]{
 A parameter that holds the root directory of the current project (e.g., the directory where you launched @code{raco pollen start}).}
 
-@defparam[current-server-extras-path dir path?]{
-A parameter that reports the path to the directory of support files for the project server. Initialized to @racket[#f], but set to a proper value when the server runs.}
 
-@defparam[current-poly-target target symbol?]{
-A parameter that reports the current rendering target for @racket[poly] source files. Initialized to @racket['html].}
+@defparam[current-server-extras-path dir path? #:value #f]{
+A parameter that reports the path to the directory of support files for the project server.}
+
+@defparam[current-poly-target target symbol? #:value 'html]{
+A parameter that reports the current rendering target for @racket[poly] source files.}
+
