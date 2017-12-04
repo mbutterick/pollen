@@ -64,7 +64,7 @@
      (with-syntax* ([default-name (format-id #'here "default-~a" #'name)]
                    [value (let ([v (syntax-local-eval #'default-name)])
                             (cond
-                              [(and (list? v) (andmap symbol? v) (> (length v) 5)) '(see below)]
+                              [(and (list? v) (andmap symbol? v) (> (length v) 5)) #`'#,'(see below)]
                               [(or (symbol? v) (list? v)) #`'#,v]
                               [(procedure? v) '(λ (path) #f)]
                               [else v]))]
