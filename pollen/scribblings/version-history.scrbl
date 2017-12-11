@@ -24,6 +24,11 @@ Beyond keeping the commit history available, I make no promise to maintain the p
 
 @section{Changelog}
 
+@subsection{Version 1.3} 
+
+Various optimizations and bugfixes.
+
+
 @subsection{Version 1.2} 
 
 @seclink["raco-pollen" #:doc '(lib "pollen/scribblings/pollen.scrbl")]{@racketfont{raco pollen}}: Added @racket[--local] option to @secref["raco_pollen_start" #:doc '(lib "pollen/scribblings/pollen.scrbl")].
