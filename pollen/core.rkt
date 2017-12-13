@@ -85,15 +85,12 @@
 
 
 (define (convert+validate-path pagenode-or-path caller)
-  (let ([path (get-source (if (pagenode? pagenode-or-path)
-                              (build-path (current-project-root) (symbol->string pagenode-or-path))
-                              pagenode-or-path))])
-    (unless path
-      ;; use `pagenode-or-path` in error message because at this point `path` is #f
-      (raise
-       (make-exn:fail:filesystem
-        (format "~a: no source found for '~a' in directory ~a" caller pagenode-or-path (current-directory))
-        (current-continuation-marks))))
+  (let* ([path (if (pagenode? pagenode-or-path)
+                   (build-path (current-project-root) (symbol->string pagenode-or-path))
+                   pagenode-or-path)]
+         [path (or (get-source path) path)])
+    (unless (file-exists? path)
+      (raise-argument-error caller "existing Pollen source, or name of its output path" path))
     path))
 
 
