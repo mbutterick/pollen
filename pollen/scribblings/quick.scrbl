@@ -392,6 +392,6 @@ Now you've seen the key features of Pollen. What do you think?
 
 ]
 
-But don't take my word for it. The rest of this documentation will show you the useful and sophisticated things you can do with Pollen. If there's another tool that suits you better, great. Keep in mind that I didn't make Pollen because I'm a programmer. I'm a writer who wants to make electronic books that are better than the ones we have now. And for that, I needed a better tool.
+But don't take my word for it. The rest of this documentation will show you the useful and sophisticated things you can do with Pollen. If there's another tool that suits you better, great. Keep in mind that I didn't make Pollen because I'm a programmer pushing some abstract fantasy of how writers ought to work. Rather, I'm a writer who wants to make electronic books that are better than the ones we have now. And for that, I needed a better tool.
 
 Now I have it.
