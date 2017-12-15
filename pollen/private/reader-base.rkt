@@ -88,6 +88,10 @@
             (my-make-drracket-buttons my-command-char)])]
         [(drracket:indentation)
          (dynamic-require 'scribble/private/indentation 'determine-spaces)]
+        [(drracket:default-extension)
+         "pm"]
+        [(drracket:default-filters)
+         '(["Pollen Sources" "*.p;*.pp;*.pmd;*.pm;*.ptree"])]
         [else default]))))
 
 (define-syntax-rule (reader-module-begin mode expr-to-ignore ...)
