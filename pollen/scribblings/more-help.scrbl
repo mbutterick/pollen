@@ -31,7 +31,7 @@ Yes, the source for @link["http://typographyforlawyers.com/"]{Typography for Law
 
 @link["http://mstill.io"]{mstill.io blog} by Malcolm Still [@link["https://github.com/malcolmstill/mstill.io"]{source}]
 
-@link["http://tilde.club/~joeld/secretary/"]{Secretary of Foreign Relations} by Joel Dueck [@link["https://github.com/otherjoel/try-pollen"]{source}]
+@link["https://thelocalyarn.com/excursus/secretary"]{Secretary of Foreign Relations} by Joel Dueck [@link["https://github.com/otherjoel/try-pollen"]{source}]
 
 @link["https://github.com/fasiha/pollen-guide"]{A Poor Guide to Pollen} by Ahmed Fasih
 
