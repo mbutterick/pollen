@@ -88,7 +88,7 @@ In this tutorial, I'll be rendering Pollen markup with an HTML template. But you
 
 Pollen markup is a free-form markup system that lets you add arbitrary @defterm{tags} and @defterm{attributes} to your text. By arbitrary, I mean that you needn't constrain your tags to an existing specification (e.g., the tags permitted by HTML). You can — but that's an option, not a requirement.
 
-I like to think of Pollen markup a way of capturing not just the text, but also my @bold{ideas about the text}. Some of these are low-level ideas (``this text should be italicized''). Some are high-level ideas (``this text is the topic of the page''). Some are just notes to myself. In short, everything I know about the text becomes part of the text. 
+I like to think of Pollen markup as a way of capturing not just the text, but also my @bold{ideas about the text}. Some of these are low-level ideas (``this text should be italicized''). Some are high-level ideas (``this text is the topic of the page''). Some are just notes to myself. In short, everything I know about the text becomes part of the text.
 
 In so doing, Pollen markup becomes the source code of the book. Let's try it out.
 
