@@ -335,7 +335,7 @@ Find the parent pagenode of @racket[_p] within @racket[_pagetree]. Return @racke
 (children
 [p (or/c #f pagenodeish?)]
 [pagetree (or/c pagetree? pathish?) (current-pagetree)])
-(or/c #f pagenode?)]
+(or/c #f (listof pagenode?))]
 Find the child pagenodes of @racket[_p] within @racket[_pagetree]. Return @racket[#f] if there aren't any.
 
 @examples[#:eval my-eval
@@ -351,7 +351,7 @@ Find the child pagenodes of @racket[_p] within @racket[_pagetree]. Return @racke
 (siblings
 [p (or/c #f pagenodeish?)]
 [pagetree (or/c pagetree? pathish?) (current-pagetree)])
-(or/c #f pagenode?)]
+(or/c #f (listof pagenode?))]
 Find the sibling pagenodes of @racket[_p] within @racket[_pagetree]. The result includes @racket[_p] itself. But the function will still return @racket[#f] if @racket[_pagetree] is @racket[#f].
 
 @examples[#:eval my-eval
@@ -365,7 +365,7 @@ Find the sibling pagenodes of @racket[_p] within @racket[_pagetree]. The result 
 (other-siblings
 [p (or/c #f pagenodeish?)]
 [pagetree (or/c pagetree? pathish?) (current-pagetree)])
-(or/c #f pagenode?)]
+(or/c #f (listof pagenode?))]
 Like @racket[siblings], but the result does not include @racket[_p] itself.
 
 @examples[#:eval my-eval
