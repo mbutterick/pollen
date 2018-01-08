@@ -54,12 +54,13 @@ cell {
     display: inline-block;
 }
 
+
 /* in & out cells */
 cell + cell {
     text-align: center;
 }
 
-cell:hover a {
+cell a:hover {
     background: #eee;
 }
 

@@ -176,7 +176,7 @@
                                                [(and source-second-ext (equal? source-second-ext (->string (setup:poly-source-ext (->complete-path source)))))
                                                 (define source-base (remove-ext source-minus-ext))
                                                 (define output-names (map (λ (ext) (->string (add-ext source-base ext))) (setup:poly-targets (->complete-path source))))
-                                                (cons #f `(span ,@(map (λ (on) `(a ((href ,on)) ,on (span ((class "file-ext")) "." ,source-first-ext ,(format " (from ~a)" (->string (find-relative-path dashboard-dir source)))))) output-names)))]
+                                                (cons #f `(div ,@(map (λ (on) `(a ((href ,on)) ,on (span ((class "file-ext")) "." ,source-first-ext ,(format " (from ~a)" (->string (find-relative-path dashboard-dir source)))))) output-names)))]
                                                [else
                                                 (define extra-row-string
                                                   (if (equal? source-minus-ext (remove-ext source)) ; escaped and unescaped versions are equal
