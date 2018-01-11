@@ -52,7 +52,7 @@
     (cond
       [(txexpr? x) (let-values([(tag attrs elements) (txexpr->values x)]) 
                      (if (or (memq tag excluded-tags) (for/or ([attr (in-list attrs)])
-                                                          (memq attr excluded-attrs))) 
+                                                          (member attr excluded-attrs))) 
                          x ; because it's excluded
                          ;; we apply processing here rather than do recursive descent on the pieces
                          ;; because if we send them back through loop, certain element types are ambiguous
