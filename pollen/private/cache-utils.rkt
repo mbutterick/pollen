@@ -24,7 +24,9 @@
                                        ;; if template has a source file, track that instead
                                        (and template-path (or (get-source template-path) template-path))
                                        ;; is either list of files or (list #f)
-                                       (->list (get-directory-require-files source-path))))
+                                       (append (->list (get-directory-require-files source-path))
+                                               ;; user-designated files to track
+                                               (map ->string (setup:compile-cache-watchlist source-path)))))
   (define pollen-env (getenv default-env-name))
   (define poly-flag (and (has-inner-poly-ext? source-path) (current-poly-target)))
   (define path+mod-time-pairs

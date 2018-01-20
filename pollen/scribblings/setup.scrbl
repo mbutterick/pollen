@@ -1,6 +1,6 @@
 #lang scribble/manual
 @(require "mb-tools.rkt")
-@(require scribble/eval pollen/setup racket/string (for-label racket (except-in pollen #%module-begin) pollen/setup))
+@(require scribble/eval pollen/setup racket/string (for-label racket syntax/modresolve (except-in pollen #%module-begin) pollen/setup))
 
 @(define my-eval (make-base-eval))
 @(my-eval `(require pollen pollen/setup))
@@ -106,6 +106,21 @@ Default separators used in decoding.
 
 @defoverridable[compile-cache-max-size exact-positive-integer?]{Maximum size of the compile cache.}
 
+@defoverridable[compile-cache-watchlist (listof (or/c path? path-string?))]{List of extra files that the compile cache watches during a project-server session. If one of the files on the watchlist changes, the compile cache is invalidated (just as it would be if @racket["pollen.rkt"] changed).
+
+If the compile cache can't find a certain file on the watchlist, it will be ignored. Therefore, to avoid unexpected behavior, the best policy is to pass in complete paths (or path strings). An easy way to convert a module name into a complete path is with @racket[resolve-module-path]:
+
+@fileblock["pollen.rkt" 
+@codeblock{
+(module+ setup
+  (require syntax/modresolve)
+  (provide (all-defined-out))
+  (define compile-cache-watchlist (map resolve-module-path '("my-module.rkt"))))
+}]
+
+}
+
+
 @defoverridable[publish-directory (or/c path-string? path-for-some-system?)]{Default target for @secref{raco_pollen_publish}. A complete path is used as is; a relative path is published to the desktop.. @pollen-history[#:added "1.1"]}
 
 @defoverridable[unpublished-path? (path? . -> . boolean?)]{@pollen-history[#:changed "1.1" @elem{Deprecated. Please use @racket[setup:omitted-path?].}]}
@@ -132,6 +147,8 @@ Default separators used in decoding.
 
 
 @defoverridable[index-pages (listof string?)]{List of strings that the project server will use as directory default pages, in order of priority. Has no effect on command-line rendering operations. Also has no effect on your live web server (usually  that's a setting you need to make in an @tt{.htaccess} configuration file).} But with this setting, you can simulate the behavior of your live server, so that internal index-page URLs work correctly.
+
+ 
 
 
 @section{Parameters}
