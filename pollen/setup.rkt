@@ -46,7 +46,7 @@
                                   (with-handlers ([exn:fail? NAME-FAIL-THUNKED])
                                     (dynamic-require `(submod ,(apply get-path-to-override get-path-args) WORLD-SUBMOD) 'NAME NAME-FAIL-THUNKED))))))]))
 
-(define-settable compile-cache-watchlist null)
+(define-settable cache-watchlist null)
 
 (define-settable preproc-source-ext 'pp)
 (define-settable markup-source-ext 'pm)

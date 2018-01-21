@@ -26,7 +26,7 @@
                                        ;; is either list of files or (list #f)
                                        (append (->list (get-directory-require-files source-path))
                                                ;; user-designated files to track
-                                               (map ->string (setup:compile-cache-watchlist source-path)))))
+                                               (map ->string (setup:cache-watchlist source-path)))))
   (define pollen-env (getenv default-env-name))
   (define poly-flag (and (has-inner-poly-ext? source-path) (current-poly-target)))
   (define path+mod-time-pairs
