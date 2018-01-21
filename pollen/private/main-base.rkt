@@ -1,6 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base racket/syntax "../setup.rkt" "split-metas.rkt")
-         "to-string.rkt" "../pagetree.rkt" "splice.rkt" "../setup.rkt")
+         "to-string.rkt" "../pagetree.rkt" "splice.rkt" "../setup.rkt" "../core.rkt")
 (provide (except-out (all-from-out racket/base) #%module-begin)
          (rename-out [dialect-module-begin #%module-begin]))
 
@@ -17,7 +17,7 @@
    (define-syntax (pmb stx)
      (syntax-case stx ()
        [(_ . EXPRS) (with-syntax ([EXPRS (syntax-property #'EXPRS 'parser-mode-from-expander 'PARSER-MODE-FROM-EXPANDER)])
-                     #'(pollen-module-begin . EXPRS))]))
+                      #'(pollen-module-begin . EXPRS))]))
    READER-SUBMOD))
 
 
@@ -64,8 +64,11 @@
             (module inner pollen/private/doclang-raw
               DOC-RAW ; positional arg for doclang-raw that sets name of export
               (require pollen/top pollen/core pollen/setup (submod ".." META-MOD-ID))
+              (and (current-metas METAS-ID) "\n") ; because newlines get stripped, voids don't
               (provide (all-defined-out) METAS-ID)
-              . EXPRS-WITHOUT-METAS)
+              . EXPRS-WITHOUT-METAS)            
+
+            (define prev-metas (current-metas))
             (require 'inner)
 
             (define DOC-ID
@@ -75,5 +78,6 @@
                      [doc-elements (strip-leading-newlines DOC-RAW)]
                      [doc-elements-spliced (splice doc-elements (setup:splicing-tag))])
                 (proc doc-elements-spliced)))
-                
+
+            (current-metas prev-metas)
             (provide DOC-ID (except-out (all-from-out 'inner) DOC-RAW)))))]))

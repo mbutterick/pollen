@@ -15,6 +15,7 @@
 
 (define+provide define-meta identity) ;; stub so it will be picked up for docs
 
+(define+provide current-metas (make-parameter #f))
 
 (define+provide/contract (select* key value-source [caller 'select*])
   ((coerce/symbol? (or/c is-meta-value? is-doc-value? pagenode? pathish?)) (symbol?) . ->* . (or/c #f txexpr-elements?))
