@@ -56,9 +56,7 @@
   ;; And with render, they would be rendered repeatedly.
   ;; Using reset-modification-dates is sort of like session control.
   (reset-mod-date-hash!) 
-  (for-each (λ (x) ((if (pagetree-source? x)
-                        render-pagenodes
-                        render-from-source-or-output-path) x)) xs))
+  (for-each render-from-source-or-output-path xs))
 
 
 (define+provide/contract (render-pagenodes pagetree-or-path)
@@ -67,17 +65,22 @@
                        pagetree-or-path
                        (cached-doc pagetree-or-path)))
   (parameterize ([current-directory (current-project-root)])
-    (for-each render-from-source-or-output-path (map ->complete-path (pagetree->list pagetree)))))
+    (apply render-batch (map ->complete-path (pagetree->list pagetree)))))
 
 
 (define+provide/contract (render-from-source-or-output-path so-pathish)
   (pathish? . -> . void?)
-  (let ([so-path (->complete-path so-pathish)])  ; so-path = source or output path (could be either) 
-    (cond
-      [(ormap (λ (test) (test so-path)) (list has/is-null-source? has/is-preproc-source? has/is-markup-source? has/is-scribble-source? has/is-markdown-source?)) 
-       (let-values ([(source-path output-path) (->source+output-paths so-path)])
-         (render-to-file-if-needed source-path #f output-path))]
-      [(pagetree-source? so-path) (render-pagenodes so-path)]))
+  (define so-path (->complete-path so-pathish)) ; so-path = source or output path (could be either) 
+  (cond
+    [(for/or ([pred (in-list (list has/is-null-source?
+                                   has/is-preproc-source?
+                                   has/is-markup-source?
+                                   has/is-scribble-source?
+                                   has/is-markdown-source?))])
+       (pred so-path))
+     (define-values (source-path output-path) (->source+output-paths so-path))
+     (render-to-file-if-needed source-path #f output-path)]
+    [(pagetree-source? so-path) (render-pagenodes so-path)])
   (void))
 
 (define render-ram-cache (make-hash))
@@ -102,18 +105,18 @@
   (when render-needed?
     (define render-result
       (let ([key (paths->key source-path template-path output-path)])
-      (hash-ref! render-ram-cache
-                 ;; within a session, this will prevent repeat players like "template.html.p"
-                 ;; from hitting the file cache repeatedly
-                 key
-                 (λ () 
-                   (cache-ref! key
-                               (λ () (render source-path template-path output-path))
-                               #:dest-path 'output
-                               #:notify-cache-use
-                               (λ (str)
-                                 (message (format "rendering: /~a (from cache)"
-                                                  (find-relative-path (current-project-root) output-path))))))))) ; will either be string or bytes
+        (hash-ref! render-ram-cache
+                   ;; within a session, this will prevent repeat players like "template.html.p"
+                   ;; from hitting the file cache repeatedly
+                   key
+                   (λ () 
+                     (cache-ref! key
+                                 (λ () (render source-path template-path output-path))
+                                 #:dest-path 'output
+                                 #:notify-cache-use
+                                 (λ (str)
+                                   (message (format "rendering: /~a (from cache)"
+                                                    (find-relative-path (current-project-root) output-path))))))))) ; will either be string or bytes
     (display-to-file render-result output-path
                      #:exists 'replace
                      #:mode (if (string? render-result) 'text 'binary))))
@@ -202,12 +205,11 @@
   (time (parameterize ([current-directory (->complete-path (dirname source-path))])
           (render-through-eval (syntax->datum
                                 (with-syntax ([SOURCE-PATH source-path])
-                                  #`(begin (require pollen/cache)
+                                  #'(begin (require pollen/cache)
                                            (cached-doc SOURCE-PATH))))))))
 
 
-(define (render-markup-or-markdown-source source-path [maybe-template-path #f] [maybe-output-path #f]) 
-  (define source-dir (dirname source-path))
+(define (render-markup-or-markdown-source source-path [maybe-template-path #f] [maybe-output-path #f])
   (define output-path (or maybe-output-path (->output-path source-path)))
   (unless output-path
     (raise-argument-error 'render-markup-or-markdown-source "valid output path" output-path))
@@ -242,7 +244,7 @@
                  DOC-ID
                  (include-template #:command-char COMMAND-CHAR (file TEMPLATE-PATH))))))))
   ;; set current-directory because include-template wants to work relative to source location
-  (time (parameterize ([current-directory (->complete-path source-dir)]) 
+  (time (parameterize ([current-directory (->complete-path (dirname source-path))]) 
           (render-through-eval expr-to-eval))))
 
 
@@ -259,18 +261,19 @@
              p)))
   
   (define (get-template)
-    (define source-dir (dirname source-path))
     (define output-path (or maybe-output-path (->output-path source-path)))
     (define output-path-ext (or (get-ext output-path) (current-poly-target))) ; output-path may not have an extension
+    
     (define (get-template-from-metas)
       (with-handlers ([exn:fail:contract? (λ (e) #f)]) ; in case source-path doesn't work with cached-require
         (parameterize ([current-directory (current-project-root)])
-          (let* ([source-metas (cached-metas source-path)]
-                 [template-name-or-names (select-from-metas (setup:template-meta-key source-path) source-metas)] ; #f or atom or list
-                 [template-name (if (list? template-name-or-names)
+          (define source-metas (cached-metas source-path))
+          (define template-name-or-names ; #f or atom or list
+            (select-from-metas (setup:template-meta-key source-path) source-metas)) 
+          (define template-name (if (list? template-name-or-names)
                                     (findf (λ (tn) (eq? (get-ext tn) output-path-ext)) template-name-or-names)
-                                    template-name-or-names)])
-            (and template-name (build-path source-dir template-name))))))
+                                    template-name-or-names))
+          (and template-name (build-path (dirname source-path) template-name)))))
     
     (define (get-default-template)
       (and output-path-ext
