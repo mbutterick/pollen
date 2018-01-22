@@ -49,20 +49,22 @@
     #:exclude-attrs txexpr-attrs?) . ->* . decode-proc-output-contract)
   (let loop ([x tx-in])
     (cond
-      [(txexpr? x) (let-values([(tag attrs elements) (txexpr->values x)]) 
-                     (if (or (memq tag excluded-tags) (for/or ([attr (in-list attrs)])
-                                                          (member attr excluded-attrs))) 
-                         x ; because it's excluded
-                         ;; we apply processing here rather than do recursive descent on the pieces
-                         ;; because if we send them back through loop, certain element types are ambiguous
-                         ;; e.g., ((p "foo")) tests out as both txexpr-attrs and txexpr-elements
-                         (let* ([decoded-txexpr (make-txexpr (txexpr-tag-proc tag) 
-                                                             (txexpr-attrs-proc attrs) 
-                                                             (txexpr-elements-proc (append-map (compose1 ->list/tx loop) elements)))]
-                                [proc (compose1 txexpr-proc (if (block-txexpr? decoded-txexpr)
-                                                                block-txexpr-proc
-                                                                inline-txexpr-proc))])
-                           (proc decoded-txexpr))))]
+      [(txexpr? x) (define-values (tag attrs elements) (txexpr->values x))
+                   (cond
+                     [(or (memq tag excluded-tags)
+                          (for/or ([attr (in-list attrs)])
+                            (member attr excluded-attrs))) 
+                      x] ; because it's excluded
+                     [else
+                      ;; we apply processing here rather than do recursive descent on the pieces
+                      ;; because if we send them back through loop, certain element types are ambiguous
+                      ;; e.g., ((p "foo")) tests out as both txexpr-attrs and txexpr-elements
+                      (define decoded-txexpr (make-txexpr (txexpr-tag-proc tag) 
+                                                          (txexpr-attrs-proc attrs) 
+                                                          (txexpr-elements-proc (append-map (λ (x) (->list/tx (loop x))) elements))))
+                      (txexpr-proc ((if (block-txexpr? decoded-txexpr)
+                                        block-txexpr-proc
+                                        inline-txexpr-proc) decoded-txexpr))])]
       [(string? x) (string-proc x)]
       [(or (symbol? x) (valid-char? x)) (entity-proc x)]
       [(cdata? x) (cdata-proc x)]
@@ -123,9 +125,7 @@
   ;; Mostly this is used inside `decode`,
   ;; so rather than test for `txexpr?` at the beginning (which is potentially slow)
   ;; just look at the tag.
-  (and (pair? x)
-       (memq (get-tag x) (setup:block-tags))
-       #t))
+  (and (pair? x) (memq (get-tag x) (setup:block-tags)) #t))
 
 (define+provide/contract (decode-linebreaks elems [maybe-linebreak-proc '(br)]
                                             #:separator [newline (setup:linebreak-separator)])
@@ -137,15 +137,16 @@
   (filter values
           (for/list ([(elem idx) (in-indexed elems-vec)])
             (cond
-              [(or (= idx 0) (= idx (sub1 (vector-length elems-vec)))) elem] ; pass through first & last items
+              [(= idx 0) elem] ; pass first item
+              [(= idx (sub1 (vector-length elems-vec))) elem] ; pass through last item
               [(equal? elem newline)
-               (let ([prev (vector-ref elems-vec (sub1 idx))]
-                     [next (vector-ref elems-vec (add1 idx))])
-                 ;; only convert if neither adjacent tag is a block
-                 ;; (because blocks automatically force a newline before & after)
-                 (if (or (block-txexpr? prev) (block-txexpr? next))
-                     #f ; flag for filtering
-                     (linebreak-proc prev next)))]
+               (define prev (vector-ref elems-vec (sub1 idx)))
+               (define next (vector-ref elems-vec (add1 idx)))
+               ;; only convert if neither adjacent tag is a block
+               ;; (because blocks automatically force a newline before & after)
+               (if (or (block-txexpr? prev) (block-txexpr? next))
+                   #f ; flag for filtering
+                   (linebreak-proc prev next))]
               [else elem]))))
 
 (module-test-external
@@ -162,19 +163,20 @@
 ;; Find adjacent newline characters in a list and merge them into one item
 ;; Scribble, by default, makes each newline a separate list item.
 ;; Ignore empty strings.
+;; Descend into txexprs.
 (define+provide/contract (merge-newlines x)
   (txexpr-elements? . -> . txexpr-elements?)
   (define newline-pat (regexp (format "^~a+$" (setup:newline))))
-  (define (newlines? x) (and (string? x) (regexp-match newline-pat x)))  
-  (define (merge-if-newlines xs)
-    (if (newlines? (car xs))
+  (define (newline? x) (and (string? x) (regexp-match newline-pat x)))  
+  (define (merge-newline-slice xs)
+    (if (newline? (car xs)) ; if first member of slice is newline, they all are
         (list (apply string-append xs))
         xs))
-  (define not-empty-string? (λ (x) (not (and (string? x) (= (string-length x) 0)))))
+  (define empty-string? (λ (x) (equal? x "")))
   (let loop ([x x])
     (if (and (pair? x) (not (attrs? x)))
-        (let ([xs (map loop (filter not-empty-string? x))])
-          (append-map merge-if-newlines (slicef xs newlines?)))
+        (let ([xs (map loop (filter-not empty-string? x))])
+          (append-map merge-newline-slice (slicef xs newline?)))
         x)))
 
 (module-test-external
@@ -186,10 +188,7 @@
                '(p "\n\n" "foo" "\n\n\n" "bar" (em "\n\n\n"))))
 
 
-
-;; detect paragraphs
-;; todo: unit tests
-(define+provide/contract (decode-paragraphs elements [maybe-wrap-proc 'p]
+(define+provide/contract (decode-paragraphs elements-in [maybe-wrap-proc 'p]
                                             #:linebreak-proc [linebreak-proc decode-linebreaks]
                                             #:force? [force-paragraph #f])
   ((txexpr-elements?) ((or/c txexpr-tag? ((listof xexpr?) . -> . txexpr?))
@@ -216,14 +215,14 @@
     (if (andmap block-txexpr? elems)
         elems ; leave a series of block xexprs alone
         (list (wrap-proc elems)))) ; otherwise wrap in p tag 
-  
-  (let ([elements (prep-paragraph-flow elements)])
-    (if (ormap explicit-or-implicit-paragraph-break? elements) ; need this condition to prevent infinite recursion
-        ;; use append-map on wrap-paragraph rather than map to permit return of multiple elements
-        (append-map wrap-paragraph (append-map (λ (es) (filter-split es paragraph-break?)) (slicef elements block-txexpr?))) ; split into ¶¶, using both implied and explicit paragraph breaks
-        (if force-paragraph
-            (append-map wrap-paragraph (slicef elements block-txexpr?)) ; upconverts non-block elements to paragraphs
-            elements))))                
+
+  (define elements (prep-paragraph-flow elements-in))
+  (if (ormap explicit-or-implicit-paragraph-break? elements) ; need this condition to prevent infinite recursion
+      ;; use append-map on wrap-paragraph rather than map to permit return of multiple elements
+      (append-map wrap-paragraph (append-map (λ (es) (filter-split es paragraph-break?)) (slicef elements block-txexpr?))) ; split into ¶¶, using both implied and explicit paragraph breaks
+      (if force-paragraph
+          (append-map wrap-paragraph (slicef elements block-txexpr?)) ; upconverts non-block elements to paragraphs
+          elements)))            
 
 (module-test-external
  (check-equal? (decode-paragraphs '("First para" "\n\n" "Second para"))
