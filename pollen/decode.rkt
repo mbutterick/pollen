@@ -21,19 +21,18 @@
     [else (list x)]))
 
 (define decode-proc-output-contract (or/c txexpr-element? txexpr-elements?))
-(define identity (λ (x) x))
 
 ;; decoder wireframe
 (define+provide/contract (decode tx-in
-                                 #:txexpr-tag-proc [txexpr-tag-proc identity]
-                                 #:txexpr-attrs-proc [txexpr-attrs-proc identity]
-                                 #:txexpr-elements-proc [txexpr-elements-proc identity]
-                                 #:txexpr-proc [txexpr-proc identity]
-                                 #:block-txexpr-proc [block-txexpr-proc identity]
-                                 #:inline-txexpr-proc [inline-txexpr-proc identity]
-                                 #:string-proc [string-proc identity]
-                                 #:entity-proc [entity-proc identity]
-                                 #:cdata-proc [cdata-proc identity]
+                                 #:txexpr-tag-proc [txexpr-tag-proc values]
+                                 #:txexpr-attrs-proc [txexpr-attrs-proc values]
+                                 #:txexpr-elements-proc [txexpr-elements-proc values]
+                                 #:txexpr-proc [txexpr-proc values]
+                                 #:block-txexpr-proc [block-txexpr-proc values]
+                                 #:inline-txexpr-proc [inline-txexpr-proc values]
+                                 #:string-proc [string-proc values]
+                                 #:entity-proc [entity-proc values]
+                                 #:cdata-proc [cdata-proc values]
                                  #:exclude-tags [excluded-tags empty]
                                  #:exclude-attrs [excluded-attrs empty])
   ((xexpr/c)  
@@ -135,7 +134,7 @@
                              maybe-linebreak-proc
                              (λ (e1 e2) maybe-linebreak-proc)))
   (define elems-vec (list->vector elems))
-  (filter identity
+  (filter values
           (for/list ([(elem idx) (in-indexed elems-vec)])
             (cond
               [(or (= idx 0) (= idx (sub1 (vector-length elems-vec)))) elem] ; pass through first & last items

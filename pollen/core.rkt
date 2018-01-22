@@ -10,10 +10,8 @@
 
 (define is-meta-value? hash?)
 (define is-doc-value? txexpr?)
-(define identity (λ (x) x))
-(define not-false? identity)
 
-(define+provide define-meta identity) ;; stub so it will be picked up for docs
+(define+provide define-meta values) ;; stub so it will be picked up for docs
 
 (define+provide current-metas (make-parameter #f))
 
@@ -21,7 +19,7 @@
   ((coerce/symbol? (or/c is-meta-value? is-doc-value? pagenode? pathish?)) (symbol?) . ->* . (or/c #f txexpr-elements?))
   (define metas-result (and (not (is-doc-value? value-source)) (select-from-metas key value-source caller)))
   (define doc-result  (and (not (is-meta-value? value-source)) (select-from-doc key value-source caller)))
-  (define result (filter not-false? (apply append (map ->list (list metas-result doc-result)))))
+  (define result (filter values (apply append (map ->list (list metas-result doc-result)))))
   (and (pair? result) result))
 
 

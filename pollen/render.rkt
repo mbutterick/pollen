@@ -250,12 +250,11 @@
   (or (markup-source? path) (markdown-source? path)))
 
 
-(define identity (λ (x) x))
 (define+provide/contract (get-template-for source-path [maybe-output-path #f])
   ((complete-path?)((or/c #f complete-path?)) . ->* . (or/c #f complete-path?))
   
   (define (file-exists-or-has-source? p) ; p could be #f
-    (and p (for/first ([proc (in-list (list identity ->preproc-source-path ->null-source-path))]
+    (and p (for/first ([proc (in-list (list values ->preproc-source-path ->null-source-path))]
                        #:when (file-exists? (proc p)))
              p)))
   
