@@ -235,15 +235,15 @@
                     pollen/pagetree
                     pollen/core)
            DIRECTORY-REQUIRE-FILES
-           (parameterize ([current-pagetree (make-project-pagetree CPR)])
-             (define DOC-ID (cached-doc SOURCE-PATH-STRING))
-             (define META-ID (cached-metas SOURCE-PATH-STRING))
+           (parameterize ([current-pagetree (make-project-pagetree CPR)]
+                          [current-metas (cached-metas SOURCE-PATH-STRING)])
              (local-require pollen/template pollen/top)
+             (define DOC-ID (cached-doc SOURCE-PATH-STRING))
+             (define META-ID (current-metas))
              (define here (path->pagenode (or (select-from-metas 'HERE-PATH-KEY META-ID) 'unknown)))
-             (parameterize ([current-metas META-ID])
-               (if (bytes? DOC-ID) ; if main export is binary, just pass it through
-                   DOC-ID
-                   (include-template #:command-char COMMAND-CHAR (file TEMPLATE-PATH)))))))))
+             (if (bytes? DOC-ID) ; if main export is binary, just pass it through
+                 DOC-ID
+                 (include-template #:command-char COMMAND-CHAR (file TEMPLATE-PATH))))))))
   ;; set current-directory because include-template wants to work relative to source location
   (time (parameterize ([current-directory (->complete-path (dirname source-path))]) 
           (render-through-eval expr-to-eval))))
