@@ -77,7 +77,7 @@
                                    has/is-markup-source?
                                    has/is-scribble-source?
                                    has/is-markdown-source?))])
-             (pred so-path))
+       (pred so-path))
      (define-values (source-path output-path) (->source+output-paths so-path))
      (render-to-file-if-needed source-path #f output-path)]
     [(pagetree-source? so-path) (render-pagenodes so-path)])
@@ -151,7 +151,7 @@
   (define render-proc (for/first ([test (in-list tests)]
                                   [render-proc (in-list render-procs)]
                                   #:when (test source-path))
-                                 render-proc))
+                        render-proc))
   (unless render-proc
     (raise-argument-error 'render (format "valid rendering function for ~a" source-path) render-proc))
   
@@ -235,18 +235,18 @@
                     pollen/pagetree
                     pollen/core)
            DIRECTORY-REQUIRE-FILES
-           (define DOC-ID (cached-doc SOURCE-PATH-STRING))
-           (define META-ID (cached-metas SOURCE-PATH-STRING))
-           (parameterize ([current-pagetree (make-project-pagetree CPR)]
-                          [current-metas META-ID])
+           (parameterize ([current-pagetree (make-project-pagetree CPR)])
+             (define DOC-ID (cached-doc SOURCE-PATH-STRING))
+             (define META-ID (cached-metas SOURCE-PATH-STRING))
              (local-require pollen/template pollen/top)
              (define here (path->pagenode (or (select-from-metas 'HERE-PATH-KEY META-ID) 'unknown)))
-             (if (bytes? DOC-ID) ; if main export is binary, just pass it through
-                 DOC-ID
-                 (include-template #:command-char COMMAND-CHAR (file TEMPLATE-PATH))))))))
-;; set current-directory because include-template wants to work relative to source location
-(time (parameterize ([current-directory (->complete-path (dirname source-path))]) 
-        (render-through-eval expr-to-eval))))
+             (parameterize ([current-metas META-ID])
+               (if (bytes? DOC-ID) ; if main export is binary, just pass it through
+                   DOC-ID
+                   (include-template #:command-char COMMAND-CHAR (file TEMPLATE-PATH)))))))))
+  ;; set current-directory because include-template wants to work relative to source location
+  (time (parameterize ([current-directory (->complete-path (dirname source-path))]) 
+          (render-through-eval expr-to-eval))))
 
 
 (define (templated-source? path)
@@ -259,7 +259,7 @@
   (define (file-exists-or-has-source? p) ; p could be #f
     (and p (for/first ([proc (in-list (list values ->preproc-source-path ->null-source-path))]
                        #:when (file-exists? (proc p)))
-                      p)))
+             p)))
   
   (define (get-template)
     (define output-path (or maybe-output-path (->output-path source-path)))

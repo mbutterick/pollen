@@ -146,7 +146,7 @@ Note that if @racket[_meta-source] is a relative path or pagenode, it is treated
 (select-from-metas 'nonexistent-key metas)
 ]
 
-@section{Parameters}
+@section[#:tag "core"]{Parameters}
 
 @defparam[current-metas hash (or/c #f hash?) #:value #f]{Holds the @racket[metas] of the current Pollen source. In tag functions, rather than pass @racket[metas] as an argument, you can refer to @racket[(current-metas)] within the body of the function. Likewise, if your tag function calls other tag functions, they can all invoke @racket[(current-metas)] instead of passing the value around.
 
