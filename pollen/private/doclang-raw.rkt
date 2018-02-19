@@ -10,18 +10,16 @@
 
 (define-syntax (*module-begin stx)
   (syntax-case stx ()
-    [(_ id . body)
-     (with-syntax ([post-process #'(λ (x) x)]
-                   [exprs #'()])
+    [(_ id post-process . body)
+     (with-syntax ([exprs #'()])
        #'(#%module-begin
           (doc-begin id post-process exprs . body)))]))
 
 (define-syntax (doc-begin stx)
   (syntax-case stx ()
     [(_ m-id post-process (expr ...))
-     #`(begin
-         (define m-id (post-process (list . #,(reverse (syntax->list #'(expr ...))))))
-         (provide m-id))]
+     ;; unlike regular doclang, don't `provide` m-id (we'll do that in main-base wrapper)
+     #`(define m-id (post-process (list . #,(reverse (syntax->list #'(expr ...))))))]
     [(_ m-id post-process exprs . body)
      ;; `body' probably starts with lots of string constants; it's
      ;; slow to trampoline on every string, so do them in a batch

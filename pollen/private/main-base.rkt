@@ -1,6 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base racket/syntax "../setup.rkt" "split-metas.rkt")
-         "to-string.rkt" "../pagetree.rkt" "splice.rkt" "../setup.rkt" "../core.rkt")
+         "to-string.rkt" "../pagetree.rkt" "splice.rkt" "../setup.rkt" "../core.rkt"
+         (prefix-in doclang: "doclang-raw.rkt"))
 (provide (except-out (all-from-out racket/base) #%module-begin)
          (rename-out [dialect-module-begin #%module-begin]))
 
@@ -51,33 +52,20 @@
                      [METAS-ID (setup:meta-export)]
                      [META-MOD-ID (setup:meta-export)]
                      [ROOT-ID (setup:main-root-node)]
-                     [DOC-ID (setup:main-export)]
-                     ;; prevents conflicts with other imported Pollen sources
-                     [DOC-RAW (datum->syntax #'here (syntax->datum (generate-temporary 'pollen-)))])
-         #'(#%module-begin
-            (require pollen/top) ; we could get this via 'inner, but then we'd have to avoid exporting it
-              
+                     [DOC-ID (setup:main-export)])
+         #'(doclang:#%module-begin
+            DOC-ID ; positional arg for doclang-raw: name of export
+            (λ (xs)
+              (define parser-mode (or 'PARSER-MODE-FROM-READER PARSER-MODE-FROM-EXPANDER))
+              (define proc (make-parse-proc parser-mode ROOT-ID))
+              (define doc-elements (splice (strip-leading-newlines xs) (setup:splicing-tag)))
+              (proc doc-elements)) ;  positional arg for doclang-raw: post-processor
             (module META-MOD-ID racket/base
               (provide METAS-ID)
               (define METAS-ID META-HASH))
-                
-            (module inner pollen/private/doclang-raw
-              DOC-RAW ; positional arg for doclang-raw that sets name of export
-              (require pollen/top pollen/core pollen/setup (submod ".." META-MOD-ID))
-              (and (current-metas METAS-ID) "\n") ; because newlines get stripped, voids don't
-              (provide (all-defined-out) METAS-ID)
-              . EXPRS-WITHOUT-METAS)            
-
+            (require pollen/top pollen/core pollen/setup (submod "." META-MOD-ID))
+            (provide (all-defined-out) METAS-ID DOC-ID)
             (define prev-metas (current-metas))
-            (require 'inner)
-
-            (define DOC-ID
-              ;; parser-mode must be resolved at runtime, not compile time
-              (let* ([parser-mode (or 'PARSER-MODE-FROM-READER PARSER-MODE-FROM-EXPANDER)]
-                     [proc (make-parse-proc parser-mode ROOT-ID)] 
-                     [doc-elements (strip-leading-newlines DOC-RAW)]
-                     [doc-elements-spliced (splice doc-elements (setup:splicing-tag))])
-                (proc doc-elements-spliced)))
-
-            (current-metas prev-metas)
-            (provide DOC-ID (except-out (all-from-out 'inner) DOC-RAW)))))]))
+            (and (current-metas METAS-ID) "\n") ; because newlines get stripped, voids don't
+            (begin . EXPRS-WITHOUT-METAS)
+            (and (current-metas prev-metas) ""))))])) ; leave behind empty string, not void
