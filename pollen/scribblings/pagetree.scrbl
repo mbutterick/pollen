@@ -118,7 +118,7 @@ Note that you need to take more care when building a pagetree by hand. Pagenodes
 
 @section{Nesting pagetrees}
 
-You can put other pagetrees within a pagetree. Since every pagetree is an X-expression, you can nest pagetrees as you would ordinary X-expressions. Suppose we have this pagetree:
+You can put other pagetrees within a pagetree. Since every pagetree is an X-expression, you can nest pagetrees as you would ordinary X-expressions. Suppose you have this pagetree:
 
 @fileblock["sub.ptree" @codeblock{
 #lang pollen
@@ -126,7 +126,7 @@ three
 four
 }]
 
-And we want to add it to an existing pagetree:
+And you want to add it to an existing pagetree:
 
 @fileblock["index.ptree" @codeblock{
 #lang pollen
@@ -135,14 +135,14 @@ two
 five
 six}]
 
-You can @racket[require] @filepath{sub.ptree} normally to import its @racket[doc]:
+You can @racket[require] @filepath{sub.ptree} to import its @racket[doc]. Be sure to use @racket[prefix-in] so that the imported @racket[doc] ends up with a distinct name that doesn't conflict with the @racket[doc] that's already part of the current file:
 
 @fileblock["index.ptree" @codeblock{
 #lang pollen
-◊(require "sub.ptree")
+◊(require (prefix-in sub: "sub.ptree"))
 one
 two
-◊doc
+◊sub:doc
 five
 six}]
 
@@ -158,11 +158,11 @@ But if you do want the imported pagetree under a subnode, just add a containing 
 
 @fileblock["index.ptree" @codeblock{
 #lang pollen
-◊(require "sub.ptree")
+◊(require (prefix-in sub: "sub.ptree"))
 one
 two
 ◊subtree{
-  ◊doc
+  ◊sub:doc
 }
 five
 six}]
