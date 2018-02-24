@@ -11,7 +11,7 @@
 (define is-meta-value? hash?)
 (define is-doc-value? txexpr?)
 
-(define+provide define-meta values) ;; stub so it will be picked up for docs
+(define+provide define-meta (λ xs "\n")) ;; newline will merge with surroundings
 
 (define+provide current-metas (make-parameter #f))
 

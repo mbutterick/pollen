@@ -1,5 +1,5 @@
 #lang racket/base
-(require (for-syntax racket/base racket/syntax "../setup.rkt" "split-metas.rkt")
+(require (for-syntax racket/base racket/syntax syntax/strip-context "../setup.rkt" "split-metas.rkt")
          "to-string.rkt" "../pagetree.rkt" "splice.rkt" "../setup.rkt" "../core.rkt"
          (prefix-in doclang: "doclang-raw.rkt"))
 (provide (except-out (all-from-out racket/base) #%module-begin)
@@ -43,29 +43,28 @@
 (define-syntax (pollen-module-begin stx)
   (syntax-case stx ()
     [(_ . EXPRS)
-     (let-values ([(meta-hash exprs-without-metas) (split-metas (syntax->datum #'EXPRS) (setup:define-meta-name))])
-       (with-syntax (;; 'parser-mode-from-reader will be #f for an inline submodule
-                     [PARSER-MODE-FROM-READER (syntax-property stx 'parser-mode-from-reader)]
-                     [PARSER-MODE-FROM-EXPANDER (syntax-property #'EXPRS 'parser-mode-from-expander)]
-                     [META-HASH meta-hash]
-                     [EXPRS-WITHOUT-METAS exprs-without-metas]
-                     [METAS-ID (setup:meta-export)]
-                     [META-MOD-ID (setup:meta-export)]
-                     [ROOT-ID (setup:main-root-node)]
-                     [DOC-ID (setup:main-export)])
-         #'(doclang:#%module-begin
-            DOC-ID ; positional arg for doclang-raw: name of export
-            (λ (xs)
-              (define parser-mode (or 'PARSER-MODE-FROM-READER PARSER-MODE-FROM-EXPANDER))
-              (define proc (make-parse-proc parser-mode ROOT-ID))
-              (define doc-elements (splice (strip-leading-newlines xs) (setup:splicing-tag)))
-              (proc doc-elements)) ;  positional arg for doclang-raw: post-processor
-            (module META-MOD-ID racket/base
-              (provide METAS-ID)
-              (define METAS-ID META-HASH))
-            (require pollen/top pollen/core pollen/setup (submod "." META-MOD-ID))
-            (provide (all-defined-out) METAS-ID DOC-ID)
-            (define prev-metas (current-metas))
-            (and (current-metas METAS-ID) "\n") ; because newlines get stripped, voids don't
-            (begin . EXPRS-WITHOUT-METAS)
-            (and (current-metas prev-metas) ""))))])) ; leave behind empty string, not void
+     (with-syntax (;; 'parser-mode-from-reader will be #f for an inline submodule
+                   [EXPRS (replace-context #'here #'EXPRS)]
+                   [PARSER-MODE-FROM-READER (syntax-property stx 'parser-mode-from-reader)]
+                   [PARSER-MODE-FROM-EXPANDER (syntax-property #'EXPRS 'parser-mode-from-expander)]
+                   [META-HASH (split-metas #'EXPRS (setup:define-meta-name))]
+                   [METAS-ID (setup:meta-export)]
+                   [META-MOD-ID (setup:meta-export)]
+                   [ROOT-ID (setup:main-root-node)]
+                   [DOC-ID (setup:main-export)])
+       #'(doclang:#%module-begin
+          DOC-ID ; positional arg for doclang-raw: name of export
+          (λ (xs)
+            (define parser-mode (or 'PARSER-MODE-FROM-READER PARSER-MODE-FROM-EXPANDER))
+            (define proc (make-parse-proc parser-mode ROOT-ID))
+            (define doc-elements (splice (strip-leading-newlines xs) (setup:splicing-tag)))
+            (proc doc-elements)) ;  positional arg for doclang-raw: post-processor
+          (module META-MOD-ID racket/base
+            (provide METAS-ID)
+            (define METAS-ID META-HASH))
+          (require pollen/top pollen/core pollen/setup (submod "." META-MOD-ID))
+          (provide (all-defined-out) METAS-ID DOC-ID)
+          (define prev-metas (current-metas))
+          (and (current-metas METAS-ID) "\n") ; because newlines get stripped, voids don't
+          (begin . EXPRS)
+          (and (current-metas prev-metas) "")))])) ; leave behind empty string, not void
