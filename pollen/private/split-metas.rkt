@@ -1,4 +1,4 @@
-#lang debug racket/base
+#lang racket/base
 (require racket/list)
 (provide (all-defined-out))
 
