@@ -11,7 +11,10 @@
 (define is-meta-value? hash?)
 (define is-doc-value? txexpr?)
 
-(define+provide define-meta (λ xs "\n")) ;; newline will merge with surroundings
+;; if `define-meta` is defined it will pop an error msg if the wrong number of args
+;; even though this error will happen after macro expansion, when metas are extracted
+;; empty string will merge with surroundings
+(define+provide (define-meta k v) "")
 
 (define+provide current-metas (make-parameter #f))
 

@@ -37,7 +37,8 @@
 
 (define (strip-leading-newlines doc)
   ;; drop leading newlines, as they're often the result of `defines` and `requires`
-  (or (memf (λ (ln) (not (equal? ln (setup:newline)))) doc) null))
+  (or (memf (λ (ln) (and (not (equal? ln (setup:newline)))
+                         (not (equal? ln "")))) doc) null))
 
 
 (define-syntax (pollen-module-begin stx)
@@ -65,6 +66,6 @@
           (require pollen/top pollen/core pollen/setup (submod "." META-MOD-ID))
           (provide (all-defined-out) METAS-ID DOC-ID)
           (define prev-metas (current-metas))
-          (and (current-metas METAS-ID) "\n") ; because newlines get stripped, voids don't
+          (and (current-metas METAS-ID) "") ; because empty strings get stripped, voids don't
           (begin . EXPRS)
           (and (current-metas prev-metas) "")))])) ; leave behind empty string, not void
