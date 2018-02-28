@@ -45,7 +45,15 @@
                   [DOC (setup:main-export)]
                   [META-MOD (setup:meta-export)]
                   [PARSER-MODE-FROM-READER parser-mode-from-reader]
-                  [POLLEN-MODULE-SYNTAX (let ([mod-stx #'(module POLLEN-MOD-NAME pollen
+                  [EXPANDER (cond
+                              [(eq? parser-mode-from-reader default-mode-markup) 'pollen/markup]
+                              [(eq? parser-mode-from-reader default-mode-markdown) 'pollen/markdown]
+                              [(eq? parser-mode-from-reader default-mode-pagetree) 'pollen/ptree]
+                              [(eq? parser-mode-from-reader default-mode-preproc) 'pollen/pre]
+                              [(eq? parser-mode-from-reader default-mode-auto) 'pollen]
+                              [(eq? parser-mode-from-reader default-mode-template) 'pollen/template]
+                              [else 'pollen])]
+                  [POLLEN-MODULE-SYNTAX (let ([mod-stx #'(module POLLEN-MOD-NAME EXPANDER
                                                            (define-meta HERE-KEY HERE-PATH)
                                                            POLLEN-REQUIRE-AND-PROVIDES
                                                            . SOURCE-LINES)])
