@@ -22,9 +22,6 @@
         auto-computed-mode)
       reader-mode))
 
-(define (derive-expander-name mode)
-  (define suffix (if (eq? mode default-mode-auto) "" mode))
-  (string->symbol (format "pollen/~a" suffix)))
 
 (define (custom-read p)
   (syntax->datum (custom-read-syntax (object-name p) p)))
