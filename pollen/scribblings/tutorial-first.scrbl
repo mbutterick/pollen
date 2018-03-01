@@ -275,7 +275,7 @@ Let's look at the root-level dashboard for our project. First, make sure your pr
 > raco pollen start
 }
 
-Then, in your web browser, visit @link-tt{http://localhost:8080/index.ptree}}. 
+Then, in your web browser, visit @link-tt{http://localhost:8080/index.ptree}. 
 
 You should see something like this:
 
