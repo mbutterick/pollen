@@ -372,17 +372,16 @@ The template, not as easy:
     \begin{document}
     ◊(apply string-append (cdr doc))
     \end{document}})
-◊(define working-directory 
-    (build-path (current-directory) "pollen-latex-work"))
-◊(unless (directory-exists? working-directory)
-    (make-directory working-directory))
+◊(define working-directory
+    (make-temporary-file "pollen-latex-work-~a" 'directory))
 ◊(define temp-ltx-path (build-path working-directory "temp.ltx"))
 ◊(display-to-file latex-source temp-ltx-path #:exists 'replace)
-◊(define command (format "pdflatex -output-directory '~a' '~a'" 
+◊(define command (format "pdflatex -output-directory ~a ~a"
   working-directory temp-ltx-path))
-◊(if (system command)
-    (file->bytes (build-path working-directory "temp.pdf"))
-    (error "pdflatex: rendering error"))
+◊(unless (system command) (error "pdflatex: rendering error"))
+◊(let ([pdf (file->bytes (build-path working-directory "temp.pdf"))])
+   (delete-directory/files working-directory)
+   pdf)
 }|]
 
 I know that only the serious nerds are still with me, but let's review what's happening here.
@@ -408,10 +407,8 @@ We need @racketmodname[racket/file] for @racket[display-to-file] and @racket[fil
 This is the same as our @filepath{template.ltx.p} from before, but stored in a variable. The @racket[string-append] is needed here because the curly braces create a list of strings, and we want a single string.
 
 @codeblock|{
-◊(define working-directory 
-    (build-path (current-directory) "pollen-latex-work"))
-◊(unless (directory-exists? working-directory)
-    (make-directory working-directory))
+◊(define working-directory
+    (make-temporary-file "pollen-latex-work-~a" 'directory))
 ◊(define temp-ltx-path (build-path working-directory "temp.ltx"))
 ◊(display-to-file latex-source temp-ltx-path #:exists 'replace)
 }|
@@ -420,14 +417,15 @@ Create a temporary working directory (because @exec{pdflatex} creates a bunch of
 
 
 @codeblock|{
-◊(define command (format "pdflatex -output-directory '~a' '~a'" 
+◊(define command (format "pdflatex -output-directory ~a ~a" 
   working-directory temp-ltx-path))
-◊(if (system command)
-    (file->bytes (build-path working-directory "temp.pdf"))
-    (error "pdflatex: rendering error"))
+◊(unless (system command) (error "pdflatex: rendering error"))
+◊(let ([pdf (file->bytes (build-path working-directory "temp.pdf"))])
+   (delete-directory/files working-directory)
+   pdf)
 }|
 
-Issue the @exec{pdflatex} command, using our newly created @filepath{temp.ltx} as the source. Finally, pick up the PDF that was created and return it as a byte string (= binary data).
+Issue the @exec{pdflatex} command, using our newly created @filepath{temp.ltx} as the source. Finally, pick up the PDF that was created, delete the temporary directory, and return it as a byte string (= binary data).
 
 Restart the project server and click on @filepath{cv.pdf.pm}, and you'll see the rendered PDF right in the browser:
 
