@@ -80,14 +80,15 @@ version                print the version" (current-server-port) (make-publish-di
 
 (define (handle-render)
   (define render-target-wanted (make-parameter (current-poly-target)))
-  (define render-recursively? (make-parameter #f))
+  (define render-with-subdirs? (make-parameter #f))
   (define parsed-args (command-line #:program "raco pollen render"
                                     #:argv (vector-drop (current-command-line-arguments) 1) ; snip the 'render' from the front
                                     #:once-each
                                     [("-t" "--target") target-arg "Render target for poly sources"
                                                        (render-target-wanted (->symbol target-arg))]
-                                    [("-r" "--recursive") "Render subdirectories"
-                                                          (render-recursively? #t)]
+                                    [("-r" "--recursive") "Render subdirectories recursively"
+                                                          (render-with-subdirs? 'recursive)]
+                                    [("-s" "--subdir") "Render subdirectories nonrecursively" (render-with-subdirs? 'include)]
                                     #:args other-args
                                     other-args))  
   (define path-args (if (empty? parsed-args)
@@ -95,11 +96,13 @@ version                print the version" (current-server-port) (make-publish-di
                         parsed-args))
   (parameterize ([current-directory (current-project-root)]
                  [current-poly-target (render-target-wanted)])
-    (define first-path-or-path-string (car path-args))
-    (if (directory-exists? first-path-or-path-string)
-        (let render-one-dir ([dir (->complete-path first-path-or-path-string)])
+    ;; special case: one directory as argument
+    (if (and (= 1 (length path-args)) (directory-exists? (car path-args)))
+        (let render-one-dir ([dir (->complete-path (car path-args))])
           (parameterize ([current-directory dir]
-                         [current-project-root dir])
+                         [current-project-root (case (render-with-subdirs?)
+                                                 [(recursive) dir]
+                                                 [else (current-project-root)])])
             (define dirlist (directory-list dir))
             (define preprocs (filter preproc-source? dirlist))
             (define static-pagetrees (filter pagetree-source? dirlist))
@@ -115,12 +118,12 @@ version                print the version" (current-server-port) (make-publish-di
                       (displayln (format "rendering preproc & pagetree files in directory ~a" dir))
                       (append preprocs static-pagetrees)])))
             (apply render-batch batch-to-render)
-            (when (render-recursively?)
+            (when (render-with-subdirs?)
               (for ([path (in-list dirlist)]
                     #:when (and (directory-exists? path)
                                 (not (omitted-path? path))))
                    (render-one-dir (->complete-path path))))))
-        (begin ; first arg is a file
+        (begin
           (displayln (format "rendering ~a" (string-join (map ->string path-args) " ")))
           (apply render-batch path-args)))))
 

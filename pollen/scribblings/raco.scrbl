@@ -74,15 +74,9 @@ Adding the optional @exec{--local} switch will restrict the project server to re
 
 @section{@exec{raco pollen render}}
 
-Render all preprocessor source files and then all pagetree files found in the current directory. If none of these files are found, a pagetree will be generated for the directory (which will include all source files) and then rendered.
+This command can be invoked two ways: in source mode or directory mode.
 
-This command can be invoked with extra arguments.
-
-@racket[raco pollen render _directory] will perform the render described above, but in the specified directory. By default, only files in the immediate directory are rendered. 
-
-Adding the optional @exec{-r} or @exec{--recursive} switch will also render subdirectories recursively. Certain directories are automatically omitted from recursive renders, including Pollen caches and source-control directories (like @tt{.git} and @tt{.svn}). You can omit other paths by overriding @racket[default-omitted-path?]. You can override these omissions — that is, force a path to be included in a recursive render — by overriding @racket[default-extra-path?].
-
-Alternatively, the command can take a variable number of path arguments. @racket[raco pollen render _path ...] will render only the paths specified in @racket[_path ...]. Consistent with the usual command-line idiom, this can be a single path, a list of paths, or a pattern:
+@bold{Source mode}: @racket[raco pollen render _source ...] will render only the source paths specified in @racket[_source ...]. Consistent with the usual command-line idiom, this can be a single path, a list of paths, or a pattern:
 
 @terminal{
 > raco pollen render foo.html.pm
@@ -103,7 +97,21 @@ The optional @exec{-t} or @exec{--target} switch specifies the render target for
 
 See also @seclink["raco-pollen-render-poly"].
 
-@bold{Warning}: In all cases, the newly rendered output file will overwrite any previous output file.
+@italic{Warning}: In all cases, the newly rendered output file will overwrite any previous output file.
+
+
+@bold{Directory mode}: @racket[raco pollen render _directory] renders all preprocessor source files and then all pagetree files found in the specified directory. If none of these files are found, a pagetree will be generated for the directory (which will include all source files) and then rendered. If the @racket[_directory] argument is omitted, the command defaults to the current directory.
+
+In directory mode, this command can be invoked with two other optional arguments (in addition to the @exec{--target} switch mentioned above):
+
+The @exec{--subdir} or @exec{-s} switch also renders subdirectories. @racket[current-project-root] remains fixed at the initial directory, just as it would be in the project server after invoking @racket[raco pollen start]. 
+
+Certain subdirectories are automatically ignored, including Racket and Pollen private directories (like @tt{compiled}) and source-control directories (like @tt{.git} and @tt{.svn}). You can omit other paths by overriding @racket[default-omitted-path?]. You can override these omissions — that is, force a path to be included in a recursive render — by overriding @racket[default-extra-path?].
+
+The @exec{--recursive} or @exec{-r} switch renders subdirectories recursively. Meaning, each subdirectory is treated like an independent subproject, and @racket[current-project-root] moves around accordingly. In many projects, there won't be any difference between the @exec{-s} and @exec{-r} switches. But if the difference matters in your project, you have them both.
+
+
+
 
 @section{@exec{raco pollen publish}}
 
