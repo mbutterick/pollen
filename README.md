@@ -25,6 +25,10 @@ And update like so:
     
 Official mailing list: http://groups.google.com/forum/#!forum/pollenpub
 
+## License
+
+LGPL
+
 ## Pull-request tips
 
 I welcome pull requests. But accepting a PR obligates me to maintain that code for the life of Pollen. So if I seem picky about which PRs I accept — yes, because I have to be. No hard feelings.
