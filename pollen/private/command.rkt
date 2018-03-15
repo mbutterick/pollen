@@ -94,38 +94,39 @@ version                print the version" (current-server-port) (make-publish-di
   (define path-args (if (empty? parsed-args)
                         (list (current-directory))
                         parsed-args))
-  (parameterize ([current-directory (current-project-root)]
-                 [current-poly-target (render-target-wanted)])
-    ;; special case: one directory as argument
-    (if (and (= 1 (length path-args)) (directory-exists? (car path-args)))
-        (let render-one-dir ([dir (->complete-path (car path-args))])
-          (parameterize ([current-directory dir]
-                         [current-project-root (case (render-with-subdirs?)
-                                                 [(recursive) dir]
-                                                 [else (current-project-root)])])
-            (define dirlist (directory-list dir))
-            (define preprocs (filter preproc-source? dirlist))
-            (define static-pagetrees (filter pagetree-source? dirlist))
-            ;; if there are no static pagetrees, use make-project-pagetree
-            ;; (which will synthesize a pagetree if needed, which includes all sources)
-            (define batch-to-render
-              (map very-nice-path
-                   (cond
-                     [(null? static-pagetrees)
-                      (displayln (format "rendering generated pagetree for directory ~a" dir))
-                      (cdr (make-project-pagetree dir))]
-                     [else
-                      (displayln (format "rendering preproc & pagetree files in directory ~a" dir))
-                      (append preprocs static-pagetrees)])))
-            (apply render-batch batch-to-render)
-            (when (render-with-subdirs?)
-              (for ([path (in-list dirlist)]
-                    #:when (and (directory-exists? path)
-                                (not (omitted-path? path))))
-                   (render-one-dir (->complete-path path))))))
-        (begin
-          (displayln (format "rendering ~a" (string-join (map ->string path-args) " ")))
-          (apply render-batch path-args)))))
+  (parameterize ([current-poly-target (render-target-wanted)]) ;; applies to both cases
+    (cond
+      ;; directory mode: one directory as argument
+      [(and (= 1 (length path-args)) (directory-exists? (car path-args)))
+       (define top-dir (very-nice-path (car path-args)))
+       (let render-one-dir ([dir top-dir])
+         (parameterize ([current-directory dir]
+                        [current-project-root (if (eq? (render-with-subdirs?) 'recursive)
+                                                  dir
+                                                  top-dir)])
+           (define dirlist (directory-list dir))
+           (define preprocs (filter preproc-source? dirlist))
+           (define static-pagetrees (filter pagetree-source? dirlist))
+           ;; if there are no static pagetrees, use make-project-pagetree
+           ;; (which will synthesize a pagetree if needed, which includes all sources)
+           (define batch-to-render
+             (map very-nice-path
+                  (cond
+                    [(null? static-pagetrees)
+                     (displayln (format "rendering generated pagetree for directory ~a" dir))
+                     (cdr (make-project-pagetree dir))]
+                    [else
+                     (displayln (format "rendering preproc & pagetree files in directory ~a" dir))
+                     (append preprocs static-pagetrees)])))
+           (apply render-batch batch-to-render)
+           (when (render-with-subdirs?)
+             (for ([path (in-list dirlist)]
+                   #:when (and (directory-exists? path)
+                               (not (omitted-path? path))))
+                  (render-one-dir (->complete-path path))))))]
+      [else ;; path mode
+       (displayln (format "rendering ~a" (string-join (map ->string path-args) " ")))
+       (apply render-batch path-args)])))
 
 
 (define (handle-start)
