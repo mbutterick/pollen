@@ -126,6 +126,13 @@
              (SPLICING-TAG)))]))
 
 
+(provide for/splice)
+(define-syntax (for/splice stx)
+  (syntax-case stx ()
+    [(_ ([ID SEQ] ...) . BODY)
+     #'(when/splice #t (for/list ([ID SEQ] ...)
+                                 (when/splice #t . BODY)))]))
+
 (provide when/block) ; bw compat
 (define-syntax-rule (when/block cond body ...)
   (when/splice cond body ...))
