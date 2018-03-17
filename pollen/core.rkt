@@ -118,20 +118,28 @@
 (provide when/splice)
 (define-syntax (when/splice stx)
   (syntax-case stx ()
-    [(_ COND BODY ...)
+    [(_ COND . BODY)
      (with-syntax ([SPLICING-TAG (datum->syntax stx (setup:splicing-tag))])
        #'(if COND
              (with-handlers ([exn:fail? (λ (exn) (error (format "within when/splice, ~a" (exn-message exn))))])
-               (SPLICING-TAG BODY ...)) 
+               (SPLICING-TAG . BODY)) 
              (SPLICING-TAG)))]))
 
 
-(provide for/splice)
+(provide for/splice for*/splice)
 (define-syntax (for/splice stx)
   (syntax-case stx ()
     [(_ ([ID SEQ] ...) . BODY)
-     #'(when/splice #t (for/list ([ID SEQ] ...)
-                                 (when/splice #t . BODY)))]))
+     (with-syntax ([SPLICING-TAG (datum->syntax stx (setup:splicing-tag))])
+       #'(apply SPLICING-TAG (for/list ([ID SEQ] ...)
+                                       (SPLICING-TAG . BODY))))]))
+
+(define-syntax (for*/splice stx)
+  (syntax-case stx ()
+    [(_ ([ID SEQ] ...) . BODY)
+     (with-syntax ([SPLICING-TAG (datum->syntax stx (setup:splicing-tag))])
+       #'(apply SPLICING-TAG (for*/list ([ID SEQ] ...)
+                                       (SPLICING-TAG . BODY))))]))
 
 (provide when/block) ; bw compat
 (define-syntax-rule (when/block cond body ...)
