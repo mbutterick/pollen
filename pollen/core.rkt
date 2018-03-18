@@ -127,20 +127,18 @@
 
 
 (provide for/splice for*/splice)
-(define-syntax (for/splice stx)
-  (syntax-case stx ()
-    [(_ ([ID SEQ] ...) . BODY)
-     (with-syntax ([SPLICING-TAG (datum->syntax stx (setup:splicing-tag))])
-       #'(apply SPLICING-TAG (for/list ([ID SEQ] ...)
-                                       (SPLICING-TAG . BODY))))]))
 
-(define-syntax (for*/splice stx)
+(define-syntax (for/splice/base stx)
   (syntax-case stx ()
     [(_ ([ID SEQ] ...) . BODY)
-     (with-syntax ([SPLICING-TAG (datum->syntax stx (setup:splicing-tag))])
-       #'(apply SPLICING-TAG (for*/list ([ID SEQ] ...)
-                                       (SPLICING-TAG . BODY))))]))
+     (with-syntax ([SPLICING-TAG (datum->syntax stx (setup:splicing-tag))]
+                   [FORM (or (syntax-property stx 'form) #'for/list)])
+       #'(apply SPLICING-TAG (FORM ([ID SEQ] ...)
+                                   (SPLICING-TAG . BODY))))]))
+
+(define-syntax-rule (for/splice . BODY) #'(for/splice/base . BODY))
+(define-syntax-rule (for*/splice . BODY) (syntax-property #'(for/splice/base . BODY) 'form #'for*/list))
+
 
 (provide when/block) ; bw compat
-(define-syntax-rule (when/block cond body ...)
-  (when/splice cond body ...))
+(define-syntax when/block (make-rename-transformer #'when/splice))
