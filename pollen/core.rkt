@@ -113,6 +113,7 @@
 ;; For a pollen source, the actual splicing happens when the source is compiled.
 ;; For a template in the render environment, which is more text-ish,
 ;; the splicing tag is redefined to produce a basic list.
+;; (which is then, by default behavior of `include-template`, merged with the surrounding text)
 (define+provide @ (make-default-tag-function '@))
 
 (provide when/splice)
