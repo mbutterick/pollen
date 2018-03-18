@@ -122,8 +122,7 @@
     [(_ COND . BODY)
      (with-syntax ([SPLICING-TAG (datum->syntax stx (setup:splicing-tag))])
        #'(if COND
-             (with-handlers ([exn:fail? (λ (exn) (error (format "within when/splice, ~a" (exn-message exn))))])
-               (SPLICING-TAG . BODY)) 
+             (SPLICING-TAG . BODY) 
              (SPLICING-TAG)))]))
 
 
