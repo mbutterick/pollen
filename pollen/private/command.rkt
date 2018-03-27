@@ -126,7 +126,7 @@ version                print the version" (current-server-port) (make-publish-di
                   (render-one-dir (->complete-path path))))))]
       [else ;; path mode
        (displayln (format "rendering ~a" (string-join (map ->string path-args) " ")))
-       (apply render-batch path-args)])))
+       (apply render-batch (map very-nice-path path-args))])))
 
 
 (define (handle-start)
