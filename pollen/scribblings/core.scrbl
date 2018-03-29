@@ -13,7 +13,7 @@ These functions are automatically imported into every Pollen source file (meanin
 
 
 
-@section{Syntactic forms}
+@section{Metas}
 
 @defform[(define-meta name value)]
 Add @racket[_value] to the metas of the current document, using @racket[_name] as the key.
@@ -21,6 +21,9 @@ Add @racket[_value] to the metas of the current document, using @racket[_name] a
 You can retrieve a meta value — even in the same document where you define it — with @racket[(select-from-metas _name metas)].
 
 For an introduction to metas, see @secref["Inserting_metas"].
+
+
+@section{Splicing}
 
 @defform[(\@ arg ...)]
 Splicing tag: signals that a list should be merged into its containing expression. You can use something other than @racket[\@] by overriding @racket[setup:splicing-tag].
@@ -33,7 +36,6 @@ doc
 ]
 
 
-
 @defform[(when/splice condition pollen-args)]
 If @racket[_condition] is true, put the @racket[_pollen-args] into the document. Within a template file, usually invoked like so:
 
@@ -42,6 +44,13 @@ If @racket[_condition] is true, put the @racket[_pollen-args] into the document.
 The inserted text can contain its own nested Pollen commands.
 
 @racket[when/splice] can be more convenient than @racket[when], because @racket[when] will only use the last argument between the curly braces. @racket[when/splice], by contrast, treats everything between the curly braces as a block.
+
+
+@deftogether[(
+@defform[(for/splice (for-clause ...) body-or-break ... body)]
+@defform[(for*/splice (for-clause ...) body-or-break ... body)])]
+Like @racket[for/list] and @racket[for*/list], but  the resulting list is spliced into the document.
+
 
 
 @section{Data helpers}
