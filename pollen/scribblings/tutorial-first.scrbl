@@ -125,7 +125,7 @@ The border is too.}
 
 @repl-output{
 The margin is 42em.
-The border is blue.
+The border is red.
 The padding is 15em.
 The border is too.}
 
