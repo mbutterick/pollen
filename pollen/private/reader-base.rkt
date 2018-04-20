@@ -63,7 +63,7 @@
          (provide (all-from-out 'POLLEN-MOD-NAME))
          (show DOC 'PARSER-MODE-FROM-READER HERE-PATH))))) ; HERE-PATH otherwise acts as "local" runtime config 
 
-(define (custom-get-info in mod line col pos)
+(define ((custom-get-info mode) in mod line col pos)
   ;; DrRacket caches source file information per session,
   ;; so we can do the same to avoid multiple searches for the command char.
   (let ([command-char-cache (make-hash)])
@@ -89,11 +89,21 @@
             (my-make-drracket-buttons my-command-char)])]
         [(drracket:indentation)
          (dynamic-require 'scribble/private/indentation 'determine-spaces)]
+        [(drracket:default-filters)
+         '(("Pollen Sources" "*.pp;*.pmd;*.pm;*.ptree;*.ptree;*.p"))]
+        [(drracket:default-extension)
+         (case mode
+           [(default-mode-auto) "pp"]
+           [(default-mode-preproc) "pp"]
+           [(default-mode-markdown) "pmd"]
+           [(default-mode-markup) "pm"]
+           [(default-mode-ptree) "ptree"]
+           [else "pm"])]
         [else default]))))
 
 (define-syntax-rule (reader-module-begin mode . _)
   (#%module-begin
-   (define cgi custom-get-info) ; stash hygienic references to local funcs with macro-introduced identifiers
+   (define cgi (custom-get-info mode)) ; stash hygienic references to local funcs with macro-introduced identifiers
    (define cr custom-read) ; so they can be provided out
    (define (crs ps p) (custom-read-syntax #:reader-mode mode ps p))
    (provide (rename-out [cr read][crs read-syntax][cgi get-info]))))
