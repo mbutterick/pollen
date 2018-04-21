@@ -1,6 +1,14 @@
 #lang racket/base
-(require racket/syntax syntax/strip-context racket/class (for-syntax racket/base))
-(require (only-in scribble/reader make-at-reader) "../setup.rkt" "project.rkt")
+(require racket/syntax
+         syntax/strip-context
+         racket/class
+         racket/string
+         racket/runtime-path
+         setup/getinfo
+         (for-syntax racket/base)
+         (only-in scribble/reader make-at-reader)
+         "../setup.rkt"
+         "project.rkt")
 (provide (rename-out [reader-module-begin #%module-begin]) (all-from-out "../setup.rkt"))
 
 (define (path-string->here-path path-string)
@@ -8,7 +16,6 @@
     [(symbol? path-string) (symbol->string path-string)]
     [(equal? path-string "unsaved editor") path-string]
     [else (path->string path-string)]))
-
 
 (define (infer-parser-mode reader-mode reader-here-path)
   (if (eq? reader-mode default-mode-auto)
@@ -63,6 +70,8 @@
          (provide (all-from-out 'POLLEN-MOD-NAME))
          (show DOC 'PARSER-MODE-FROM-READER HERE-PATH))))) ; HERE-PATH otherwise acts as "local" runtime config 
 
+(define-runtime-path info-dir "..")
+
 (define ((custom-get-info mode) in mod line col pos)
   ;; DrRacket caches source file information per session,
   ;; so we can do the same to avoid multiple searches for the command char.
@@ -90,15 +99,19 @@
         [(drracket:indentation)
          (dynamic-require 'scribble/private/indentation 'determine-spaces)]
         [(drracket:default-filters)
-         '(("Pollen Sources" "*.pp;*.pmd;*.pm;*.ptree;*.ptree;*.p"))]
+         ;; derive this from `module-suffixes` entry in main info.rkt file
+         (define module-suffixes ((get-info/full info-dir) 'module-suffixes))
+         (define filter-strings (for/list ([suffix (in-list module-suffixes)])
+                                            (format "*.~a" suffix)))
+         (list (list "Pollen sources" (string-join filter-strings ";")))]
         [(drracket:default-extension)
-         (case mode
-           [(default-mode-auto) "pp"]
-           [(default-mode-preproc) "pp"]
-           [(default-mode-markdown) "pmd"]
-           [(default-mode-markup) "pm"]
-           [(default-mode-ptree) "ptree"]
-           [else "pm"])]
+         (symbol->string
+          (cond
+            [(eq? mode default-mode-auto) (setup:preproc-source-ext)]
+            [(eq? mode default-mode-preproc) (setup:preproc-source-ext)]
+            [(eq? mode default-mode-markdown) (setup:markdown-source-ext)]
+            [(eq? mode default-mode-markup) (setup:markup-source-ext)]
+            [(eq? mode default-mode-pagetree) (setup:pagetree-source-ext)]))]
         [else default]))))
 
 (define-syntax-rule (reader-module-begin mode . _)
