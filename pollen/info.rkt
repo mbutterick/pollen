@@ -5,4 +5,5 @@
 (define compile-omit-paths '("test" "tools" "server-extras" "scribblings/third-tutorial-files"))
 ;; it's redundant to test "pollen.scrbl" because it incorporates the other scribble sources by reference
 (define test-omit-paths '("test/data" "tools" "server-extras" "scribblings/third-tutorial-files" "scribblings/pollen.scrbl"))
-(define module-suffixes '(#"p" #"pp" #"pm" #"pmd" #"ptree"))
+;; don't put #"p" in this list because it's not a #lang
+(define module-suffixes '(#"pp" #"pm" #"pmd" #"ptree"))
