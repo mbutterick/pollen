@@ -5,17 +5,18 @@
 (provide (except-out (all-from-out racket/base) #%module-begin)
          (rename-out [pollen-module-begin #%module-begin]))
 
-(define (make-parse-proc parser-mode root-proc)
+
+(define ((make-parse-proc parser-mode root-proc) xs)
   (define (stringify xs) (apply string-append (map to-string xs)))
   (cond
-    [(eq? parser-mode default-mode-pagetree) decode-pagetree]
-    [(eq? parser-mode default-mode-markup) (λ (xs) (apply root-proc (remove-voids xs)))] 
+    [(eq? parser-mode default-mode-pagetree) (decode-pagetree xs)]
+    [(eq? parser-mode default-mode-markup) (apply root-proc (remove-voids xs))] 
     [(eq? parser-mode default-mode-markdown)
-     (λ (xs) (let* ([xs (stringify xs)]
-                    [xs ((dynamic-require 'markdown 'parse-markdown) xs)]
-                    [xs (map strip-empty-attrs xs)])
-               (apply root-proc xs)))]
-    [else stringify])) ; preprocessor mode
+     (let* ([xs (stringify xs)]
+            [xs ((dynamic-require 'markdown 'parse-markdown) xs)]
+            [xs (map strip-empty-attrs xs)])
+       (apply root-proc xs))]
+    [else (stringify xs)])) ; preprocessor mode
 
 
 (define (strip-leading-newlines doc)
@@ -23,11 +24,11 @@
   (or (memf (λ (ln) (and (not (equal? ln (setup:newline)))
                          (not (equal? ln "")))) doc) null))
 
+
 (define-syntax (pollen-module-begin stx)
   (syntax-case stx ()
     [(_ PARSER-MODE . EXPRS)
-     (with-syntax (;; 'parser-mode-from-reader will be #f for an inline submodule
-                   [EXPRS (replace-context #'here #'EXPRS)]
+     (with-syntax ([EXPRS (replace-context #'here #'EXPRS)]
                    [META-HASH (split-metas #'EXPRS (setup:define-meta-name))]
                    [METAS-ID (setup:meta-export)]
                    [META-MOD-ID (setup:meta-export)]
