@@ -9,7 +9,8 @@
 ;; If that name isn't already defined, you'll get the usual syntax error.
 
 (define-syntax-rule (top~ . ID)
-  (make-default-tag-function 'ID))
+  ;; #%app shouldn't be necessary, but temp fix for Racket7
+  (#%app make-default-tag-function 'ID))
 
 (define-syntax (def/c stx)
   (syntax-case stx ()
