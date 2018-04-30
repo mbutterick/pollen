@@ -22,7 +22,7 @@ env:
     - RACKET_VERSION=6.10
     - RACKET_VERSION=6.11
     - RACKET_VERSION=6.12
-    # - RACKET_VERSION=HEAD
+    - RACKET_VERSION=HEAD
 
 # You may want to test against certain versions of Racket, without
 # having them count against the overall success/failure.
