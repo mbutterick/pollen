@@ -31,10 +31,10 @@
   (define poly-flag (and (has-inner-poly-ext? source-path) (current-poly-target)))
   (define path+mod-time-pairs
     (for/list ([ps (in-list path-strings-to-track)])
-              (cond
-                [ps (define cp (->complete-path ps))
-                    (cons (path->string cp) (file-or-directory-modify-seconds cp #f (λ () 0)))]
-                [else #f])))
+      (cond
+        [ps (define cp (->complete-path ps))
+            (cons (path->string cp) (file-or-directory-modify-seconds cp #f (λ () 0)))]
+        [else #f])))
   (list* pollen-env poly-flag (and output-path (path->string output-path)) path+mod-time-pairs))
 
 
@@ -59,15 +59,14 @@
              (raise-argument-error 'path->hash "symbols for doc and meta key" (cons doc-key meta-key)))
            ;; new namespace forces `dynamic-require` to re-instantiate 'path'
            ;; otherwise it gets cached in current namespace.
-           (define new-ns (make-base-namespace))
-           (namespace-attach-module (namespace-anchor->namespace cache-utils-module-ns) 'pollen/setup new-ns)
-           (parameterize ([current-namespace new-ns]
+           (parameterize ([current-namespace (make-base-namespace)]
                           [current-directory path-dir])
              ;; I monkeyed around with using the metas submodule to pull out the metas (for speed)
              ;; but in practice most files get their doc requested too.
              ;; so it's just simpler to get both at once and be done with it.
              ;; the savings of avoiding two cache fetches at the outset outweighs
              ;; the benefit of not reloading doc when you just need metas.
+             (namespace-attach-module (namespace-anchor->namespace cache-utils-module-ns) 'pollen/setup) ; brings in params
              (define doc-missing-thunk (λ () ""))
              (define metas-missing-thunk (λ () (hasheq)))
              (list doc-key (dynamic-require path doc-key doc-missing-thunk)
