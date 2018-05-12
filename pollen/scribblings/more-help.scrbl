@@ -37,4 +37,4 @@ Yes, the source for @link["http://typographyforlawyers.com/"]{Typography for Law
 
 @link["https://youtu.be/20GGVNBykaw"]{The World's Most Dangerous Racket Programmer} and @link["https://youtu.be/IMz09jYOgoc"]{Like a Blind Squirrel in a Ferrari}: short talks about Pollen that I gave at RacketCons 2013 and 2014, respectively.
 
-@link["https://www.leafac.com/"]{Leandro Facchinetti's personal website} [@link["https://git.leafac.com/www.leafac.com/"]{source}]
+@link["https://www.leafac.com/"]{Leandro Facchinetti's personal website} [@link["https://github.com/leafac/www.leafac.com/tree/pollen"]{source}]
