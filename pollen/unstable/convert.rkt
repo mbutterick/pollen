@@ -58,18 +58,18 @@ You are kitty}")
 (define/contract+provide (html->xexpr html-string)
   (string? . -> . xexpr?)
   (use-html-spec #f)
-  (define xexpr-results 
-    (let loop ([elem (read-html-as-xml (open-input-string html-string))])
-      (match elem
-        [(struct pcdata (start stop string)) string]
-        [(struct entity (start stop entity)) entity]
-        [(struct attribute (start stop key value)) (list key value)]
-        [(struct element (start stop name attributes content)) `(,name ,@(if (empty? attributes) empty (list (map loop attributes))) ,@(map loop content))]
-        [(list elements ...) (map loop elements)]
-        [else (format "unknown item: ~a" elem)])))
-
-  ; xexpr-results will be a list with whitespace elements, so strip those out
-  (car (filter-not (conjoin string? whitespace?) xexpr-results)))
+  (define xexpr-results
+    ; loop result will be a list with whitespace elements, so strip those out
+    (filter-not (conjoin string? whitespace?) 
+                (let loop ([elem (read-html-as-xml (open-input-string html-string))])
+                  (match elem
+                    [(struct pcdata (start stop string)) string]
+                    [(struct entity (start stop entity)) entity]
+                    [(struct attribute (start stop key value)) (list key value)]
+                    [(struct element (start stop name attributes content)) `(,name ,@(if (empty? attributes) empty (list (map loop attributes))) ,@(map loop content))]
+                    [(list elements ...) (map loop elements)]
+                    [else (format "unknown item: ~a" elem)]))))  
+  (if (pair? xexpr-results) (car xexpr-results) ""))
 
 (module+ test
   (define (hx-identity xexpr)
@@ -77,7 +77,8 @@ You are kitty}")
   (check-true (hx-identity '(p "You are puppy")))
   (check-true (hx-identity '(p ((class "foo")) "You are puppy")))
   (check-true (hx-identity '(p)))
-  (check-true (hx-identity '(p ((class "foo")) "You are " (em "so") " puppy"))))
+  (check-true (hx-identity '(p ((class "foo")) "You are " (em "so") " puppy")))
+  (check-equal? (html->xexpr "\n") ""))
 
 
 (define/contract+provide (html->pollen html-string #:white-p? [white-p? #f])
