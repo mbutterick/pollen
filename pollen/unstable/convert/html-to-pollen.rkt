@@ -1,4 +1,4 @@
-#lang debug racket
+#lang racket
 (require pollen/unstable/convert pollen/unstable/typography)
 (provide (except-out (all-from-out racket) #%module-begin))
 (provide (rename-out [mb #%module-begin]))
