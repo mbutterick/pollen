@@ -11,11 +11,12 @@
          "project.rkt")
 (provide (rename-out [reader-module-begin #%module-begin]) (all-from-out "../setup.rkt"))
 
-(define (path-string->here-path path-string)
-  (cond
-    [(symbol? path-string) (symbol->string path-string)]
-    [(equal? path-string "unsaved editor") path-string]
-    [else (path->string path-string)]))
+(define (source-name->pollen-require-path source-name)
+  ;; the `path-string` passed in from `read-syntax` can actually be `any/c`
+  (if (syntax? source-name)
+      (syntax-source source-name)
+      ;; captures paths, strings, "unsaved editor", path-strings, symbols
+      source-name))
 
 (define (infer-parser-mode reader-mode reader-here-path)
   (if (eq? reader-mode default-mode-auto)
@@ -34,19 +35,21 @@
   (syntax->datum (custom-read-syntax (object-name p) p)))
 
 
-(define (custom-read-syntax #:reader-mode [reader-mode #f] path-string p)
+(define (custom-read-syntax #:reader-mode [reader-mode #f] source-name input-port)
   (define source-stx (let ([read-inner (make-at-reader 
                                         #:command-char (setup:command-char)
                                         #:syntax? #t 
                                         #:inside? #t)])
-                       (read-inner path-string p)))
-  (define reader-here-path (path-string->here-path path-string))
+                       (read-inner source-name input-port)))
+  (define pollen-require-path (source-name->pollen-require-path source-name))
+  (define reader-here-path (format "~a" pollen-require-path))
   (define parser-mode-from-reader (infer-parser-mode reader-mode reader-here-path))
+
   (strip-context
    (with-syntax* ([POLLEN-MOD-NAME 'pollen-module]
                   ;; the next two exist only in the reader because they are specific to file-based Pollen sources.
                   ;; an inline Pollen submodule doesn't have "pollen.rkt" or `here-path` 
-                  [POLLEN-REQUIRE-AND-PROVIDES (require+provide-directory-require-files path-string)]
+                  [POLLEN-REQUIRE-AND-PROVIDES (require+provide-directory-require-files pollen-require-path)]
                   [HERE-PATH reader-here-path]
                   [HERE-KEY (setup:here-path-key)]
                   [SOURCE-LINES source-stx]
@@ -102,7 +105,7 @@
          ;; derive this from `module-suffixes` entry in main info.rkt file
          (define module-suffixes ((get-info/full info-dir) 'module-suffixes))
          (define filter-strings (for/list ([suffix (in-list module-suffixes)])
-                                            (format "*.~a" suffix)))
+                                          (format "*.~a" suffix)))
          (list (list "Pollen sources" (string-join filter-strings ";")))]
         [(drracket:default-extension)
          (symbol->string
