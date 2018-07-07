@@ -41,6 +41,10 @@ My advice: don't knock the lozenge till you try it.
 
 @subsection{Lozenge helpers}
 
+@subsubsection{How MB types the lozenge}
+
+I work on Mac OS. I use @link["http://www.ergonis.com/products/typinator/"]{Typinator} to assign the @literal{◊} character to the otherwise never-used Option + Shift + backlash key combo (ordinarily assigned to @literal{»}). For that matter, I assign @literal{λ} to Option + backslash (ordinarily assigned to @literal{«}).
+
 @subsubsection{DrRacket toolbar button}
 
 When you use DrRacket, you'll see a button in the toolbar that says @onscreen{Insert command char}. This will insert the lozenge (or whatever command character you've defined for your project).
