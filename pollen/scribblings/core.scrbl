@@ -1,6 +1,7 @@
 #lang scribble/manual
 
 @(require scribble/eval pollen/cache pollen/setup (for-label racket (except-in pollen #%module-begin) pollen/render txexpr xml pollen/pagetree sugar/coerce pollen/core pollen/setup))
+@(require "mb-tools.rkt")
 
 @(define my-eval (make-base-eval))
 @(my-eval `(require pollen pollen/core xml))
@@ -51,6 +52,7 @@ The inserted text can contain its own nested Pollen commands.
 @defform[(for*/splice (for-clause ...) body-or-break ... body)])]
 Like @racket[for/list] and @racket[for*/list], but  the resulting list is spliced into the document.
 
+@pollen-history[#:added "1.4"]
 
 
 @section{Data helpers}
@@ -162,5 +164,6 @@ Holds the @racket[metas] of the current Pollen source. In tag functions, rather 
 
 @racket[(current-metas)] will also work in templates, holding the @racket[metas] of the source currently being rendered into the template. 
 
-Note that the default value is @racket[#f]. This indicates that no metas value is available. It is up to you to code your tag functions to do something sensible if this circumstance arises.
+The default value is @racket[#f]. This means that no metas value is available. It's your responsibility to handle this circumstance sensibly.
 
+@pollen-history[#:added "1.4"]

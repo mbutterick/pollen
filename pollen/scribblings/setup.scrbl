@@ -118,6 +118,7 @@ If the cache can't find a certain file on the watchlist, it will be ignored. The
   (define cache-watchlist (map resolve-module-path '("my-module.rkt"))))
 }]
 
+@pollen-history[#:added "1.4"]
 }
 
 
