@@ -55,9 +55,10 @@ You are kitty}")
 (define (conjoin . fs)
   (λ (x) (andmap (λ (f) (f x)) fs)))
 
-(define/contract+provide (html->xexpr html-string)
-  (string? . -> . xexpr?)
+(define/contract+provide (html->xexpr . html-strings)
+  (() () #:rest (listof string?) . ->* . xexpr?)
   (use-html-spec #f)
+  (define html-string (string-join html-strings ""))
   (define xexpr-results
     ; loop result will be a list with whitespace elements, so strip those out
     (filter-not (conjoin string? whitespace?) 
@@ -81,9 +82,9 @@ You are kitty}")
   (check-equal? (html->xexpr "\n") ""))
 
 
-(define/contract+provide (html->pollen html-string #:white-p? [white-p? #f])
-  ((string?) (#:white-p? boolean?) . ->* . string?)
-  (xexpr->pollen #:white-p? white-p? (html->xexpr html-string))) 
+(define/contract+provide (html->pollen #:white-p? [white-p? #f] . html-strings)
+  (() (#:white-p? boolean?) #:rest (listof string?) . ->* . string?)
+  (xexpr->pollen #:white-p? white-p? (apply html->xexpr html-strings))) 
 
 
 (define/contract+provide (url->pollen url-or-string #:white-p? [white-p? #f])
