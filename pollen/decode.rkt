@@ -130,6 +130,8 @@
 (define+provide/contract (decode-linebreaks elems [maybe-linebreak-proc '(br)]
                                             #:separator [newline (setup:linebreak-separator)])
   ((txexpr-elements?) ((or/c #f txexpr-element? (txexpr-element? txexpr-element? . -> . (or/c #f txexpr-element?))) #:separator string?) . ->* . txexpr-elements?)
+  (unless (string? newline)
+    (raise-argument-error 'decode-linebreaks "string" newline))
   (define linebreak-proc (if (procedure? maybe-linebreak-proc)
                              maybe-linebreak-proc
                              (λ (e1 e2) maybe-linebreak-proc)))
