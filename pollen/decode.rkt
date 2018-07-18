@@ -197,12 +197,14 @@
                        #:linebreak-proc (txexpr-elements? . -> . txexpr-elements?)
                        #:force? boolean?) 
                       . ->* . txexpr-elements?)
+  (define paragraph-separator (setup:paragraph-separator))
+  (unless (string? paragraph-separator)
+    (raise-argument-error 'decode-paragraphs "string" paragraph-separator))
   
   (define (prep-paragraph-flow elems)
     (linebreak-proc (merge-newlines (trimf elems whitespace?))))
   
   (define (paragraph-break? x)
-    (define paragraph-separator (setup:paragraph-separator))
     (define paragraph-pattern (pregexp (format "^~a+$" paragraph-separator)))
     (and (string? x) (regexp-match paragraph-pattern x)))
   
