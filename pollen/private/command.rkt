@@ -123,7 +123,7 @@ version                print the version" (current-server-port) (make-publish-di
              (for ([path (in-list dirlist)]
                    #:when (and (directory-exists? path)
                                (not (omitted-path? path))))
-                  (render-one-dir (->complete-path path))))))]
+               (render-one-dir (->complete-path path))))))]
       [else ;; path mode
        (displayln (format "rendering ~a" (string-join (map ->string path-args) " ")))
        (apply render-batch (map very-nice-path path-args))])))
@@ -242,4 +242,5 @@ version                print the version" (current-server-port) (make-publish-di
       (begin
         (displayln (format "`~a` is an unknown command." command))
         (display "These are the available ") ; ... "Pollen commands:"
-        (handle-help))))
+        (handle-help)
+        (exit 1))))
