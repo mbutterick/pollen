@@ -15,11 +15,15 @@ For general tips and how-to questions, use the @link["https://groups.google.com/
 
 @link["https://github.com/malcolmstill/pollen-count"]{pollen-count}: enumeration and cross-referencing library by Malcolm Still
 
+@link["https://github.com/lijunsong/pollen-mode"]{pollen-mode}: Emacs mode for Pollen by Junsong Li
+
 @link["https://github.com/basus/pollen-mode"]{Pollen mode}: Emacs mode for Pollen by Shrutarshi Basu
 
 @link["https://docs.racket-lang.org/pollen-component/"]{Pollen Component}: Component-based development for Pollen by Leandro Facchinetti
 
 @link["https://docs.racket-lang.org/css-expr/"]{CSS-expressions}: S-expression-based CSS by Leandro Facchinetti
+
+@link["https://github.com/lijunsong/pollen-rock"]{Pollen Rock}: rendering server and an in-browser editor for Pollen
 
 
 @section{Can I see the source for Practical Typography or Typography for Lawyers?}
