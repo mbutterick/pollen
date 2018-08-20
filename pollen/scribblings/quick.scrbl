@@ -39,16 +39,16 @@ Try editing your source file:
 
 @codeblock{
 #lang pollen
-Goodbye Stranger
-Breakfast in America
-Take the Long Way Home
+Era Vulgaris
+Songs for the Deaf
+Like Clockwork
 }
 
-You don't have to use Supertramp song titles. Any text will do. When you click @onscreen{Run} again, you'll see whatever you typed:
+You don't have to use Queens of the Stone Age albums. Any text will do. When you click @onscreen{Run} again, you'll see whatever you typed:
 
-@repl-output{Goodbye Stranger
-Breakfast in America
-Take the Long Way Home
+@repl-output{Era Vulgaris
+Songs for the Deaf
+Like Clockwork
 }
 
 We won't do it a third time. You get the point — any plain text is valid within a Pollen source file, and gets printed as typed. What you write is what you get. You never have to perform the incantations often required by other programming languages:
