@@ -74,9 +74,9 @@ After a moment, a new file will appear called @filepath{hello.txt}. Let's see wh
 
 @terminal{
 > cat hello.txt
-Goodbye Stranger
-Breakfast in America
-Take the Long Way Home
+Era Vulgaris
+Songs for the Deaf
+Like Clockwork
 }
 
 @margin-note{If @exec{raco} doesn't work, it's probably because the @envvar{PATH} wasn't set up correctly during @secref["Installation"].}
@@ -127,9 +127,9 @@ Open a web browser and point it at the project dashboard, which by default is @l
 Among them will be @filepath{hello.txt}, with a greyed-out @filepath{.pp} extension. Click on it, and you'll be taken to @link-tt{http://localhost:8080/hello.txt}, where you'll see:
 
 @terminal{
-Goodbye Stranger
-Breakfast in America
-Take the Long Way Home
+Era Vulgaris
+Songs for the Deaf
+Like Clockwork
 }
 
 That's the boring part. Here's the good part. Leave the project server running. Open your source file again in DrRacket and edit it as follows:
@@ -137,17 +137,17 @@ That's the boring part. Here's the good part. Leave the project server running. 
 @fileblock["hello.txt.pp" 
 @codeblock{
 #lang pollen
-Mean Street
-Panama
-Hear About It Later
+Grand Illusion
+Pieces of Eight
+Paradise Theatre
 }]
 
 Go back to your web browser and reload @link-tt{http://localhost:8080/hello.txt}. Now you'll see this:
 
 @terminal{
-Mean Street
-Panama
-Hear About It Later}
+Grand Illusion
+Pieces of Eight
+Paradise Theatre}
 
 Notice what happened — the Pollen project server dynamically regenerated the output file (@filepath{hello.txt}) from the source file (@filepath{hello.txt.pp}) after you edited the source. If you like, try making some more changes to @filepath{hello.txt.pp}, and reloading the browser to see the updates in @filepath{hello.txt}. The project server will regenerate the file whenever it changes.
 
