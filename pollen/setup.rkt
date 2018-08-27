@@ -120,7 +120,7 @@
 (define-settable extra-published-path? (λ (path) #f)) ; deprecated in favor of `extra-path?`
 (define-settable extra-path? (λ (path) #f))
 
-
+(define-settable trim-whitespace? #t)
 
 (define-settable here-path-key 'here-path)
 

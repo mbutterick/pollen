@@ -38,7 +38,8 @@
           DOC-ID ; positional arg for doclang-raw: name of export
           (λ (xs)
             (define proc (make-parse-proc PARSER-MODE ROOT-ID))
-            (define doc-elements (splice (strip-leading-newlines xs) (setup:splicing-tag)))
+            (define trimmed-xs (if (setup:trim-whitespace?) (strip-leading-newlines xs) xs))
+            (define doc-elements (splice trimmed-xs (setup:splicing-tag)))
             (proc doc-elements)) ;  positional arg for doclang-raw: post-processor
           (module META-MOD-ID racket/base
             (provide METAS-ID)
