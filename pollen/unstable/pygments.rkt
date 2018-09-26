@@ -24,9 +24,11 @@ http://github.com/greghendershott/frog
 YOU MUST HAVE PYGMENTS INSTALLED ALREADY!
 sudo easy_install --upgrade Pygments
 
-Sample usage in test.html.pm:
+Sample usage:
 
-◊(require pollen/highlight)
+#lang pollen/markup
+
+◊(require pollen/unstable/pygments)
 ◊(make-highlight-css)
 
 ; specify language in square brackets
