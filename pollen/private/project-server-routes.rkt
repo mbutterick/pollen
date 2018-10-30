@@ -58,14 +58,15 @@
 ;; print message to console about a request
 (define/contract (logger req)
   (request? . -> . void?) 
-  (define client (request-client-ip req))
   (define localhost-client "::1")
   (define url-string (url->string (request-uri req)))
   (unless (ends-with? url-string "favicon.ico")
-    (message (if (regexp-match #rx"/$" url-string)
-                           (string-append url-string " directory default page")
-                           (string-replace url-string (setup:main-pagetree) " dashboard"))
-             (if (not (equal? client localhost-client)) (format "from ~a" client) "")))
+    (message (match url-string
+               [(regexp #rx"/$") (string-append url-string " directory default page")]
+               [_ (string-replace url-string (setup:main-pagetree) " dashboard")])
+             (match (request-client-ip req)
+               [(== localhost-client) ""]
+               [client (format "from ~a" client)]))))
 
 ;; pass string args to route, then
 ;; package route into right format for web server
