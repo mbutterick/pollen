@@ -175,8 +175,8 @@
   (parameterize ([current-namespace (make-base-namespace)]
                  [current-directory (->complete-path source-dir)])
     (define ns (namespace-anchor->namespace render-module-ns))
-    (namespace-attach-module ns 'scribble/core (current-namespace))
-    (namespace-attach-module ns 'scribble/manual (current-namespace))
+    (namespace-attach-module ns 'scribble/core)
+    (namespace-attach-module ns 'scribble/manual)
     ;; scribble/lp files have their doc export in a 'doc submodule, so check both locations
     (match (cond
              [(dynamic-require source-path 'doc (λ () #false))]
@@ -298,6 +298,5 @@
   ;; render a datum, not a syntax object, so that it can have fresh bindings.
   (parameterize ([current-namespace (make-base-namespace)]
                  [current-output-port (current-error-port)])
-    (namespace-attach-module (namespace-anchor->namespace render-module-ns)
-                             'pollen/setup (current-namespace)) ; brings in params
+    (namespace-attach-module (namespace-anchor->namespace render-module-ns) 'pollen/setup) ; brings in params
     (eval datum-to-eval)))

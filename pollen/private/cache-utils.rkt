@@ -62,8 +62,7 @@
            (parameterize ([current-namespace (make-base-namespace)]
                           [current-directory (dirname path)])
              (namespace-attach-module
-              (namespace-anchor->namespace cache-utils-module-ns)
-              'pollen/setup (current-namespace)) ; brings in currently instantiated params (unlike namespace-require)
+              (namespace-anchor->namespace cache-utils-module-ns) 'pollen/setup) ; brings in currently instantiated params (unlike namespace-require)
              (define doc-missing-thunk (λ () ""))
              (define metas-missing-thunk (λ () (hasheq)))
              (list doc-key (dynamic-require path doc-key doc-missing-thunk)
