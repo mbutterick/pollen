@@ -154,7 +154,7 @@
       (time-apply render-proc (list source-path template-path output-path))))
   ;; wait till last possible moment to store mod dates, because render-proc may also trigger its own subrenders
   ;; e.g., of a template.
-  (message (format "rendering /~a as /~a (~a ms)"
+  (message (format "rendered /~a as /~a (~a ms)"
                    (find-relative-path (current-project-root) source-path)
                    (find-relative-path (current-project-root) output-path)
                    real))
