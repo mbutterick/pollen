@@ -1,19 +1,20 @@
 #lang racket/base
 (require racket/syntax
+         racket/match
          sugar/define
          sugar/coerce
          "../setup.rkt"
          "file-utils.rkt")
 
 (define+provide/contract (get-directory-require-files source-arg)
-  (pathish? . -> . (or/c #f (λ (xs) (and (list? xs) (andmap complete-path? xs)))))
-  (define source-path (->path source-arg))  
-  (define require-filenames (list default-directory-require))
-  (define possible-requires (for*/list ([rf (in-list require-filenames)]
-                                        [p (in-value (find-upward-from source-path rf))]
-                                        #:when p)
-                                       p))
-  (and (pair? possible-requires) possible-requires))
+  (pathish? . -> . (or/c #false (λ (xs) (and (list? xs) (andmap complete-path? xs)))))
+  ;; only one file, but we'll leave it in plural form
+  (match (for*/list ([rf (in-list (list default-directory-require))]
+                     [path (in-value (find-upward-from (->path source-arg) rf))]
+                     #:when path)
+                    path)
+    [(? pair? possible-requires) possible-requires]
+    [_ #false]))
 
 
 (define+provide/contract (require+provide-directory-require-files here-arg #:provide [provide? #t])
