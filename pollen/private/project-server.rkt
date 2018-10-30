@@ -1,9 +1,8 @@
 #lang web-server/base
-
 (require racket/list
          web-server/servlet-env 
-         web-server/dispatch)
-(require "project-server-routes.rkt" 
+         web-server/dispatch
+         "project-server-routes.rkt" 
          "debug.rkt" 
          "../setup.rkt"
          "../file.rkt"
@@ -15,7 +14,7 @@
 (define (start-server servlet-path [open-browser-window? #f])
   (define-values (pollen-servlet _)
     (dispatch-rules
-     [((string-arg) ... (? (λ (x) (equal? "" x)))) route-index] ; last element of a "/"-terminated url is ""
+     [((string-arg) ... (? (λ (x) (string=? "" x)))) route-index] ; last element of a "/"-terminated url is ""
      [((string-arg) ... (? pagetree-source?)) route-dashboard]
      [((string-arg) ... "in" (string-arg) ...) route-in]
      [((string-arg) ... "out" (string-arg) ...) route-out]
