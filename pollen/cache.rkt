@@ -47,7 +47,7 @@
          (parameterize ([current-namespace (make-base-namespace)])
            (namespace-attach-module
             (namespace-anchor->namespace cache-module-ns)
-            'pollen/setup (current-namespace)) ; brings in currently instantiated params (unlike namespace-require)
+            'pollen/setup) ; brings in currently instantiated params (unlike namespace-require)
            (dynamic-require path subkey))]))))
 
 (define+provide (cached-require path-string subkey)
