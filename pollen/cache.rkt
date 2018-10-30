@@ -1,6 +1,7 @@
 #lang racket/base
 (require racket/file
          racket/list
+         racket/fasl
          sugar/define
          "private/cache-utils.rkt"
          "private/log.rkt"
@@ -26,6 +27,8 @@
 
 (define-namespace-anchor cache-module-ns)
 
+(define use-fasl? #true)
+
 (define cached-require-base
   (let ([ram-cache (make-hash)])
     (λ (path-or-path-string subkey caller-name)
@@ -39,8 +42,8 @@
       (cond
         [(setup:compile-cache-active path)
          (define key (paths->key path))
-         (define (convert-path-to-cache-record) (path->hash path))
-         (define (get-cache-record) (cache-ref! key convert-path-to-cache-record))
+         (define (convert-path-to-cache-record) ((if use-fasl? s-exp->fasl values) (path->hash path)))
+         (define (get-cache-record) ((if use-fasl? fasl->s-exp values) (cache-ref! key convert-path-to-cache-record)))
          (define ram-cache-record (hash-ref! ram-cache key get-cache-record))
          (hash-ref ram-cache-record subkey)]
         [else
