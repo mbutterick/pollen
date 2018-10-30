@@ -27,7 +27,7 @@
 
 (define-namespace-anchor cache-module-ns)
 
-(define use-fasl? #true)
+(define use-fasl? #false)
 
 (define cached-require-base
   (let ([ram-cache (make-hash)])
