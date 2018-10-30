@@ -107,7 +107,7 @@
                                  #:dest-path 'output
                                  #:notify-cache-use
                                  (λ (str)
-                                   (message (format "rendering: /~a (from cache)"
+                                   (message (format "loading from cache /~a"
                                                     (find-relative-path (current-project-root) output-path))))))))) ; will either be string or bytes
     (display-to-file render-result output-path
                      #:exists 'replace
@@ -145,16 +145,19 @@
     (raise-argument-error 'render (format "valid rendering function for ~a" source-path) render-proc))
   
   (define template-path (or maybe-template-path (get-template-for source-path output-path)))
-  (message (format "rendering: /~a as /~a"
-                   (find-relative-path (current-project-root) source-path)
-                   (find-relative-path (current-project-root) output-path)))
+  
   ;; output-path and template-path may not have an extension, so check them in order with fallback
-  (define render-result (parameterize ([current-poly-target (->symbol (or (get-ext output-path)
-                                                                          (and template-path (get-ext template-path))
-                                                                          (current-poly-target)))])
-                          (apply render-proc (list source-path template-path output-path))))
+  (match-define-values ((cons render-result _) _ real _)
+    (parameterize ([current-poly-target (->symbol (or (get-ext output-path)
+                                                      (and template-path (get-ext template-path))
+                                                      (current-poly-target)))])
+      (time-apply render-proc (list source-path template-path output-path))))
   ;; wait till last possible moment to store mod dates, because render-proc may also trigger its own subrenders
-  ;; e.g., of a template. 
+  ;; e.g., of a template.
+  (message (format "rendering /~a as /~a (~a ms)"
+                   (find-relative-path (current-project-root) source-path)
+                   (find-relative-path (current-project-root) output-path)
+                   real))
   (update-mod-date-hash! source-path template-path) 
   render-result)
 
@@ -169,29 +172,29 @@
   (local-require scribble/core scribble/manual (prefix-in scribble- scribble/render))
   (define source-dir (dirname source-path))
   ;; make fresh namespace for scribble rendering (avoids dep/zo caching)
-  (time (parameterize ([current-namespace (make-base-namespace)]
-                       [current-directory (->complete-path source-dir)])
-          (define ns (namespace-anchor->namespace render-module-ns))
-          (namespace-attach-module ns 'scribble/core (current-namespace))
-          (namespace-attach-module ns 'scribble/manual (current-namespace))
-          ;; scribble/lp files have their doc export in a 'doc submodule, so check both locations
-          (match (cond
-                   [(dynamic-require source-path 'doc (λ () #false))]
-                   [(dynamic-require `(submod ,source-path doc) 'doc (λ () #false))]
-                   [else #false])
-            ;; BTW this next action has side effects: scribble will copy in its core files if they don't exist.
-            [(? part? doc) (scribble-render (list doc) (list source-path))]
-            [_ (void)])))
+  (parameterize ([current-namespace (make-base-namespace)]
+                 [current-directory (->complete-path source-dir)])
+    (define ns (namespace-anchor->namespace render-module-ns))
+    (namespace-attach-module ns 'scribble/core (current-namespace))
+    (namespace-attach-module ns 'scribble/manual (current-namespace))
+    ;; scribble/lp files have their doc export in a 'doc submodule, so check both locations
+    (match (cond
+             [(dynamic-require source-path 'doc (λ () #false))]
+             [(dynamic-require `(submod ,source-path doc) 'doc (λ () #false))]
+             [else #false])
+      ;; BTW this next action has side effects: scribble will copy in its core files if they don't exist.
+      [(? part? doc) (scribble-render (list doc) (list source-path))]
+      [_ (void)]))
   (begin0 ; because render promises the data, not the side effect
     (file->string (->output-path source-path))
     (delete-file (->output-path source-path))))
 
 (define (render-preproc-source source-path . _)
-  (time (parameterize ([current-directory (->complete-path (dirname source-path))])
-          (render-datum-through-eval (syntax->datum
-                                      (with-syntax ([SOURCE-PATH source-path])
-                                        #'(begin (require pollen/cache)
-                                                 (cached-doc SOURCE-PATH))))))))
+  (parameterize ([current-directory (->complete-path (dirname source-path))])
+    (render-datum-through-eval (syntax->datum
+                                (with-syntax ([SOURCE-PATH source-path])
+                                  #'(begin (require pollen/cache)
+                                           (cached-doc SOURCE-PATH)))))))
 
 (define (render-markup-or-markdown-source source-path [maybe-template-path #f] [maybe-output-path #f])
   (define output-path (or maybe-output-path (->output-path source-path)))
@@ -229,8 +232,8 @@
                  DOC-ID
                  (include-template #:command-char COMMAND-CHAR (file TEMPLATE-PATH))))))))
   ;; set current-directory because include-template wants to work relative to source location
-  (time (parameterize ([current-directory (->complete-path (dirname source-path))]) 
-          (render-datum-through-eval datum-to-eval))))
+  (parameterize ([current-directory (->complete-path (dirname source-path))]) 
+    (render-datum-through-eval datum-to-eval)))
 
 (define (templated-source? path)
   (or (markup-source? path) (markdown-source? path)))
