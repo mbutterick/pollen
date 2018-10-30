@@ -107,7 +107,7 @@
                                  #:dest-path 'output
                                  #:notify-cache-use
                                  (λ (str)
-                                   (message (format "loading from cache /~a"
+                                   (message (format "from cache /~a"
                                                     (find-relative-path (current-project-root) output-path))))))))) ; will either be string or bytes
     (display-to-file render-result output-path
                      #:exists 'replace
@@ -147,6 +147,8 @@
   (define template-path (or maybe-template-path (get-template-for source-path output-path)))
   
   ;; output-path and template-path may not have an extension, so check them in order with fallback
+    (message (format "rendering /~a"
+                   (find-relative-path (current-project-root) source-path)))
   (match-define-values ((cons render-result _) _ real _)
     (parameterize ([current-poly-target (->symbol (or (get-ext output-path)
                                                       (and template-path (get-ext template-path))
@@ -154,8 +156,7 @@
       (time-apply render-proc (list source-path template-path output-path))))
   ;; wait till last possible moment to store mod dates, because render-proc may also trigger its own subrenders
   ;; e.g., of a template.
-  (message (format "rendered /~a as /~a (~a ms)"
-                   (find-relative-path (current-project-root) source-path)
+  (message (format "rendered as /~a (~a ms)"
                    (find-relative-path (current-project-root) output-path)
                    real))
   (update-mod-date-hash! source-path template-path) 
