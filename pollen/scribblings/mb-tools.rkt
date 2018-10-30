@@ -1,7 +1,7 @@
 #lang at-exp racket/base
-(require (for-syntax racket/base racket/syntax pollen/setup) scribble/core scribble/manual scribble/private/manual-sprop scribble/decode scribble/html-properties racket/runtime-path racket/format "../private/manual-history.rkt" pollen/setup)
+(require (for-syntax racket/base racket/syntax pollen/setup) scribble/core scribble/manual scribble/private/manual-sprop scribble/decode scribble/html-properties racket/runtime-path racket/format "../private/external/manual-history.rkt" pollen/setup)
 
-(provide (all-defined-out) (all-from-out racket/runtime-path "../private/manual-history.rkt"))
+(provide (all-defined-out) (all-from-out racket/runtime-path "../private/external/manual-history.rkt"))
 
 (define-runtime-path mb-css "mb.css")
 

@@ -1,5 +1,5 @@
 #lang racket/base
-(require rackunit pollen/private/output racket/port)
+(require rackunit pollen/private/external/output racket/port)
 
 (define-syntax-rule (check-output outputter string)
   (check-equal? (with-output-to-string (λ () outputter)) string))

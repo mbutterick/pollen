@@ -213,7 +213,7 @@
                    [TEMPLATE-PATH (->string template-path)])
        #'(begin 
            (require (for-syntax racket/base)
-                    pollen/private/include-template
+                    pollen/private/external/include-template
                     pollen/cache
                     pollen/private/log
                     pollen/pagetree

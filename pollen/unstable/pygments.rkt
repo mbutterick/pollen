@@ -86,7 +86,7 @@ if zero is False:
 
 (define-values (pyg-in pyg-out pyg-pid pyg-err pyg-proc)
   (values #f #f #f #f #f))
-(define-runtime-path pipe.py "../private/pipe.py")
+(define-runtime-path pipe.py "../private/external/pipe.py")
 
 (define start
   (let ([start-attempted? #f])

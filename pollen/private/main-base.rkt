@@ -10,7 +10,7 @@
          "splice.rkt"
          "../setup.rkt"
          "../core.rkt"
-         (prefix-in doclang: "doclang-raw.rkt"))
+         (prefix-in doclang: "external/doclang-raw.rkt"))
 (provide (except-out (all-from-out racket/base) #%module-begin)
          (rename-out [pollen-module-begin #%module-begin]))
 
