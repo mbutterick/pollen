@@ -14,8 +14,8 @@
   ;; seems like it would be slow to load cache.rktd but it's not.
   (define-values (_ private-cache-dir) (make-cache-dirs path))
   (define cache-db-file (build-path private-cache-dir "cache.rktd"))
-  (or (file-exists? cache-db-file)
-      (hash-has-key? (file->value cache-db-file) (paths->key path))))
+  (and (file-exists? cache-db-file)
+       (hash-has-key? (file->value cache-db-file) (paths->key path))))
 
 ;; compile a path inside a place (= parallel processing)
 (define (path-into-place starting-dir path)
