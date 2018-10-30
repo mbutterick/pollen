@@ -149,7 +149,7 @@ If the cache can't find a certain file on the watchlist, it will be ignored. The
 
 @defoverridable[index-pages (listof string?)]{List of strings that the project server will use as directory default pages, in order of priority. Has no effect on command-line rendering operations. Also has no effect on your live web server (usually  that's a setting you need to make in an @tt{.htaccess} configuration file).} But with this setting, you can simulate the behavior of your live server, so that internal index-page URLs work correctly.
 
- @defoverridable[trim-whitespace? boolean?)]{Predicate that controls whether the Pollen source reader trims whitespace from the beginning of a @racket[doc] export. You might set this to @racket[#false] if you're using Pollen as a preprocessor for another programming language and you want to preserve leading whitespace accurately.
+ @defoverridable[trim-whitespace? boolean?]{Predicate that controls whether the Pollen source reader trims whitespace from the beginning of a @racket[doc] export. You might set this to @racket[#false] if you're using Pollen as a preprocessor for another programming language and you want to preserve leading whitespace accurately.
 
  @pollen-history[#:added "1.5"]}
 
