@@ -160,7 +160,7 @@
                    (find-relative-path (current-project-root) output-path)
                    (if (< real 1000)
                        (format "(~a ms)" real)
-                       (format "(~a s)" (/ real 1000)))))
+                       (format "(~a s)" (/ real 1000.0)))))
   (update-mod-date-hash! source-path template-path) 
   render-result)
 
