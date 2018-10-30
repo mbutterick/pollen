@@ -22,7 +22,7 @@
          sugar/unstable/container
          txexpr/base
          "file-utils.rkt"
-         "debug.rkt"
+         "log.rkt"
          "../pagetree.rkt"
          "../cache.rkt")
 

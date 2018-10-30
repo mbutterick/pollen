@@ -10,7 +10,7 @@
          rackjure/str
           xml
          (only-in html read-html-as-xml)
-         "../private/debug.rkt"
+         "../private/log.rkt"
          "../private/splice.rkt")
 
 (provide highlight make-highlight-css)

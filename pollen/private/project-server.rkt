@@ -3,7 +3,7 @@
          web-server/servlet-env 
          web-server/dispatch
          "project-server-routes.rkt" 
-         "debug.rkt" 
+         "log.rkt" 
          "../setup.rkt"
          "../file.rkt"
          "../cache.rkt"
@@ -20,13 +20,13 @@
      [((string-arg) ... "out" (string-arg) ...) route-out]
      [else route-default]))
   
-  (message (format "Welcome to Pollen ~a" pollen:version) (format "(Racket ~a)" (version)))
-  (message (format "Project root is ~a" (current-project-root)))
+  (message (format "welcome to Pollen ~a (Racket ~a)" pollen:version (version)))
+  (message (format "project root is ~a" (current-project-root)))
   
   (define server-name (format "http://localhost:~a" (current-server-port)))
-  (message (format "Project server is ~a" server-name) "(Ctrl+C to exit)")
-  (message (format "Project dashboard is ~a/~a" server-name (setup:main-pagetree)))
-  (message "Ready to rock")
+  (message (format "project server is ~a (Ctrl+C to exit)" server-name))
+  (message (format "project dashboard is ~a/~a" server-name (setup:main-pagetree)))
+  (message "ready to rock")
   
   (parameterize ([error-print-width 1000])
     (serve/servlet pollen-servlet

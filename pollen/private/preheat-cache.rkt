@@ -6,7 +6,7 @@
          sugar/list
          "file-utils.rkt"
          "cache-utils.rkt"
-         "debug.rkt")
+         "log.rkt")
 (provide preheat-cache)
 
 (define (path-cached? path)

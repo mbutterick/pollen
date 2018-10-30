@@ -3,7 +3,7 @@
          racket/list
          sugar/define
          "private/cache-utils.rkt"
-         "private/debug.rkt"
+         "private/log.rkt"
          "setup.rkt")
 
 ;; The cache is a hash with paths as keys.

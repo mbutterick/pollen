@@ -8,6 +8,7 @@
          racket/match
          sugar/coerce
          "file-utils.rkt"
+         "log.rkt"
          "../setup.rkt"
          "../render.rkt"
          "../pagetree.rkt")
@@ -30,17 +31,23 @@
      (very-nice-path (car args)))))
 
 (define (dispatch command-name)
-  (case command-name
-    [("test" "xyzzy") (handle-test)]
-    [(#f "help") (handle-help)]
-    [("start") (handle-start)] ; parses its own args
-    ;; "second" arg is actually third in command line args, so use cddr not cdr
-    [("render") (handle-render)] ; render parses its own args from current-command-line-arguments
-    [("version") (handle-version)]
-    [("reset") (handle-reset (get-first-arg-or-current-dir))]
-    [("setup") (handle-setup (get-first-arg-or-current-dir))]
-    [("clone" "publish") (handle-publish)]
-    [else (handle-unknown command-name)]))
+  (with-logging-to-port
+   (current-error-port)
+   (λ ()
+     (case command-name
+       [("test" "xyzzy") (handle-test)]
+       [(#f "help") (handle-help)]
+       [("start") (handle-start)] ; parses its own args
+       ;; "second" arg is actually third in command line args, so use cddr not cdr
+       [("render") (handle-render)] ; render parses its own args from current-command-line-arguments
+       [("version") (handle-version)]
+       [("reset") (handle-reset (get-first-arg-or-current-dir))]
+       [("setup") (handle-setup (get-first-arg-or-current-dir))]
+       [("clone" "publish") (handle-publish)]
+       [else (handle-unknown command-name)]))
+   #:logger pollen-logger
+   'info
+   'pollen))
 
 (define (very-nice-path x)
   (path->complete-path (simplify-path (cleanse-path (->path x)))))
@@ -145,7 +152,7 @@ version                print the version" (current-server-port) (make-publish-di
   (parameterize ([current-project-root dir]
                  [current-server-port (or http-port (setup:project-server-port))]
                  [current-server-listen-ip (and localhost-wanted "127.0.0.1")])
-    (displayln "Starting project server ...")
+    (message "starting project server ...")
     ((dynamic-require 'pollen/private/project-server 'start-server) (format "/~a" (setup:main-pagetree dir)) launch-wanted)))
 
 (define (make-publish-dir-name [project-root (current-directory)] [arg-command-name #f])

@@ -8,7 +8,7 @@
          sugar/coerce
          "private/file-utils.rkt"
          "cache.rkt"
-         "private/debug.rkt"
+         "private/log.rkt"
          "private/project.rkt"
          "private/cache-utils.rkt"
          "pagetree.rkt"
@@ -215,7 +215,7 @@
            (require (for-syntax racket/base)
                     pollen/private/include-template
                     pollen/cache
-                    pollen/private/debug
+                    pollen/private/log
                     pollen/pagetree
                     pollen/core)
            DIRECTORY-REQUIRE-FILES
