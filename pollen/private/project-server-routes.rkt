@@ -1,14 +1,32 @@
 #lang racket/base
-(require racket/list racket/contract racket/file racket/format xml racket/match racket/set racket/string racket/promise racket/path)
-(require web-server/http/xexpr web-server/dispatchers/dispatch)
-(require net/url)
-(require web-server/http/request-structs)
-(require web-server/http/response-structs)
-(require web-server/http/redirect)
-(require 2htdp/image)
-(require "../setup.rkt" "../render.rkt" sugar sugar/unstable/string sugar/unstable/misc sugar/unstable/container txexpr/base "file-utils.rkt" "debug.rkt" "../pagetree.rkt" "../cache.rkt")
+(require racket/list
+         racket/contract
+         racket/file
+         racket/format
+         racket/match
+         racket/string
+         racket/promise
+         racket/path
+         web-server/http/xexpr
+         web-server/dispatchers/dispatch
+         net/url
+         web-server/http/request-structs
+         web-server/http/response-structs
+         web-server/http/redirect
+         2htdp/image
+         "../setup.rkt"
+         "../render.rkt"
+         sugar
+         sugar/unstable/string
+         sugar/unstable/misc
+         sugar/unstable/container
+         txexpr/base
+         "file-utils.rkt"
+         "debug.rkt"
+         "../pagetree.rkt"
+         "../cache.rkt")
 
-(module+ test (require rackunit))
+(module+ test (require))
 
 ;;; Routes for the server module
 ;;; separated out for ease of testing
