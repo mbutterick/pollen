@@ -1,18 +1,20 @@
-#lang racket/base
+#lang debug racket/base
+(require racket/match
+         racket/list)
 (provide (all-defined-out))
 
 (define (split-metas x meta-key)
   (apply hasheq
-         (let loop ([x (if (syntax? x) (syntax->datum x) x)])
-           (cond
-             [(list? x) (cond
-                          [(and (= (length x) 3) (eq? (car x) meta-key))
-                           (unless (symbol? (cadr x))
-                             (raise-argument-error 'define-meta "valid meta key" (cadr x)))
-                           (cdr x)] ; list with meta key and meta value
-                          [else (apply append (map loop x))])]
-             [else null]))))
-
+         (let loop ([x ((if (syntax? x) syntax->datum values) x)])
+           (match x
+             [(? list? xs)
+              (match xs
+                [(list (== meta-key eq?) key val)
+                 (unless (symbol? key)
+                   (raise-argument-error 'define-meta "valid meta key" key))
+                 (list key val)]
+                [_ (append-map loop xs)])]
+             [_ null]))))
 
 (module+ test
   (require rackunit)
