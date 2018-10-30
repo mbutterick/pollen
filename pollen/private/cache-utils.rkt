@@ -44,7 +44,7 @@
  (define ps "/users/nobody/project/source.html.pm")
  (check-equal? (key->source-path (paths->key ps)) ps))
 
-(define-namespace-anchor cache-module-ns)
+(define-namespace-anchor cache-utils-module-ns)
 
 (define (path->hash path)
   (for-each managed-compile-zo (or (get-directory-require-files path) null))
@@ -62,7 +62,7 @@
            (parameterize ([current-namespace (make-base-namespace)]
                           [current-directory (dirname path)])
              (namespace-attach-module
-              (namespace-anchor->namespace cache-module-ns)
+              (namespace-anchor->namespace cache-utils-module-ns)
               'pollen/setup (current-namespace)) ; brings in currently instantiated params (unlike namespace-require)
              (define doc-missing-thunk (λ () ""))
              (define metas-missing-thunk (λ () (hasheq)))
