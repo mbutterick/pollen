@@ -7,7 +7,6 @@
 
 ; todo: contracts, tests, docs
 
-
 ; debug utilities
 (define months (list "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"))
 
@@ -56,7 +55,6 @@
 ;; log-pollen-fatal, log-pollen-error, log-pollen-warning, 
 ;; log-pollen-info, and log-pollen-debug
 (define-logger pollen) 
-
 
 (define-syntax (make-message-logger-functions stx)
   (syntax-case stx ()
