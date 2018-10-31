@@ -1,7 +1,7 @@
 #lang info
 (define collection 'multi)
 
-(define version "1.4")
+(define version "1.5")
 (define deps '("base"
                ["txexpr" #:version "0.2"]
                ["sugar" #:version "0.2"]
