@@ -10,7 +10,7 @@
 
 #|
 Need this to make pollen docs buildable on v6.0.
-`history` not added to scribble/manul till v6.1.
+`history` not added to scribble/manual till v6.1.
 |#
 
 (provide pollen-history)

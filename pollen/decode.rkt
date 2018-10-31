@@ -2,6 +2,7 @@
 (require xml
          txexpr/base
          racket/list
+         racket/match
          sugar/list
          sugar/define
          sugar/test
@@ -48,27 +49,29 @@
     #:exclude-tags txexpr-tags?
     #:exclude-attrs txexpr-attrs?) . ->* . decode-proc-output-contract)
   (let loop ([x tx-in])
-    (cond
-      [(txexpr? x) (define-values (tag attrs elements) (txexpr->values x))
-                   (cond
-                     [(or (memq tag excluded-tags)
-                          (for/or ([attr (in-list attrs)])
-                            (member attr excluded-attrs))) 
-                      x] ; because it's excluded
-                     [else
-                      ;; we apply processing here rather than do recursive descent on the pieces
-                      ;; because if we send them back through loop, certain element types are ambiguous
-                      ;; e.g., ((p "foo")) tests out as both txexpr-attrs and txexpr-elements
-                      (define decoded-txexpr (make-txexpr (txexpr-tag-proc tag) 
-                                                          (txexpr-attrs-proc attrs) 
-                                                          (txexpr-elements-proc (append-map (λ (x) (->list/tx (loop x))) elements))))
-                      (txexpr-proc ((if (block-txexpr? decoded-txexpr)
-                                        block-txexpr-proc
-                                        inline-txexpr-proc) decoded-txexpr))])]
-      [(string? x) (string-proc x)]
-      [(or (symbol? x) (valid-char? x)) (entity-proc x)]
-      [(cdata? x) (cdata-proc x)]
-      [else (error "decode: can't decode" x)])))
+    (match x
+      [(? txexpr?)
+       (define-values (tag attrs elements) (txexpr->values x))
+       (cond
+         [(or (memq tag excluded-tags)
+              (for/or ([attr (in-list attrs)])
+                      (member attr excluded-attrs))) x] ; because it's excluded
+         [else
+          ;; we apply processing here rather than do recursive descent on the pieces
+          ;; because if we send them back through loop, certain element types are ambiguous
+          ;; e.g., ((p "foo")) tests out as both txexpr-attrs and txexpr-elements
+          (define decoded-txexpr
+            (make-txexpr (txexpr-tag-proc tag) 
+                         (txexpr-attrs-proc attrs) 
+                         (txexpr-elements-proc (append-map (λ (x) (->list/tx (loop x))) elements))))
+          (txexpr-proc ((if (block-txexpr? decoded-txexpr)
+                            block-txexpr-proc
+                            inline-txexpr-proc) decoded-txexpr))])]
+      [(? string?) (string-proc x)]
+      [(? symbol?) (entity-proc x)]
+      [(? valid-char?) (entity-proc x)]
+      [(? cdata?) (cdata-proc x)]
+      [else (raise-argument-error 'decode "decodable thing" x)])))
 
 (module-test-external
  (require racket/list txexpr racket/function)
@@ -115,10 +118,8 @@
   (make-keyword-procedure
    (λ (kws kwargs . args)
      (define temp-tag (gensym "temp-tag"))
-     (define elements (car args))
-     (define decode-result (keyword-apply decode kws kwargs (list (cons temp-tag elements))))
-     (get-elements decode-result))))
-
+     (define elements (first args))
+     (get-elements (keyword-apply decode kws kwargs (list (cons temp-tag elements)))))))
 
 (define+provide/contract (block-txexpr? x)
   (any/c . -> . boolean?)
@@ -129,27 +130,30 @@
 
 (define+provide/contract (decode-linebreaks elems [maybe-linebreak-proc '(br)]
                                             #:separator [newline (setup:linebreak-separator)])
-  ((txexpr-elements?) ((or/c #f txexpr-element? (txexpr-element? txexpr-element? . -> . (or/c #f txexpr-element?))) #:separator string?) . ->* . txexpr-elements?)
+  ((txexpr-elements?)
+   ((or/c #f txexpr-element?
+          (txexpr-element? txexpr-element? . -> . (or/c #f txexpr-element?))) #:separator string?)
+   . ->* . txexpr-elements?)
   (unless (string? newline)
     (raise-argument-error 'decode-linebreaks "string" newline))
-  (define linebreak-proc (if (procedure? maybe-linebreak-proc)
-                             maybe-linebreak-proc
-                             (λ (e1 e2) maybe-linebreak-proc)))
+  (define linebreak-proc (match maybe-linebreak-proc
+                           [(? procedure? proc) proc]
+                           [val (λ (e1 e2) val)]))
   (define elems-vec (list->vector elems))
   (filter values
           (for/list ([(elem idx) (in-indexed elems-vec)])
-            (cond
-              [(= idx 0) elem] ; pass first item
-              [(= idx (sub1 (vector-length elems-vec))) elem] ; pass through last item
-              [(equal? elem newline)
-               (define prev (vector-ref elems-vec (sub1 idx)))
-               (define next (vector-ref elems-vec (add1 idx)))
-               ;; only convert if neither adjacent tag is a block
-               ;; (because blocks automatically force a newline before & after)
-               (if (or (block-txexpr? prev) (block-txexpr? next))
-                   #f ; flag for filtering
-                   (linebreak-proc prev next))]
-              [else elem]))))
+                    (cond
+                      [(zero? idx) elem] ; pass first item
+                      [(= idx (sub1 (vector-length elems-vec))) elem] ; pass through last item
+                      [(equal? elem newline)
+                       (define prev (vector-ref elems-vec (sub1 idx)))
+                       (define next (vector-ref elems-vec (add1 idx)))
+                       ;; only convert if neither adjacent tag is a block
+                       ;; (because blocks automatically force a newline before & after)
+                       (if (or (block-txexpr? prev) (block-txexpr? next))
+                           #false ; flag for filtering
+                           (linebreak-proc prev next))]
+                      [else elem]))))
 
 (module-test-external
  (check-equal? (decode-linebreaks '("foo" "\n" "bar")) '("foo" (br) "bar"))
@@ -169,17 +173,21 @@
 (define+provide/contract (merge-newlines x)
   (txexpr-elements? . -> . txexpr-elements?)
   (define newline-pat (regexp (format "^~a+$" (setup:newline))))
-  (define (newline? x) (and (string? x) (regexp-match newline-pat x)))  
+  (define (newline? x) (match x
+                         [(regexp newline-pat) #true]
+                         [_ #false]))  
   (define (merge-newline-slice xs)
-    (if (newline? (car xs)) ; if first member of slice is newline, they all are
-        (list (apply string-append xs))
-        xs))
-  (define empty-string? (λ (x) (equal? x "")))
+    (match xs
+      ;; if first member of slice is newline, they all are
+      [(cons (? newline?) _) (list (apply string-append xs))]
+      [_ xs]))
+  (define (empty-string? x) (equal? x ""))
   (let loop ([x x])
-    (if (and (pair? x) (not (attrs? x)))
-        (let ([xs (map loop (filter-not empty-string? x))])
-          (append-map merge-newline-slice (slicef xs newline?)))
-        x)))
+    (match x
+      [(? pair? x) #:when (not (attrs? x))
+                   (define xs (map loop (filter-not empty-string? x)))
+                   (append-map merge-newline-slice (slicef xs newline?))]
+      [_ x])))
 
 (module-test-external
  (require racket/list)
@@ -188,7 +196,6 @@
  (check-equal? (merge-newlines '((p "\n" "" "\n"))) '((p "\n\n")))
  (check-equal? (merge-newlines '(p "\n" "\n" "foo" "\n" "\n\n" "bar" (em "\n" "\n" "\n"))) 
                '(p "\n\n" "foo" "\n\n\n" "bar" (em "\n\n\n"))))
-
 
 (define+provide/contract (decode-paragraphs elements-in [maybe-wrap-proc 'p]
                                             #:linebreak-proc [linebreak-proc decode-linebreaks]
@@ -206,26 +213,30 @@
   
   (define (paragraph-break? x)
     (define paragraph-pattern (pregexp (format "^~a+$" paragraph-separator)))
-    (and (string? x) (regexp-match paragraph-pattern x)))
+    (match x
+      [(pregexp paragraph-pattern) #true]
+      [_ #false]))
   
   (define (explicit-or-implicit-paragraph-break? x)
     (or (paragraph-break? x) (block-txexpr? x)))
 
-  (define wrap-proc (if (procedure? maybe-wrap-proc)
-                        maybe-wrap-proc
-                        (λ (elems) (list* maybe-wrap-proc elems))))
+  (define wrap-proc (match maybe-wrap-proc
+                      [(? procedure? proc) proc]
+                      [_ (λ (elems) (list* maybe-wrap-proc elems))]))
 
   (define (wrap-paragraph elems)
-    (if (andmap block-txexpr? elems)
-        elems ; leave a series of block xexprs alone
-        (list (wrap-proc elems)))) ; otherwise wrap in p tag 
+    (match elems
+      [(list (? block-txexpr?) ...) elems] ; leave a series of block xexprs alone
+      [_ (list (wrap-proc elems))])) ; otherwise wrap in p tag
 
   (define elements (prep-paragraph-flow elements-in))
   (if (ormap explicit-or-implicit-paragraph-break? elements) ; need this condition to prevent infinite recursion
-      ;; use append-map on wrap-paragraph rather than map to permit return of multiple elements
-      (append-map wrap-paragraph (append-map (λ (es) (filter-split es paragraph-break?)) (slicef elements block-txexpr?))) ; split into ¶¶, using both implied and explicit paragraph breaks
+      ;; use `append-map` on `wrap-paragraph` rather than `map` to permit return of multiple elements
+      (append-map wrap-paragraph
+                  (append-map (λ (es) (filter-split es paragraph-break?)) (slicef elements block-txexpr?))) ; split into ¶¶, using both implied and explicit paragraph breaks
       (if force-paragraph
-          (append-map wrap-paragraph (slicef elements block-txexpr?)) ; upconverts non-block elements to paragraphs
+          ;; upconverts non-block elements to paragraphs
+          (append-map wrap-paragraph (slicef elements block-txexpr?)) 
           elements)))            
 
 (module-test-external
@@ -246,7 +257,6 @@
                '((p "foo") (div "bar") (div "zam")))
  (check-equal? (decode-paragraphs '("foo" "\n\n" (div "bar") "\n\n" (div "zam")))
                '((p "foo") (div "bar") (div "zam")))
- 
  (check-equal? (decode-paragraphs '("foo")) '("foo"))
  (check-equal? (decode-paragraphs '("foo") #:force? #t) '((p "foo")))
  (check-equal? (decode-paragraphs '((div "foo"))) '((div "foo")))

@@ -5,8 +5,10 @@
          racket/list
          racket/vector
          racket/cmdline
+         racket/match
          sugar/coerce
          "file-utils.rkt"
+         "log.rkt"
          "../setup.rkt"
          "../render.rkt"
          "../pagetree.rkt")
@@ -18,10 +20,9 @@
 ;; todo: investigate this
 
 (module+ raco
-  (define command-name (with-handlers ([exn:fail? (λ _ #f)])
+  (define command-name (with-handlers ([exn:fail? (λ () #f)])
                          (vector-ref (current-command-line-arguments) 0)))
   (dispatch command-name))
-
 
 (define (get-first-arg-or-current-dir [args (cdr (vector->list (current-command-line-arguments)))]) ; cdr to strip command name from front
   (normalize-path
@@ -29,19 +30,24 @@
      ;; incoming path argument is handled as described in docs for current-directory
      (very-nice-path (car args)))))
 
-
 (define (dispatch command-name)
-  (case command-name
-    [("test" "xyzzy") (handle-test)]
-    [(#f "help") (handle-help)]
-    [("start") (handle-start)] ; parses its own args
-    ;; "second" arg is actually third in command line args, so use cddr not cdr
-    [("render") (handle-render)] ; render parses its own args from current-command-line-arguments
-    [("version") (handle-version)]
-    [("reset") (handle-reset (get-first-arg-or-current-dir))]
-    [("setup") (handle-setup (get-first-arg-or-current-dir))]
-    [("clone" "publish") (handle-publish)]
-    [else (handle-unknown command-name)]))
+  (with-logging-to-port
+   (current-error-port)
+   (λ ()
+     (case command-name
+       [("test" "xyzzy") (handle-test)]
+       [(#f "help") (handle-help)]
+       [("start") (handle-start)] ; parses its own args
+       ;; "second" arg is actually third in command line args, so use cddr not cdr
+       [("render") (handle-render)] ; render parses its own args from current-command-line-arguments
+       [("version") (handle-version)]
+       [("reset") (handle-reset (get-first-arg-or-current-dir))]
+       [("setup") (handle-setup (get-first-arg-or-current-dir))]
+       [("clone" "publish") (handle-publish)]
+       [else (handle-unknown command-name)]))
+   #:logger pollen-logger
+   'info
+   'pollen))
 
 (define (very-nice-path x)
   (path->complete-path (simplify-path (cleanse-path (->path x)))))
@@ -67,91 +73,87 @@ version                print the version" (current-server-port) (make-publish-di
 (define (handle-version)
   (displayln (dynamic-require 'pollen/private/version 'pollen:version)))
 
-
 (define (handle-reset directory-maybe)
   (displayln "resetting cache ...")
   ((dynamic-require 'pollen/cache 'reset-cache) directory-maybe))
-
 
 (define (handle-setup directory-maybe)
   (displayln "preheating cache ...")
   ((dynamic-require 'pollen/private/preheat-cache 'preheat-cache) directory-maybe)) 
 
-
 (define (handle-render)
   (define render-target-wanted (make-parameter (current-poly-target)))
   (define render-with-subdirs? (make-parameter #f))
-  (define parsed-args (command-line #:program "raco pollen render"
-                                    #:argv (vector-drop (current-command-line-arguments) 1) ; snip the 'render' from the front
-                                    #:once-each
-                                    [("-t" "--target") target-arg "Render target for poly sources"
-                                                       (render-target-wanted (->symbol target-arg))]
-                                    [("-r" "--recursive") "Render subdirectories recursively"
-                                                          (render-with-subdirs? 'recursive)]
-                                    [("-s" "--subdir") "Render subdirectories nonrecursively" (render-with-subdirs? 'include)]
-                                    #:args other-args
-                                    other-args))  
-  (define path-args (if (empty? parsed-args)
-                        (list (current-directory))
-                        parsed-args))
+  (define parsed-args
+    (command-line #:program "raco pollen render"
+                  #:argv (vector-drop (current-command-line-arguments) 1) ; snip the 'render' from the front
+                  #:once-each
+                  [("-t" "--target") target-arg "Render target for poly sources"
+                                     (render-target-wanted (->symbol target-arg))]
+                  [("-r" "--recursive") "Render subdirectories recursively"
+                                        (render-with-subdirs? 'recursive)]
+                  [("-s" "--subdir") "Render subdirectories nonrecursively" (render-with-subdirs? 'include)]
+                  #:args other-args
+                  other-args)) 
   (parameterize ([current-poly-target (render-target-wanted)]) ;; applies to both cases
-    (cond
-      ;; directory mode: one directory as argument
-      [(and (= 1 (length path-args)) (directory-exists? (car path-args)))
-       (define top-dir (very-nice-path (car path-args)))
-       (let render-one-dir ([dir top-dir])
-         (parameterize ([current-directory dir]
-                        [current-project-root (if (eq? (render-with-subdirs?) 'recursive)
-                                                  dir
-                                                  top-dir)])
-           (define dirlist (directory-list dir))
-           (define preprocs (filter preproc-source? dirlist))
-           (define static-pagetrees (filter pagetree-source? dirlist))
-           ;; if there are no static pagetrees, use make-project-pagetree
-           ;; (which will synthesize a pagetree if needed, which includes all sources)
-           (define batch-to-render
-             (map very-nice-path
-                  (cond
-                    [(null? static-pagetrees)
-                     (displayln (format "rendering generated pagetree for directory ~a" dir))
-                     (cdr (make-project-pagetree dir))]
-                    [else
-                     (displayln (format "rendering preproc & pagetree files in directory ~a" dir))
-                     (append preprocs static-pagetrees)])))
-           (apply render-batch batch-to-render)
-           (when (render-with-subdirs?)
-             (for ([path (in-list dirlist)]
-                   #:when (and (directory-exists? path)
-                               (not (omitted-path? path))))
-               (render-one-dir (->complete-path path))))))]
-      [else ;; path mode
-       (displayln (format "rendering ~a" (string-join (map ->string path-args) " ")))
-       (apply render-batch (map very-nice-path path-args))])))
-
+    (let loop ([args parsed-args])
+      (match args
+        [(== empty) (loop (list (current-directory)))]
+        [(list dir) ;; directory mode: one directory as argument
+         #:when (directory-exists? dir)
+         (define top-dir (very-nice-path dir))
+         (let render-one-dir ([dir top-dir])
+           (parameterize ([current-directory dir]
+                          [current-project-root (case (render-with-subdirs?)
+                                                  [(recursive) dir]
+                                                  [else top-dir])])
+             (define dirlist (directory-list dir))
+             (define preprocs (filter preproc-source? dirlist))
+             (define static-pagetrees (filter pagetree-source? dirlist))
+             ;; if there are no static pagetrees, use make-project-pagetree
+             ;; (which will synthesize a pagetree if needed, which includes all sources)
+             (define batch-to-render
+               (map very-nice-path
+                    (cond
+                      [(null? static-pagetrees)
+                       (displayln (format "rendering generated pagetree for directory ~a" dir))
+                       (cdr (make-project-pagetree dir))]
+                      [else
+                       (displayln (format "rendering preproc & pagetree files in directory ~a" dir))
+                       (append preprocs static-pagetrees)])))
+             (apply render-batch batch-to-render)
+             (when (render-with-subdirs?)
+               (for ([path (in-list dirlist)]
+                     #:when (and (directory-exists? path)
+                                 (not (omitted-path? path))))
+                    (render-one-dir (->complete-path path))))))]
+        [path-args ;; path mode
+         (displayln (format "rendering ~a" (string-join (map ->string path-args) " ")))
+         (apply render-batch (map very-nice-path path-args))]))))
 
 (define (handle-start)
   (define launch-wanted #f)
   (define localhost-wanted #f)
-  (define clargs (command-line #:program "raco pollen start"
-                               #:argv (vector-drop (current-command-line-arguments) 1) ; snip the 'start' from the front
-                               #:once-each
-                               [("--launch" "-l") "Launch browser after start" (set! launch-wanted #t)]
-                               [("--local") "Restrict access to localhost" (set! localhost-wanted #t)]
-                               #:args other-args
-                               other-args))
+  (define clargs
+    (command-line #:program "raco pollen start"
+                  #:argv (vector-drop (current-command-line-arguments) 1) ; snip the 'start' from the front
+                  #:once-each
+                  [("--launch" "-l") "Launch browser after start" (set! launch-wanted #t)]
+                  [("--local") "Restrict access to localhost" (set! localhost-wanted #t)]
+                  #:args other-args
+                  other-args))
   (define dir (path->directory-path (get-first-arg-or-current-dir clargs)))
   (unless (directory-exists? dir)
     (error (format "~a is not a directory" dir)))
-  (define port (with-handlers ([exn:fail? (λ (e) #f)])
-                 (string->number (cadr clargs))))
-  (when (and port (not (exact-positive-integer? port)))
-    (error (format "~a is not a valid port number" port)))
+  (define http-port (with-handlers ([exn:fail? (λ (e) #f)])
+                      (string->number (cadr clargs))))
+  (when (and http-port (not (exact-positive-integer? http-port)))
+    (error (format "~a is not a valid port number" http-port)))
   (parameterize ([current-project-root dir]
-                 [current-server-port (or port (setup:project-server-port))]
+                 [current-server-port (or http-port (setup:project-server-port))]
                  [current-server-listen-ip (and localhost-wanted "127.0.0.1")])
-    (displayln "Starting project server ...")
+    (message "starting project server ...")
     ((dynamic-require 'pollen/private/project-server 'start-server) (format "/~a" (setup:main-pagetree dir)) launch-wanted)))
-
 
 (define (make-publish-dir-name [project-root (current-directory)] [arg-command-name #f])
   (define user-publish-path
@@ -159,16 +161,14 @@ version                print the version" (current-server-port) (make-publish-di
   (if (complete-path? user-publish-path)
       user-publish-path       
       (build-path (find-system-path 'desk-dir)
-                  (->path (if (equal? arg-command-name "clone") ; bw compat
-                              "clone"
-                              user-publish-path)))))
-
+                  (->path (case arg-command-name
+                            [("clone") "clone"] ; bw compat
+                            [else user-publish-path])))))
 
 (define (delete-it path)
-  (cond
-    [(directory-exists? path) (delete-directory/files path)]
-    [(file-exists? path) (delete-file path)]))
-  
+  (match path
+    [(? directory-exists?) (delete-directory/files path)]
+    [(? file-exists?) (delete-file path)]))
 
 (define (contains-directory? possible-superdir possible-subdir)
   (define (has-prefix? xs prefix)
@@ -176,11 +176,10 @@ version                print the version" (current-server-port) (make-publish-di
          (andmap equal? prefix (take xs (length prefix)))))
   ((explode-path possible-subdir) . has-prefix? . (explode-path possible-superdir)))
 
-
 (define (handle-publish)
   (define command-name ; either "publish" or "clone"
     (vector-ref (current-command-line-arguments) 0))
-  (define force-target-overwrite? (make-parameter #t))
+  (define force-target-overwrite? (make-parameter #true))
   (define other-args (command-line
                       ;; drop command name
                       #:argv (vector-drop (current-command-line-arguments) 1)
@@ -217,8 +216,8 @@ version                print the version" (current-server-port) (make-publish-di
         (begin
           (display (format "destination directory ~a exists. Overwrite? [yes/no] " dest-dir))
           (case (read)
-            [(y yes) #t]
-            [else #f]))))
+            [(y yes) #true]
+            [else #false]))))
   (cond
     [do-publish-operation?
      (when (directory-exists? dest-dir)
@@ -236,11 +235,11 @@ version                print the version" (current-server-port) (make-publish-di
     [else (displayln "publish aborted")]))
 
 (define (handle-unknown command)
-  (if (regexp-match #rx"(shit|fuck)" command)
-      (displayln (let ([responses '("Cursing at free software? Really?" "How uncouth." "Same to you, buddy.")])
-                   (list-ref responses (random (length responses)))))
-      (begin
-        (displayln (format "`~a` is an unknown command." command))
-        (display "These are the available ") ; ... "Pollen commands:"
-        (handle-help)
-        (exit 1))))
+  (match command
+    [(regexp #rx"(shit|fuck)")
+     (define responses '("Cursing at free software? Really?" "How uncouth." "Same to you, buddy."))
+     (displayln (list-ref responses (random (length responses))))]
+    [_ (displayln (format "`~a` is an unknown command." command))
+       (display "These are the available ") ; ... "Pollen commands:"
+       (handle-help)
+       (exit 1)]))

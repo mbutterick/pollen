@@ -1,31 +1,36 @@
 #lang pollen/mode racket/base
-(require (for-syntax racket/base syntax/parse))
-(require txexpr/base racket/string racket/match)
+(require (for-syntax
+          racket/base
+          syntax/parse)
+         txexpr/base
+         racket/string
+         racket/match)
 (provide default-tag-function make-default-tag-function define-tag-function)
-
 
 (define (parse-leading-attrs xs)
   (match xs
     [(cons (? txexpr-attrs? leading-attrs) tail) (values leading-attrs tail)]
     [else (values null xs)]))
 
+(define (colon-attr-name? x)
+  (match x
+    [(? symbol?)
+     (=> resume)
+     (match (symbol->string x)
+       [(regexp #rx".*?(?=:$)" (cons res _)) (string->symbol res)]
+       [_ (resume)])]
+    [_ #false]))
 
 (define (parse-colon-attrs xs)
-  (define (colon-attr-name? x)
-    (and (symbol? x)
-         (let ([result (regexp-match #rx".*?(?=:$)" (symbol->string x))])
-           (and (pair? result) (string->symbol (car result))))))
   (let parse-next ([xs xs][colon-attrs empty])
     (match xs
       [(list* (? colon-attr-name? name) (? string? val) xs)
        (parse-next xs (cons (list (colon-attr-name? name) val) colon-attrs))]
-      [else (values colon-attrs xs)])))
-
+      [_ (values colon-attrs xs)])))
 
 (define (parse-kw-attrs kw-symbols-in kw-args)
   (define kw-symbols (map (λ (kw) (string->symbol (string-trim (keyword->string kw) "#:"))) kw-symbols-in))
   (map list kw-symbols kw-args))
-
 
 (define (make-one-tag-function outer-kws outer-kw-args id)
   (make-keyword-procedure
@@ -40,25 +45,23 @@
        ;; construct the xexpr result "manually" (i.e., not with `make-txexpr` because it may not be a legit txexpr for now
        ;; (but it may become one through further processing, so no need to be finicky)
        ;; however, don't show empty attrs.
-       (define attrs (append kw-attrs colon-attrs leading-attrs))
-       (cons id (if (null? attrs)
-                    xs
-                    (cons attrs xs)))))))
-
+       (cons id (match (append kw-attrs colon-attrs leading-attrs)
+                  [(== empty) xs]
+                  [attrs (cons attrs xs)]))))))
 
 (define default-tag-function
   (make-keyword-procedure
-   (λ (outer-kws outer-kw-args . ids)     
-     (let ([tag-proc (apply compose1 (for/list ([id (in-list ids)])
-                                               (make-one-tag-function outer-kws outer-kw-args id)))]
-           [tag-proc-name (string->symbol (format "pollen-tag:~a" (string-join (map symbol->string ids) "+")))])
-       (procedure-rename tag-proc tag-proc-name)))))
+   (λ (outer-kws outer-kw-args . ids)
+     (define tag-proc (apply compose1 (for/list ([id (in-list ids)])
+                                               (make-one-tag-function outer-kws outer-kw-args id))))
+     (define tag-proc-name (string->symbol (format "pollen-tag:~a" (string-join (map symbol->string ids) "+"))))
+     (procedure-rename tag-proc tag-proc-name))))
 
 (define make-default-tag-function default-tag-function) ; bw compat
 
 
 (module+ test
-  (require rackunit txexpr/check)
+  (require txexpr/check)
   (define outerdiv (default-tag-function 'div #:class "outer" #:style "outer"))
   (check-txexprs-equal? (outerdiv "foo") '(div ((class "outer") (style "outer")) "foo"))
   (check-txexprs-equal? (outerdiv) '(div ((class "outer") (style "outer"))))
@@ -91,7 +94,7 @@
 
 
 (module+ test
-  (require rackunit)
+  (require)
   (define foo2 (default-tag-function 'foo))
   
   (define-tag-function (foo attrs elems)

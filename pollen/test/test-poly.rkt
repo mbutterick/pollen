@@ -1,5 +1,8 @@
 #lang at-exp racket/base
-(require rackunit pollen/setup racket/runtime-path pollen/render)
+(require rackunit
+         pollen/setup
+         racket/runtime-path
+         pollen/render)
 
 ;; define-runtime-path only allowed at top level
 (define-runtime-path poly-dir "data/poly")

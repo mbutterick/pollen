@@ -116,11 +116,11 @@ Now here's a third: the Pollen project server. To start the project server, retu
 After a moment, you'll see the startup message:
 
 @terminal{
-Welcome to Pollen @|pollen:version| (Racket @(version))
-Project root is /path/to/your/directory
-Project server is http://localhost:8080 (Ctrl+C to exit)
-Project dashboard is http://localhost:8080/index.ptree
-Ready to rock}
+pollen: welcome to Pollen @|pollen:version| (Racket @(version))
+pollen: project root is /path/to/your/directory
+pollen: project server is http://localhost:8080 (Ctrl+C to exit)
+pollen: project dashboard is http://localhost:8080/index.ptree
+pollen: ready to rock}
 
 Open a web browser and point it at the project dashboard, which by default is @link-tt{http://localhost:8080/index.ptree}. The top line of the window will say @tt{Project root} and show the name of the starting directory. Below that will be a listing of the files in the directory. 
 

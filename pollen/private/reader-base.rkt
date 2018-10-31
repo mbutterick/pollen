@@ -4,7 +4,9 @@
          racket/class
          racket/string
          racket/runtime-path
+         racket/match
          setup/getinfo
+         sugar/file
          (for-syntax racket/base)
          (only-in scribble/reader make-at-reader)
          "../setup.rkt"
@@ -13,27 +15,20 @@
 
 (define (source-name->pollen-require-path source-name)
   ;; the `path-string` passed in from `read-syntax` can actually be `any/c`
-  (if (syntax? source-name)
-      (syntax-source source-name)
-      ;; captures paths, strings, "unsaved editor", path-strings, symbols
-      source-name))
+  ;; captures paths, strings, "unsaved editor", path-strings, symbols
+  ((if (syntax? source-name) syntax-source values) source-name))
 
 (define (infer-parser-mode reader-mode reader-here-path)
-  (if (eq? reader-mode default-mode-auto)
-      (let* ([file-ext-pattern (pregexp "\\w+$")]
-             [here-ext (string->symbol (car (regexp-match file-ext-pattern reader-here-path)))]
-             [auto-computed-mode (cond
-                                   [(eq? here-ext (setup:pagetree-source-ext)) default-mode-pagetree]
-                                   [(eq? here-ext (setup:markup-source-ext)) default-mode-markup]
-                                   [(eq? here-ext (setup:markdown-source-ext)) default-mode-markdown]
-                                   [else default-mode-preproc])])
-        auto-computed-mode)
-      reader-mode))
+  (match reader-mode
+    [(== default-mode-auto)
+     (match (cond [(get-ext reader-here-path) => string->symbol])
+       [(== (setup:pagetree-source-ext)) default-mode-pagetree]
+       [(== (setup:markup-source-ext)) default-mode-markup]
+       [(== (setup:markdown-source-ext)) default-mode-markdown]
+       [_ default-mode-preproc])]
+    [_ reader-mode]))
 
-
-(define (custom-read p)
-  (syntax->datum (custom-read-syntax (object-name p) p)))
-
+(define (custom-read p) (syntax->datum (custom-read-syntax (object-name p) p)))
 
 (define (custom-read-syntax #:reader-mode [reader-mode #f] source-name input-port)
   (define source-stx (let ([read-inner (make-at-reader 
@@ -78,44 +73,44 @@
 (define ((custom-get-info mode) in mod line col pos)
   ;; DrRacket caches source file information per session,
   ;; so we can do the same to avoid multiple searches for the command char.
-  (let ([command-char-cache (make-hash)])
-    (λ (key default)
-      (case key
-        [(color-lexer drracket:toolbar-buttons) ; only do source-path searching if we have one of these keys
-         (define maybe-source-path (with-handlers ([exn:fail? (λ (exn) #f)])
-                                     ;; Robert Findler does not endorse `get-filename` here,
-                                     ;; because it's sneaky and may not always work.
-                                     ;; OTOH Scribble relies on it, so IMO it's highly unlikely to change.
-                                     (let ([maybe-definitions-frame (object-name in)])
-                                       (send maybe-definitions-frame get-filename)))) ; will be #f if unsaved file
-         (define my-command-char (hash-ref! command-char-cache maybe-source-path (λ _ (setup:command-char maybe-source-path))))
-         (case key
-           [(color-lexer)
-            (define my-make-scribble-inside-lexer
-              (dynamic-require 'syntax-color/scribble-lexer 'make-scribble-inside-lexer (λ () #f)))
-            (if my-make-scribble-inside-lexer
-                (my-make-scribble-inside-lexer #:command-char my-command-char)
-                default)]
-           [(drracket:toolbar-buttons)
-            (define my-make-drracket-buttons (dynamic-require 'pollen/private/drracket-buttons 'make-drracket-buttons))
-            (my-make-drracket-buttons my-command-char)])]
-        [(drracket:indentation)
-         (dynamic-require 'scribble/private/indentation 'determine-spaces)]
-        [(drracket:default-filters)
-         ;; derive this from `module-suffixes` entry in main info.rkt file
-         (define module-suffixes ((get-info/full info-dir) 'module-suffixes))
-         (define filter-strings (for/list ([suffix (in-list module-suffixes)])
-                                          (format "*.~a" suffix)))
-         (list (list "Pollen sources" (string-join filter-strings ";")))]
-        [(drracket:default-extension)
-         (symbol->string
-          (cond
-            [(eq? mode default-mode-auto) (setup:preproc-source-ext)]
-            [(eq? mode default-mode-preproc) (setup:preproc-source-ext)]
-            [(eq? mode default-mode-markdown) (setup:markdown-source-ext)]
-            [(eq? mode default-mode-markup) (setup:markup-source-ext)]
-            [(eq? mode default-mode-pagetree) (setup:pagetree-source-ext)]))]
-        [else default]))))
+  (define command-char-cache (make-hash))
+  (λ (key default)
+    (case key
+      ;; only do source-path searching if we have one of these two keys
+      [(color-lexer drracket:toolbar-buttons) 
+       (define maybe-source-path
+         (with-handlers ([exn:fail? (λ (exn) #false)])
+           ;; Robert Findler does not endorse `get-filename` here,
+           ;; because it's sneaky and may not always work.
+           ;; OTOH Scribble relies on it, so IMO it's highly unlikely to change.
+           (send (object-name in) get-filename)))
+       (define my-command-char
+         (hash-ref! command-char-cache maybe-source-path (λ () (setup:command-char maybe-source-path))))
+       (case key
+         [(color-lexer)
+          (match (dynamic-require 'syntax-color/scribble-lexer 'make-scribble-inside-lexer (λ () #false))
+            [(? procedure? make-lexer) (make-lexer #:command-char my-command-char)]
+            [_ default])]
+         [(drracket:toolbar-buttons)
+          (match (dynamic-require 'pollen/private/drracket-buttons 'make-drracket-buttons (λ () #false))
+            [(? procedure? make-buttons) (make-buttons my-command-char)])])]
+      [(drracket:indentation)
+       (dynamic-require 'scribble/private/indentation 'determine-spaces)]
+      [(drracket:default-filters)
+       ;; derive this from `module-suffixes` entry in main info.rkt file
+       (define module-suffixes ((get-info/full info-dir) 'module-suffixes))
+       (define filter-strings (for/list ([suffix (in-list module-suffixes)])
+                                        (format "*.~a" suffix)))
+       (list (list "Pollen sources" (string-join filter-strings ";")))]
+      [(drracket:default-extension)
+       (symbol->string
+        (match mode
+          [(== default-mode-auto) (setup:preproc-source-ext)]
+          [(== default-mode-preproc) (setup:preproc-source-ext)]
+          [(== default-mode-markdown) (setup:markdown-source-ext)]
+          [(== default-mode-markup) (setup:markup-source-ext)]
+          [(== default-mode-pagetree) (setup:pagetree-source-ext)]))]
+      [else default])))
 
 (define-syntax-rule (reader-module-begin mode . _)
   (#%module-begin

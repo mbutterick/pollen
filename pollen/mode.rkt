@@ -96,7 +96,7 @@ Intractable problem; unavoidable limitation.
                 (lexer-maker #:command-char #\◊)
                 (fallback))]
            [(drracket:indentation)
-            (dynamic-require 'pollen/private/mode-indentation 'determine-spaces)]
+            (dynamic-require 'pollen/private/external/mode-indentation 'determine-spaces)]
            [else (fallback)]))))))
 
 (module at-reader racket/base

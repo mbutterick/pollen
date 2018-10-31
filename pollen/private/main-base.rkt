@@ -1,29 +1,34 @@
 #lang racket/base
-(require (for-syntax racket/base syntax/strip-context "../setup.rkt" "split-metas.rkt")
-         "to-string.rkt" "../pagetree.rkt" "splice.rkt" "../setup.rkt" "../core.rkt"
-         (prefix-in doclang: "doclang-raw.rkt"))
+(require (for-syntax racket/base
+                     syntax/strip-context
+                     "../setup.rkt"
+                     "split-metas.rkt")
+         racket/match
+         racket/list
+         "to-string.rkt"
+         "../pagetree.rkt"
+         "splice.rkt"
+         "../setup.rkt"
+         "../core.rkt"
+         (prefix-in doclang: "external/doclang-raw.rkt"))
 (provide (except-out (all-from-out racket/base) #%module-begin)
          (rename-out [pollen-module-begin #%module-begin]))
 
-
 (define ((make-parse-proc parser-mode root-proc) xs)
   (define (stringify xs) (apply string-append (map to-string xs)))
-  (cond
-    [(eq? parser-mode default-mode-pagetree) (decode-pagetree xs)]
-    [(eq? parser-mode default-mode-markup) (apply root-proc (remove-voids xs))] 
-    [(eq? parser-mode default-mode-markdown)
+  (match parser-mode
+    [(== default-mode-pagetree) (decode-pagetree xs)]
+    [(== default-mode-markup) (apply root-proc (remove-voids xs))] 
+    [(== default-mode-markdown)
      (let* ([xs (stringify xs)]
             [xs ((dynamic-require 'markdown 'parse-markdown) xs)]
             [xs (map strip-empty-attrs xs)])
        (apply root-proc xs))]
-    [else (stringify xs)])) ; preprocessor mode
-
+    [_ (stringify xs)])) ; preprocessor mode
 
 (define (strip-leading-newlines doc)
   ;; drop leading newlines, as they're often the result of `defines` and `requires`
-  (or (memf (λ (ln) (and (not (equal? ln (setup:newline)))
-                         (not (equal? ln "")))) doc) null))
-
+  (dropf doc (λ (ln) (member ln (list (setup:newline) "")))))
 
 (define-syntax (pollen-module-begin stx)
   (syntax-case stx ()
@@ -38,7 +43,7 @@
           DOC-ID ; positional arg for doclang-raw: name of export
           (λ (xs)
             (define proc (make-parse-proc PARSER-MODE ROOT-ID))
-            (define trimmed-xs (if (setup:trim-whitespace?) (strip-leading-newlines xs) xs))
+            (define trimmed-xs ((if (setup:trim-whitespace?) strip-leading-newlines values) xs))
             (define doc-elements (splice trimmed-xs (setup:splicing-tag)))
             (proc doc-elements)) ;  positional arg for doclang-raw: post-processor
           (module META-MOD-ID racket/base

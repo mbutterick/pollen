@@ -24,6 +24,11 @@ Beyond keeping the commit history available, I make no promise to maintain the p
 
 @section{Changelog}
 
+@subsection{Version 1.5}
+
+Added @racket[setup:trim-whitespace?].
+
+
 @subsection{Version 1.4}
 
 Added @racket[setup:cache-watchlist], @racket[for/splice], @racket[for*/splice], @racket[current-metas].

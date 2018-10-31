@@ -1,14 +1,32 @@
 #lang racket/base
-(require racket/list racket/contract racket/file racket/format xml racket/match racket/set racket/string racket/promise racket/path)
-(require web-server/http/xexpr web-server/dispatchers/dispatch)
-(require net/url)
-(require web-server/http/request-structs)
-(require web-server/http/response-structs)
-(require web-server/http/redirect)
-(require 2htdp/image)
-(require "../setup.rkt" "../render.rkt" sugar sugar/unstable/string sugar/unstable/misc sugar/unstable/container txexpr/base "file-utils.rkt" "debug.rkt" "../pagetree.rkt" "../cache.rkt")
+(require racket/list
+         racket/contract
+         racket/file
+         racket/format
+         racket/match
+         racket/string
+         racket/promise
+         racket/path
+         web-server/http/xexpr
+         web-server/dispatchers/dispatch
+         net/url
+         web-server/http/request-structs
+         web-server/http/response-structs
+         web-server/http/redirect
+         2htdp/image
+         "../setup.rkt"
+         "../render.rkt"
+         sugar
+         sugar/unstable/string
+         sugar/unstable/misc
+         sugar/unstable/container
+         txexpr/base
+         "file-utils.rkt"
+         "log.rkt"
+         "../pagetree.rkt"
+         "../cache.rkt")
 
-(module+ test (require rackunit))
+(module+ test (require))
 
 ;;; Routes for the server module
 ;;; separated out for ease of testing
@@ -40,14 +58,15 @@
 ;; print message to console about a request
 (define/contract (logger req)
   (request? . -> . void?) 
-  (define client (request-client-ip req))
   (define localhost-client "::1")
   (define url-string (url->string (request-uri req)))
-  (when (not (ends-with? url-string "favicon.ico"))
-    (message "request:" (if (regexp-match #rx"/$" url-string)
-                            (string-append url-string " directory default page")
-                            (string-replace url-string (setup:main-pagetree) " dashboard"))
-             (if (not (equal? client localhost-client)) (format "from ~a" client) ""))))
+  (unless (ends-with? url-string "favicon.ico")
+    (message (match url-string
+               [(regexp #rx"/$") (string-append url-string " directory default page")]
+               [_ (string-replace url-string (setup:main-pagetree) " dashboard")])
+             (match (request-client-ip req)
+               [(== localhost-client) ""]
+               [client (format "from ~a" client)]))))
 
 ;; pass string args to route, then
 ;; package route into right format for web server
@@ -146,9 +165,9 @@
   (define (make-link-cell href+text)
     (match-define (cons href text) href+text) 
     (filter-not void? `(cell ,(when text 
-                              (if href 
-                                  `(a ((href ,href)) ,text)
-                                  text)))))
+                                (if href 
+                                    `(a ((href ,href)) ,text)
+                                    text)))))
   
   (define (make-parent-row)
     (define title (string-append "Project root" (if (equal? (current-project-root) dashboard-dir) (format " = ~a" dashboard-dir) "")))
@@ -162,51 +181,51 @@
   
   (define (make-path-row filename source indent-level)
     `(row ,@(map make-link-cell 
-                (append (list                          
-                         (let ([main-cell (cond ; main cell
-                                            [(directory-exists? (build-path dashboard-dir filename)) ; links subdir to its dashboard
-                                             (cons (format "~a/~a" filename (setup:main-pagetree)) (format "~a/" filename))]
-                                            [(and source (equal? (get-ext source) "scrbl")) ; scribble source
-                                             (cons #f `(a ((href ,filename)) ,filename (span ((class "file-ext")) " (from " ,(->string (find-relative-path dashboard-dir source)) ")")))]
-                                            [source ; ordinary source. use remove-ext because source may have escaped extension in it
-                                             (define source-first-ext (get-ext source))
-                                             (define source-minus-ext (unescape-ext (remove-ext source)))
-                                             (define source-second-ext (get-ext source-minus-ext))
-                                             (cond ; multi source. expand to multiple output files.
-                                               [(and source-second-ext (equal? source-second-ext (->string (setup:poly-source-ext (->complete-path source)))))
-                                                (define source-base (remove-ext source-minus-ext))
-                                                (define output-names (map (λ (ext) (->string (add-ext source-base ext))) (setup:poly-targets (->complete-path source))))
-                                                (cons #f `(div ,@(map (λ (on) `(a ((href ,on)) ,on (span ((class "file-ext")) "." ,source-first-ext ,(format " (from ~a)" (->string (find-relative-path dashboard-dir source)))))) output-names)))]
-                                               [else
-                                                (define extra-row-string
-                                                  (if (equal? source-minus-ext (remove-ext source)) ; escaped and unescaped versions are equal
-                                                      "" ; no extra string needed
-                                                      (format " (from ~a)" (->string (find-relative-path dashboard-dir source)))))
+                 (append (list                          
+                          (let ([main-cell (cond ; main cell
+                                             [(directory-exists? (build-path dashboard-dir filename)) ; links subdir to its dashboard
+                                              (cons (format "~a/~a" filename (setup:main-pagetree)) (format "~a/" filename))]
+                                             [(and source (equal? (get-ext source) "scrbl")) ; scribble source
+                                              (cons #f `(a ((href ,filename)) ,filename (span ((class "file-ext")) " (from " ,(->string (find-relative-path dashboard-dir source)) ")")))]
+                                             [source ; ordinary source. use remove-ext because source may have escaped extension in it
+                                              (define source-first-ext (get-ext source))
+                                              (define source-minus-ext (unescape-ext (remove-ext source)))
+                                              (define source-second-ext (get-ext source-minus-ext))
+                                              (cond ; multi source. expand to multiple output files.
+                                                [(and source-second-ext (equal? source-second-ext (->string (setup:poly-source-ext (->complete-path source)))))
+                                                 (define source-base (remove-ext source-minus-ext))
+                                                 (define output-names (map (λ (ext) (->string (add-ext source-base ext))) (setup:poly-targets (->complete-path source))))
+                                                 (cons #f `(div ,@(map (λ (on) `(a ((href ,on)) ,on (span ((class "file-ext")) "." ,source-first-ext ,(format " (from ~a)" (->string (find-relative-path dashboard-dir source)))))) output-names)))]
+                                                [else
+                                                 (define extra-row-string
+                                                   (if (equal? source-minus-ext (remove-ext source)) ; escaped and unescaped versions are equal
+                                                       "" ; no extra string needed
+                                                       (format " (from ~a)" (->string (find-relative-path dashboard-dir source)))))
                                                 
-                                                (cons #f `(a ((href ,filename)) ,(->string source-minus-ext) (span ((class "file-ext")) "." ,source-first-ext ,extra-row-string)))])]
-                                            [else ; other non-source file
-                                             (cons filename filename)])])
+                                                 (cons #f `(a ((href ,filename)) ,(->string source-minus-ext) (span ((class "file-ext")) "." ,source-first-ext ,extra-row-string)))])]
+                                             [else ; other non-source file
+                                              (cons filename filename)])])
                            
-                           (cons (car main-cell)
-                                 (let* ([cell-content (cdr main-cell)]
-                                       [indent-padding (+ 1 indent-level)]
-                                       [padding-attr `(class ,(format "indent_~a" indent-padding))])
-                                   (cond
-                                     [(string? cell-content) `(span (,padding-attr) ,cell-content)]
-                                     [(txexpr? cell-content)
-                                      ;; indent link text by depth in pagetree
-                                      `(,(get-tag cell-content) ,(cons padding-attr (get-attrs cell-content)) ,@(get-elements cell-content))]
-                                     [else (error 'make-path-row (format "mysterious cell data: ~v" cell-content))]))))
+                            (cons (car main-cell)
+                                  (let* ([cell-content (cdr main-cell)]
+                                         [indent-padding (+ 1 indent-level)]
+                                         [padding-attr `(class ,(format "indent_~a" indent-padding))])
+                                    (cond
+                                      [(string? cell-content) `(span (,padding-attr) ,cell-content)]
+                                      [(txexpr? cell-content)
+                                       ;; indent link text by depth in pagetree
+                                       `(,(get-tag cell-content) ,(cons padding-attr (get-attrs cell-content)) ,@(get-elements cell-content))]
+                                      [else (error 'make-path-row (format "mysterious cell data: ~v" cell-content))]))))
                          
-                         (cond ; 'in' cell
-                           [source  (cons (format "in/~a" source) "in")]
-                           [(or (pagetree-source? filename) (sourceish? filename))  (cons (format "in/~a" filename) "in")]
-                           [else empty-cell])
+                          (cond ; 'in' cell
+                            [source  (cons (format "in/~a" source) "in")]
+                            [(or (pagetree-source? filename) (sourceish? filename))  (cons (format "in/~a" filename) "in")]
+                            [else empty-cell])
                          
-                         (cond ; 'out' cell 
-                           [(directory-exists? (build-path dashboard-dir filename)) (cons #f #f)]
-                           [(pagetree-source? filename) empty-cell]
-                           [else (cons (format "out/~a" filename) "out")]))))))
+                          (cond ; 'out' cell 
+                            [(directory-exists? (build-path dashboard-dir filename)) (cons #f #f)]
+                            [(pagetree-source? filename) empty-cell]
+                            [else (cons (format "out/~a" filename) "out")]))))))
   
   (define (ineligible-path? x) (member x (setup:paths-excluded-from-dashboard)))
   
@@ -223,32 +242,32 @@
           depth)))
   
   (apply body-wrapper #:title (format "~a" dashboard-dir)
-                (cons (make-parent-row) 
-                          (cond
-                            [(not (null? project-paths))
-                             (define path-source-pairs
-                               (map
-                                (λ (p) (define source
-                                        (let ([possible-source (get-source (build-path dashboard-dir p))])
-                                          (and possible-source (->string (find-relative-path dashboard-dir possible-source)))))
-                                  (cons p source))
-                                project-paths))
+         (cons (make-parent-row) 
+               (cond
+                 [(not (null? project-paths))
+                  (define path-source-pairs
+                    (map
+                     (λ (p) (define source
+                              (let ([possible-source (get-source (build-path dashboard-dir p))])
+                                (and possible-source (->string (find-relative-path dashboard-dir possible-source)))))
+                       (cons p source))
+                     project-paths))
                              
-                             (define-values (reversed-unique-path-source-pairs seen-paths) ; delete pairs with duplicate sources
-                               (for/fold ([psps empty][seen-source-paths empty])
-                                         ([psp (in-list path-source-pairs)])
-                                 (define source-path (cdr psp))
-                                 (if (and source-path (member source-path seen-source-paths))
-                                     (values psps seen-source-paths) ; skip the pair
-                                     (values (cons psp psps) (cons source-path seen-source-paths)))))
+                  (define-values (reversed-unique-path-source-pairs seen-paths) ; delete pairs with duplicate sources
+                    (for/fold ([psps empty][seen-source-paths empty])
+                              ([psp (in-list path-source-pairs)])
+                      (define source-path (cdr psp))
+                      (if (and source-path (member source-path seen-source-paths))
+                          (values psps seen-source-paths) ; skip the pair
+                          (values (cons psp psps) (cons source-path seen-source-paths)))))
                              
-                             (define unique-path-source-pairs (reverse reversed-unique-path-source-pairs))
-                             (define filenames (map (compose1 ->string car) unique-path-source-pairs))
-                             (define sources (map cdr unique-path-source-pairs))
-                             (define indent-levels (map directory-pagetree-depth filenames))
-                             (parameterize ([current-directory dashboard-dir])
-                               (map make-path-row filenames sources indent-levels))]
-                            [else (list '(row (cell ((class "no-files")) "No files yet in this directory") (td) (td)))]))))
+                  (define unique-path-source-pairs (reverse reversed-unique-path-source-pairs))
+                  (define filenames (map (compose1 ->string car) unique-path-source-pairs))
+                  (define sources (map cdr unique-path-source-pairs))
+                  (define indent-levels (map directory-pagetree-depth filenames))
+                  (parameterize ([current-directory dashboard-dir])
+                    (map make-path-row filenames sources indent-levels))]
+                 [else (list '(row (cell ((class "no-files")) "No files yet in this directory") (td) (td)))]))))
 
 (define route-dashboard (route-wrapper dashboard))
 
@@ -289,7 +308,7 @@
 (define/contract (route-404 req)
   (request? . -> . response?)
   (define missing-path-string (path->string (simplify-path (req->path req))))
-  (message (format "route-404: Can't find ~a" missing-path-string))
+  (message (format "can't find ~a" missing-path-string))
   (response/xexpr+doctype
    `(html 
      (head (title "404 error") (link ((href "/error.css") (rel "stylesheet"))))
