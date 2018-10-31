@@ -48,8 +48,7 @@
          (hash-ref ram-cache-record subkey)]
         [else
          (parameterize ([current-namespace (make-base-namespace)])
-           ;; brings in currently instantiated params (unlike namespace-require)
-           (namespace-attach-module (namespace-anchor->namespace cache-module-ns) 'pollen/setup (current-namespace)) 
+           (namespace-attach-module (namespace-anchor->namespace cache-module-ns) 'pollen/setup) ; brings in currently instantiated params (unlike namespace-require)
            (dynamic-require path subkey))]))))
 
 (define+provide (cached-require path-string subkey)
