@@ -7,13 +7,11 @@
   (apply hasheq
          (let loop ([x ((if (syntax? x) syntax->datum values) x)])
            (match x
-             [(? list? xs)
-              (match xs
-                [(list (== meta-key eq?) key val)
-                 (unless (symbol? key)
-                   (raise-argument-error 'define-meta "valid meta key" key))
-                 (list key val)]
-                [_ (append-map loop xs)])]
+             [(list (== meta-key eq?) key val)
+              (unless (symbol? key)
+                (raise-argument-error 'define-meta "valid meta key" key))
+              (list key val)]
+             [(? list? xs) (append-map loop xs)]
              [_ null]))))
 
 (module+ test
