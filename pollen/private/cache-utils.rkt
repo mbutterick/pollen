@@ -59,11 +59,12 @@
            ;; the benefit of not reloading doc when you just need metas.
            ;; new namespace forces `dynamic-require` to re-instantiate `path`
            ;; otherwise it gets cached in current namespace.
-           (parameterize ([current-namespace (make-base-namespace)]
+           ;; brings in currently instantiated params (unlike namespace-require)
+           (define outer-ns (namespace-anchor->namespace cache-utils-module-ns))
+           (define new-ns (make-base-namespace))
+           (namespace-attach-module outer-ns 'pollen/setup new-ns)
+           (parameterize ([current-namespace new-ns]
                           [current-directory (dirname path)])
-             ;; brings in currently instantiated params (unlike namespace-require)
-             (define outer-ns (namespace-anchor->namespace cache-utils-module-ns))
-             (namespace-attach-module outer-ns 'pollen/setup) 
              (define doc-missing-thunk (λ () ""))
              (define metas-missing-thunk (λ () (hasheq)))
              (list doc-key (dynamic-require path doc-key doc-missing-thunk)

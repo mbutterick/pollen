@@ -147,7 +147,7 @@
   (define template-path (or maybe-template-path (get-template-for source-path output-path)))
   
   ;; output-path and template-path may not have an extension, so check them in order with fallback
-    (message (format "rendering /~a"
+  (message (format "rendering /~a"
                    (find-relative-path (current-project-root) source-path)))
   (match-define-values ((cons render-result _) _ real _)
     (parameterize ([current-poly-target (->symbol (or (get-ext output-path)
@@ -175,11 +175,12 @@
   (local-require scribble/core scribble/manual (prefix-in scribble- scribble/render))
   (define source-dir (dirname source-path))
   ;; make fresh namespace for scribble rendering (avoids dep/zo caching)
-  (parameterize ([current-namespace (make-base-namespace)]
+  (define outer-ns (namespace-anchor->namespace render-module-ns))
+  (define new-ns (make-base-namespace))
+  (namespace-attach-module outer-ns 'scribble/core new-ns)
+  (namespace-attach-module outer-ns 'scribble/manual new-ns)
+  (parameterize ([current-namespace new-ns]
                  [current-directory (->complete-path source-dir)])
-    (define outer-ns (namespace-anchor->namespace render-module-ns))
-    (namespace-attach-module outer-ns 'scribble/core)
-    (namespace-attach-module outer-ns 'scribble/manual)
     ;; scribble/lp files have their doc export in a 'doc submodule, so check both locations
     (match (cond
              [(dynamic-require source-path 'doc (λ () #false))]

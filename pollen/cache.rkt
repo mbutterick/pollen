@@ -47,10 +47,11 @@
          (define ram-cache-record (hash-ref! ram-cache key get-cache-record))
          (hash-ref ram-cache-record subkey)]
         [else
-         (parameterize ([current-namespace (make-base-namespace)])
+         (define outer-ns (namespace-anchor->namespace cache-module-ns))
+         (define new-ns (make-base-namespace))
+         (namespace-attach-module outer-ns 'pollen/setup new-ns) 
+         (parameterize ([current-namespace new-ns])
            ;; brings in currently instantiated params (unlike namespace-require)
-           (define outer-ns (namespace-anchor->namespace cache-module-ns))
-           (namespace-attach-module outer-ns 'pollen/setup) 
            (dynamic-require path subkey))]))))
 
 (define+provide (cached-require path-string subkey)
