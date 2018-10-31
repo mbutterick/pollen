@@ -177,9 +177,9 @@
   ;; make fresh namespace for scribble rendering (avoids dep/zo caching)
   (parameterize ([current-namespace (make-base-namespace)]
                  [current-directory (->complete-path source-dir)])
-    (define ns (namespace-anchor->namespace render-module-ns))
-    (namespace-attach-module ns 'scribble/core)
-    (namespace-attach-module ns 'scribble/manual)
+    (define outer-ns (namespace-anchor->namespace render-module-ns))
+    (namespace-attach-module outer-ns 'scribble/core)
+    (namespace-attach-module outer-ns 'scribble/manual)
     ;; scribble/lp files have their doc export in a 'doc submodule, so check both locations
     (match (cond
              [(dynamic-require source-path 'doc (λ () #false))]
