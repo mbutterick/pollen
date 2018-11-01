@@ -69,7 +69,7 @@
                                    has/is-markup-source?
                                    has/is-scribble-source?
                                    has/is-markdown-source?))])
-             (pred so-path))
+       (pred so-path))
      (define-values (source-path output-path) (->source+output-paths so-path))
      (render-to-file-if-needed source-path #f output-path)]
     [(pagetree-source? so-path) (render-pagenodes so-path)])
@@ -140,14 +140,14 @@
   (define render-proc (for/first ([test (in-list tests)]
                                   [render-proc (in-list render-procs)]
                                   #:when (test source-path))
-                                 render-proc))
+                        render-proc))
   (unless render-proc
     (raise-argument-error 'render (format "valid rendering function for ~a" source-path) render-proc))
   
   (define template-path (or maybe-template-path (get-template-for source-path output-path)))
   
   ;; output-path and template-path may not have an extension, so check them in order with fallback
-    (message (format "rendering /~a"
+  (message (format "rendering /~a"
                    (find-relative-path (current-project-root) source-path)))
   (match-define-values ((cons render-result _) _ real _)
     (parameterize ([current-poly-target (->symbol (or (get-ext output-path)
@@ -194,10 +194,15 @@
 
 (define (render-preproc-source source-path . _)
   (parameterize ([current-directory (->complete-path (dirname source-path))])
-    (render-datum-through-eval (syntax->datum
-                                (with-syntax ([SOURCE-PATH source-path])
-                                  #'(begin (require pollen/cache)
-                                           (cached-doc SOURCE-PATH)))))))
+    (render-through-eval (with-syntax ([MODNAME (gensym)]
+                                       [SOURCE-PATH-STRING (->string source-path)])
+                           #'(begin
+                               (module MODNAME racket/base
+                                 (require pollen/cache)
+                                 (define result (cached-doc SOURCE-PATH-STRING))
+                                 (provide result))
+                               (require 'MODNAME)
+                               result)))))
 
 (define (render-markup-or-markdown-source source-path [maybe-template-path #f] [maybe-output-path #f])
   (define output-path (or maybe-output-path (->output-path source-path)))
@@ -207,36 +212,19 @@
   (unless template-path
     (raise-argument-error 'render-markup-or-markdown-source "valid template path" template-path))
   (render-from-source-or-output-path template-path) ; because template might have its own preprocessor source
-  (define datum-to-eval
-    (syntax->datum
-     (with-syntax ([DIRECTORY-REQUIRE-FILES (require-directory-require-files source-path)]
-                   [DOC-ID (setup:main-export source-path)]
-                   [META-ID (setup:meta-export source-path)]
-                   [SOURCE-PATH-STRING (path->string source-path)]
-                   [CPR (current-project-root)]
-                   [HERE-PATH-KEY (setup:here-path-key source-path)]
-                   [COMMAND-CHAR (setup:command-char source-path)]
-                   [TEMPLATE-PATH (->string template-path)])
-       #'(begin 
-           (require (for-syntax racket/base)
-                    pollen/private/external/include-template
-                    pollen/cache
-                    pollen/private/log
-                    pollen/pagetree
-                    pollen/core)
-           DIRECTORY-REQUIRE-FILES
-           (parameterize ([current-pagetree (make-project-pagetree CPR)]
-                          [current-metas (cached-metas SOURCE-PATH-STRING)])
-             (local-require pollen/template pollen/top)
-             (define DOC-ID (cached-doc SOURCE-PATH-STRING))
-             (define META-ID (current-metas))
-             (define here (path->pagenode (or (select-from-metas 'HERE-PATH-KEY META-ID) 'unknown)))
-             (if (bytes? DOC-ID) ; if main export is binary, just pass it through
-                 DOC-ID
-                 (include-template #:command-char COMMAND-CHAR (file TEMPLATE-PATH))))))))
   ;; set current-directory because include-template wants to work relative to source location
-  (parameterize ([current-directory (->complete-path (dirname source-path))]) 
-    (render-datum-through-eval datum-to-eval)))
+  (parameterize ([current-directory (->complete-path (dirname source-path))])
+    (define stx-to-eval
+      (with-syntax ([MODNAME (gensym)]
+                    [SOURCE-PATH-STRING (->string source-path)]
+                    [TEMPLATE-PATH-STRING (->string template-path)])
+        #'(begin
+            (module MODNAME pollen/markup-helper
+              SOURCE-PATH-STRING
+              TEMPLATE-PATH-STRING)
+            (require 'MODNAME)
+            result)))
+    (render-through-eval stx-to-eval)))
 
 (define (templated-source? path)
   (or (markup-source? path) (markdown-source? path)))
@@ -244,7 +232,7 @@
 (define (file-exists-or-has-source? path) ; path could be #f
   (and path (for/first ([proc (in-list (list values ->preproc-source-path ->null-source-path))]
                         #:when (file-exists? (proc path)))
-                       path)))
+              path)))
 
 (define (get-template-from-metas source-path output-path-ext)
   (with-handlers ([exn:fail:contract? (λ (e) #f)]) ; in case source-path doesn't work with cached-require
@@ -275,7 +263,7 @@
          ;; output-path may not have an extension
          (define output-path-ext (or (get-ext output-path) (current-poly-target)))
          (for/or ([proc (list get-template-from-metas get-default-template get-fallback-template)])
-                 (file-exists-or-has-source? (proc source-path output-path-ext))))))
+           (file-exists-or-has-source? (proc source-path output-path-ext))))))
 
 (module-test-external
  (require pollen/setup sugar/file sugar/coerce)
@@ -297,9 +285,7 @@
    (check-equal? (get-template-for (->complete-path "foo.html.pm")) fallback.html)))
 
 (define-namespace-anchor render-module-ns)
-(define (render-datum-through-eval datum-to-eval)
+(define (render-through-eval datum-to-eval)
   ;; render a datum, not a syntax object, so that it can have fresh bindings.
-  (parameterize ([current-namespace (make-base-namespace)]
-                 [current-output-port (current-error-port)])
-    (namespace-attach-module (namespace-anchor->namespace render-module-ns) 'pollen/setup) ; brings in params
+  (parameterize ([current-output-port (current-error-port)])
     (eval datum-to-eval)))
