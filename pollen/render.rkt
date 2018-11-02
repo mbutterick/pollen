@@ -150,7 +150,7 @@
   (message (format "rendering /~a"
                    (find-relative-path (current-project-root) source-path)))
   (match-define-values ((cons render-result _) _ real _)
-    (parameterize ([current-render-status source-path]
+    (parameterize ([current-render-source source-path]
                    [current-poly-target (->symbol (or (get-ext output-path)
                                                       (and template-path (get-ext template-path))
                                                       (current-poly-target)))])
@@ -194,15 +194,9 @@
     (delete-file (->output-path source-path))))
 
 (define (render-preproc-source source-path . _)
-  (parameterize ([current-directory (->complete-path (dirname source-path))])
-    (render-through-eval (with-syntax ([MODNAME (gensym)]
-                                       [SOURCE-PATH-STRING (->string source-path)])
-                           #'(begin
-                               (module MODNAME pollen/private/render-helper
-                                 #:source SOURCE-PATH-STRING
-                                 #:result-id result)
-                               (require 'MODNAME)
-                               result)))))
+  (parameterize ([current-directory (->complete-path (dirname source-path))]
+                 [current-render-source source-path])
+    (cached-doc (->string source-path))))
 
 (define (render-markup-or-markdown-source source-path [maybe-template-path #f] [maybe-output-path #f])
   (define output-path (or maybe-output-path (->output-path source-path)))

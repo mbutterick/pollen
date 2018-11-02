@@ -22,13 +22,6 @@
 
 (define-syntax (mb stx)
   (syntax-case stx ()
-    ;; preproc branch
-    [(_ #:source SOURCE-PATH-STRING
-        #:result-id RESULT-ID)
-     #'(#%module-begin
-        (splicing-syntax-parameterize ([result (make-rename-transformer #'RESULT-ID)])
-          (define result (cached-doc SOURCE-PATH-STRING))
-          (provide result)))]
     ;; markup / markdown branch
     [(_ #:source SOURCE-PATH-STRING
         #:template TEMPLATE-PATH-STRING
