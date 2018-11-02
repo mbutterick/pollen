@@ -28,7 +28,9 @@
 
 (define (strip-leading-newlines doc)
   ;; drop leading newlines, as they're often the result of `defines` and `requires`
-  (dropf doc (λ (ln) (member ln (list (setup:newline) "")))))
+  (if (setup:trim-whitespace?)
+      (dropf doc (λ (ln) (member ln (list (setup:newline) ""))))
+      doc))
 
 (define-syntax (pollen-module-begin stx)
   (syntax-case stx ()
@@ -43,14 +45,14 @@
           DOC-ID ; positional arg for doclang-raw: name of export
           (λ (xs)
             (define proc (make-parse-proc PARSER-MODE ROOT-ID))
-            (define trimmed-xs ((if (setup:trim-whitespace?) strip-leading-newlines values) xs))
+            (define trimmed-xs (strip-leading-newlines xs))
             (define doc-elements (splice trimmed-xs (setup:splicing-tag)))
             (proc doc-elements)) ;  positional arg for doclang-raw: post-processor
           (module META-MOD-ID racket/base
             (provide METAS-ID)
             (define METAS-ID META-HASH))
           (require pollen/top pollen/core pollen/setup (submod "." META-MOD-ID))
-          (provide (all-defined-out) METAS-ID DOC-ID)
+          (provide (all-defined-out) METAS-ID DOC-ID doc+metas)
           (define prev-metas (current-metas))
           (and (current-metas METAS-ID) "") ; because empty strings get stripped, voids don't
           (begin . EXPRS)
