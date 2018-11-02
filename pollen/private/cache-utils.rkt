@@ -93,19 +93,19 @@
   (define-values (cache-dir private-cache-dir) (make-cache-dirs dest-path))
   (define-values (dest-path-dir dest-path-filename _) (split-path dest-path))
   (define dest-file (build-path cache-dir (format "~a.rktd" dest-path-filename)))
-  (define (fetch-dest-file)
+  (define (generate-dest-file)
     (write-to-file (path-hash-thunk) dest-file #:exists 'replace))
 
   ;; `cache-file` looks for a file in private-cache-dir previously cached with key
   ;; (which in this case carries modification dates and POLLEN env).
   ;; If a cached file is found, copies it to dest-file (which must not exist already, unless exists-ok? is true)
-  ;; Otherwise, fetch-dest-file is called; if dest-file exists after calling fetch-dest-file,
+  ;; Otherwise, generate-dest-file is called; if dest-file exists after calling fetch-dest-file,
   ;; it is copied to private-cache-dir and recorded with key.
   (cache-file dest-file
               #:exists-ok? #true
               key
               private-cache-dir
-              fetch-dest-file
+              generate-dest-file
               #:notify-cache-use notify-proc
               #:max-cache-size (setup:compile-cache-max-size))
   (file->value dest-file))
