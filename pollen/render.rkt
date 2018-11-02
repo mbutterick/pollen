@@ -150,7 +150,8 @@
   (message (format "rendering /~a"
                    (find-relative-path (current-project-root) source-path)))
   (match-define-values ((cons render-result _) _ real _)
-    (parameterize ([current-poly-target (->symbol (or (get-ext output-path)
+    (parameterize ([current-render-status source-path]
+                   [current-poly-target (->symbol (or (get-ext output-path)
                                                       (and template-path (get-ext template-path))
                                                       (current-poly-target)))])
       (time-apply render-proc (list source-path template-path output-path))))

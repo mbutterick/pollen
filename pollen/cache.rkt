@@ -1,7 +1,7 @@
 #lang racket/base
 (require racket/file
          racket/list
-         racket/fasl
+         racket/path
          sugar/define
          "private/cache-utils.rkt"
          "private/log.rkt"
@@ -47,7 +47,10 @@
       (cond
         [(setup:compile-cache-active path)
          (define key (paths->key path))
-         (define (convert-path-to-cache-record) (path->hash path))
+         (define (convert-path-to-cache-record)
+           (when (current-render-status)
+             (message (format "transitively loading /~a" (find-relative-path (current-project-root) path))))
+           (path->hash path))
          (define (get-cache-record) (cache-ref! key convert-path-to-cache-record))
          (define ram-cache-record (hash-ref! ram-cache key get-cache-record))
          (hash-ref ram-cache-record subkey)]
