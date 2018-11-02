@@ -209,13 +209,14 @@
   (parameterize ([current-output-port (current-error-port)])
     (eval (with-syntax ([MODNAME (gensym)]
                         [SOURCE-PATH-STRING (->string source-path)]
-                        [TEMPLATE-PATH-STRING (->string template-path)])
+                        [TEMPLATE-PATH-STRING (->string template-path)]
+                        [REQUIRE (if (version<? (version) "6.3") 'local-require 'require)])
             #'(begin
                 (module MODNAME pollen/private/render-helper
                   #:source SOURCE-PATH-STRING
                   #:template TEMPLATE-PATH-STRING
                   #:result-id result)
-                (require 'MODNAME)
+                (REQUIRE 'MODNAME)
                 result)))))
 
 (define (templated-source? path)
