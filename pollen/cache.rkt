@@ -19,15 +19,20 @@
     (raise-argument-error 'reset-cache "path-string to existing directory" starting-dir))
   (for ([path (in-directory starting-dir)]
         #:when (cache-directory? path))
-       (message (format "removing cache directory: ~a" path))
-       (delete-directory/files path)))
+    (message (format "removing cache directory: ~a" path))
+    (delete-directory/files path)))
 
 (define ((path-error-handler caller-name path-or-path-string) e)
   (raise-argument-error caller-name "valid path or path-string" path-or-path-string))
 
 (define-namespace-anchor cache-module-ns)
 
-(define use-fasl? #false)
+(define (fetch-val path subkey)
+  (parameterize ([current-namespace (make-base-namespace)])
+    ;; brings in currently instantiated params (unlike namespace-require)
+    (define outer-ns (namespace-anchor->namespace cache-module-ns))
+    (namespace-attach-module outer-ns 'pollen/setup) 
+    (dynamic-require path subkey)))
 
 (define cached-require-base
   (let ([ram-cache (make-hash)])
@@ -42,16 +47,11 @@
       (cond
         [(setup:compile-cache-active path)
          (define key (paths->key path))
-         (define (convert-path-to-cache-record) ((if use-fasl? s-exp->fasl values) (path->hash path)))
-         (define (get-cache-record) ((if use-fasl? fasl->s-exp values) (cache-ref! key convert-path-to-cache-record)))
+         (define (convert-path-to-cache-record) (path->hash path))
+         (define (get-cache-record) (cache-ref! key convert-path-to-cache-record))
          (define ram-cache-record (hash-ref! ram-cache key get-cache-record))
          (hash-ref ram-cache-record subkey)]
-        [else
-         (parameterize ([current-namespace (make-base-namespace)])
-           ;; brings in currently instantiated params (unlike namespace-require)
-           (define outer-ns (namespace-anchor->namespace cache-module-ns))
-           (namespace-attach-module outer-ns 'pollen/setup) 
-           (dynamic-require path subkey))]))))
+        [else (fetch-val path subkey)]))))
 
 (define+provide (cached-require path-string subkey)
   (cached-require-base path-string subkey 'cached-require))
