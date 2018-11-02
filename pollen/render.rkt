@@ -150,10 +150,11 @@
   (message (format "rendering /~a"
                    (find-relative-path (current-project-root) source-path)))
   (match-define-values ((cons render-result _) _ real _)
-    (parameterize ([current-render-source source-path]
+    (parameterize ([current-directory (->complete-path (dirname source-path))]
                    [current-poly-target (->symbol (or (get-ext output-path)
                                                       (and template-path (get-ext template-path))
-                                                      (current-poly-target)))])
+                                                      (current-poly-target)))]
+                   [current-render-source source-path])
       (time-apply render-proc (list source-path template-path output-path))))
   ;; wait till last possible moment to store mod dates, because render-proc may also trigger its own subrenders
   ;; e.g., of a template.
@@ -171,13 +172,14 @@
   ;; todo: add test to avoid copying if unnecessary (good idea in case the file is large)
   (file->bytes source-path))
 
+(define-namespace-anchor render-module-ns)
+
 (define (render-scribble-source source-path . _)
   ;((complete-path?) #:rest any/c . ->* . string?)
   (local-require scribble/core scribble/manual (prefix-in scribble- scribble/render))
   (define source-dir (dirname source-path))
   ;; make fresh namespace for scribble rendering (avoids dep/zo caching)
-  (parameterize ([current-namespace (make-base-namespace)]
-                 [current-directory (->complete-path source-dir)])
+  (parameterize ([current-namespace (make-base-namespace)])
     (define outer-ns (namespace-anchor->namespace render-module-ns))
     (namespace-attach-module outer-ns 'scribble/core)
     (namespace-attach-module outer-ns 'scribble/manual)
@@ -194,9 +196,7 @@
     (delete-file (->output-path source-path))))
 
 (define (render-preproc-source source-path . _)
-  (parameterize ([current-directory (->complete-path (dirname source-path))]
-                 [current-render-source source-path])
-    (cached-doc (->string source-path))))
+  (cached-doc (->string source-path)))
 
 (define (render-markup-or-markdown-source source-path [maybe-template-path #f] [maybe-output-path #f])
   (define output-path (or maybe-output-path (->output-path source-path)))
@@ -206,20 +206,17 @@
   (unless template-path
     (raise-argument-error 'render-markup-or-markdown-source "valid template path" template-path))
   (render-from-source-or-output-path template-path) ; because template might have its own preprocessor source
-  ;; set current-directory because include-template wants to work relative to source location
-  (parameterize ([current-directory (->complete-path (dirname source-path))])
-    (define stx-to-eval
-      (with-syntax ([MODNAME (gensym)]
-                    [SOURCE-PATH-STRING (->string source-path)]
-                    [TEMPLATE-PATH-STRING (->string template-path)])
-        #'(begin
-            (module MODNAME pollen/private/render-helper
-              #:source SOURCE-PATH-STRING
-              #:template TEMPLATE-PATH-STRING
-              #:result-id result)
-            (require 'MODNAME)
-            result)))
-    (render-through-eval stx-to-eval)))
+  (parameterize ([current-output-port (current-error-port)])
+    (eval (with-syntax ([MODNAME (gensym)]
+                        [SOURCE-PATH-STRING (->string source-path)]
+                        [TEMPLATE-PATH-STRING (->string template-path)])
+            #'(begin
+                (module MODNAME pollen/private/render-helper
+                  #:source SOURCE-PATH-STRING
+                  #:template TEMPLATE-PATH-STRING
+                  #:result-id result)
+                (require 'MODNAME)
+                result)))))
 
 (define (templated-source? path)
   (or (markup-source? path) (markdown-source? path)))
@@ -279,8 +276,3 @@
    (check-false (get-template-for (->complete-path "foo.poly.pm")))
    (check-equal? (get-template-for (->complete-path "foo.html.pm")) fallback.html)))
 
-(define-namespace-anchor render-module-ns)
-(define (render-through-eval stx-to-eval)
-  ;; render a datum, not a syntax object, so that it can have fresh bindings.
-  (parameterize ([current-output-port (current-error-port)])
-    (eval stx-to-eval)))
