@@ -101,6 +101,8 @@
 (define+provide current-server-port (make-parameter (project-server-port)))
 (define+provide current-server-listen-ip (make-parameter #f))
 
+(define+provide current-render-source (make-parameter #f))
+
 (define-settable dashboard-css "poldash.css")
 
 (define-runtime-path server-extras-dir "private/server-extras")

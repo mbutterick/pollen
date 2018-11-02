@@ -156,13 +156,13 @@
                    [->STEM-SOURCE+OUTPUT-PATHS (format-id stx "->~a-source+output-paths" #'STEM)])
        #`(begin
            ;; does file have particular extension
-           (define+provide/contract (STEM-SOURCE? x)
-             (any/c . -> . boolean?)
-             (and (pathish? x) (has-ext? (->path x) (SETUP:STEM-SOURCE-EXT)) #t))
+           (define+provide (STEM-SOURCE? x)
+             #;(any/c . -> . boolean?)
+             (and (pathish? x) (has-ext? (->path x) (SETUP:STEM-SOURCE-EXT)) #true))
            
            ;; non-theoretical: want the first possible source that exists in the filesystem
-           (define+provide/contract (GET-STEM-SOURCE x)
-             (coerce/path? . -> . (or/c #f path?))
+           (define+provide (GET-STEM-SOURCE x)
+             #;(coerce/path? . -> . (or/c #f path?))
              (define source-paths (or (->STEM-SOURCE-PATHS x) null))
              (for/first ([sp (in-list source-paths)]
                          #:when (file-exists? sp))
@@ -173,8 +173,8 @@
              (->boolean (and (pathish? x) (ormap (λ (proc) (proc (->path x))) (list STEM-SOURCE? GET-STEM-SOURCE)))))
            
            ;; get first possible source path (does not check filesystem)
-           (define+provide/contract (->STEM-SOURCE-PATH x)
-             (pathish? . -> . (or/c #f path?))
+           (define+provide (->STEM-SOURCE-PATH x)
+             #;(pathish? . -> . (or/c #f path?))
              (define paths (->STEM-SOURCE-PATHS x))
              (and paths (car paths)))
            
@@ -186,7 +186,7 @@
                    #,(if (eq? (syntax->datum #'STEM) 'scribble)
                          #'(if (x . has-ext? . 'html) ; different logic for scribble sources
                                (list (add-ext (remove-ext* x) (SETUP:STEM-SOURCE-EXT)))
-                               #f)
+                               #false)
                          #'(let ([x-ext (get-ext x)]
                                  [source-ext (SETUP:STEM-SOURCE-EXT)])
                              (cons
