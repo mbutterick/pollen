@@ -52,7 +52,7 @@
             (provide METAS-ID)
             (define METAS-ID META-HASH))
           (require pollen/top pollen/core pollen/setup (submod "." META-MOD-ID))
-          (provide (all-defined-out) METAS-ID DOC-ID doc+metas)
+          (provide (all-defined-out) METAS-ID DOC-ID)
           (define prev-metas (current-metas))
           (and (current-metas METAS-ID) "") ; because empty strings get stripped, voids don't
           (begin . EXPRS)
