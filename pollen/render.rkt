@@ -6,6 +6,7 @@
          sugar/define
          sugar/file
          sugar/coerce
+         version/utils
          "private/file-utils.rkt"
          "cache.rkt"
          "private/log.rkt"
