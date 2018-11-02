@@ -197,10 +197,9 @@
     (render-through-eval (with-syntax ([MODNAME (gensym)]
                                        [SOURCE-PATH-STRING (->string source-path)])
                            #'(begin
-                               (module MODNAME racket/base
-                                 (require pollen/cache)
-                                 (define result (cached-doc SOURCE-PATH-STRING))
-                                 (provide result))
+                               (module MODNAME pollen/private/render-helper
+                                 #:source SOURCE-PATH-STRING
+                                 #:result-id result)
                                (require 'MODNAME)
                                result)))))
 
@@ -219,9 +218,10 @@
                     [SOURCE-PATH-STRING (->string source-path)]
                     [TEMPLATE-PATH-STRING (->string template-path)])
         #'(begin
-            (module MODNAME pollen/markup-helper
-              SOURCE-PATH-STRING
-              TEMPLATE-PATH-STRING)
+            (module MODNAME pollen/private/render-helper
+              #:source SOURCE-PATH-STRING
+              #:template TEMPLATE-PATH-STRING
+              #:result-id result)
             (require 'MODNAME)
             result)))
     (render-through-eval stx-to-eval)))
@@ -285,7 +285,7 @@
    (check-equal? (get-template-for (->complete-path "foo.html.pm")) fallback.html)))
 
 (define-namespace-anchor render-module-ns)
-(define (render-through-eval datum-to-eval)
+(define (render-through-eval stx-to-eval)
   ;; render a datum, not a syntax object, so that it can have fresh bindings.
   (parameterize ([current-output-port (current-error-port)])
-    (eval datum-to-eval)))
+    (eval stx-to-eval)))
