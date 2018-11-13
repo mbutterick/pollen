@@ -6,9 +6,9 @@
          racket/runtime-path
          racket/system
          racket/string
+         racket/format
          rackjure/threading
-         rackjure/str
-          xml
+         xml
          (only-in html read-html-as-xml)
          "../private/log.rkt"
          "../private/splice.rkt")
@@ -69,17 +69,6 @@ if zero is False:
 
 
 ;;;;;;;;;;;;;;;;;;
-;; from frog/params
-
-(define current-pygments-linenos? (make-parameter #t))
-(define current-pygments-cssclass (make-parameter "source"))
-
-;; end frog/params
-;;;;;;;;;;;;;;;;;;
-
-
-
-;;;;;;;;;;;;;;;;;;
 ;; from frog/pygments
 
 ;; Process that runs Python with our pipe.py script.
@@ -90,26 +79,27 @@ if zero is False:
 
 (define start
   (let ([start-attempted? #f])
-    (λ ()
+    (λ (python-executable line-numbers? css-class)
       (unless start-attempted?
         (set! start-attempted? #t)
-        (prn0 "Launching python pipe.py")
-        (match (process (str "python -u " pipe.py
-                             (if (current-pygments-linenos?) " --linenos" "")
-                             " --cssclass " (current-pygments-cssclass)))
-          [(list in out pid err proc)
-           (set!-values (pyg-in pyg-out pyg-pid pyg-err pyg-proc)
-                        (values in out pid err proc))
-           (file-stream-buffer-mode out 'line)
-           (match (read-line pyg-in 'any)  ;; consume "ready" line or EOF
-             [(? eof-object?) (say-no-pygments)]
-             [_ (say-pygments)])]
-          [_ (say-no-pygments)])))))
-
-(define (say-pygments)
-  (prn1 "Using Pygments."))
-(define (say-no-pygments)
-  (prn1 "Pygments not found. Using plain `pre` blocks."))
+        (define pre " Using plain `pre` blocks.")
+        (match (find-executable-path python-executable)
+          [(? path? python)
+           (prn1 (~a "Launching `" python " " pipe.py "` to use Pygments."))
+           (match (process (~a python
+                               " -u " pipe.py
+                               (if line-numbers? " --linenos" "")
+                               " --cssclass " css-class))
+             [(list in out pid err proc)
+              (set!-values (pyg-in pyg-out pyg-pid pyg-err pyg-proc)
+                           (values in out pid err proc))
+              (file-stream-buffer-mode out 'line)
+              (match (read-line pyg-in 'any)  ;; consume "ready" line or EOF
+                [(? eof-object?) (prn0 (~a "Pygments pipe.py not responding." pre))]
+                [_ (void)])]
+             [_ (prn0 (~a "`" python " " pipe.py "` failed." pre))])]
+          [#f
+           (prn0 (~a "Pygments executable `" python-executable "` not found." pre))])))))
 
 (define (running?)
   (and pyg-proc
@@ -130,11 +120,15 @@ if zero is False:
      (stop)
      (old-exit-handler v))))
 
-(define (pygmentize code lang [hl-lines null]) ;; string? string? (listof number?) -> (listof xexpr?)
+(define (pygmentize code lang
+                    #:python-executable python-executable
+                    #:line-numbers? line-numbers?
+                    #:css-class css-class
+                    #:hl-lines hl-lines)
   (define (default code)
     `((pre () (code () ,code))))
   (unless (running?)
-    (start))
+    (start python-executable line-numbers? css-class))
   (cond [(running?)
          ;; order of writing arguments is significant: cooperates with pipe.py
          (displayln lang pyg-out)
@@ -144,7 +138,7 @@ if zero is False:
          (let loop ([s ""])
            (match (read-line pyg-in 'any)
              ["__END__" (with-input-from-string s read-html-as-xexprs)]
-             [(? string? v) (loop (str s v "\n"))]
+             [(? string? v) (loop (~a s v "\n"))]
              [_ (copy-port pyg-err (current-output-port)) ;echo error msg
                 (default code)]))]
         [else (default code)]))
@@ -153,11 +147,18 @@ if zero is False:
 ;;;;;;;;;;;;;;;;;;
 
 
-(define (highlight #:lines [hl-lines null]
+(define (highlight #:python-executable [python-executable "python"]
+                   #:line-numbers? [line-numbers? #t]
+                   #:css-class [css-class "source"]
+                   #:lines [hl-lines null]
                    lang . codelines)
   (define code (string-append* codelines))
   `(div ((class "highlight"))
-      ,@(strip-empty-attrs (pygmentize code lang hl-lines))))
+        ,@(strip-empty-attrs (pygmentize code lang
+                                         #:python-executable python-executable
+                                         #:line-numbers? line-numbers?
+                                         #:css-class css-class
+                                         #:hl-lines hl-lines))))
 
 ;; Other CSS options available from http://richleland.github.io/pygments-css/ 
 
