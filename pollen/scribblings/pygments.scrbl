@@ -16,10 +16,14 @@ A simple interface to syntax highlighting using Pygments. @bold{You must already
 @defproc[
 (highlight
 [language symbol?]
+[#:python-executable python-executable path-string? "python"]
+[#:line-numbers? line-numbers? boolean? #t]
+[#:css-class css-class string? "source"]
+[#:lines lines (listof number?) '()]
 [lines-of-code string?] ...
 )
 txexpr?]
-Use Pygments to highlight the code in @racket[_lines-of-code] according to the semantics of @racket[_language]. Does not apply any visual styling, just the markup.
+Use Pygments to highlight the code in @racket[_lines-of-code] according to the semantics of @racket[_language]. Does not apply any visual styling, just the markup. The optional @racket[_python-executable] controls which Python Pollen should use (which will be useful when you install Pygments in a non-default version of Python). The optional @racket[_line-numbers?] controls whether or not the syntax highlight should include line numbers. The optional @racket[_css-class] controls the CSS class name for the syntax highlight. The optional @racket[_lines] will tag the specified lines of code with the CSS class @tt{hll}.
 
 Sample input:
 
