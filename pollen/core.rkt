@@ -20,7 +20,8 @@
 ;; if `define-meta` is defined it will pop an error msg if the wrong number of args
 ;; even though this error will happen after macro expansion, when metas are extracted
 ;; empty string will merge with surroundings
-(define+provide (define-meta k v) "")
+(provide define-meta)
+(define-syntax-rule (define-meta k v) (begin))
 
 (define+provide current-metas (make-parameter #f))
 

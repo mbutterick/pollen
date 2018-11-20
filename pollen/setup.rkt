@@ -133,3 +133,5 @@
 (define+provide current-poly-target (make-parameter (car (poly-targets))))
 
 (define-settable index-pages '("index.html"))
+
+(define-settable allow-unbound-ids #true)
