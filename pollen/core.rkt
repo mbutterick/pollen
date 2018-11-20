@@ -21,7 +21,7 @@
 ;; even though this error will happen after macro expansion, when metas are extracted
 ;; empty string will merge with surroundings
 (provide define-meta)
-(define-syntax-rule (define-meta k v) "")
+(define-syntax-rule (define-meta k v) (begin))
 
 (define+provide current-metas (make-parameter #f))
 
