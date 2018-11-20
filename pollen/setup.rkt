@@ -134,4 +134,4 @@
 
 (define-settable index-pages '("index.html"))
 
-(define-settable racket-style-top #f)
+(define-settable allow-unbound-ids #true)

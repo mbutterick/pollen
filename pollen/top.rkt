@@ -5,12 +5,12 @@
 (define-syntax (top~ stx)
   (syntax-case stx ()
     [(_ . ID)
-     (setup:racket-style-top)
-     #'(#%top . ID)]
+     (setup:allow-unbound-ids)
+     #'(#%app make-default-tag-function 'ID)]
     [(_ . ID)
-     #'(#%app make-default-tag-function 'ID)]))
+     #'(def/c ID)]))
 
 (define-syntax (def/c stx)
   (syntax-case stx ()
-    [(_ X) (identifier-binding #'X) #'X]
-    [(_ X) #'(#%top . X)]))
+    [(_ ID) (identifier-binding #'ID) #'ID]
+    [(_ ID) #'(#%top . ID)]))
