@@ -145,7 +145,7 @@ Note that if @racket[_doc-source] is a relative path or pagenode, it is treated 
 (select-from-metas
 [key symbolish?]
 [meta-source (or/c hash? pagenodeish? pathish?)])
-(or/c #f xexpr?)]
+any/c]
 Look up the value of @racket[_key] in @racket[_meta-source]. The @racket[_meta-source] argument can be either 1) a hashtable representing @racket[metas] or 2) a pagenode or source path that identifies a source file that provides @racket[metas]. If no value exists for @racket[_key], you get @racket[#f]. 
 
 Note that if @racket[_meta-source] is a relative path or pagenode, it is treated as being relative to @racket[current-project-root]. If that's not what you want, you'll need to convert it explicitly to a complete-path (e.g., with @racket[path->complete-path] or @racket[->complete-path]).

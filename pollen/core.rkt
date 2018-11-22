@@ -62,7 +62,7 @@
 (define+provide/contract (select-from-metas key metas-source [caller 'select-from-metas])
   ;; output contract is a single txexpr-element
   ;; because metas is a hash, and a hash has only one value for a key.
-  ((coerce/symbol? (or/c is-meta-value? pagenode? pathish?)) (symbol?) . ->* . (or/c #f txexpr-element?))
+  ((coerce/symbol? (or/c is-meta-value? pagenode? pathish?)) (symbol?) . ->* . any/c)
   (hash-ref (match metas-source
               [(? is-meta-value? ms) ms]
               [_  (get-metas metas-source caller)]) key #false))
