@@ -22,3 +22,4 @@ scribblings/*.css
 scribblings/*.html
 scribblings/pollen/*
 doc/*
+pollen/doc/*
