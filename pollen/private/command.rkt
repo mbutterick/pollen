@@ -165,10 +165,13 @@ version                print the version" (current-server-port) (make-publish-di
                             [("clone") "clone"] ; bw compat
                             [else user-publish-path])))))
 
-(define (delete-it path)
+(define (delete-it! path)
   (match path
     [(? directory-exists?) (delete-directory/files path)]
-    [(? file-exists?) (delete-file path)]))
+    [(? file-exists?) (delete-file path)]
+    ;; possible we'll get a file path whose parent directory
+    ;; has been deleted (and so it too is already gone)
+    [_ (void)]))
 
 (define (contains-directory? possible-superdir possible-subdir)
   (define (has-prefix? xs prefix)
@@ -230,7 +233,7 @@ version                print the version" (current-server-port) (make-publish-di
                      [current-project-root (current-directory)])
        (define (delete-from-publish-dir? p)
          (and (omitted-path? p) (not (extra-path? p))))
-       (for-each delete-it (find-files delete-from-publish-dir? dest-dir)))
+       (for-each delete-it! (find-files delete-from-publish-dir? dest-dir)))
      (displayln "publish completed")]
     [else (displayln "publish aborted")]))
 
