@@ -20,7 +20,7 @@
 ;; todo: investigate this
 
 (module+ raco
-  (define command-name (with-handlers ([exn:fail? (λ () #f)])
+  (define command-name (with-handlers ([exn:fail? (λ (exn) #f)])
                          (vector-ref (current-command-line-arguments) 0)))
   (dispatch command-name))
 
