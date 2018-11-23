@@ -162,7 +162,7 @@ I mean @italic{parameters} in the Racket sense, i.e. values that can be fed to @
 A parameter that sets the HTTP port for the project server.}
 
 
-@defparam[current-project-root port path?]{
+@defparam[current-project-root path path?]{
 A parameter that holds the root directory of the current project (e.g., the directory where you launched @code{raco pollen start}).}
 
 
