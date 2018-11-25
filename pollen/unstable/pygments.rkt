@@ -85,7 +85,7 @@ if zero is False:
         (define pre " Using plain `pre` blocks.")
         (match (find-executable-path python-executable)
           [(? path? python)
-           (prn1 (~a "Launching `" python " " pipe.py "` to use Pygments."))
+           (prn1 (~a "launching `" python " " pipe.py "` to use Pygments"))
            (match (process (~a python
                                " -u " pipe.py
                                (if line-numbers? " --linenos" "")
@@ -95,11 +95,11 @@ if zero is False:
                            (values in out pid err proc))
               (file-stream-buffer-mode out 'line)
               (match (read-line pyg-in 'any)  ;; consume "ready" line or EOF
-                [(? eof-object?) (prn0 (~a "Pygments pipe.py not responding." pre))]
+                [(? eof-object?) (prn0 (~a "Pygments pipe.py not responding" pre))]
                 [_ (void)])]
              [_ (prn0 (~a "`" python " " pipe.py "` failed." pre))])]
           [#f
-           (prn0 (~a "Pygments executable `" python-executable "` not found." pre))])))))
+           (prn0 (~a "Pygments executable `" python-executable "` not found" pre))])))))
 
 (define (running?)
   (and pyg-proc
