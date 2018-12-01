@@ -74,11 +74,11 @@ version                print the version" (current-server-port) (make-publish-di
   (displayln (dynamic-require 'pollen/private/version 'pollen:version)))
 
 (define (handle-reset directory-maybe)
-  (displayln "resetting cache ...")
+  (message "resetting cache ...")
   ((dynamic-require 'pollen/cache 'reset-cache) directory-maybe))
 
 (define (handle-setup directory-maybe)
-  (displayln "preheating cache ...")
+  (message "preheating cache ...")
   ((dynamic-require 'pollen/private/preheat-cache 'preheat-cache) directory-maybe)) 
 
 (define (handle-render)
@@ -116,10 +116,10 @@ version                print the version" (current-server-port) (make-publish-di
                (map very-nice-path
                     (cond
                       [(null? static-pagetrees)
-                       (displayln (format "rendering generated pagetree for directory ~a" dir))
+                       (message (format "rendering generated pagetree for directory ~a" dir))
                        (cdr (make-project-pagetree dir))]
                       [else
-                       (displayln (format "rendering preproc & pagetree files in directory ~a" dir))
+                       (message (format "rendering preproc & pagetree files in directory ~a" dir))
                        (append preprocs static-pagetrees)])))
              (apply render-batch batch-to-render)
              (when (render-with-subdirs?)
@@ -128,7 +128,7 @@ version                print the version" (current-server-port) (make-publish-di
                                  (not (omitted-path? path))))
                     (render-one-dir (->complete-path path))))))]
         [path-args ;; path mode
-         (displayln (format "rendering ~a" (string-join (map ->string path-args) " ")))
+         (message (format "rendering ~a" (string-join (map ->string path-args) " ")))
          (apply render-batch (map very-nice-path path-args))]))))
 
 (define (handle-start)
@@ -211,8 +211,7 @@ version                print the version" (current-server-port) (make-publish-di
   (when (equal? dest-dir (current-directory))
     (error 'publish "aborted because destination directory for publishing (~a) can't be the same as current directory (~a)" dest-dir (current-directory)))
   
-  (display (format "publishing from ~a " source-dir))
-  (displayln (format "to ~a ..." dest-dir))
+  (message (string-append (format "publishing from ~a to ~a ..." source-dir dest-dir)))
   (define do-publish-operation?
     (or (not (directory-exists? dest-dir))
         (force-target-overwrite?)
@@ -234,8 +233,8 @@ version                print the version" (current-server-port) (make-publish-di
        (define (delete-from-publish-dir? p)
          (and (omitted-path? p) (not (extra-path? p))))
        (for-each delete-it! (find-files delete-from-publish-dir? dest-dir)))
-     (displayln "publish completed")]
-    [else (displayln "publish aborted")]))
+     (message "publish completed")]
+    [else (message "publish aborted")]))
 
 (define (handle-unknown command)
   (match command
