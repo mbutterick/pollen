@@ -48,9 +48,9 @@
   (define pt-root-tag (setup:pagetree-root-node))
   (define (splice-nested-pagetree xs)
     (apply append (for/list ([x (in-list xs)])
-                            (if (and (txexpr? x) (eq? (get-tag x) pt-root-tag))
-                                (get-elements x)
-                                (list x)))))
+                    (if (and (txexpr? x) (eq? (get-tag x) pt-root-tag))
+                        (get-elements x)
+                        (list x)))))
   (validate-pagetree 
    (decode (cons pt-root-tag xs)
            #:txexpr-elements-proc (compose1 splice-nested-pagetree (λ (xs) (filter-not whitespace? xs))) 
@@ -63,7 +63,7 @@
          (define pagenodes (pagetree-strict->list x))
          (for ([p (in-list pagenodes)]
                #:unless (pagenode? p))
-              (raise-argument-error 'validate-pagetree "valid pagenodes" p))
+           (raise-argument-error 'validate-pagetree "valid pagenodes" p))
          (with-handlers ([exn:fail? (λ (e) (error 'validate-pagetree "~a" (exn-message e)))])
            (members-unique?/error pagenodes))
          x)))
@@ -138,7 +138,7 @@
            (if (memq pagenode (map topmost-node current-children))
                current-parent
                (for/or ([st (in-list (filter list? current-children))])
-                       (loop pagenode st))))))
+                 (loop pagenode st))))))
   (if (eq? result (first pt))
       (and allow-root? result)
       result))
@@ -160,7 +160,7 @@
          (match pagenode
            [(== (first pt) eq?) (map topmost-node (rest pt))]
            [_ (for/or ([subtree (in-list (filter pair? pt))])
-                      (loop pagenode subtree))]))))
+                (loop pagenode subtree))]))))
 
 
 (module-test-external
@@ -191,7 +191,7 @@
   (((or/c #f pagenodeish?)) ((or/c pagetree? pathish?)) . ->* . (or/c #f pagenodes?))  
   (match (for/list ([sib (in-list (or (siblings pnish pt-or-path) empty))]
                     #:unless (eq? sib (->pagenode pnish)))
-                   sib)
+           sib)
     [(? pair? sibs) sibs]
     [_ #false]))
 
@@ -231,7 +231,7 @@
                   [pagetree-nodes (pagetree->list (get-pagetree pt-or-path))])
          (case side
            [(right) (match (memq pagenode pagetree-nodes)
-                      [(list _ rest ...) rest]
+                      [(list _ rest ..1) rest]
                       [_ #false])]
            [else (match (loop 'right pagenode (reverse pagetree-nodes))
                    [(? pair? result) (reverse result)]
@@ -254,11 +254,15 @@
  (check-equal? (previous* 'three test-pagetree) '(foo bar one two))
  (check-false (previous* 'foo test-pagetree)))
 
-
 (define+provide/contract (next* pnish [pt-or-path (current-pagetree)]) 
   (((or/c #f pagenodeish?)) ((or/c pagetree? pathish?)) . ->* . (or/c #f pagenodes?))
   (adjacents 'right pnish pt-or-path))
 
+(module-test-external
+ (define test-pagetree `(pagetree-main foo bar (one (two three))))
+ (check-equal? (next* 'foo test-pagetree) '(bar one two three))
+ (check-equal? (next* 'one test-pagetree) '(two three))
+ (check-false (next* 'three test-pagetree)))
 
 (define+provide/contract (previous pnish [pt-or-path (current-pagetree)])
   (((or/c #f pagenodeish?)) ((or/c pagetree? pathish?)) . ->* . (or/c #f pagenode?))
