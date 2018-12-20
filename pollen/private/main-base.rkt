@@ -47,7 +47,8 @@
             (define proc (make-parse-proc PARSER-MODE ROOT-ID))
             (define trimmed-xs (strip-leading-newlines xs))
             (define doc-elements (splice trimmed-xs (setup:splicing-tag)))
-            (proc doc-elements)) ;  positional arg for doclang-raw: post-processor
+            (parameterize ([current-metas METAS-ID])
+              (proc doc-elements))) ;  positional arg for doclang-raw: post-processor
           (module META-MOD-ID racket/base
             (provide METAS-ID)
             (define METAS-ID META-HASH))
