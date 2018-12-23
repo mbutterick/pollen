@@ -70,7 +70,7 @@
                                    has/is-markup-source?
                                    has/is-scribble-source?
                                    has/is-markdown-source?))])
-       (pred so-path))
+             (pred so-path))
      (define-values (source-path output-path) (->source+output-paths so-path))
      (render-to-file-if-needed source-path #f output-path)]
     [(pagetree-source? so-path) (render-pagenodes so-path)])
@@ -84,6 +84,8 @@
                              source-path
                              maybe-output-path
                              maybe-template-path)
+  (unless (file-exists? source-path)
+    (raise-argument-error caller "existing source path" source-path))
   (define output-path (or maybe-output-path (->output-path source-path)))
   (unless output-path
     (raise-argument-error caller "valid output path" output-path))
@@ -124,6 +126,8 @@
 
 (define+provide/contract (render source-path [maybe-template-path #f] [maybe-output-path #f])
   ((complete-path?) ((or/c #f complete-path?) (or/c #f complete-path?)) . ->* . (or/c string? bytes?))
+  (unless (file-exists? source-path)
+    (raise-argument-error 'render "existing source path" source-path))
   (define output-path (or maybe-output-path (->output-path source-path)))
   (unless output-path
     (raise-argument-error 'render "valid output path" output-path))
@@ -141,7 +145,7 @@
   (define render-proc (for/first ([test (in-list tests)]
                                   [render-proc (in-list render-procs)]
                                   #:when (test source-path))
-                        render-proc))
+                                 render-proc))
   (unless render-proc
     (raise-argument-error 'render (format "valid rendering function for ~a" source-path) render-proc))
   
@@ -226,7 +230,7 @@
 (define (file-exists-or-has-source? path) ; path could be #f
   (and path (for/first ([proc (in-list (list values ->preproc-source-path ->null-source-path))]
                         #:when (file-exists? (proc path)))
-              path)))
+                       path)))
 
 (define (get-template-from-metas source-path output-path-ext)
   (with-handlers ([exn:fail:contract? (λ (e) #f)]) ; in case source-path doesn't work with cached-require
@@ -257,7 +261,7 @@
          ;; output-path may not have an extension
          (define output-path-ext (or (get-ext output-path) (current-poly-target)))
          (for/or ([proc (list get-template-from-metas get-default-template get-fallback-template)])
-           (file-exists-or-has-source? (proc source-path output-path-ext))))))
+                 (file-exists-or-has-source? (proc source-path output-path-ext))))))
 
 (module-test-external
  (require pollen/setup sugar/file sugar/coerce)
