@@ -1,6 +1,6 @@
 #lang scribble/manual
 @(require "mb-tools.rkt")
-@(require scribble/eval pollen/setup racket/string (for-label racket syntax/modresolve (except-in pollen #%module-begin) pollen/setup))
+@(require scribble/eval pollen/setup racket/string (for-label racket racket/runtime-path syntax/modresolve (except-in pollen #%module-begin) pollen/setup))
 
 @(define my-eval (make-base-eval))
 @(my-eval `(require pollen pollen/setup))
@@ -108,14 +108,16 @@ Default separators used in decoding.
 
 @defoverridable[cache-watchlist (listof (or/c path? path-string?))]{List of extra files that the cache (= render cache + compile cache, collectively) watches during a project-server session. If one of the files on the watchlist changes, the cache is invalidated (just as it would be if @racket["pollen.rkt"] changed).
 
-If the cache can't find a certain file on the watchlist, it will be ignored. Therefore, to avoid unexpected behavior, the best policy is to pass in complete paths (or path strings). An easy way to convert a module name into a complete path is with @racket[resolve-module-path]:
+If the cache can't find a certain file on the watchlist, no error will arise. The file will simply be ignored. Therefore, to avoid unexpected behavior, the best policy is to use complete paths (or path strings). One way to generate a complete path to a local file is with @racket[define-runtime-path]. Another way, if you're using a module that's already installed as part of a package, is with @racket[resolve-module-path]:
 
 @fileblock["pollen.rkt" 
 @codeblock{
 (module+ setup
-  (require syntax/modresolve)
   (provide (all-defined-out))
-  (define cache-watchlist (map resolve-module-path '("my-module.rkt"))))
+  (require racket/runtime-path syntax/modresolve)
+  (define-runtime-path my-local-mod "my-module.rkt")
+  (define my-installed-mod (resolve-module-path 'package/my-other-module))
+  (define cache-watchlist (list my-local-mod my-installed-mod)))
 }]
 
 @pollen-history[#:added "1.4"]
