@@ -1,17 +1,13 @@
 #lang racket/base
 (require racket/file
          racket/path
-         racket/string
-         racket/list
          racket/vector
          racket/cmdline
          racket/match
          sugar/coerce
          "file-utils.rkt"
          "log.rkt"
-         "../setup.rkt"
-         "../render.rkt"
-         "../pagetree.rkt")
+         "../setup.rkt")
 
 ;; The use of dynamic-require throughout this file is intentional:
 ;; this way, low-dependency raco commands (like "version") are faster.
@@ -82,6 +78,9 @@ version                print the version" (current-server-port) (make-publish-di
   ((dynamic-require 'pollen/private/preheat-cache 'preheat-cache) directory-maybe)) 
 
 (define (handle-render)
+  (define render-batch (dynamic-require 'pollen/render 'render-batch))
+  (define string-join (dynamic-require 'string-join 'racket/string))
+  (define make-project-pagetree (dynamic-require 'pollen/pagetree 'make-project-pagetree))
   (define render-target-wanted (make-parameter (current-poly-target)))
   (define render-with-subdirs? (make-parameter #f))
   (define parsed-args
@@ -98,7 +97,7 @@ version                print the version" (current-server-port) (make-publish-di
   (parameterize ([current-poly-target (render-target-wanted)]) ;; applies to both cases
     (let loop ([args parsed-args])
       (match args
-        [(== empty) (loop (list (current-directory)))]
+        [(== null) (loop (list (current-directory)))]
         [(list dir) ;; directory mode: one directory as argument
          #:when (directory-exists? dir)
          (define top-dir (very-nice-path dir))
@@ -176,7 +175,9 @@ version                print the version" (current-server-port) (make-publish-di
 (define (contains-directory? possible-superdir possible-subdir)
   (define (has-prefix? xs prefix)
     (and (>= (length xs) (length prefix))
-         (andmap equal? prefix (take xs (length prefix)))))
+         (andmap equal? prefix (for/list ([(x idx) (in-indexed xs)]
+                                          #:break (= idx (length prefix)))
+                                 x))))
   ((explode-path possible-subdir) . has-prefix? . (explode-path possible-superdir)))
 
 (define (handle-publish)
