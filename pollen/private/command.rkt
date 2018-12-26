@@ -79,7 +79,7 @@ version                print the version" (current-server-port) (make-publish-di
 
 (define (handle-render)
   (define render-batch (dynamic-require 'pollen/render 'render-batch))
-  (define string-join (dynamic-require 'string-join 'racket/string))
+  (define string-join (dynamic-require 'racket/string 'string-join))
   (define make-project-pagetree (dynamic-require 'pollen/pagetree 'make-project-pagetree))
   (define render-target-wanted (make-parameter (current-poly-target)))
   (define render-with-subdirs? (make-parameter #f))
