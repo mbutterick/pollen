@@ -45,7 +45,7 @@ Be warned that this will make your rendering much slower. But you will be guaran
 
 The compile cache tracks the modification date of the source file, the current setting of @secref["The_POLLEN_environment_variable"], and the modification dates of the template and @filepath{pollen.rkt} (if they exist). For @tt{poly} source files, it also tracks the @racket[current-poly-target]. It also tracks any files you've listed in the optional setup value @racket[setup:cache-watchlist].
 
-It does not, however, track every possible dependency. So in a complex project, it's possible to create deep dependencies that aren't noticed by the cache. 
+It does not, however, track every possible dependency. So in a complex project, it's possible to create deep dependencies that aren't noticed by the cache. In particular, Pollen does not track pagetree files as dependencies of other source files. Thus, if you change a pagetree, you'll ordinarily need to use @exec{raco pollen reset} to clear the caches.
 
 Unfortunately, there's no way around this problem. For the cache to be useful, there has to be a limit on the horizon of dependency checking. To capture every possible dependency, the cache would have to recompile every file, every time — which would be equivalent to not caching at all.
 
