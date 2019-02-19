@@ -241,7 +241,7 @@
       (define template-name (if (list? template-name-or-names)
                                 (findf (λ (tn) (eq? (get-ext tn) output-path-ext)) template-name-or-names)
                                 template-name-or-names))
-      (and template-name (build-path (dirname source-path) template-name)))))
+      (and template-name (simplify-path (cleanse-path (build-path (dirname source-path) template-name)))))))
 
 (define (get-default-template source-path output-path-ext)
   (and output-path-ext
