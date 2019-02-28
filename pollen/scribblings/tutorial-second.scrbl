@@ -638,7 +638,7 @@ The automatic pagetree for this project is exactly what you see in the dashboard
 
 @subsection{Adding navigation links to the template with @tt{here}}
 
-Recall from earlier in the tutorial that the content of your source file is made available in the template through the special variable @code{doc}. Likewise, the name of the current source file is made available through the special variable @code{here}. 
+Recall from earlier in the tutorial that the content of your source file is made available in the template through the special variable @code{doc}. Likewise, the output name of the current source file is made available through the special variable @code{here}. 
 
 To make any navigation link — up, down, sideways — the general idea is that we use @code{here} as input to a pagetree-navigation function, which then looks up the answer in the current pagetree.
 
@@ -659,7 +659,9 @@ The current page is called ◊|here|.
 </html>
 }]
 
-If you refresh @filepath{article.html}, you'll now see the line ``The current page is called article.html.'' Switch to @filepath{barticle.html}, and you'll see ``The current page is called barticle.html.'' Makes sense, right?
+If you refresh @filepath{article.html}, you'll now see the line ``The current page is called article.html.'' Switch to @filepath{barticle.html}, and you'll see ``The current page is called barticle.html.'' Makes sense, right? 
+
+Notice that @code{here} is always an @italic{output} filename, on the idea that navigation naturally makes connections among output files, not source files. In this case, this conversion to output name means we lose the @filepath{pmd} extension. (As we'll see below, we'll also use these output filenames when we're @secref["Making_a_pagetree_file"].)
 
 Now let's use pagetree functions to show the names of the previous and next pages. Consistent with the usual Pollen policy of obviousness, these functions are called @racket[previous] and @racket[next]:
 
