@@ -77,7 +77,7 @@ Did it work? Sort of. Source code went in; web pages came out. But it was also c
 
 @section{Enter Racket}
 
-I had come across Racket while researching languages suitable for HTML/XML processing. I had unexpectedly learned about the @link["http://www.defmacro.org/ramblings/lisp.html"]{secret kinship} of XML and Lisp: though XML is not a programming language, it uses a variant of Lisp syntax. Thus Lisp languages are particularly adept at handling XMLish structures. That was interesting.
+I had come across Racket while researching languages suitable for HTML/XML processing. I had unexpectedly learned about the @link["http://www.defmacro.org/ramblings/lisp.html"]{secret kinship} of XML and Lisp: though XML is not a full-featured programming language, it uses a variant of Lisp syntax. Thus Lisp languages are particularly adept at handling XMLish structures. That was interesting.
 
 After comparing some of the Lisp & Scheme variants, @link["http://practicaltypography.com/why-racket-why-lisp.html"]{Racket stood out} because it had a text-based dialect called  @seclink["getting-started" #:doc '(lib "scribblings/scribble/scribble.scrbl")]{Scribble}. Scribble could be used to embed code within textual content. That was interesting too. Among other things, this meant Scribble could be used as a @seclink["text" #:doc '(lib "scribblings/scribble/scribble-pp.scrbl")]{general-purpose preprocessor}. So I thought I'd see if I could add it to Pollen.
 
