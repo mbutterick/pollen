@@ -15,7 +15,7 @@ Pollen gives you access to a full programming language (Racket) with a text-base
 * [Full docs](http://pkg-build.racket-lang.org/doc/pollen)
 
 
-Using Racket 6.0+, install from the command line:
+Using Racket 6.3+, install from the command line:
 
     raco pkg install pollen
     
