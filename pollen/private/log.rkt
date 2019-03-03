@@ -1,9 +1,9 @@
 #lang racket/base
 (require racket/format
          racket/string
-         racket/logging)
+         "external/logging.rkt")
 
-(provide (all-defined-out) (all-from-out racket/logging))
+(provide (all-defined-out) (all-from-out "external/logging.rkt"))
 
 ;; creates `pollen-logger` and associated functions:
 ;; log-pollen-fatal, log-pollen-error, log-pollen-warning, 
