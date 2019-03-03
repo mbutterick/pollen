@@ -1,8 +1,8 @@
 #lang info
 (define collection 'multi)
 
-(define version "1.5")
-(define deps '("base"
+(define version "2.0")
+(define deps '(["base" #:version "6.3"]
                ["txexpr" #:version "0.2"]
                ["sugar" #:version "0.2"]
                ["markdown" #:version "0.18"]
