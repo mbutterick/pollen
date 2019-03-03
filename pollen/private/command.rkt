@@ -27,23 +27,23 @@
      (very-nice-path (car args)))))
 
 (define (dispatch command-name)
-  (with-logging-to-port
-   (current-error-port)
-   (λ ()
-     (case command-name
-       [("test" "xyzzy") (handle-test)]
-       [(#f "help") (handle-help)]
-       [("start") (handle-start)] ; parses its own args
-       ;; "second" arg is actually third in command line args, so use cddr not cdr
-       [("render") (handle-render)] ; render parses its own args from current-command-line-arguments
-       [("version") (handle-version)]
-       [("reset") (handle-reset (get-first-arg-or-current-dir))]
-       [("setup") (handle-setup (get-first-arg-or-current-dir))]
-       [("clone" "publish") (handle-publish)]
-       [else (handle-unknown command-name)]))
-   #:logger pollen-logger
-   'info
-   'pollen))
+  (parameterize ([current-logger pollen-logger])
+    (with-logging-to-port
+     (current-error-port)
+     (λ ()
+       (case command-name
+         [("test" "xyzzy") (handle-test)]
+         [(#f "help") (handle-help)]
+         [("start") (handle-start)] ; parses its own args
+         ;; "second" arg is actually third in command line args, so use cddr not cdr
+         [("render") (handle-render)] ; render parses its own args from current-command-line-arguments
+         [("version") (handle-version)]
+         [("reset") (handle-reset (get-first-arg-or-current-dir))]
+         [("setup") (handle-setup (get-first-arg-or-current-dir))]
+         [("clone" "publish") (handle-publish)]
+         [else (handle-unknown command-name)]))
+     'info
+     'pollen)))
 
 (define (very-nice-path x)
   (path->complete-path (simplify-path (cleanse-path (->path x)))))
@@ -177,7 +177,7 @@ version                print the version" (current-server-port) (make-publish-di
     (and (>= (length xs) (length prefix))
          (andmap equal? prefix (for/list ([(x idx) (in-indexed xs)]
                                           #:break (= idx (length prefix)))
-                                 x))))
+                                         x))))
   ((explode-path possible-subdir) . has-prefix? . (explode-path possible-superdir)))
 
 (define (handle-publish)
