@@ -24,6 +24,13 @@ Beyond keeping the commit history available, I make no promise to maintain the p
 
 @section{Changelog}
 
+@subsection{Version 2.0}
+
+Dropped support for Racket versions earlier than 6.3.
+
+Added @racket[setup:allow-unbound-ids?].
+
+
 @subsection{Version 1.5}
 
 Added @racket[setup:trim-whitespace?].

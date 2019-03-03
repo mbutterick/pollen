@@ -5,7 +5,7 @@
 (define-syntax (top~ stx)
   (syntax-case stx ()
     [(_ . ID)
-     (setup:allow-unbound-ids)
+     (setup:allow-unbound-ids?)
      #'(#%app make-default-tag-function 'ID)]
     [(_ . ID)
      #'(def/c ID)]))

@@ -1,6 +1,6 @@
 #lang scribble/manual
 @(require "mb-tools.rkt")
-@(require scribble/eval pollen/setup racket/string (for-label racket racket/runtime-path syntax/modresolve (except-in pollen #%module-begin) pollen/setup))
+@(require scribble/eval pollen/setup racket/string (for-label (except-in racket #%top) racket/runtime-path syntax/modresolve (except-in pollen #%module-begin) pollen/setup pollen/top))
 
 @(define my-eval (make-base-eval))
 @(my-eval `(require pollen pollen/setup))
@@ -120,24 +120,24 @@ If the cache can't find a certain file on the watchlist, no error will arise. Th
   (define cache-watchlist (list my-local-mod my-installed-mod)))
 }]
 
-@pollen-history[#:added "1.4"]
+@history[#:added "1.4"]
 }
 
 
-@defoverridable[publish-directory (or/c path-string? path-for-some-system?)]{Default target for @secref{raco_pollen_publish}. A complete path is used as is; a relative path is published to the desktop.. @pollen-history[#:added "1.1"]}
+@defoverridable[publish-directory (or/c path-string? path-for-some-system?)]{Default target for @secref{raco_pollen_publish}. A complete path is used as is; a relative path is published to the desktop.. @history[#:added "1.1"]}
 
-@defoverridable[unpublished-path? (path? . -> . boolean?)]{@pollen-history[#:changed "1.1" @elem{Deprecated. Please use @racket[setup:omitted-path?].}]}
+@defoverridable[unpublished-path? (path? . -> . boolean?)]{@history[#:changed "1.1" @elem{Deprecated. Please use @racket[setup:omitted-path?].}]}
 
 
 @defoverridable[omitted-path? (path? . -> . boolean?)]{Predicate that determines whether a path is omitted from @secref{raco_pollen_render} and @secref{raco_pollen_publish} operations. If the predicate evaluated to @racket[#t], then the path is omitted. 
 
-@pollen-history[#:added "1.1"]}
+@history[#:added "1.1"]}
 
-@defoverridable[extra-published-path? (path? . -> . boolean?)]{@pollen-history[#:changed "1.1" @elem{Deprecated. Please use @racket[setup:extra-path?].}]}
+@defoverridable[extra-published-path? (path? . -> . boolean?)]{@history[#:changed "1.1" @elem{Deprecated. Please use @racket[setup:extra-path?].}]}
 
 @defoverridable[extra-path? (path? . -> . boolean?)]{Predicate that determines if path is rendered & published, overriding @racket[(setup:omitted-path?)] above, and Pollen's default publish settings. For instance, Pollen automatically omits files with a @racket[.rkt] extension. If you wanted to force a @racket[.rkt] file to be published, you could include it here.
 
-@pollen-history[#:added "1.1"]}
+@history[#:added "1.1"]}
 
 
 @defoverridable[splicing-tag symbol?]{Key used to signal that an X-expression should be spliced into its containing X-expression.}
@@ -153,7 +153,11 @@ If the cache can't find a certain file on the watchlist, no error will arise. Th
 
  @defoverridable[trim-whitespace? boolean?]{Predicate that controls whether the Pollen source reader trims whitespace from the beginning of a @racket[doc] export. You might set this to @racket[#false] if you're using Pollen as a preprocessor for another programming language and you want to preserve leading whitespace accurately.
 
- @pollen-history[#:added "1.5"]}
+ @history[#:added "1.5"]}
+
+  @defoverridable[allow-unbound-ids? boolean?]{Predicate that controls whether Pollen converts unbound identifiers into default tags by altering the behavior of @racket[#%top] in @racketmodname[pollen/top].
+
+ @history[#:added "2.0"]}
 
 
 @section{Parameters}

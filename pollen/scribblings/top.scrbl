@@ -43,7 +43,7 @@ The good news is that this behavior means you use any tag you want in your marku
 (em "Bonjour")
 ]
 
-The bad news is that you'll never get an ``undefined identifier'' error. These undefined identifiers will happily sail through and be converted to tags.
+The bad news is that you'll never get an ``unbound identifier'' error. These unbound identifiers will happily sail through and be converted to tags.
 
 @examples[
 (require pollen/top)
@@ -51,6 +51,8 @@ The bad news is that you'll never get an ``undefined identifier'' error. These u
 (code:comment @#,t{There's a typo in my tag})
 (erm "Bonjour")
 ]
+
+@margin-note{If you prefer the ordinary Racket-style behavior where unbound identifiers raise an error, define @racket[setup:allow-unbound-ids?] in your project to be @racket[#false].}
 
 This isn't a bug. It's just a natural consequence of how Pollen's @racket[#%top] works. It can, however, make debugging difficult sometimes. Let's suppose my markup depends on @racket[very-important-function], which I don't import correctly.
 
@@ -95,6 +97,5 @@ By adding @racket[def/c], we restore the usual behavior, guaranteeing that we ge
 (code:comment @#,t{Forgot to (require 'vif)})
 ((def/c very-important-function) "Bonjour")
 ]
-
 
 }
