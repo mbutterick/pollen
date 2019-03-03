@@ -1,7 +1,7 @@
 #lang racket/base
 
-;; 181030: Needed for compatibility with Racket 6.0.
-;; This module introduced until 6.3.
+;; 190303: Needed for compatibility with Rackets < 6.7.
+;; #:logger argument not introduced until 6.7
 
 (require racket/contract/base)
 
