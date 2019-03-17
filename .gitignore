@@ -16,10 +16,10 @@ Icon
 .Trashes
 
 # generated documentation
-scribblings/*.js
-scribblings/*.css
-!scribblings/mb.css
-scribblings/*.html
-scribblings/pollen/*
+pollen/scribblings/*.js
+pollen/scribblings/*.css
+!pollen/scribblings/mb.css
+pollen/scribblings/*.html
+pollen/scribblings/pollen/*
 doc/*
 pollen/doc/*
