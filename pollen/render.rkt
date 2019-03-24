@@ -70,7 +70,7 @@
                                    has/is-markup-source?
                                    has/is-scribble-source?
                                    has/is-markdown-source?))])
-             (pred so-path))
+       (pred so-path))
      (define-values (source-path output-path) (->source+output-paths so-path))
      (render-to-file-if-needed source-path #f output-path)]
     [(pagetree-source? so-path) (render-pagenodes so-path)])
@@ -90,29 +90,33 @@
   (unless output-path
     (raise-argument-error caller "valid output path" output-path))
   (define template-path (or maybe-template-path (get-template-for source-path output-path)))
+  (define render-cache-activated? (setup:render-cache-active source-path))
   (define render-needed?
     (cond
       [force?]
       [(not (file-exists? output-path)) 'file-missing]
       [(mod-date-missing-or-changed? source-path template-path) 'mod-key-missing-or-changed]
-      [(not (setup:render-cache-active source-path)) 'render-cache-deactivated]
+      [(not render-cache-activated?) 'render-cache-deactivated]
       [else #false]))
   (when render-needed?
     (define render-result
-      (let ([key (paths->key source-path template-path output-path)])
-        (hash-ref! render-ram-cache
-                   ;; within a session, this will prevent repeat players like "template.html.p"
-                   ;; from hitting the file cache repeatedly
-                   key
-                   (λ () 
-                     (cache-ref! key
-                                 (λ () (render source-path template-path output-path))
-                                 #:dest-path 'output
-                                 #:notify-cache-use
-                                 (λ (str)
-                                   (message (format "from cache /~a"
-                                                    (find-relative-path (current-project-root) output-path))))))))) ; will either be string or bytes
-    (display-to-file render-result output-path
+      (let ([key (paths->key source-path template-path output-path)]
+            [render-thunk (λ () (render source-path template-path output-path))]) ; returns either string or bytes
+        (if render-cache-activated?
+            (hash-ref! render-ram-cache
+                       ;; within a session, this will prevent repeat players like "template.html.p"
+                       ;; from hitting the file cache repeatedly
+                       key
+                       (cache-ref! key
+                                   render-thunk
+                                   #:dest-path 'output
+                                   #:notify-cache-use
+                                   (λ (str)
+                                     (message (format "from cache /~a"
+                                                      (find-relative-path (current-project-root) output-path))))))
+            (render-thunk))))
+    (display-to-file render-result
+                     output-path
                      #:exists 'replace
                      #:mode (if (string? render-result) 'text 'binary))))
 
@@ -145,7 +149,7 @@
   (define render-proc (for/first ([test (in-list tests)]
                                   [render-proc (in-list render-procs)]
                                   #:when (test source-path))
-                                 render-proc))
+                        render-proc))
   (unless render-proc
     (raise-argument-error 'render (format "valid rendering function for ~a" source-path) render-proc))
   
@@ -211,7 +215,10 @@
   (unless template-path
     (raise-argument-error 'render-markup-or-markdown-source "valid template path" template-path))
   (render-from-source-or-output-path template-path) ; because template might have its own preprocessor source
-  (parameterize ([current-output-port (current-error-port)])
+  (parameterize ([current-output-port (current-error-port)]
+                 [current-namespace (make-base-namespace)])
+    (define outer-ns (namespace-anchor->namespace render-module-ns))
+    (namespace-attach-module outer-ns 'pollen/setup) 
     (eval (with-syntax ([MODNAME (gensym)]
                         [SOURCE-PATH-STRING (->string source-path)]
                         [TEMPLATE-PATH-STRING (->string template-path)])
@@ -229,7 +236,7 @@
 (define (file-exists-or-has-source? path) ; path could be #f
   (and path (for/first ([proc (in-list (list values ->preproc-source-path ->null-source-path))]
                         #:when (file-exists? (proc path)))
-                       path)))
+              path)))
 
 (define (get-template-from-metas source-path output-path-ext)
   (with-handlers ([exn:fail:contract? (λ (e) #f)]) ; in case source-path doesn't work with cached-require
@@ -260,7 +267,7 @@
          ;; output-path may not have an extension
          (define output-path-ext (or (get-ext output-path) (current-poly-target)))
          (for/or ([proc (list get-template-from-metas get-default-template get-fallback-template)])
-                 (file-exists-or-has-source? (proc source-path output-path-ext))))))
+           (file-exists-or-has-source? (proc source-path output-path-ext))))))
 
 (module-test-external
  (require pollen/setup sugar/file sugar/coerce)
