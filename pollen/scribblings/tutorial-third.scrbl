@@ -554,7 +554,7 @@ Run this in DrRacket and you'll get:
 
 @repl-output{'(root "The author is " "Trevor Goodchild" ".")}
 
-Staying in the same dirctory, create a second Pollen source file:
+Staying in the same directory, create a second Pollen source file:
 
 @fileblock["barticle.html.pm" @codeblock{
 #lang pollen
