@@ -2,8 +2,10 @@
 (require "file-utils.rkt"
          "../setup.rkt"
          "project.rkt"
+         "log.rkt"
          file/cache
          racket/file
+         racket/path
          racket/list
          sugar/coerce
          sugar/test
@@ -33,6 +35,8 @@
     (for/list ([ps (in-list path-strings-to-track)])
               (cond
                 [ps (define cp (->complete-path ps))
+                    (unless (file-exists? cp)
+                      (message (format "watchlist file /~a does not exist" (find-relative-path (current-project-root) cp))))
                     (cons (path->string cp) (file-or-directory-modify-seconds cp #false (λ () 0)))]
                 [else #false])))
   (list* pollen-env poly-flag (and output-path (path->string output-path)) path+mod-time-pairs))
