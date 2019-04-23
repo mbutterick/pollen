@@ -2,10 +2,12 @@
 (require racket/file
          racket/path
          racket/match
+         racket/place
          sugar/test
          sugar/define
          sugar/file
          sugar/coerce
+         sugar/list
          version/utils
          "private/file-utils.rkt"
          "cache.rkt"
@@ -44,22 +46,59 @@
 
 (define (list-of-pathish? x) (and (list? x) (andmap pathish? x)))
 
-(define+provide/contract (render-batch . xs)
-  (() #:rest list-of-pathish? . ->* . void?)
+(define+provide/contract (render-batch #:parallel [parallel? #false] . paths)
+  ((#:parallel any/c) #:rest list-of-pathish? . ->* . void?)
   ;; Why not just (for-each render ...)?
   ;; Because certain files will pass through multiple times (e.g., templates)
   ;; And with render, they would be rendered repeatedly.
   ;; Using reset-modification-dates is sort of like session control.
-  (reset-mod-date-hash!) 
-  (for-each render-from-source-or-output-path xs))
+  (reset-mod-date-hash!)
+  (cond
+    [parallel?
+     (define worker-places
+       (for/list ([i (in-range (processor-count))])
+         (place ch
+                (let loop ()
+                  (define result
+                    (with-handlers ([exn:fail? (λ (e) #false)])
+                      (render-from-source-or-output-path (place-channel-get ch))
+                      #true))
+                  (place-channel-put ch result)
+                  (loop)))))
 
-(define+provide/contract (render-pagenodes pagetree-or-path)
-  ((or/c pagetree? pathish?) . -> . void?)
+     (define flattened-paths
+       (filter file-exists?
+               (let loop ([paths paths])
+                 (if (null? paths)
+                     null
+                     (match (->complete-path (car paths))
+                       [(? pagetree-source? pt) (append (loop (pagetree->paths pt)) (loop (cdr paths)))]
+                       [path (cons path (loop (cdr paths)))])))))
+           
+     (for ([path-group (in-list (slice-at flattened-paths (length worker-places)))])
+       (for ([path (in-list path-group)]
+             [(wp wpidx) (in-indexed worker-places)])
+         (message (format "rendering parallel on core ~a /~a" (add1 wpidx)
+                          (find-relative-path (current-project-root) (->source-path path))))
+         (place-channel-put wp path))
+       (for ([path (in-list path-group)]
+             [(wp wpidx) (in-indexed worker-places)])
+         (message (format "rendered parallel on core ~a /~a" (add1 wpidx)
+                          (find-relative-path (current-project-root) (->output-path path))))
+         (place-channel-get wp)))]
+    [else
+     (for-each render-from-source-or-output-path paths)]))
+
+(define (pagetree->paths pagetree-or-path)
   (define pagetree (if (pagetree? pagetree-or-path)
                        pagetree-or-path
                        (cached-doc pagetree-or-path)))
   (parameterize ([current-directory (current-project-root)])
-    (apply render-batch (map ->complete-path (pagetree->list pagetree)))))
+    (map ->complete-path (pagetree->list pagetree))))
+
+(define+provide/contract (render-pagenodes pagetree-or-path)
+  ((or/c pagetree? pathish?) . -> . void?)
+  (apply render-batch (pagetree->paths pagetree-or-path)))
 
 (define+provide/contract (render-from-source-or-output-path so-pathish)
   (pathish? . -> . void?)

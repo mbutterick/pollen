@@ -83,6 +83,7 @@ version                print the version" (current-server-port) (make-publish-di
   (define make-project-pagetree (dynamic-require 'pollen/pagetree 'make-project-pagetree))
   (define render-target-wanted (make-parameter (current-poly-target)))
   (define render-with-subdirs? (make-parameter #f))
+  (define render-parallel? (make-parameter #f))
   (define parsed-args
     (command-line #:program "raco pollen render"
                   #:argv (vector-drop (current-command-line-arguments) 1) ; snip the 'render' from the front
@@ -92,6 +93,7 @@ version                print the version" (current-server-port) (make-publish-di
                   [("-r" "--recursive") "Render subdirectories recursively"
                                         (render-with-subdirs? 'recursive)]
                   [("-s" "--subdir") "Render subdirectories nonrecursively" (render-with-subdirs? 'include)]
+                  [("-p" "--parallel") "Render in parallel" (render-parallel? #true)]
                   #:args other-args
                   other-args)) 
   (parameterize ([current-poly-target (render-target-wanted)]) ;; applies to both cases
@@ -120,7 +122,7 @@ version                print the version" (current-server-port) (make-publish-di
                       [else
                        (message (format "rendering preproc & pagetree files in directory ~a" dir))
                        (append preprocs static-pagetrees)])))
-             (apply render-batch batch-to-render)
+             (keyword-apply render-batch '(#:parallel) (list (render-parallel?)) batch-to-render)
              (when (render-with-subdirs?)
                (for ([path (in-list dirlist)]
                      #:when (and (directory-exists? path)
@@ -128,7 +130,7 @@ version                print the version" (current-server-port) (make-publish-di
                     (render-one-dir (->complete-path path))))))]
         [path-args ;; path mode
          (message (format "rendering ~a" (string-join (map ->string path-args) " ")))
-         (apply render-batch (map very-nice-path path-args))]))))
+         (keyword-apply render-batch '(#:parallel) (list (render-parallel?)) (map very-nice-path path-args))]))))
 
 (define (handle-start)
   (define launch-wanted #f)
