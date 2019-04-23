@@ -21,8 +21,7 @@
 (define (preheat-cache starting-dir)
   (unless (and (path-string? starting-dir) (directory-exists? starting-dir))
     (raise-argument-error 'preheat-cache "directory" starting-dir))
-  (define max-places (processor-count)) ; number of parallel processes to spawn at a time
-  (define worker-places (for/list ([i (in-range max-places)])
+  (define worker-places (for/list ([i (in-range (processor-count))])
                           (place ch
                                  (let loop ()
                                    (define result (with-handlers ([exn:fail? (λ (e) #false)])
@@ -45,7 +44,7 @@
   ;; compile the paths in groups, so they can be incrementally saved.
   ;; that way, if there's a failure, the progress is preserved.
   ;; but the slowest file in a group will prevent further progress.
-  (for ([path-group (in-list (slice-at uncached-paths max-places))])
+  (for ([path-group (in-list (slice-at uncached-paths (length worker-places)))])
     (for ([path (in-list path-group)]
           [wp (in-list worker-places)])
       (message (format "caching: ~a" (find-relative-path starting-dir path)))
