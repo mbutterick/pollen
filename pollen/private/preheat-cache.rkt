@@ -1,4 +1,4 @@
-#lang debug racket/base
+#lang racket/base
 (require racket/file
          racket/path
          racket/place
