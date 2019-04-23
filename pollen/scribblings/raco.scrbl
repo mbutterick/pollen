@@ -134,7 +134,7 @@ Certain files and directories are automatically omitted from the published direc
 
 Finds Pollen source files in the current directory, compiles them, and loads the results into the @seclink["Cache" #:doc '(lib "pollen/scribblings/pollen.scrbl")]. This will give you the snappiest performance during an interactive session with the project server. 
 
-Can also be invoked as @racket[raco pollen setup _directory], which will set up a different project @racket[_directory].
+Can also be invoked as @racket[raco pollen setup _directory], which will set up the files in @racket[_directory].
 
 
 @section{@exec{raco pollen reset}}
