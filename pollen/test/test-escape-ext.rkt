@@ -14,8 +14,10 @@
   (define (render path)
     ;; need to cd first to pick up directory require correctly
     (define cmd-string (format "cd '~a' ; '~a' pollen render '~a'" test-dir raco-path path))
-    (with-output-to-string (λ () (system cmd-string))))
-  (when (file-exists? result-file) (delete-file result-file))
+    (parameterize ([current-error-port (open-output-nowhere)])
+      (system cmd-string)))
+  (when (file-exists? result-file)
+    (delete-file result-file))
   (render test-file)
   (check-true (file-exists? result-file))
   (check-equal? (file->string result-file) "test")
