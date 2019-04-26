@@ -10,8 +10,6 @@ env:
     - RACKET_DIR=~/racket
   matrix:
     - RACKET_VERSION=6.3
-    - RACKET_VERSION=6.4
-    - RACKET_VERSION=6.5
     - RACKET_VERSION=6.6
     - RACKET_VERSION=6.9
     - RACKET_VERSION=6.12
