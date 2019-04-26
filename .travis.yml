@@ -41,5 +41,5 @@ before_install:
 
 script:
  - cd ..   # Travis did a cd into the dir. Back up, for the next:
- - travis_retry raco pkg install --deps search-auto --link pollen
+ - travis_retry raco pkg install --deps search-auto --link https://github.com/mbutterick/pollen.git
  - raco test -p pollen
