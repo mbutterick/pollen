@@ -57,14 +57,16 @@
     [parallel?
      (define worker-places
        (for/list ([i (in-range (processor-count))])
-         (place ch
-                (let loop ()
-                  (define result
-                    (with-handlers ([exn:fail? (λ (e) #false)])
-                      (render-from-source-or-output-path (place-channel-get ch))
-                      #true))
-                  (place-channel-put ch result)
-                  (loop)))))
+                 (place ch
+                        (let loop ()
+                          (match-define (cons path poly-target) (place-channel-get ch))
+                          (define result
+                            (with-handlers ([exn:fail? (λ (e) #false)])
+                              (parameterize ([current-poly-target poly-target])
+                                (render-from-source-or-output-path path))
+                              #true))
+                          (place-channel-put ch result)
+                          (loop)))))
 
      (define flattened-paths
        (filter file-exists?
@@ -76,16 +78,16 @@
                        [path (cons path (loop (cdr paths)))])))))
            
      (for ([path-group (in-list (slice-at flattened-paths (length worker-places)))])
-       (for ([path (in-list path-group)]
-             [(wp wpidx) (in-indexed worker-places)])
-         (message (format "rendering parallel on core ~a /~a" (add1 wpidx)
-                          (find-relative-path (current-project-root) (->source-path path))))
-         (place-channel-put wp path))
-       (for ([path (in-list path-group)]
-             [(wp wpidx) (in-indexed worker-places)])
-         (message (format "rendered parallel on core ~a /~a" (add1 wpidx)
-                          (find-relative-path (current-project-root) (->output-path path))))
-         (place-channel-get wp)))]
+          (for ([path (in-list path-group)]
+                [(wp wpidx) (in-indexed worker-places)])
+               (message (format "rendering parallel on core ~a /~a" (add1 wpidx)
+                                (find-relative-path (current-project-root) (->source-path path))))
+               (place-channel-put wp (cons path (current-poly-target))))
+          (for ([path (in-list path-group)]
+                [(wp wpidx) (in-indexed worker-places)])
+               (message (format "rendered parallel on core ~a /~a" (add1 wpidx)
+                                (find-relative-path (current-project-root) (->output-path path))))
+               (place-channel-get wp)))]
     [else
      (for-each render-from-source-or-output-path paths)]))
 
@@ -109,7 +111,7 @@
                                    has/is-markup-source?
                                    has/is-scribble-source?
                                    has/is-markdown-source?))])
-       (pred so-path))
+             (pred so-path))
      (define-values (source-path output-path) (->source+output-paths so-path))
      (render-to-file-if-needed source-path #f output-path)]
     [(pagetree-source? so-path) (render-pagenodes so-path)])
@@ -188,7 +190,7 @@
   (define render-proc (for/first ([test (in-list tests)]
                                   [render-proc (in-list render-procs)]
                                   #:when (test source-path))
-                        render-proc))
+                                 render-proc))
   (unless render-proc
     (raise-argument-error 'render (format "valid rendering function for ~a" source-path) render-proc))
   
@@ -275,7 +277,7 @@
 (define (file-exists-or-has-source? path) ; path could be #f
   (and path (for/first ([proc (in-list (list values ->preproc-source-path ->null-source-path))]
                         #:when (file-exists? (proc path)))
-              path)))
+                       path)))
 
 (define (get-template-from-metas source-path output-path-ext)
   (with-handlers ([exn:fail:contract? (λ (e) #f)]) ; in case source-path doesn't work with cached-require
@@ -306,7 +308,7 @@
          ;; output-path may not have an extension
          (define output-path-ext (or (get-ext output-path) (current-poly-target)))
          (for/or ([proc (list get-template-from-metas get-default-template get-fallback-template)])
-           (file-exists-or-has-source? (proc source-path output-path-ext))))))
+                 (file-exists-or-has-source? (proc source-path output-path-ext))))))
 
 (module-test-external
  (require pollen/setup sugar/file sugar/coerce)
