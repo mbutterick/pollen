@@ -89,20 +89,25 @@ Paths can also be specified as output rather than input paths, and the correspon
 > raco pollen render foo.html
 > raco pollen render foo.html bar.html zam.css}
 
-The optional @exec{-t} or @exec{--target} switch specifies the render target for multi-output source files. If the target is omitted, the renderer will use whatever target appears first in @racket[(setup:poly-targets)].
-
+The optional @exec{--target} or @exec{-t} switch specifies the render target for multi-output source files. If the target is omitted, the renderer will use whatever target appears first in @racket[(setup:poly-targets)].
 
 @terminal{
 > raco pollen render -t pdf foo.poly.pm}
 
 See also @seclink["raco-pollen-render-poly"].
 
+The optional @exec{--parallel} or @exec{-p} switch creates a set of parallel rendering jobs. On a multi-core machine, this will usually make your rendering job finish faster. The order of rendering is not guaranteed, of course, so if your project depends on a certain order of rendering, don't use this option.
+
+@terminal{
+> raco pollen render -p foo.html bar.html zam.css}
+
+
 @italic{Warning}: In all cases, the newly rendered output file will overwrite any previous output file.
 
 
 @bold{Directory mode}: @racket[raco pollen render _directory] renders all preprocessor source files and then all pagetree files found in the specified directory. If none of these files are found, a pagetree will be generated for the directory (which will include all source files) and then rendered. If the @racket[_directory] argument is omitted, the command defaults to the current directory.
 
-In directory mode, this command can be invoked with two other optional arguments (in addition to the @exec{--target} switch mentioned above):
+In directory mode, this command can be invoked with two other optional arguments (in addition to the @exec{--target} and @exec{--parallel} switches mentioned above):
 
 The @exec{--subdir} or @exec{-s} switch also renders subdirectories. @racket[current-project-root] remains fixed at the initial directory, just as it would be in the project server after invoking @racket[raco pollen start]. 
 
