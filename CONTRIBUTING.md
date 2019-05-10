@@ -24,6 +24,8 @@ I welcome pull requests. But accepting a PR obligates me to maintain that code f
 
 * If you’re new to Pollen or Racket, your PR is more likely to be declined, because certain things you perceive as bugs are actually features, certain things you perceive as missing are actually present, and certain limitations you perceive as surmountable are actually not. (See also point #1 re: backdrop of ignorance.)
 
+* If your PR includes open-source material from elsewhere, please make sure that material is a) compatible with the Pollen license and b) attributed in whatever way is required. Otherwise, I cannot accept it.
+
 * PRs that could have unit tests, and don’t, will be treated harshly. As they should.
 
 * PRs that want to amend Pollen’s public interface receive the highest scrutiny.
