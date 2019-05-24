@@ -78,15 +78,19 @@
                        [path (cons path (loop (cdr paths)))])))))
            
      (for ([path-group (in-list (slice-at flattened-paths (length worker-places)))])
-          (for ([path (in-list path-group)]
+          (define source-paths (for*/list ([path (in-list path-group)]
+                                           [source-path (in-value (->source-path path))]
+                                           #:when source-path)
+                                          source-path))
+          (for ([source-path (in-list source-paths)]
                 [(wp wpidx) (in-indexed worker-places)])
                (message (format "rendering parallel on core ~a /~a" (add1 wpidx)
-                                (find-relative-path (current-project-root) (->source-path path))))
-               (place-channel-put wp (cons path (current-poly-target))))
-          (for ([path (in-list path-group)]
+                                (find-relative-path (current-project-root) source-path)))
+               (place-channel-put wp (cons source-path (current-poly-target))))
+          (for ([source-path (in-list source-paths)]
                 [(wp wpidx) (in-indexed worker-places)])
                (message (format "rendered parallel on core ~a /~a" (add1 wpidx)
-                                (find-relative-path (current-project-root) (->output-path path))))
+                                (find-relative-path (current-project-root) (->output-path source-path))))
                (place-channel-get wp)))]
     [else
      (for-each render-from-source-or-output-path paths)]))
