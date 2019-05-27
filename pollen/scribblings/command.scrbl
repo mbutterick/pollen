@@ -1,5 +1,5 @@
 #lang scribble/manual
-@(require scribble/bnf scribble/eval "utils.rkt" "mb-tools.rkt"
+@(require scribble/bnf scribble/eval "utils.rkt" "mb-tools.rkt" pollen/setup
           (for-syntax racket/base)
           (for-label rackunit pollen/core pollen/setup pollen/cache pollen/tag pollen/render pollen/template (only-in scribble/reader
                               use-at-readtable)))
@@ -612,7 +612,7 @@ Second, the metas are collected into a hash table that is exported with the name
 '#hasheq((dog . "Roxy") (cat . "Chopper") (here-path . "unsaved-editor"))
 }
 
-The only key that's automatically defined in every meta table is @id{'here-path}, which is the absolute path to the source file. (In this case, because the file hasn't been saved, you'll see the @val{unsaved-editor} name instead.) 
+The only key that's automatically defined in every meta table is @racket['#,(setup:here-path-key)], which is the absolute path to the source file. (In this case, because the file hasn't been saved, you'll see the @val{unsaved-editor} name instead.) 
 
 Still, you can override this too:
 

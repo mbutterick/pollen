@@ -16,12 +16,17 @@ These functions are automatically imported into every Pollen source file (meanin
 
 @section{Metas}
 
+The only key that's automatically defined in every meta table is @racket['#,(setup:here-path-key)], which holds the absolute path to the source file. For instance, you could retrieve this value with @racket[(select-from-metas '#,(setup:here-path-key) metas)]. You can use something other than @racket['#,(setup:here-path-key)] as the key by overriding @racket[setup:here-path-key].
+
+For a full introduction to metas, see @secref["Inserting_metas"].
+
+
 @defform[(define-meta name value)]
 Add @racket[_value] to the metas of the current document, using @racket[_name] as the key.
 
 You can retrieve a meta value — even in the same document where you define it — with @racket[(select-from-metas _name metas)].
 
-For an introduction to metas, see @secref["Inserting_metas"].
+
 
 
 @section{Splicing}

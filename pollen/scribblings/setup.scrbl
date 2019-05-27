@@ -159,6 +159,8 @@ If the cache can't find a certain file on the watchlist, no error will arise. Th
 
  @history[#:added "2.0"]}
 
+@defoverridable[here-path-key 'symbol]{Key used to store the path of the source file in its metas table. No idea why you'd want to change this.}
+
 
 @section{Parameters}
 
