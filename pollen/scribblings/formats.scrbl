@@ -42,17 +42,17 @@ There are no undefined commands in Pollen. If a command has not already been def
 
 By default, every Pollen source file exports two identifiers:
 
-@itemlist[
-@item{@id{doc} contains the output of the file. The type of output depends on the source format (about which, more below).}
+@defthing[doc xexpr?]{
+Contains the output of the file. The type of output depends on the source format (about which, more below).}
 
-@item{@id{metas} is a hashtable of key–value pairs with extra information that is extracted from the source. These @id{metas} will always contain the key @racket['#,(setup:here-path-key)], which returns a string representation of the full path to the source file. Beyond that, the only @id{metas} are the ones that are specified within the source file (see the source formats below for more detail on how to specify metas).}
-]
+@defthing[metas hasheq?]{
+A table of key–value pairs with extra information that is extracted from the source. These @racket[metas] will always contain the key @racket['#,(setup:here-path-key)], which returns a string representation of the full path to the source file. Beyond that, the only @racket[metas] are the ones that are specified within the source file (see the source formats below for more detail on how to specify metas).}
 
 As usual, you can use @racket[require], @racket[local-require], or @racket[dynamic-require] to retrieve these values. But within a Pollen project, the faster way is to use @racket[get-doc] and @racket[get-metas].
 
-Pollen source files also make the @id{metas} hashtable available through a submodule, unsurprisingly called @id{metas}. So rather than importing a source file with @racket[(require "source.html.pm")], you can @racket[(require (submod "source.html.pm" metas))]. Accessing the metas this way avoids fully compiling the source file, and thus will usually be faster.
+Pollen source files also make the @racket[metas] hashtable available through a submodule, unsurprisingly called @racket[metas]. So rather than importing a source file with @racket[(require "source.html.pm")], you can @racket[(require (submod "source.html.pm" metas))]. Accessing the metas this way avoids fully compiling the source file, and thus will usually be faster.
 
-The names @@id{doc} and @@id{metas} can be changed for a project by overriding @racket[default-main-export] and @racket[default-meta-export].
+The names @racket[doc] and @racket[metas] can be changed for a project by overriding @racket[default-main-export] and @racket[default-meta-export].
 
 @margin-note{The Pollen rendering system relies on these two exported identifiers, but otherwise doesn't care how they're generated. Thus, the code inside your Pollen source file could be written in @tt{#lang racket} or @tt{#lang whatever}. As long as you @racket[provide] those two identifiers and follow Pollen's file-naming conventions, your source file will be renderable.}
 
@@ -92,7 +92,7 @@ _...source...
 
 Of course, you're better off specifying the preprocessor dialect explicitly rather than relying on this default behavior.
 
-The output of the preprocessor dialect, provided by @id{doc}, is plain text. For this reason, the preprocessor will convert everything it finds to text in the least surprising way possible.
+The output of the preprocessor dialect, provided by @racket[doc], is plain text. For this reason, the preprocessor will convert everything it finds to text in the least surprising way possible.
 
 
 
