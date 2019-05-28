@@ -25,26 +25,11 @@ After the initial download, Pollen does not require a network connection.
 
 @item{@link["http://download.racket-lang.org/"]{Download and install Racket}, which includes DrRacket. (Of course, you're welcome to use your preferred text editor, but the tutorials will assume you're using DrRacket.)}
 
-@item{@bold{Windows} users: when you see instructions that reference @exec{racket} or @exec{raco}, I'll trust you to convert into the appropriate command for your system. Assuming defaults, it's likely to be @filepath{C:\Program Files\Racket\raco} (include the surrounding quotes in the command).}
+@item{Update the @envvar{PATH} envi­ron­ment vari­able on your system to include the direc­tory that holds the racket appli­ca­tion. On @bold{Mac OS} and @bold{Linux}, this path will be some­thing like @exec{"/path/to/racket/bin"}. On @bold{Windows}, it’ll be some­thing like @exec{"C:\Program Files\Racket71\"}. Then, from the terminal, you’ll be able to run @exec{racket} and @exec{raco} (see @other-doc['(lib "scribblings/raco/raco.scrbl")]).}
 
-@item{@bold{Linux} and @bold{Mac OS} users: update your system @envvar{PATH} variable to include the path to Racket's newly installed @filepath{bin} directory. Then, from the terminal, you'll be able to run @exec{racket} and @exec{raco} (see @other-doc['(lib "scribblings/raco/raco.scrbl")]).}
+@item{@bold{Windows} users who haven’t altered your @envvar{PATH} before: don’t panic. Follow @link["https://www.opentechguides.com/how-to/article/windows-10/113/windows-10-set-path.html"]{these instruc­tions}.}
 
-@item{@bold{Mac OS} users who haven't altered your @envvar{PATH} before: don't panic. You need to add the full path of Racket's @filepath{bin} subdirectory to the @filepath{/etc/paths} file on your system. 
-
-First, confirm that your Racket instal­la­tion works. Open your new Racket direc­tory and launch­ DrRacket. If DrRacket works, then your Racket installa­tion is sound.
-
-Second, verify the full path to the @filepath{bin} sub­di­rec­tory of your new Racket direc­tory. If you put this direc­tory in @filepath{Applications} as rec­om­mended, the path will be:
-
-@terminal{/Applications/Racket v@(short-version)/bin}
-
-Third, copy the terminal command below, paste it into your terminal, and type return. (It will ask you for your password, because the @filepath{paths.d} directory is restricted to administrators.)
-
-@terminal{sudo sh -c 'echo "/Applications/Racket v@(short-version)/bin" >> /etc/paths.d/racket'
-}
-
-Of course, @filepath{/Applications/Racket v@(short-version)/bin} in this command should be edited as necessary to represent the actual location and version of your Racket installation.}
-
-@item{@bold{Mac OS} users who are still confused: here's an @link["https://beautifulracket.com/setting-the-mac-os-path.html"]{even gentler walkthrough}.}
+@item{@bold{Mac OS} users who haven't altered your @envvar{PATH} before: don't panic. Follow @link["https://beautifulracket.com/setting-the-mac-os-path.html"]{these instructions}.}
 
 @item{@bold{Linux}, @bold{Mac OS}, and @bold{Windows} users: try typing @exec{racket} on your command line, and you should see something like this:
 
