@@ -25,9 +25,11 @@ After the initial download, Pollen does not require a network connection.
 
 @item{@link["http://download.racket-lang.org/"]{Download and install Racket}, which includes DrRacket. (Of course, you're welcome to use your preferred text editor, but the tutorials will assume you're using DrRacket.)}
 
-@item{Update the @envvar{PATH} envi­ron­ment vari­able on your system to include the direc­tory that holds the racket appli­ca­tion. On @bold{Mac OS} and @bold{Linux}, this path will be some­thing like @exec{"/path/to/racket/bin"}. On @bold{Windows}, it’ll be some­thing like @exec{"C:\Program Files\Racket71\"}. Then, from the terminal, you’ll be able to run @exec{racket} and @exec{raco} (see @other-doc['(lib "scribblings/raco/raco.scrbl")]).}
+@item{Update the @envvar{PATH} envi­ron­ment vari­able on your system to include the direc­tory that holds the racket appli­ca­tion. On @bold{Mac OS} and @bold{Linux}, this path will be some­thing like @exec{"/path/to/racket/bin"}. On @bold{Windows}, it’ll be some­thing like @filepath{"C:\Program Files\Racket71\"}. Then, from the terminal, you’ll be able to run @exec{racket} and @exec{raco} (see @other-doc['(lib "scribblings/raco/raco.scrbl")]).}
 
-@item{@bold{Windows} users who haven’t altered your @envvar{PATH} before: don’t panic. Follow @link["https://www.opentechguides.com/how-to/article/windows-10/113/windows-10-set-path.html"]{these instruc­tions}.}
+@item{@bold{Windows} users who haven’t altered your @envvar{PATH} before: don’t panic. To add the Racket command-line programs to your path in Windows 10, click the Windows key and type the word @exec{path} and then click on @onscreen{Edit the System Environment Variables}. Then click on the @onscreen{Environment Variables} button. In the top window, which contains your user variables, find @exec{path} and double-click it to open. Click the @onscreen{New} button and either use the @onscreen{Browse} button to find it, or manually enter the path. Restart your Windows terminal (either the Command Prompt or PowerShell) and now @exec{racket} and @exec{raco} should work.
+
+  Alternatively, follow @link["https://www.opentechguides.com/how-to/article/windows-10/113/windows-10-set-path.html"]{these instruc­tions}.}
 
 @item{@bold{Mac OS} users who haven't altered your @envvar{PATH} before: don't panic. Follow @link["https://beautifulracket.com/setting-the-mac-os-path.html"]{these instructions}.}
 
