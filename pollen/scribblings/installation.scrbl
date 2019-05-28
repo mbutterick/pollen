@@ -61,6 +61,8 @@ But if you get an error like this:
 
 You have a deeper problem with your Racket installation that needs adjustment before continuing (usually a misconfiguration of @code{PATH}).
 
+To add the Racket command-line programs to your path in Windows 10, click the Windows key and type the word @italic{path} and then click on @italic{Edit the System Environment Variables}. Then click on the @italic{Environment Variables} button. In the top window, which contains your user variables, find @italic{path} and double-click it to open. Click the @italic{new} button and either use the @italic{browse} button to find it, or manually enter @filepath{C:\Program Files\Racket}. Restart your Windows terminal (either the Command Prompt or PowerShell) and now @exec{racket} and @exec{raco} should work.
+
 }
 
 
