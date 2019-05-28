@@ -341,7 +341,7 @@ Pollen source files that are written in an authoring mode (i.e., @filepath{.pmd}
 
 When it needs a template, Pollen first looks for a file in the project directory named @filepath{template.[output extension of source]}. Thus, for @filepath{uptown.html.pm}, the output extension will be @filepath{.html}, and Pollen will first look for @filepath{template.html}.
 
-So let's create @filepath{template.html}. Make a new file that with the following lines and save it to the same directory as @filepath{uptown.html.pm}:
+So let's create @filepath{template.html}. Make a new file with the following lines and save it to the same directory as @filepath{uptown.html.pm}:
 
 @fileblock["template.html"
 @codeblock{
