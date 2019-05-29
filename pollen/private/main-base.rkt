@@ -36,7 +36,7 @@
   (syntax-case stx ()
     [(_ PARSER-MODE . EXPRS)
      (with-syntax ([EXPRS (replace-context #'here #'EXPRS)]
-                   [META-HASH (split-metas #'EXPRS (setup:define-meta-name))]
+                   [((META-KEY . META-VAL) ...) (split-metas #'EXPRS (setup:define-meta-name))]
                    [METAS-ID (setup:meta-export)]
                    [META-MOD-ID (setup:meta-export)]
                    [ROOT-ID (setup:main-root-node)]
@@ -51,7 +51,9 @@
               (proc doc-elements))) ;  positional arg for doclang-raw: post-processor
           (module META-MOD-ID racket/base
             (provide METAS-ID)
-            (define METAS-ID META-HASH))
+            (define METAS-ID (for/hasheq ([k (in-list (list 'META-KEY ...))]
+                                          [v (in-list (list META-VAL ...))])
+                               (values k v))))
           (require pollen/top pollen/core pollen/setup (submod "." META-MOD-ID))
           (provide (all-defined-out) METAS-ID DOC-ID)
           (define prev-metas (current-metas))
