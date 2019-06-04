@@ -1,4 +1,4 @@
-#lang racket/base
+#lang debug racket/base
 (require (for-syntax racket/base
                      syntax/strip-context
                      "../setup.rkt"
@@ -12,7 +12,8 @@
          "../core.rkt"
          (prefix-in doclang: "external/doclang-raw.rkt"))
 (provide (except-out (all-from-out racket/base) #%module-begin)
-         (rename-out [pollen-module-begin #%module-begin]))
+         (rename-out [pollen-module-begin #%module-begin])
+         (all-from-out "../core.rkt"))
 
 (define ((make-parse-proc parser-mode root-proc) xs)
   (define (stringify xs) (apply string-append (map to-string xs)))
@@ -35,9 +36,9 @@
 (define-syntax (pollen-module-begin stx)
   (syntax-case stx ()
     [(_ PARSER-MODE . EXPRS)
-     (with-syntax ([EXPRS (replace-context #'here #'EXPRS)]
-                   [META-HASH (split-metas #'EXPRS (setup:define-meta-name))]
-                   [METAS-ID (setup:meta-export)]
+     (with-syntax ([META-HASH (split-metas #'EXPRS (setup:define-meta-name))]
+                   [METAS-ID-HERE (setup:meta-export)]
+                   [METAS-ID (datum->syntax #'EXPRS (setup:meta-export))]
                    [META-MOD-ID (setup:meta-export)]
                    [ROOT-ID (setup:main-root-node)]
                    [DOC-ID (setup:main-export)])
@@ -55,6 +56,7 @@
           (require pollen/top pollen/core pollen/setup (submod "." META-MOD-ID))
           (provide (all-defined-out) METAS-ID DOC-ID)
           (define prev-metas (current-metas))
+          (define METAS-ID METAS-ID-HERE)
           (and (current-metas METAS-ID) "") ; because empty strings get stripped, voids don't
           (begin . EXPRS)
           (and (current-metas prev-metas) "")))])) ; leave behind empty string, not void
