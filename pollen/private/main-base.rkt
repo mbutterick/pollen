@@ -40,7 +40,7 @@
                    [METAS-ID-HERE (setup:meta-export)]
                    [METAS-ID (datum->syntax #'EXPRS (setup:meta-export))]
                    [META-MOD-ID (setup:meta-export)]
-                   [ROOT-ID (setup:main-root-node)]
+                   [ROOT-ID (datum->syntax #'EXPRS (setup:main-root-node))]
                    [DOC-ID (setup:main-export)])
        #'(doclang:#%module-begin
           DOC-ID ; positional arg for doclang-raw: name of export
