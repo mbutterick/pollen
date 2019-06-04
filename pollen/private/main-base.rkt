@@ -1,4 +1,4 @@
-#lang debug racket/base
+#lang racket/base
 (require (for-syntax racket/base
                      syntax/strip-context
                      "../setup.rkt"
@@ -8,12 +8,12 @@
          "to-string.rkt"
          "../pagetree.rkt"
          "splice.rkt"
-         "../setup.rkt"
          "../core.rkt"
+         "../setup.rkt"
          (prefix-in doclang: "external/doclang-raw.rkt"))
 (provide (except-out (all-from-out racket/base) #%module-begin)
          (rename-out [pollen-module-begin #%module-begin])
-         (all-from-out "../core.rkt"))
+         (all-from-out "../core.rkt" "../setup.rkt"))
 
 (define ((make-parse-proc parser-mode root-proc) xs)
   (define (stringify xs) (apply string-append (map to-string xs)))
@@ -41,6 +41,8 @@
                    [METAS-ID (datum->syntax #'EXPRS (setup:meta-export))]
                    [META-MOD-ID (setup:meta-export)]
                    [ROOT-ID (datum->syntax #'EXPRS (setup:main-root-node))]
+                   [CURRENT-METAS (datum->syntax #'EXPRS 'current-metas)]
+                   [POLLEN/TOP (datum->syntax #'EXPRS 'pollen/top)]
                    [DOC-ID (setup:main-export)])
        #'(doclang:#%module-begin
           DOC-ID ; positional arg for doclang-raw: name of export
@@ -48,15 +50,15 @@
             (define proc (make-parse-proc PARSER-MODE ROOT-ID))
             (define trimmed-xs (strip-leading-newlines xs))
             (define doc-elements (splice trimmed-xs (setup:splicing-tag)))
-            (parameterize ([current-metas METAS-ID])
+            (parameterize ([CURRENT-METAS METAS-ID])
               (proc doc-elements))) ;  positional arg for doclang-raw: post-processor
           (module META-MOD-ID racket/base
             (provide METAS-ID)
             (define METAS-ID META-HASH))
-          (require pollen/top pollen/core pollen/setup (submod "." META-MOD-ID))
+          (require POLLEN/TOP (submod "." META-MOD-ID))
           (provide (all-defined-out) METAS-ID DOC-ID)
-          (define prev-metas (current-metas))
+          (define prev-metas (CURRENT-METAS))
           (define METAS-ID METAS-ID-HERE)
-          (and (current-metas METAS-ID) "") ; because empty strings get stripped, voids don't
+          (and (CURRENT-METAS METAS-ID) "") ; because empty strings get stripped, voids don't
           (begin . EXPRS)
-          (and (current-metas prev-metas) "")))])) ; leave behind empty string, not void
+          (and (CURRENT-METAS prev-metas) "")))])) ; leave behind empty string, not void
