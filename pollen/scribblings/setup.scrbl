@@ -1,6 +1,6 @@
 #lang scribble/manual
 @(require "mb-tools.rkt")
-@(require scribble/eval pollen/setup racket/string (for-label (except-in racket #%top) racket/runtime-path syntax/modresolve (except-in pollen #%module-begin) pollen/setup pollen/top))
+@(require scribble/eval pollen/setup racket/string (for-label (except-in racket #%top) racket/runtime-path syntax/modresolve (except-in pollen #%module-begin #%top) pollen/setup pollen/top))
 
 @(define my-eval (make-base-eval))
 @(my-eval `(require pollen pollen/setup))
