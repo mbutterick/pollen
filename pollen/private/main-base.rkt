@@ -37,11 +37,9 @@
   (syntax-case stx ()
     [(_ PARSER-MODE . EXPRS)
      (with-syntax ([META-HASH (split-metas #'EXPRS (setup:define-meta-name))]
-                   [METAS-ID-HERE (setup:meta-export)]
-                   [METAS-ID (datum->syntax #'EXPRS (setup:meta-export))]
-                   [META-MOD-ID (setup:meta-export)]
+                   [METAS-ID (setup:meta-export)]
+                   [METAS-ID-CALLER (datum->syntax #'EXPRS (setup:meta-export))]
                    [ROOT-ID (datum->syntax #'EXPRS (setup:main-root-node))]
-                   [CURRENT-METAS (datum->syntax #'EXPRS 'current-metas)]
                    [POLLEN/TOP (datum->syntax #'EXPRS 'pollen/top)]
                    [DOC-ID (setup:main-export)])
        #'(doclang:#%module-begin
@@ -50,15 +48,15 @@
             (define proc (make-parse-proc PARSER-MODE ROOT-ID))
             (define trimmed-xs (strip-leading-newlines xs))
             (define doc-elements (splice trimmed-xs (setup:splicing-tag)))
-            (parameterize ([CURRENT-METAS METAS-ID])
+            (parameterize ([current-metas METAS-ID-CALLER])
               (proc doc-elements))) ;  positional arg for doclang-raw: post-processor
-          (module META-MOD-ID racket/base
+          (module METAS-ID racket/base
             (provide METAS-ID)
             (define METAS-ID META-HASH))
-          (require POLLEN/TOP (submod "." META-MOD-ID))
+          (require POLLEN/TOP (submod "." METAS-ID))
           (provide (all-defined-out) METAS-ID DOC-ID)
-          (define prev-metas (CURRENT-METAS))
-          (define METAS-ID METAS-ID-HERE)
-          (and (CURRENT-METAS METAS-ID) "") ; because empty strings get stripped, voids don't
+          (define prev-metas (current-metas))
+          (define METAS-ID-CALLER METAS-ID)
+          (and (current-metas METAS-ID) "") ; because empty strings get stripped, voids don't
           (begin . EXPRS)
-          (and (CURRENT-METAS prev-metas) "")))])) ; leave behind empty string, not void
+          (and (current-metas prev-metas) "")))])) ; leave behind empty string, not void
