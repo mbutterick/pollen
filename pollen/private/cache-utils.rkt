@@ -7,6 +7,7 @@
          racket/file
          racket/path
          racket/list
+         racket/serialize
          sugar/coerce
          sugar/test
          compiler/cm)
@@ -98,7 +99,7 @@
   (define-values (dest-path-dir dest-path-filename _) (split-path dest-path))
   (define dest-file (build-path cache-dir (format "~a.rktd" dest-path-filename)))
   (define (generate-dest-file)
-    (write-to-file (path-hash-thunk) dest-file #:exists 'replace))
+    (write-to-file (serialize (path-hash-thunk)) dest-file #:exists 'replace))
 
   ;; `cache-file` looks for a file in private-cache-dir previously cached with key
   ;; (which in this case carries modification dates and POLLEN env).
@@ -112,4 +113,4 @@
               generate-dest-file
               #:notify-cache-use notify-proc
               #:max-cache-size (setup:compile-cache-max-size))
-  (file->value dest-file))
+  (deserialize (file->value dest-file)))
