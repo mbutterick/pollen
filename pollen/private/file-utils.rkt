@@ -262,15 +262,15 @@
 
 
 
-(define+provide/contract (get-source path)
-  (coerce/path? . -> . (or/c #f path?))
+(define+provide (get-source path)
+  #;(coerce/path? . -> . (or/c #f path?))
   (ormap (λ (proc) (proc path)) (list get-markup-source get-markdown-source get-preproc-source get-null-source get-scribble-source)))
 
 ;; for backward compatibility
 (define+provide ->source-path get-source)
 
-(define+provide/contract (->output-path x)
-  (coerce/path? . -> . coerce/path?)
+(define+provide (->output-path x)
+  #;(coerce/path? . -> . coerce/path?)
   (cond
     [(or (markup-source? x) (preproc-source? x) (null-source? x) (markdown-source? x))
      (define output-path (unescape-ext (remove-ext x)))
