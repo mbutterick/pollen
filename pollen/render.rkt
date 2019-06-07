@@ -69,25 +69,24 @@
                   (loop)))))
 
      (define flattened-paths
-       (filter file-exists?
-               (let loop ([paths paths])
-                 (if (null? paths)
-                     null
-                     (match (->complete-path (car paths))
-                       [(? pagetree-source? pt) (append (loop (pagetree->paths pt)) (loop (cdr paths)))]
-                       [path (cons path (loop (cdr paths)))])))))
-           
-     (for ([path-group (in-list (slice-at flattened-paths (length worker-places)))])
-       (define source-paths (for*/list ([path (in-list path-group)]
-                                        [source-path (in-value (->source-path path))]
-                                        #:when source-path)
-                              source-path))
-       (for ([source-path (in-list source-paths)]
+       (let loop ([paths paths])
+         (if (null? paths)
+             null
+             (match (->complete-path (car paths))
+               [(? pagetree-source? pt) (append (loop (pagetree->paths pt)) (loop (cdr paths)))]
+               [path (cons path (loop (cdr paths)))]))))
+
+     (define source-paths (for*/list ([p (in-list flattened-paths)]
+                                      [maybe-source-path (in-value (->source-path p))]
+                                      #:when (and maybe-source-path (file-exists? maybe-source-path)))
+                            maybe-source-path))
+     (for ([source-path-group (in-list (slice-at source-paths (length worker-places)))])
+       (for ([source-path (in-list source-path-group)]
              [(wp wpidx) (in-indexed worker-places)])
          (message (format "rendering parallel on core ~a /~a" (add1 wpidx)
                           (find-relative-path (current-project-root) source-path)))
          (place-channel-put wp (cons source-path (current-poly-target))))
-       (for ([source-path (in-list source-paths)]
+       (for ([source-path (in-list source-path-group)]
              [(wp wpidx) (in-indexed worker-places)])
          (message (format "rendered parallel on core ~a /~a" (add1 wpidx)
                           (find-relative-path (current-project-root) (->output-path source-path))))
