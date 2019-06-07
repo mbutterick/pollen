@@ -259,26 +259,25 @@
  (check-equal? (->markdown-source-paths "foo") (list (->path "foo.pmd")))
  (check-equal? (->markdown-source-paths 'foo) (list (->path "foo.pmd"))))
 
-
-
-
-(define+provide (get-source path)
-  #;(coerce/path? . -> . (or/c #f path?))
-  (ormap (λ (proc) (proc path)) (list get-markup-source get-markdown-source get-preproc-source get-null-source get-scribble-source)))
+(define+provide (get-source pathish)
+  (define p (->path pathish))
+  (for/or ([proc (in-list (list get-markup-source get-markdown-source get-preproc-source get-null-source get-scribble-source))])
+          (proc p)))
 
 ;; for backward compatibility
 (define+provide ->source-path get-source)
 
-(define+provide (->output-path x)
-  #;(coerce/path? . -> . coerce/path?)
-  (cond
-    [(or (markup-source? x) (preproc-source? x) (null-source? x) (markdown-source? x))
-     (define output-path (unescape-ext (remove-ext x)))
-     (if (has-poly-ext? output-path)
-         (add-ext (remove-ext output-path) (or (current-poly-target) (car (setup:poly-targets))))
-         output-path)]
-    [(scribble-source? x) (add-ext (remove-ext x) 'html)]
-    [else x]))
+(define+provide (->output-path pathish)
+  (define p (->path pathish))
+  (->path
+   (cond
+     [(or (markup-source? p) (preproc-source? p) (null-source? p) (markdown-source? p))
+      (define output-path (unescape-ext (remove-ext p)))
+      (if (has-poly-ext? output-path)
+          (add-ext (remove-ext output-path) (or (current-poly-target) (car (setup:poly-targets))))
+          output-path)]
+     [(scribble-source? p) (add-ext (remove-ext p) 'html)]
+     [else p])))
 
 
 (define+provide (project-files-with-ext ext)
