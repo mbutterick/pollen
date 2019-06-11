@@ -18,6 +18,11 @@
       (#px"[\\s#\u00A0]*(--|–)[\\s#\u00A0]*" "–"))) ; en dash
   ((make-replacer dashes) str))
 
+(define+provide/contract (smart-ellipses str)
+  (string? . -> . string?)
+  (define triple-dot '((#px"\\.{3}" "…")))
+  ((make-replacer triple-dot) str))
+
 (module-test-external
  (check-equal? (smart-dashes "I had --- maybe 13 -- 20 --- hob-nobs.") "I had—maybe 13–20—hob-nobs.")
  (define tricky-string "\"Why,\" she could've asked, \"are we in O‘ahu watching 'Mame'?\"")

@@ -54,6 +54,19 @@ In @racket[_str], convert three hyphens to an em dash, and two hyphens to an en 
 ]
 
 
+@defproc[
+(smart-ellipses
+[str string?])
+string?]
+In @racket[_str], convert three periods to an ellipsis.
+
+@examples[#:eval my-eval
+(define tricky-string "I had a few ... OK, like 6--8 ... thin mints.")
+(display tricky-string)
+(display (smart-ellipses tricky-string))
+]
+
+
 
 @defproc[
 (wrap-hanging-quotes
