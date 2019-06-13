@@ -41,7 +41,8 @@
                    [METAS-ID-CALLER (datum->syntax #'EXPRS (setup:meta-export))]
                    [ROOT-ID (datum->syntax #'EXPRS (setup:main-root-node))]
                    [POLLEN/TOP (datum->syntax #'EXPRS 'pollen/top)]
-                   [DOC-ID (setup:main-export)])
+                   [DOC-ID (setup:main-export)]
+                   [ALL-DEFINED-OUT (datum->syntax #'EXPRS '(all-defined-out))])
        #'(doclang:#%module-begin
           DOC-ID ; positional arg for doclang-raw: name of export
           (λ (xs)
@@ -54,7 +55,8 @@
             (provide METAS-ID)
             (define METAS-ID META-HASH))
           (require POLLEN/TOP (submod "." METAS-ID))
-          (provide (all-defined-out) METAS-ID DOC-ID)
+          (provide ALL-DEFINED-OUT ; implicitly picks up METAS-ID-CALLER
+                   DOC-ID)
           (define prev-metas (current-metas))
           (define METAS-ID-CALLER METAS-ID)
           (and (current-metas METAS-ID) "") ; because empty strings get stripped, voids don't
