@@ -3,6 +3,7 @@
          racket/path
          racket/match
          racket/place
+         racket/list
          sugar/test
          sugar/define
          sugar/file
@@ -59,13 +60,21 @@
        (for/list ([i (in-range (processor-count))])
          (place ch
                 (let loop ()
-                  (match-define (cons path poly-target) (place-channel-get ch))
-                  (define result
-                    (with-handlers ([exn:fail? (λ (e) #false)])
-                      (parameterize ([current-poly-target poly-target])
-                        (render-from-source-or-output-path path))
-                      #true))
-                  (place-channel-put ch result)
+                  (match-define (list path poly-target) (place-channel-get ch))
+                  (define render-result
+                    (let render ([failures 0][exn-msg #f])
+                      (cond
+                        [(= 3 failures) exn-msg]
+                        [else
+                         (with-handlers ([exn:fail?
+                                          (λ (e)
+                                            (sleep 0.01)
+                                            (render (add1 failures) (exn-message e)))])
+                           (parameterize ([current-poly-target poly-target])
+                             (match-define-values (_ _ ms _)
+                               (time-apply render-from-source-or-output-path (list path)))
+                             ms))])))
+                  (place-channel-put ch render-result)
                   (loop)))))
 
      (define flattened-paths
@@ -80,19 +89,21 @@
                                       [maybe-source-path (in-value (->source-path p))]
                                       #:when (and maybe-source-path (file-exists? maybe-source-path)))
                             maybe-source-path))
-     (for ([source-path-group (in-list (slice-at source-paths (length worker-places)))])
+     
+     (for ([source-path-group (in-list (slice-at (shuffle source-paths) (length worker-places)))])
        (for ([source-path (in-list source-path-group)]
              [(wp wpidx) (in-indexed worker-places)])
-         (message (format "rendering parallel on core ~a /~a" (add1 wpidx)
-                          (find-relative-path (current-project-root) source-path)))
-         (place-channel-put wp (cons source-path (current-poly-target))))
+         (place-channel-put wp (list source-path (current-poly-target))))
        (for ([source-path (in-list source-path-group)]
              [(wp wpidx) (in-indexed worker-places)])
-         (message (format "rendered parallel on core ~a /~a" (add1 wpidx)
-                          (find-relative-path (current-project-root) (->output-path source-path))))
-         (place-channel-get wp)))]
-    [else
-     (for-each render-from-source-or-output-path paths)]))
+         (match (place-channel-get wp)
+           [(? number? ms) 
+            (message (format "rendered parallel on core ~a /~a ~a"
+                             (add1 wpidx)
+                             (find-relative-path (current-project-root) (->output-path source-path))
+                             (if (< ms 1000) (format "(~a ms)" ms) (format "(~a s)" (/ ms 1000.0)))))]
+           [exn-msg (raise (exn:fail exn-msg (current-continuation-marks)))])))]
+    [else (for-each render-from-source-or-output-path paths)]))
 
 (define (pagetree->paths pagetree-or-path)
   (define pagetree (if (pagetree? pagetree-or-path)
@@ -260,6 +271,7 @@
   (define template-path (or maybe-template-path (get-template-for source-path output-path)))
   (unless template-path
     (raise-argument-error 'render-markup-or-markdown-source (format "valid template path~a" (if (has-inner-poly-ext? source-path) (format " for target ~a" (current-poly-target)) "")) template-path))
+  
   (render-from-source-or-output-path template-path) ; because template might have its own preprocessor source
   (parameterize ([current-output-port (current-error-port)]
                  [current-namespace (make-base-namespace)])
