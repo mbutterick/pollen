@@ -55,7 +55,8 @@
   ;; Using reset-modification-dates is sort of like session control.
   (reset-mod-date-hash!)
   (cond
-    [parallel?
+    ;; disable parallel processing until concurrency problems are sorted
+    #;[parallel?
      (define worker-places
        (for/list ([i (in-range (processor-count))])
          (place ch
