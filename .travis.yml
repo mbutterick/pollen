@@ -2,6 +2,7 @@
 # https://github.com/greghendershott/travis-racket/blob/master/.travis.yml
 # Thanks Greg!
 
+dist: trusty
 language: c
 sudo: false
 
