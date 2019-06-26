@@ -21,36 +21,43 @@
 (define (preheat-cache starting-dir)
   (unless (and (path-string? starting-dir) (directory-exists? starting-dir))
     (raise-argument-error 'preheat-cache "directory" starting-dir))
-  (define worker-places (for/list ([i (in-range (processor-count))])
-                          (place ch
-                                 (let loop ()
-                                   (define result (with-handlers ([exn:fail? (λ (e) #false)])
-                                                        (path->hash (place-channel-get ch))))
-                                   (place-channel-put ch result)
-                                   (loop)))))
-  (define paths-that-should-be-cached
+  
+  ;; if a file is already in the cache, no need to hit it again.
+  ;; this allows partially completed preheat jobs to resume.
+  (define uncached-paths
     (for/list ([path (in-directory starting-dir)]
                #:when (for/or ([proc (in-list (list preproc-source?
                                                     markup-source?
                                                     markdown-source?
                                                     pagetree-source?))])
-                        (proc path)))
+                        (proc path))
+               #:unless (path-cached? path))
       path))
 
-  ;; if a file is already in the cache, no need to hit it again.
-  ;; this allows partially completed preheat jobs to resume.
-  (define uncached-paths (filter-not path-cached? paths-that-should-be-cached))
+  (define worker-evts
+    (for/list ([wpidx (in-range (processor-count))])
+      (define wp
+        (place ch
+               (let loop ()
+                 (define path (place-channel-put/get ch (list 'want-job)))
+                 (place-channel-put ch (list 'job-finished path 
+                                             (with-handlers ([exn:fail? (λ (e) #f)])
+                                               (path->hash path))))
+                 (loop))))
+      (handle-evt wp (λ (val) (list* wpidx wp val)))))
   
-  ;; compile the paths in groups, so they can be incrementally saved.
-  ;; that way, if there's a failure, the progress is preserved.
-  ;; but the slowest file in a group will prevent further progress.
-  (for ([path-group (in-list (slice-at uncached-paths (length worker-places)))])
-    (for ([path (in-list path-group)]
-          [wp (in-list worker-places)])
-      (message (format "caching: ~a" (find-relative-path starting-dir path)))
-      (place-channel-put wp path))
-    (for ([path (in-list path-group)]
-          [wp (in-list worker-places)])
-      (match (place-channel-get wp)
-        [#false (message (format "compile failed: ~a" path))]
-        [result (cache-ref! (paths->key path) (λ () result))]))))
+  (let loop ([paths uncached-paths][actives null])
+    (unless (and (null? paths) (null? actives))
+      (match (apply sync worker-evts)
+        [(list wpidx wp 'want-job)
+         (match paths
+           [(? null?) (loop null actives)]
+           [(cons path rest)
+            (place-channel-put wp path)
+            (message (format "caching on core ~a: ~a" (add1 wpidx) (find-relative-path starting-dir path)))
+            (loop rest (cons wpidx actives))])]
+        [(list wpidx wp 'job-finished path result)
+         (if result
+             (cache-ref! (paths->key path) (λ () result))
+             (message (format "caching failed on core ~a: ~a" (add1 wpidx) (find-relative-path starting-dir path))))
+         (loop paths (remq wpidx actives))]))))
