@@ -99,7 +99,15 @@ See also @seclink["raco-pollen-render-poly"].
 The optional @exec{--parallel} or @exec{-p} switch creates a set of parallel rendering jobs. On a multi-core machine, this will usually make your rendering job finish faster. The order of rendering is not guaranteed, of course, so if your project depends on a certain order of rendering, don't use this option.
 
 @terminal{
-> raco pollen render -p foo.html bar.html zam.css}
+> raco pollen render -p foo.html bar.html zam.css
+}
+
+As a rule of thumb, parallel rendering works best if you do @exec{raco setup} first, which updates Pollen's disk caches:
+
+@terminal{
+> raco setup
+> raco pollen render -p 
+}
 
 
 @italic{Warning}: In all cases, the newly rendered output file will overwrite any previous output file.
