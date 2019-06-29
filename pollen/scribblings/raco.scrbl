@@ -96,16 +96,22 @@ The optional @exec{--target} or @exec{-t} switch specifies the render target for
 
 See also @seclink["raco-pollen-render-poly"].
 
-The optional @exec{--parallel} or @exec{-p} switch creates a set of parallel rendering jobs. On a multi-core machine, this will usually make your rendering job finish faster. The order of rendering is not guaranteed, of course, so if your project depends on a certain order of rendering, don't use this option.
+The optional @exec{--parallel} or @exec{-p} switch creates a set of parallel rendering jobs equal to the number of processing cores on the system. On a multi-core machine, this will usually make your rendering job finish faster. The order of rendering is not guaranteed, of course, so if your project depends on a certain order of rendering, don't use this option.
 
 @terminal{
 > raco pollen render -p foo.html bar.html zam.css
 }
 
+The alternative @exec{--jobs <count>} or @exec{-j <count>} switch does the same thing, but takes one argument that creates @racket[<count>] parallel jobs (which can be more or less than the number of processing cores).
+
+@terminal{
+> raco pollen render -j 4 foo.html bar.html zam.css
+}
+
 As a rule of thumb, parallel rendering works best if you do @exec{raco setup} first, which updates Pollen's disk caches:
 
 @terminal{
-> raco setup
+> raco setup -p
 > raco pollen render -p 
 }
 
@@ -115,7 +121,7 @@ As a rule of thumb, parallel rendering works best if you do @exec{raco setup} fi
 
 @bold{Directory mode}: @racket[raco pollen render _directory] renders all preprocessor source files and then all pagetree files found in the specified directory. If none of these files are found, a pagetree will be generated for the directory (which will include all source files) and then rendered. If the @racket[_directory] argument is omitted, the command defaults to the current directory.
 
-In directory mode, this command can be invoked with two other optional arguments (in addition to the @exec{--target} and @exec{--parallel} switches mentioned above):
+In directory mode, this command can be invoked with two other optional arguments (in addition to the @exec{--target}, @exec{--parallel}, and  @exec{--jobs} switches mentioned above):
 
 The @exec{--subdir} or @exec{-s} switch also renders subdirectories. @racket[current-project-root] remains fixed at the initial directory, just as it would be in the project server after invoking @racket[raco pollen start]. 
 
@@ -148,6 +154,18 @@ Certain files and directories are automatically omitted from the published direc
 Finds Pollen source files in the current directory, compiles them, and loads the results into the @seclink["Cache" #:doc '(lib "pollen/scribblings/pollen.scrbl")]. This will give you the snappiest performance during an interactive session with the project server. 
 
 Can also be invoked as @racket[raco pollen setup _directory], which will set up the files in @racket[_directory].
+
+The optional @exec{--parallel} or @exec{-p} switch creates a set of parallel setup jobs equal to the number of processing cores on the system. On a multi-core machine, this will usually make your setup finish faster.
+
+@terminal{
+> raco pollen setup -p
+}
+
+The alternative @exec{--jobs <count>} or @exec{-j <count>} switch does the same thing, but takes one argument that creates @racket[<count>] parallel jobs (which can be more or less than the number of processing cores).
+
+@terminal{
+> raco pollen setup -j 4
+}
 
 
 @section{@exec{raco pollen reset}}

@@ -48,7 +48,7 @@
 
 (define (list-of-pathish? x) (and (list? x) (andmap pathish? x)))
 
-(define+provide/contract (render-batch #:parallel [parallel? #false] . paths)
+(define+provide/contract (render-batch #:parallel [wants-parallel-render #false] . paths)
   ((#:parallel any/c) #:rest list-of-pathish? . ->* . void?)
   ;; Why not just (for-each render ...)?
   ;; Because certain files will pass through multiple times (e.g., templates)
@@ -56,7 +56,7 @@
   ;; Using reset-modification-dates is sort of like session control.
   (reset-mod-date-hash!)
   (cond
-    [parallel?
+    [wants-parallel-render
 
      (define source-paths
        (let ()
@@ -75,10 +75,16 @@
                      [maybe-source-path (in-value (->source-path p))]
                      #:when (and maybe-source-path (file-exists? maybe-source-path)))
            maybe-source-path)))
+
+     (define job-count
+       (match wants-parallel-render
+         [#true (processor-count)]
+         [(? exact-positive-integer? count) count]
+         [_ (raise-argument-error 'render-batch "exact positive integer" wants-parallel-render)]))
      
      ;; initialize the workers
      (define worker-evts
-       (for/list ([wpidx (in-range (processor-count))])
+       (for/list ([wpidx (in-range job-count)])
          (define wp (place ch
                            (let loop ()
                              (match-define (cons path poly-target)
@@ -120,7 +126,7 @@
                (loop rest locks blocks)])]
            [(list wpidx wp 'finished-job path ms)
             (message
-             (format "rendered parallel on core ~a /~a ~a"
+             (format "rendered parallel @ job ~a /~a ~a"
                      (add1 wpidx)
                      (find-relative-path (current-project-root) (->output-path path))
                      (if (< ms 1000) (format "(~a ms)" ms) (format "(~a s)" (/ ms 1000.0)))))

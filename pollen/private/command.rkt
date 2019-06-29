@@ -28,22 +28,22 @@
 
 (define (dispatch command-name)
   (with-logging-to-port
-   (current-error-port)
-   (λ ()
-     (case command-name
-       [("test" "xyzzy") (handle-test)]
-       [(#f "help") (handle-help)]
-       [("start") (handle-start)] ; parses its own args
-       ;; "second" arg is actually third in command line args, so use cddr not cdr
-       [("render") (handle-render)] ; render parses its own args from current-command-line-arguments
-       [("version") (handle-version)]
-       [("reset") (handle-reset (get-first-arg-or-current-dir))]
-       [("setup") (handle-setup (get-first-arg-or-current-dir))]
-       [("clone" "publish") (handle-publish)]
-       [else (handle-unknown command-name)]))
-   #:logger pollen-logger
-   'info
-   'pollen))
+      (current-error-port)
+    (λ ()
+      (case command-name
+        [("test" "xyzzy") (handle-test)]
+        [(#f "help") (handle-help)]
+        [("start") (handle-start)] ; parses its own args
+        ;; "second" arg is actually third in command line args, so use cddr not cdr
+        [("render") (handle-render)] ; render parses its own args from current-command-line-arguments
+        [("version") (handle-version)]
+        [("reset") (handle-reset (get-first-arg-or-current-dir))]
+        [("setup") (handle-setup)]
+        [("clone" "publish") (handle-publish)]
+        [else (handle-unknown command-name)]))
+    #:logger pollen-logger
+    'info
+    'pollen))
 
 (define (very-nice-path x)
   (path->complete-path (simplify-path (cleanse-path (->path x)))))
@@ -73,9 +73,21 @@ version                print the version" (current-server-port) (make-publish-di
   (message "resetting cache ...")
   ((dynamic-require 'pollen/cache 'reset-cache) directory-maybe))
 
-(define (handle-setup directory-maybe)
+(define (handle-setup)
   (message "preheating cache ...")
-  ((dynamic-require 'pollen/private/preheat-cache 'preheat-cache) directory-maybe)) 
+  (define setup-parallel? (make-parameter #false))
+  (define parsed-args
+    (command-line #:program "raco pollen setup"
+                  #:argv (vector-drop (current-command-line-arguments) 1) ; snip the 'setup' from the front
+                  #:once-any
+                  [("-p" "--parallel") "Setup in parallel using all cores" (setup-parallel? #true)]
+                  [("-j" "--jobs") job-count "Setup in parallel using <job-count> jobs" (setup-parallel? (or (string->number job-count) (raise-argument-error 'handle-setup "exact positive integer" job-count)))]
+                  #:args other-args
+                  other-args))
+  (define starting-dir (match parsed-args
+                         [(list dir) dir]
+                         [_  (current-directory)]))
+  ((dynamic-require 'pollen/private/preheat-cache 'preheat-cache) starting-dir (setup-parallel?)))
 
 (define (handle-render)
   (define render-batch (dynamic-require 'pollen/render 'render-batch))
@@ -93,7 +105,9 @@ version                print the version" (current-server-port) (make-publish-di
                   [("-r" "--recursive") "Render subdirectories recursively"
                                         (render-with-subdirs? 'recursive)]
                   [("-s" "--subdir") "Render subdirectories nonrecursively" (render-with-subdirs? 'include)]
-                  [("-p" "--parallel") "Render in parallel" (render-parallel? #true)]
+                  #:once-any
+                  [("-p" "--parallel") "Render in parallel using all cores" (render-parallel? #true)]
+                  [("-j" "--jobs") job-count "Render in parallel using <job-count> jobs" (render-parallel? (or (string->number job-count) (raise-argument-error 'handle-render "exact positive integer" job-count)))]
                   #:args other-args
                   other-args)) 
   (parameterize ([current-poly-target (render-target-wanted)]) ;; applies to both cases
@@ -127,7 +141,7 @@ version                print the version" (current-server-port) (make-publish-di
                (for ([path (in-list dirlist)]
                      #:when (and (directory-exists? path)
                                  (not (omitted-path? path))))
-                    (render-one-dir (->complete-path path))))))]
+                 (render-one-dir (->complete-path path))))))]
         [path-args ;; path mode
          (message (format "rendering ~a" (string-join (map ->string path-args) " ")))
          (apply render-batch (map very-nice-path path-args) #:parallel (render-parallel?))]))))
