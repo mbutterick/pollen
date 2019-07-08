@@ -32,7 +32,7 @@
                                                     pagetree-source?))])
                         (proc path))
                #:unless (path-cached? path))
-      path))
+      (path->complete-path path)))
 
   (cond
     [(null? uncached-paths)
