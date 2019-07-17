@@ -118,30 +118,32 @@ version                print the version" (current-server-port) (make-publish-di
          #:when (directory-exists? dir)
          (define top-dir (very-nice-path dir))
          (let render-one-dir ([dir top-dir])
-           (parameterize ([current-directory dir]
-                          [current-project-root (case (render-with-subdirs?)
-                                                  [(recursive) dir]
-                                                  [else top-dir])])
-             (define dirlist (directory-list dir))
-             (define preprocs (filter preproc-source? dirlist))
-             (define static-pagetrees (filter pagetree-source? dirlist))
-             ;; if there are no static pagetrees, use make-project-pagetree
-             ;; (which will synthesize a pagetree if needed, which includes all sources)
-             (define batch-to-render
-               (map very-nice-path
-                    (match static-pagetrees
-                      [(? null?)
-                       (message (format "rendering generated pagetree for directory ~a" dir))
-                       (cdr (make-project-pagetree dir))]
-                      [_
-                       (message (format "rendering preproc & pagetree files in directory ~a" dir))
-                       (append preprocs static-pagetrees)])))
-             (apply render-batch batch-to-render #:parallel (render-parallel?))
-             (when (render-with-subdirs?)
-               (for ([path (in-list dirlist)]
-                     #:when (and (directory-exists? path)
-                                 (not (omitted-path? path))))
-                 (render-one-dir (->complete-path path))))))]
+           (when (or (extra-path? dir) (not (omitted-path? dir)))
+             (parameterize ([current-directory dir]
+                            [current-project-root (case (render-with-subdirs?)
+                                                    [(recursive) dir]
+                                                    [else top-dir])])
+               (define dirlist (directory-list dir))
+               (define preprocs (filter preproc-source? dirlist))
+               (define static-pagetrees (filter pagetree-source? dirlist))
+               ;; if there are no static pagetrees, use make-project-pagetree
+               ;; (which will synthesize a pagetree if needed, which includes all sources)
+               (define paths-to-render
+                 (map very-nice-path
+                      (match static-pagetrees
+                        [(? null?)
+                         (message (format "rendering generated pagetree for directory ~a" dir))
+                         (cdr (make-project-pagetree dir))]
+                        [_
+                         (message (format "rendering preproc & pagetree files in directory ~a" dir))
+                         (append preprocs static-pagetrees)])))
+               (apply render-batch (for/list ([path paths-to-render]
+                                              #:when (or (extra-path? path) (not (omitted-path? path))))
+                                     path) #:parallel (render-parallel?))
+               (when (render-with-subdirs?)
+                 (for ([path (in-list dirlist)]
+                       #:when (directory-exists? path))
+                   (render-one-dir (->complete-path path)))))))]
         [path-args ;; path mode
          (message (format "rendering ~a" (string-join (map ->string path-args) " ")))
          (apply render-batch (map very-nice-path path-args) #:parallel (render-parallel?))]))))
