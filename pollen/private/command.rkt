@@ -137,9 +137,7 @@ version                print the version" (current-server-port) (make-publish-di
                         [_
                          (message (format "rendering preproc & pagetree files in directory ~a" dir))
                          (append preprocs static-pagetrees)])))
-               (apply render-batch (for/list ([path paths-to-render]
-                                              #:when (or (extra-path? path) (not (omitted-path? path))))
-                                     path) #:parallel (render-parallel?))
+               (apply render-batch paths-to-render #:parallel (render-parallel?))
                (when (render-with-subdirs?)
                  (for ([path (in-list dirlist)]
                        #:when (directory-exists? path))
