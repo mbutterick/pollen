@@ -5,11 +5,15 @@
 
 @section{Bugs and feature requests}
 
-Can be submitted as @link["https://github.com/mbutterick/pollen/issues"]{GitHub issues}.
+Can be submitted as @link["https://github.com/mbutterick/pollen/issues"]{GitHub issues} at the main Pollen source repository.
 
-@section{Mailing list}
+@section{Questions & discussion}
 
-For general tips and how-to questions, use the @link["https://groups.google.com/forum/#!forum/pollenpub"]{Pollen discussion group} at @link["mailto:pollenpub@googlegroups.com"]{pollenpub@"@"googlegroups.com}. I'll also use that list to post major changes and new features.
+For general tips and how-to questions, use the @link["https://github.com/mbutterick/pollen-users/issues"]{pollen-users discussion group} (on GitHub). I'll also use that list to post major changes and new features. 
+
+You need a GitHub account to post. If you don't have one, don't panic — they're free and easy to set up with an email address. @link["https://github.com/mbutterick/pollen-users"]{Instructions here}.
+
+(BTW, the former ``pollenpub'' Google Group is now deprecated.)
 
 @section{Utilities & libraries}
 
