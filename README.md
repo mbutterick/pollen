@@ -23,7 +23,7 @@ And update like so:
 
     raco pkg update --update-deps pollen
     
-Official mailing list: http://groups.google.com/forum/#!forum/pollenpub
+Official discussion area: https://github.com/mbutterick/pollen-users/issues
 
 ## License
 
