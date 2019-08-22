@@ -7,6 +7,7 @@
          racket/file
          racket/path
          racket/list
+         racket/string
          racket/serialize
          sugar/coerce
          sugar/test
@@ -22,6 +23,7 @@
 ;; because cache validity is not sensitive to mod date of output path
 ;; (in fact we would expect it to be earlier, since we want to rely on an earlier version)
 (define (paths->key source-path [template-path #false] [output-path #false])
+  (define-values (env-watchlist path-watchlist) (partition bytes? (setup:cache-watchlist source-path)))
   (define path-strings-to-track
     (list* source-path
            ;; if template has a source file, track that instead
@@ -29,8 +31,10 @@
            ;; is either list of files or (list #f)
            (append (->list (get-directory-require-files source-path))
                    ;; user-designated files to track
-                   (map ->string (setup:cache-watchlist source-path)))))
+                   (map ->string path-watchlist))))
   (define pollen-env (getenv default-env-name))
+  (define env-rec (for/list ([env-name (in-list (sort env-watchlist bytes<?))])
+                            (cons env-name (environment-variables-ref (current-environment-variables) env-name))))
   (define poly-flag (and (has-inner-poly-ext? source-path) (current-poly-target)))
   (define path+mod-time-pairs
     (for/list ([ps (in-list path-strings-to-track)])
@@ -40,7 +44,7 @@
                       (message (format "watchlist file /~a does not exist" (find-relative-path (current-project-root) cp))))
                     (cons (path->string cp) (file-or-directory-modify-seconds cp #false (λ () 0)))]
                 [else #false])))
-  (list* pollen-env poly-flag (and output-path (path->string output-path)) path+mod-time-pairs))
+  (append env-rec (list pollen-env poly-flag (and output-path (path->string output-path))) path+mod-time-pairs))
 
 (define (key->source-path key) (car (fourth key)))
 (define (key->output-path key) (third key))
