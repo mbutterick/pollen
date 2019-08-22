@@ -1,4 +1,4 @@
-#lang racket/base
+#lang debug racket/base
 (require "file-utils.rkt"
          "../setup.rkt"
          "project.rkt"
@@ -7,6 +7,7 @@
          racket/file
          racket/path
          racket/list
+         racket/match
          racket/string
          racket/serialize
          sugar/coerce
@@ -23,7 +24,6 @@
 ;; because cache validity is not sensitive to mod date of output path
 ;; (in fact we would expect it to be earlier, since we want to rely on an earlier version)
 (define (paths->key source-path [template-path #false] [output-path #false])
-  (define-values (env-watchlist path-watchlist) (partition symbol? (setup:cache-watchlist source-path)))
   (define path-strings-to-track
     (list* source-path
            ;; if template has a source file, track that instead
@@ -31,10 +31,11 @@
            ;; is either list of files or (list #f)
            (append (->list (get-directory-require-files source-path))
                    ;; user-designated files to track
-                   (map ->string path-watchlist))))
-  (define pollen-env (getenv default-env-name))
-  (define env-rec (for/list ([env-name (in-list (sort env-watchlist bytes<?))])
-                            (cons env-name (getenv (symbol->string env-name)))))
+                   (map ->string (setup:cache-watchlist source-path)))))
+  (define env-rec (for/list ([env-name (in-list (cons default-env-name (sort (setup:envvar-watchlist source-path) bytes<?)))])
+                            (cons env-name (match (getenv env-name)
+                                             [#false #false]
+                                             [str (string-downcase (->string str))]))))
   (define poly-flag (and (has-inner-poly-ext? source-path) (current-poly-target)))
   (define path+mod-time-pairs
     (for/list ([ps (in-list path-strings-to-track)])
@@ -44,10 +45,10 @@
                       (message (format "watchlist file /~a does not exist" (find-relative-path (current-project-root) cp))))
                     (cons (path->string cp) (file-or-directory-modify-seconds cp #false (λ () 0)))]
                 [else #false])))
-  (list* env-rec pollen-env poly-flag (and output-path (path->string output-path)) path+mod-time-pairs))
+  (list* env-rec poly-flag (and output-path (path->string output-path)) path+mod-time-pairs))
 
-(define (key->source-path key) (car (fifth key)))
-(define (key->output-path key) (fourth key))
+(define (key->source-path key) (car (fourth key)))
+(define (key->output-path key) (third key))
 
 (module-test-internal
  (define ps "/users/nobody/project/source.html.pm")

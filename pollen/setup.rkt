@@ -47,6 +47,7 @@
                                     (dynamic-require `(submod ,(apply get-path-to-override get-path-args) WORLD-SUBMOD) 'NAME NAME-FAIL-THUNKED))))))]))
 
 (define-settable cache-watchlist null)
+(define-settable envvar-watchlist null)
 
 (define-settable preproc-source-ext 'pp)
 (define-settable markup-source-ext 'pm)

@@ -106,9 +106,9 @@ Default separators used in decoding.
 
 @defoverridable[compile-cache-max-size exact-positive-integer?]{Maximum size of the compile cache.}
 
-@defoverridable[cache-watchlist (listof (or/c path? path-string? symbol?))]{List of extra things that the cache (= render cache + compile cache, collectively) watches during a project-server session, which can be files (each given as a @racket[path?] or @racket[path-string?]) and environment variables (each given as a @racket[symbol?]).
+@defoverridable[cache-watchlist (listof (or/c path? path-string?))]{List of extra files that the cache (= render cache + compile cache, collectively) watches during a project-server session. If one of the files on the watchlist changes, the cache is invalidated (just as it would be if @racket["pollen.rkt"] changed).
 
-Here's how files on the watchlist are handled. If one of the files on the watchlist changes, the cache is invalidated (just as it would be if @racket["pollen.rkt"] changed). If the cache can't find a certain file on the watchlist, no error will arise. The file will simply be ignored. Therefore, to avoid unexpected behavior, the best policy is to use complete paths (or path strings). One way to generate a complete path to a local file is with @racket[define-runtime-path]. Another way, if you're using a module that's already installed as part of a package, is with @racket[resolve-module-path]:
+If the cache can't find a certain file on the watchlist, no error will arise. The file will simply be ignored. Therefore, to avoid unexpected behavior, the best policy is to use complete paths (or path strings). One way to generate a complete path to a local file is with @racket[define-runtime-path]. Another way, if you're using a module that's already installed as part of a package, is with @racket[resolve-module-path]:
 
 @fileblock["pollen.rkt" 
 @codeblock{
@@ -120,10 +120,13 @@ Here's how files on the watchlist are handled. If one of the files on the watchl
   (define cache-watchlist (list my-local-mod my-installed-mod)))
 }]
 
-Here's how environment variables on the watchlist are handled. By default, the cache always watches the default @racket[POLLEN] environment variable, but no others. By listing other environment variables in the watchlist, Pollen will watch those too. Unlike files, environment variables don't change during a session. But separate caches will be maintained for each distinct value of an environment variable.
-
 @history[#:added "1.4"]
 }
+
+@defoverridable[envvar-watchlist (listof string?)]{List of extra environment variables that are used in cache keys. Separate caches will be maintained for each distinct value of an environment variable. @secref["The_POLLEN_environment_variable"] is always used, regardless of how this value is set.
+
+@history[#:added "2.1"]}
+
 
 
 @defoverridable[publish-directory (or/c path-string? path-for-some-system?)]{Default target for @secref{raco_pollen_publish}. A complete path is used as is; a relative path is published to the desktop.. @history[#:added "1.1"]}
