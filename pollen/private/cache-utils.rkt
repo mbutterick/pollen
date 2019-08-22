@@ -23,7 +23,7 @@
 ;; because cache validity is not sensitive to mod date of output path
 ;; (in fact we would expect it to be earlier, since we want to rely on an earlier version)
 (define (paths->key source-path [template-path #false] [output-path #false])
-  (define-values (env-watchlist path-watchlist) (partition bytes? (setup:cache-watchlist source-path)))
+  (define-values (env-watchlist path-watchlist) (partition symbol? (setup:cache-watchlist source-path)))
   (define path-strings-to-track
     (list* source-path
            ;; if template has a source file, track that instead
@@ -34,7 +34,7 @@
                    (map ->string path-watchlist))))
   (define pollen-env (getenv default-env-name))
   (define env-rec (for/list ([env-name (in-list (sort env-watchlist bytes<?))])
-                            (cons env-name (environment-variables-ref (current-environment-variables) env-name))))
+                            (cons env-name (getenv (symbol->string env-name)))))
   (define poly-flag (and (has-inner-poly-ext? source-path) (current-poly-target)))
   (define path+mod-time-pairs
     (for/list ([ps (in-list path-strings-to-track)])
