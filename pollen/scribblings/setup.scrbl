@@ -120,7 +120,7 @@ Here's how files on the watchlist are handled. If one of the files on the watchl
   (define cache-watchlist (list my-local-mod my-installed-mod)))
 }]
 
-Here's how environment variables on the watchlist are handled. Ordinarily the cache  only watches the default @racket[#"POLLEN"] environment variable. By listing other environment variables in the watchlist, Pollen will watch those too. Unlike files, environment variables don't change during a session. But separate caches will be maintained for each distinct value of an environment variable.
+Here's how environment variables on the watchlist are handled. By default, the cache always watches the default @racket[#"POLLEN"] environment variable, but no others. By listing other environment variables in the watchlist, Pollen will watch those too. Unlike files, environment variables don't change during a session. But separate caches will be maintained for each distinct value of an environment variable.
 
 @history[#:added "1.4"]
 }
