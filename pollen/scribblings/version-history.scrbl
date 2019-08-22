@@ -24,6 +24,13 @@ Beyond keeping the commit history available, I make no promise to maintain the p
 
 @section{Changelog}
 
+@subsection{Version 2.1}
+
+Added @racket[setup:envvar-watchlist].
+
+@seclink["raco-pollen" #:doc '(lib "pollen/scribblings/pollen.scrbl")]{@racketfont{raco pollen}}: Introduced support for parallel processing by adding @racket[--parallel] and @racket[--jobs] options to @secref["raco_pollen_setup" #:doc '(lib "pollen/scribblings/pollen.scrbl")] and @secref["raco_pollen_render" #:doc '(lib "pollen/scribblings/pollen.scrbl")].
+
+
 @subsection{Version 2.0}
 
 Dropped support for Racket versions earlier than 6.3.
