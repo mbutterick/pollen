@@ -44,10 +44,10 @@
                       (message (format "watchlist file /~a does not exist" (find-relative-path (current-project-root) cp))))
                     (cons (path->string cp) (file-or-directory-modify-seconds cp #false (λ () 0)))]
                 [else #false])))
-  (append env-rec (list pollen-env poly-flag (and output-path (path->string output-path))) path+mod-time-pairs))
+  (list* env-rec pollen-env poly-flag (and output-path (path->string output-path)) path+mod-time-pairs))
 
-(define (key->source-path key) (car (fourth key)))
-(define (key->output-path key) (third key))
+(define (key->source-path key) (car (fifth key)))
+(define (key->output-path key) (fourth key))
 
 (module-test-internal
  (define ps "/users/nobody/project/source.html.pm")
