@@ -125,6 +125,8 @@ If the cache can't find a certain file on the watchlist, no error will arise. Th
 
 @defoverridable[envvar-watchlist (listof string?)]{List of extra environment variables that are used in cache keys. Separate caches will be maintained for each distinct value of an environment variable. @secref["The_POLLEN_environment_variable"] is always used, regardless of how this value is set.
 
+Both the names and the values of environment variables are case-insensitive, so @racket["PUB"] and @racket["pub"] and @racket["pUb"] are all treated the same.
+
 @history[#:added "2.1"]}
 
 
