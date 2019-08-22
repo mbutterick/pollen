@@ -1,4 +1,4 @@
-#lang debug racket/base
+#lang racket/base
 (require "file-utils.rkt"
          "../setup.rkt"
          "project.rkt"
