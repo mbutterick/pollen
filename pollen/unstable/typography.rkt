@@ -28,6 +28,8 @@
  (define tricky-string "\"Why,\" she could've asked, \"are we in O‘ahu watching 'Mame'?\"")
  (check-equal? (smart-quotes tricky-string) 
                "“Why,” she could’ve asked, “are we in O‘ahu watching ‘Mame’?”")
+ (check-equal? (smart-quotes "\"what's in it for me?\",")
+               "“what’s in it for me?”,")
  (check-equal? (smart-quotes tricky-string
                              #:apostrophe "zing"
                              #:double-open "«" #:double-close "»"
@@ -53,8 +55,10 @@
 
   (define quotes
     `((#px"(?<=\\w)'(?=\\w)" ,apostrophe-str) ; apostrophe
+      (#px"(?<!\\w)'(?=[,.:;?!])" ,single-close-str) ; sentence ender on outside exceptions
       (#px"(?<!\\w)'(?=\\S)" ,single-open-str) ; single_at_beginning
       (#px"(?<=\\S)'(?!\\w)" ,single-close-str) ; single_at_end
+      (#px"(?<!\\w)\"(?=[,.:;?!])" ,double-close-str) ; sentence ender on outside exceptions
       (#px"(?<!\\w)\"(?=\\S)" ,double-open-str) ; double_at_beginning
       (#px"(?<=\\S)\"(?!\\w)" ,double-close-str))) ; double_at_end
 
