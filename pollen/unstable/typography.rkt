@@ -1,13 +1,22 @@
 #lang racket/base
-(require racket/list racket/string sugar/define sugar/test txexpr/base racket/match sugar/unstable/container sugar/coerce sugar/unstable/len  "../private/whitespace.rkt")
+(require racket/list
+         racket/string
+         sugar/define
+         sugar/test
+         txexpr/base
+         racket/match
+         sugar/unstable/container
+         sugar/coerce
+         sugar/unstable/len
+         "../private/whitespace.rkt")
 
 (provide whitespace? whitespace/nbsp?)
 
-(define (make-replacer query+replacement)
-  (let ([queries (map car query+replacement)]
-        [replacements (map second query+replacement)])
-    ;; reverse because first in list should be first applied to str (and compose1 works right-to-left)
-    (apply compose1 (reverse (map (λ (query replacement) (λ (str) (regexp-replace* query str replacement))) queries replacements)))))
+(define ((make-replacer query+replacement) str)
+  (for/fold ([str str])
+            ([qr (in-list query+replacement)])
+    (match-define (list query replacement) qr)
+    (regexp-replace* query str replacement)))
 
 (define+provide/contract (smart-dashes str)
   (string? . -> . string?)
@@ -36,9 +45,16 @@
                              #:single-open "‹" #:single-close "›")
                "«Why,» she couldzingve asked, «are we in O‘ahu watching ‹Mame›?»")
  (check-equal? (smart-quotes "\"\'Impossible.\' Yes.\"") "“‘Impossible.’ Yes.”")
+ (check-equal? (smart-quotes "(\"No.\")") "(“No.”)")
  (check-equal? (smart-quotes '(div "don'" (em "t"))) '(div "don’" (em "t")))
  (check-equal? (smart-quotes '(div "do '" (em "not'"))) '(div "do ‘" (em "not’"))))
 
+
+(define sentence-ender-exceptions (regexp-quote ",.:;?!])}"))
+(define (at-beginning-pat str)
+  (pregexp (format "(?<!\\w)~a(?=\\S)" (regexp-quote str))))
+(define (at-end-pat str)
+  (pregexp (format "(?<=\\S)~a(?!\\w)" (regexp-quote str))))
 
 (define+provide/contract (smart-quotes x
                                        #:apostrophe [apostrophe-str "’"]
@@ -54,17 +70,18 @@
     #:double-close string?) . ->* . (or/c string? txexpr?))
 
   (define quotes
-    `((#px"(?<=\\w)'(?=\\w)" ,apostrophe-str) ; apostrophe
-      (#px"(?<!\\w)'(?=[,.:;?!])" ,single-close-str) ; sentence ender on outside exceptions
-      (#px"(?<!\\w)'(?=\\S)" ,single-open-str) ; single_at_beginning
-      (#px"(?<=\\S)'(?!\\w)" ,single-close-str) ; single_at_end
-      (#px"(?<!\\w)\"(?=[,.:;?!])" ,double-close-str) ; sentence ender on outside exceptions
-      (#px"(?<!\\w)\"(?=\\S)" ,double-open-str) ; double_at_beginning
-      (#px"(?<=\\S)\"(?!\\w)" ,double-close-str))) ; double_at_end
+    (list
+     (list #px"(?<=\\w)'(?=\\w)" apostrophe-str) ; apostrophe
+     (list (pregexp (format "(?<!\\w)'(?=[~a])" sentence-ender-exceptions)) single-close-str) ; sentence ender on outside exceptions
+     (list (at-beginning-pat "'") single-open-str) ; single_at_beginning
+     (list (at-end-pat "'") single-close-str) ; single_at_end
+     (list (pregexp (format "(?<!\\w)\"(?=[~a])" sentence-ender-exceptions)) double-close-str) ; sentence ender on outside exceptions
+     (list (at-beginning-pat "\"") double-open-str) ; double_at_beginning
+     (list (at-end-pat "\"") double-close-str))) ; double_at_end
 
-  (cond
-    [(string? x) ((make-replacer quotes) x)]
-    [(txexpr? x)
+  (match x
+    [(? string?) ((make-replacer quotes) x)]
+    [(? txexpr?)
      ;; convert the quotes as if the txexpr were a flat string, to get proximity right
      ;; then replace the actual strings with substrings from this converted result
      ;; todo: handle entities & chars correctly, for now they are ignored
@@ -74,16 +91,16 @@
                         c))
      (define offset 0)
      (let loop ([x x])
-       (cond
-         [(txexpr? x) (txexpr (get-tag x) (get-attrs x) (map loop (get-elements x)))]
-         [(string? x)
+       (match x
+         [(? txexpr?) (txexpr (get-tag x) (get-attrs x) (map loop (get-elements x)))]
+         [(? string?)
           (define prev-offset offset)
           (set! offset (+ prev-offset (string-length x)))
           (list->string
            (for/list ([c (in-vector char-vec prev-offset offset)])
              c))]
-         [else x]))]
-    [else x]))
+         [_ x]))]
+    [_ x]))
 
 ; wrap initial quotes for hanging punctuation
 ; todo: improve this
@@ -96,23 +113,25 @@
   (define two-or-more-char-string? (λ (i) (and (string? i) (>= (string-length i) 2))))
   (define-values (tag attr elements) (txexpr->values nx))
   (make-txexpr tag attr
-               (if (and (list? elements) (not (empty? elements)))
-                   (let ([new-car-elements  (match (car elements)
-                                              [(? two-or-more-char-string? tcs)
-                                               (define str-first (get tcs 0))
-                                               (define str-rest (get tcs 1 (string-length tcs)))
-                                               (cond
-                                                 [(str-first . in? . '("\"" "“"))
-                                                  ;; can wrap with any inline tag
-                                                  ;; so that linebreak detection etc still works
-                                                  `(,@double-pp ,(->string #\“) ,str-rest)]
-                                                 [(str-first . in? . '("\'" "‘")) 
-                                                  `(,@single-pp ,(->string #\‘) ,str-rest)]
-                                                 [else tcs])]
-                                              [(? txexpr? nx) (wrap-hanging-quotes nx)]
-                                              [else (car elements)])])
-                     (cons new-car-elements (cdr elements)))
-                   elements)))
+               (match elements
+                 [(cons elem other-elems)
+                  (define new-car-elements
+                    (match elem
+                      [(? two-or-more-char-string? tcs)
+                       (define str-first (get tcs 0))
+                       (define str-rest (get tcs 1 (string-length tcs)))
+                       (cond
+                         [(str-first . in? . '("\"" "“"))
+                          ;; can wrap with any inline tag
+                          ;; so that linebreak detection etc still works
+                          `(,@double-pp ,(->string #\“) ,str-rest)]
+                         [(str-first . in? . '("\'" "‘")) 
+                          `(,@single-pp ,(->string #\‘) ,str-rest)]
+                         [else tcs])]
+                      [(? txexpr? nx) (wrap-hanging-quotes nx)]
+                      [_ elem]))
+                  (cons new-car-elements other-elems)]
+                 [_ elements])))
 
 (module-test-external
  (check-equal? (wrap-hanging-quotes '(p "\"Hi\" there")) '(p (dquo "“" "Hi\" there")))
@@ -133,32 +152,35 @@
   (define tags-to-pay-attention-to '(p aside)) ; only apply to paragraphs
   
   (define (replace-last-space str)
-    (if (#\space . in? . str)
-        (let ([reversed-str-list (reverse (string->list str))]
-              [reversed-nbsp (reverse (string->list (->string nbsp)))])
-          (define-values (last-word-chars other-chars) 
-            (splitf-at reversed-str-list (λ (i) (not (eq? i #\space)))))
-          
-          (define front-chars (if (< (len last-word-chars) minimum-word-length) ; OK for long words to be on their own line
-                                  ; first char of other-chars will be the space, so use cdr
-                                  (string-append (list->string (reverse (cdr other-chars))) (->string nbsp))
-                                  (list->string (reverse other-chars))))
-          (define last-word (list->string (reverse last-word-chars)))
-          `(,front-chars ,(last-word-proc last-word))) ; don't concatenate last word bc last-word-proc might be a txexpr wrapper
-        (list str)))
+    (cond
+      [(#\space . in? . str)
+       (define reversed-str-list (reverse (string->list str)))
+       (define reversed-nbsp (reverse (string->list (->string nbsp))))
+       (define-values (last-word-chars other-chars) 
+         (splitf-at reversed-str-list (λ (i) (not (eq? i #\space)))))
+       (define front-chars
+         (cond
+           [(< (len last-word-chars) minimum-word-length) ; OK for long words to be on their own line
+            ; first char of other-chars will be the space, so use cdr
+            (string-append (list->string (reverse (cdr other-chars))) (->string nbsp))]
+           [else (list->string (reverse other-chars))]))
+       (define last-word (list->string (reverse last-word-chars)))
+       `(,front-chars ,(last-word-proc last-word))] ; don't concatenate last word bc last-word-proc might be a txexpr wrapper
+      [else (list str)]))
   
   (define (find-last-word-space x) ; recursively traverse xexpr
-    (cond
-      [(string? x) (replace-last-space x)] ; todo: this assumes a paragraph only has one string in it.
-      [(txexpr? x)
-       (let-values([(tag attr elements) (txexpr->values x)])
-         (if (> (length elements) 0) ; elements is list of xexprs
-             (let-values ([(all-but-last last) (split-at elements (sub1 (length elements)))]) 
-               (define result (find-last-word-space (car last)))
-               (define result-items (if (txexpr? result) (list result) result)) ; might be txexpr, or list of new elements
-               (make-txexpr tag attr `(,@all-but-last ,@result-items)))
-             x))]
-      [else x]))
+    (match x
+      [(? string?) (replace-last-space x)] ; todo: this assumes a paragraph only has one string in it.
+      [(? txexpr?)
+       (define-values (tag attr elements) (txexpr->values x))
+       (match elements
+         [(list all-but-last ... last-item) ; elements is list of xexprs
+          (define result-items (match (find-last-word-space last-item)
+                                 [(? txexpr? tx) (list tx)]
+                                 [other other])) ; might be txexpr, or list of new elements
+          (make-txexpr tag attr `(,@all-but-last ,@result-items))]
+         [_ x])]
+      [_ x]))
   
   (if ((car x) . in? . tags-to-pay-attention-to)
       (find-last-word-space x)
