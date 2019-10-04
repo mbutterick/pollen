@@ -36,6 +36,7 @@ Yes, the source for @link["http://typographyforlawyers.com/"]{Typography for Law
 
 @section{More projects & guides}
 
+@link["https://digitalwords.net"]{Digital Words} by Júda Ronén
 
 @link["http://mstill.io"]{mstill.io blog} by Malcolm Still [@link["https://github.com/malcolmstill/mstill.io"]{source}]
 
