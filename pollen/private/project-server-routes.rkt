@@ -176,7 +176,7 @@
                                  null)))
     (define dirlinks (cons "/" (map (λ (ps) (format "/~a/" (apply build-path ps)))  
                                     (for/list ([i (in-range (length (cdr dirs)))])
-                                              (take (cdr dirs) (add1 i))))))
+                                      (take (cdr dirs) (add1 i))))))
     `(row (heading ((colspan "3")) ,@(add-between (map (λ (dir dirlink) `(a ((href ,(format "~a~a" dirlink (setup:main-pagetree)))) ,(->string dir))) dirs dirlinks) "/"))))
   
   (define (make-path-row filename source indent-level)
@@ -301,15 +301,21 @@
                    [possible-idx-path (in-value (build-path index-dir possible-idx-page))]
                    [_ (in-value (render-from-source-or-output-path possible-idx-path))]
                    #:when (file-exists? possible-idx-path))
-                  (redirect-to (path->string (find-relative-path index-dir possible-idx-path)) temporarily))
+        (redirect-to (path->string (find-relative-path index-dir possible-idx-path)) temporarily))
       (route-404 req)))
 
 ;; 404 route
 (define/contract (route-404 req)
   (request? . -> . response?)
+  (define missing-url (url->string (request-uri req)))
   (define missing-path-string (path->string (simplify-path (req->path req))))
-  (message (format "can't find ~a" missing-path-string))
+  (message (format "can't find ~a" missing-url))
   (response/xexpr+doctype
    `(html 
      (head (title "404 error") (link ((href "/error.css") (rel "stylesheet"))))
-     (body (div ((class "section")) (div ((class "title")) "404 error") (p ,(format "~v" missing-path-string) " was not found"))))))
+     (body (div ((class "section"))
+                (div ((class "title")) "404 error")
+                (p ,(format "URL ~v was not found at path ~v" missing-url
+                            (match missing-path-string
+                              [(regexp #rx"/$") (string-append missing-path-string "index.html")]
+                              [mps mps]))))))))
