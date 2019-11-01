@@ -25,7 +25,7 @@
   ;; if a file is already in the cache, no need to hit it again.
   ;; this allows partially completed preheat jobs to resume.
   (define uncached-paths
-    (for/list ([path (in-directory starting-dir)]
+    (for/list ([path (in-directory starting-dir (λ (p) (not (special-path? p))))]
                #:when (for/or ([proc (in-list (list preproc-source?
                                                     markup-source?
                                                     markdown-source?

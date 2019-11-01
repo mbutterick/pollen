@@ -299,7 +299,7 @@
   (and (regexp-match pat str) #t))
 
 
-(define (special-path? path)
+(define+provide (special-path? path)
   (define special-paths (append default-cache-names '("compiled" ".git" ".gitignore" ".hg" ".svn" "CVS" "Makefile")))
   (and (member (path->string (last (explode-path path))) special-paths) #t))
 
