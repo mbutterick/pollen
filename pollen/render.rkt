@@ -48,7 +48,7 @@
 
 (define (list-of-pathish? x) (and (list? x) (andmap pathish? x)))
 
-(define+provide/contract (render-batch #:parallel [wants-parallel-render #false] . paths)
+(define+provide/contract (render-batch #:parallel [wants-parallel-render #false] . paths-in)
   ((#:parallel any/c) #:rest list-of-pathish? . ->* . void?)
   ;; Why not just (for-each render ...)?
   ;; Because certain files will pass through multiple times (e.g., templates)
@@ -59,22 +59,19 @@
     [wants-parallel-render
 
      (define source-paths
-       (let ()
-         (define flattened-paths
-           (remove-duplicates
-            (sort 
-             (let loop ([paths paths])
-               (if (null? paths)
-                   null
-                   (match (->complete-path (car paths))
-                     [(? pagetree-source? pt) (append (loop (pagetree->paths pt)) (loop (cdr paths)))]
-                     [path (cons path (loop (cdr paths)))])))
-             string<?
-             #:key path->string)))
-         (for*/list ([p (in-list flattened-paths)]
-                     [maybe-source-path (in-value (->source-path p))]
-                     #:when (and maybe-source-path (file-exists? maybe-source-path)))
-           maybe-source-path)))
+       (remove-duplicates
+        (let loop ([paths paths-in])
+          (match paths
+            [(cons path0 rest)
+             (define paths-to-append
+               (match (->complete-path path0)
+                 [(? pagetree-source? pt) (loop (pagetree->paths pt))]
+                 [path (define sp (->source-path path))
+                       (cond
+                         [(and sp (file-exists? sp)) (list sp)]
+                         [else null])]))
+             (append paths-to-append rest)]
+            [_ null]))))
 
      (define job-count
        (match wants-parallel-render
@@ -85,22 +82,22 @@
      ;; initialize the workers
      (define worker-evts
        (for/list ([wpidx (in-range job-count)])
-         (define wp (place ch
-                           (let loop ()
-                             (match-define (cons path poly-target)
-                               (place-channel-put/get ch (list 'wants-job)))
-                             (parameterize ([current-poly-target poly-target])
-                               (place-channel-put/get ch (list 'wants-lock (->output-path path)))
-                               (match-define-values (_ _ ms _)
-                                 (time-apply render-from-source-or-output-path (list path)))
-                               (place-channel-put ch (list 'finished-job path ms)))
-                             (loop))))
-         (handle-evt wp (λ (val) (list* wpidx wp val)))))
+                 (define wp (place ch
+                                   (let loop ()
+                                     (match-define (cons path poly-target)
+                                       (place-channel-put/get ch (list 'wants-job)))
+                                     (parameterize ([current-poly-target poly-target])
+                                       (place-channel-put/get ch (list 'wants-lock (->output-path path)))
+                                       (match-define-values (_ _ ms _)
+                                         (time-apply render-from-source-or-output-path (list path)))
+                                       (place-channel-put ch (list 'finished-job path ms)))
+                                     (loop))))
+                 (handle-evt wp (λ (val) (list* wpidx wp val)))))
      
      (define poly-target (current-poly-target))
 
      ;; `locks` and `blocks` are (listof (cons/c evt? path?))
-     (let loop ([source-paths source-paths][locks-in null][blocks-in null])
+     (let loop ([source-paths (sort source-paths string<? #:key path->string)][locks-in null][blocks-in null])
        ;; try to unblock blocked workers
        (define-values (locks blocks)
          (for/fold ([locks locks-in]
@@ -135,7 +132,7 @@
                                  [lock (remove lock locks)]) blocks)]
            [(list wpidx wp 'wants-lock path)
             (loop source-paths locks (append blocks (list (cons wp path))))])))]
-    [else (for-each render-from-source-or-output-path paths)]))
+    [else (for-each render-from-source-or-output-path paths-in)]))
 
 (define (pagetree->paths pagetree-or-path)
   (define pagetree (if (pagetree? pagetree-or-path)
@@ -157,7 +154,7 @@
                                    has/is-markup-source?
                                    has/is-scribble-source?
                                    has/is-markdown-source?))])
-       (pred so-path))
+             (pred so-path))
      (define-values (source-path output-path) (->source+output-paths so-path))
      (render-to-file-if-needed source-path #f output-path)]
     [(pagetree-source? so-path) (render-pagenodes so-path)])
@@ -236,7 +233,7 @@
   (define render-proc (for/first ([test (in-list tests)]
                                   [render-proc (in-list render-procs)]
                                   #:when (test source-path))
-                        render-proc))
+                                 render-proc))
   (unless render-proc
     (raise-argument-error 'render (format "valid rendering function for ~a" source-path) render-proc))
   
@@ -332,7 +329,7 @@
 (define (file-exists-or-has-source? path) ; path could be #f
   (and path (for/first ([proc (in-list (list values ->preproc-source-path ->null-source-path))]
                         #:when (file-exists? (proc path)))
-              path)))
+                       path)))
 
 (define (get-template-from-metas source-path output-path-ext)
   (with-handlers ([exn:fail:contract? (λ (e) #f)]) ; in case source-path doesn't work with cached-require
@@ -363,7 +360,7 @@
          ;; output-path may not have an extension
          (define output-path-ext (or (get-ext output-path) (current-poly-target)))
          (for/or ([proc (list get-template-from-metas get-default-template get-fallback-template)])
-           (file-exists-or-has-source? (proc source-path output-path-ext))))))
+                 (file-exists-or-has-source? (proc source-path output-path-ext))))))
 
 (module-test-external
  (require pollen/setup sugar/file sugar/coerce)
