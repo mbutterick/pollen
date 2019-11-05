@@ -59,15 +59,12 @@
     [wants-parallel-render
 
      (define source-paths
-       (for/fold ([paths paths-in]
-                  [acc null]
-                  #:result (remove-duplicates acc))
-                 ([i (in-naturals)]
-                  #:break (null? paths))
-         (match (->complete-path (car paths))
-           [(? pagetree-source? pt) (values (append (pagetree->paths pt) (cdr paths)) acc)]
-           [(app ->source-path (and (not #false) (? file-exists?) sp)) (values (cdr paths) (cons sp acc))]
-           [_ (values (cdr paths) acc)])))
+       (let loop ([paths paths-in] [acc null])
+         (match (and (pair? paths) (->complete-path (car paths)))
+           [#false (remove-duplicates acc)]
+           [(? pagetree-source? pt) (loop (append (pagetree->paths pt) (cdr paths)) acc)]
+           [(app ->source-path (and (not #false) (? file-exists?) sp)) (loop (cdr paths) (cons sp acc))]
+           [_ (loop (cdr paths) acc)])))
      
      (define job-count
        (match wants-parallel-render
