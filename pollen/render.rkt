@@ -66,9 +66,9 @@
                   #:break (null? paths))
          (match (->complete-path (car paths))
            [(? pagetree-source? pt) (values (append (pagetree->paths pt) (cdr paths)) acc)]
-           [(? ->source-path sp) #:when (file-exists? sp) (values (cdr paths) (cons sp acc))]
+           [(app ->source-path (and (not #false) (? file-exists?) sp)) (values (cdr paths) (cons sp acc))]
            [_ (values (cdr paths) acc)])))
-
+     
      (define job-count
        (match wants-parallel-render
          [#true (processor-count)]
