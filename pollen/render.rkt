@@ -84,50 +84,70 @@
                                        (place-channel-put/get ch (list 'wants-job)))
                                      (parameterize ([current-poly-target poly-target])
                                        (place-channel-put/get ch (list 'wants-lock (->output-path path)))
-                                       (match-define-values (_ _ ms _)
-                                         (time-apply render-from-source-or-output-path (list path)))
-                                       (place-channel-put ch (list 'finished-job path ms)))
+                                       (with-handlers ([exn:fail? (λ (e) (place-channel-put ch (list 'crashed-job path #f)))])
+                                         (match-define-values (_ _ ms _)
+                                           (time-apply render-from-source-or-output-path (list path)))
+                                         (place-channel-put ch (list 'finished-job path ms))))
                                      (loop))))
                  (handle-evt wp (λ (val) (list* wpidx wp val)))))
      
      (define poly-target (current-poly-target))
 
      ;; `locks` and `blocks` are (listof (cons/c evt? path?))
-     (let loop ([source-paths (sort source-paths string<? #:key path->string)][locks-in null][blocks-in null])
-       ;; try to unblock blocked workers
-       (define-values (locks blocks)
-         (for/fold ([locks locks-in]
-                    [blocks null])
-                   ([block (in-list blocks-in)])
-           (match-define (cons wp path) block)
-           (cond
-             [(member path (dict-values locks))
-              (values locks (cons block blocks))]
-             [else
-              (place-channel-put wp 'lock-approved)
-              (values (cons block locks) blocks)])))               
-       ;; no source paths means all jobs have been assigned
-       ;; no locks means no jobs are in progress
-       ;; therefore we must be done.
-       (unless (and (null? source-paths) (null? locks))
-         (match (apply sync worker-evts)
-           [(list wpidx wp 'wants-job)
-            (match source-paths
-              [(? null?) (loop null locks blocks)]
-              [(cons path rest)
-               (place-channel-put wp (cons path poly-target))
-               (loop rest locks blocks)])]
-           [(list wpidx wp 'finished-job path ms)
-            (message
-             (format "rendered parallel @ job ~a /~a ~a"
-                     (add1 wpidx)
-                     (find-relative-path (current-project-root) (->output-path path))
-                     (if (< ms 1000) (format "(~a ms)" ms) (format "(~a s)" (/ ms 1000.0)))))
-            (loop source-paths (match (assoc wp locks)
-                                 [#false locks]
-                                 [lock (remove lock locks)]) blocks)]
-           [(list wpidx wp 'wants-lock path)
-            (loop source-paths locks (append blocks (list (cons wp path))))])))]
+     (define crashed-jobs
+       (let loop ([source-paths (sort source-paths string<? #:key path->string)]
+                  [locks-in null]
+                  [blocks-in null]
+                  [crashed-jobs null])
+         ;; try to unblock blocked workers
+         (define-values (locks blocks)
+           (for/fold ([locks locks-in]
+                      [blocks null])
+                     ([block (in-list blocks-in)])
+             (match-define (cons wp path) block)
+             (cond
+               [(member path (dict-values locks))
+                (values locks (cons block blocks))]
+               [else
+                (place-channel-put wp 'lock-approved)
+                (values (cons block locks) blocks)])))               
+         ;; no source paths means all jobs have been assigned
+         ;; no locks means no jobs are in progress
+         ;; therefore we must be done.
+         (cond
+           [(and (null? source-paths) (null? locks)) crashed-jobs]
+           [else
+            (match (apply sync worker-evts)
+              [(list wpidx wp 'wants-job)
+               (match source-paths
+                 [(? null?) (loop null locks blocks crashed-jobs)]
+                 [(cons path rest)
+                  (place-channel-put wp (cons path poly-target))
+                  (loop rest locks blocks crashed-jobs)])]
+              [(list wpidx wp (and (or 'finished-job 'crashed-job) tag) path ms)
+               (match tag
+                 ['finished-job
+                  (message
+                   (format "rendered parallel @ job ~a /~a ~a"
+                           (add1 wpidx)
+                           (find-relative-path (current-project-root) (->output-path path))
+                           (if (< ms 1000) (format "(~a ms)" ms) (format "(~a s)" (/ ms 1000.0)))))]
+                 [_
+                  (message
+                   (format "render crash @ job ~a /~a (retry pending)"
+                           (add1 wpidx)
+                           (find-relative-path (current-project-root) (->output-path path))))])
+               (loop source-paths
+                     (match (assoc wp locks)
+                       [#false locks]
+                       [lock (remove lock locks)])
+                     blocks
+                     (match tag
+                       ['crashed-job (cons path crashed-jobs)]
+                       [_ crashed-jobs]))]
+              [(list wpidx wp 'wants-lock path)
+               (loop source-paths locks (append blocks (list (cons wp path))) crashed-jobs)])])))
+     (for-each render-from-source-or-output-path crashed-jobs)]
     [else (for-each render-from-source-or-output-path paths-in)]))
 
 (define (pagetree->paths pagetree-or-path)
