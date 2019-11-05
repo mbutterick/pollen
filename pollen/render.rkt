@@ -81,6 +81,8 @@
                                        (place-channel-put/get ch (list 'wants-job)))
                                      (parameterize ([current-poly-target poly-target])
                                        (place-channel-put/get ch (list 'wants-lock (->output-path path)))
+                                       ;; trap any exceptions and pass them back as crashed jobs.
+                                       ;; otherwise, a crashed rendering place can't recover, and the parallel job will be stuck.
                                        (with-handlers ([exn:fail? (λ (e) (place-channel-put ch (list 'crashed-job path #f)))])
                                          (match-define-values (_ _ ms _)
                                            (time-apply render-from-source-or-output-path (list path)))
@@ -110,7 +112,7 @@
                 (values (cons block locks) blocks)])))               
          ;; no source paths means all jobs have been assigned
          ;; no locks means no jobs are in progress
-         ;; therefore we must be done.
+         ;; therefore we must be done (other than crashed jobs)
          (cond
            [(and (null? source-paths) (null? locks)) crashed-jobs]
            [else
@@ -144,6 +146,16 @@
                        [_ crashed-jobs]))]
               [(list wpidx wp 'wants-lock path)
                (loop source-paths locks (append blocks (list (cons wp path))) crashed-jobs)])])))
+     ;; second bite at the apple for crashed jobs.
+     ;; 1) many crashes that arise in parallel rendering are
+     ;; a result of concurrency issues (e.g. shared files not being readable at the right moment).
+     ;; That is, they do not appear under serial rendering.
+     ;; 2) even if a crash is legit (that is, there is a real flaw in the source)
+     ;; and should be raised, we don't want to do it inside a parallel-rendering `place`
+     ;; because then the place will never return, and the whole parallel job will never finish.
+     ;; so we take the list of crashed jobs and try rendering them again serially.
+     ;; if it was a concurrency-related error, it will disappear.
+     ;; if it was a legit error, the render will stop and print a trace.
      (for-each render-from-source-or-output-path crashed-jobs)]
     [else (for-each render-from-source-or-output-path paths-in)]))
 
