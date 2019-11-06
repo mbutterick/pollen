@@ -30,9 +30,9 @@
                                                     markup-source?
                                                     markdown-source?
                                                     pagetree-source?))])
-                        (proc path))
+                              (proc path))
                #:unless (path-cached? path))
-      (path->complete-path path)))
+              (path->complete-path path)))
 
   (cond
     [(null? uncached-paths)
@@ -40,22 +40,24 @@
     [wants-parallel-setup
      
      (define job-count
-       (match wants-parallel-setup
-         [#true (processor-count)]
-         [(? exact-positive-integer? count) count]
-         [_ (raise-argument-error 'preheat-cache "exact positive integer" wants-parallel-setup)]))    
+       (min
+        (length uncached-paths)
+        (match wants-parallel-setup
+          [#true (processor-count)]
+          [(? exact-positive-integer? count) count]
+          [_ (raise-argument-error 'preheat-cache "exact positive integer" wants-parallel-setup)])))    
 
      (define worker-evts
        (for/list ([wpidx (in-range job-count)])
-         (define wp
-           (place ch
-                  (let loop ()
-                    (define path (place-channel-put/get ch (list 'want-job)))
-                    (place-channel-put ch (list 'job-finished path 
-                                                (with-handlers ([exn:fail? (λ (e) #f)])
-                                                  (path->hash path))))
-                    (loop))))
-         (handle-evt wp (λ (val) (list* wpidx wp val)))))
+                 (define wp
+                   (place ch
+                          (let loop ()
+                            (define path (place-channel-put/get ch (list 'want-job)))
+                            (place-channel-put ch (list 'job-finished path 
+                                                        (with-handlers ([exn:fail? (λ (e) #f)])
+                                                          (path->hash path))))
+                            (loop))))
+                 (handle-evt wp (λ (val) (list* wpidx wp val)))))
   
      (let loop ([paths uncached-paths][actives null])
        (unless (and (null? paths) (null? actives))
@@ -73,7 +75,7 @@
                 (message (format "caching failed on job ~a: ~a" (add1 wpidx) (find-relative-path starting-dir path))))
             (loop paths (remq wpidx actives))])))]
     [else (for ([path (in-list uncached-paths)])
-            (message (format "caching: ~a" (find-relative-path starting-dir path)))
-            (match (with-handlers ([exn:fail? (λ (e) #f)]) (path->hash path))
-              [#false (message (format "caching failed: ~a" (find-relative-path starting-dir path)))]
-              [result (cache-ref! (paths->key path) (λ () result))]))]))
+               (message (format "caching: ~a" (find-relative-path starting-dir path)))
+               (match (with-handlers ([exn:fail? (λ (e) #f)]) (path->hash path))
+                 [#false (message (format "caching failed: ~a" (find-relative-path starting-dir path)))]
+                 [result (cache-ref! (paths->key path) (λ () result))]))]))

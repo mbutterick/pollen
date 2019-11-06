@@ -67,10 +67,12 @@
            [_ (loop (cdr paths) acc)])))
      
      (define job-count
-       (match wants-parallel-render
-         [#true (processor-count)]
-         [(? exact-positive-integer? count) count]
-         [_ (raise-argument-error 'render-batch "exact positive integer" wants-parallel-render)]))
+       (min
+        (length source-paths)
+        (match wants-parallel-render
+          [#true (processor-count)]
+          [(? exact-positive-integer? count) count]
+          [_ (raise-argument-error 'render-batch "exact positive integer" wants-parallel-render)])))
      
      ;; initialize the workers
      (define worker-evts
@@ -93,11 +95,14 @@
      (define poly-target (current-poly-target))
 
      ;; `locks` and `blocks` are (listof (cons/c evt? path?))
+     (define starting-source-paths (sort source-paths string<? #:key path->string))
      (define crashed-jobs
-       (let loop ([source-paths (sort source-paths string<? #:key path->string)]
+       (let loop ([source-paths starting-source-paths]
                   [locks-in null]
                   [blocks-in null]
-                  [crashed-jobs null])
+                  ;; `completed-jobs` is (listof (cons/c path? boolean?))
+                  [completed-jobs null]
+                  [completed-job-count 0])
          ;; try to unblock blocked workers
          (define-values (locks blocks)
            (for/fold ([locks locks-in]
@@ -109,20 +114,21 @@
                 (values locks (cons block blocks))]
                [else
                 (place-channel-put wp 'lock-approved)
-                (values (cons block locks) blocks)])))               
-         ;; no source paths means all jobs have been assigned
-         ;; no locks means no jobs are in progress
-         ;; therefore we must be done (other than crashed jobs)
+                (values (cons block locks) blocks)])))  
          (cond
-           [(and (null? source-paths) (null? locks)) crashed-jobs]
+           [(eq? completed-job-count (length starting-source-paths))
+            ;; crashed jobs are completed jobs that weren't finished
+            (for/list ([(path finished?) (in-dict completed-jobs)]
+                       #:unless finished?)
+                      path)]
            [else
             (match (apply sync worker-evts)
               [(list wpidx wp 'wants-job)
                (match source-paths
-                 [(? null?) (loop null locks blocks crashed-jobs)]
+                 [(? null?) (loop null locks blocks completed-jobs completed-job-count)]
                  [(cons path rest)
                   (place-channel-put wp (cons path poly-target))
-                  (loop rest locks blocks crashed-jobs)])]
+                  (loop rest locks blocks completed-jobs completed-job-count)])]
               [(list wpidx wp (and (or 'finished-job 'crashed-job) tag) path ms)
                (match tag
                  ['finished-job
@@ -141,11 +147,10 @@
                        [#false locks]
                        [lock (remove lock locks)])
                      blocks
-                     (match tag
-                       ['crashed-job (cons path crashed-jobs)]
-                       [_ crashed-jobs]))]
+                     (cons (cons path (eq? tag 'finished-job)) completed-jobs)
+                     (add1 completed-job-count))]
               [(list wpidx wp 'wants-lock path)
-               (loop source-paths locks (append blocks (list (cons wp path))) crashed-jobs)])])))
+               (loop source-paths locks (append blocks (list (cons wp path))) completed-jobs completed-job-count)])])))
      ;; second bite at the apple for crashed jobs.
      ;; 1) many crashes that arise in parallel rendering are
      ;; a result of concurrency issues (e.g. shared files not being readable at the right moment).
