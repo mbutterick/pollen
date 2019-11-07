@@ -121,6 +121,7 @@
               (λ (str)
                 (match str
                   ;; concurrency-related error that has no larger consequence
-                  ["cache attempt failed: could not acquire exclusive lock" (void)]
+                  [(or "cache attempt failed: could not acquire exclusive lock"
+                       "cache attempt failed: could not acquire shared lock") (void)]
                   [_ (log-pollen-error str)])))
   (deserialize (file->value dest-file)))
