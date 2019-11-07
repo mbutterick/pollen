@@ -8,7 +8,6 @@
          racket/path
          racket/list
          racket/match
-         racket/string
          racket/serialize
          sugar/coerce
          sugar/test
@@ -117,5 +116,11 @@
               private-cache-dir
               generate-dest-file
               #:notify-cache-use notify-proc
-              #:max-cache-size (setup:compile-cache-max-size))
+              #:max-cache-size (setup:compile-cache-max-size)
+              #:log-error-string
+              (λ (str)
+                (match str
+                  ;; concurrency-related error that has no larger consequence
+                  ["cache attempt failed: could not acquire exclusive lock" (void)]
+                  [_ (log-pollen-error str)])))
   (deserialize (file->value dest-file)))
