@@ -2,9 +2,7 @@
 (require racket/file
          racket/path
          racket/place
-         racket/list
          racket/match
-         sugar/list
          "file-utils.rkt"
          "cache-utils.rkt"
          "log.rkt")
