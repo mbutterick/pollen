@@ -116,9 +116,7 @@ version                print the version" (current-server-port) (make-publish-di
                   other-args))
 
   (define (handle-batch-render paths)
-    (if (dry-run?)
-        (for-each message paths)
-        (apply render-batch paths #:parallel (render-parallel?))))
+    (apply render-batch (map very-nice-path paths) #:parallel (render-parallel?) #:dry-run (dry-run?)))
   
   (parameterize ([current-poly-target (render-target-wanted)]) ;; applies to both cases
     (let loop ([args parsed-args])
@@ -134,19 +132,16 @@ version                print the version" (current-server-port) (make-publish-di
                                                     [(recursive) dir]
                                                     [else top-dir])])
                (define dirlist (directory-list dir))
-               (define preprocs (filter preproc-source? dirlist))
-               (define static-pagetrees (filter pagetree-source? dirlist))
-               ;; if there are no static pagetrees, use make-project-pagetree
-               ;; (which will synthesize a pagetree if needed, which includes all sources)
                (define paths-to-render
-                 (map very-nice-path
-                      (match static-pagetrees
+                 (match (filter pagetree-source? dirlist)
+                        ;; if there are no static pagetrees, use make-project-pagetree
+                        ;; (which will synthesize a pagetree if needed, which includes all sources)
                         [(? null?)
                          (message (format "rendering generated pagetree for directory ~a" dir))
                          (cdr (make-project-pagetree dir))]
-                        [_
+                        [pagetree-sources
                          (message (format "rendering preproc & pagetree files in directory ~a" dir))
-                         (append preprocs static-pagetrees)])))
+                         (append (filter preproc-source? dirlist) pagetree-sources)]))
                (handle-batch-render paths-to-render)
                (when (render-with-subdirs?)
                  (for ([path (in-list dirlist)]
@@ -154,7 +149,7 @@ version                print the version" (current-server-port) (make-publish-di
                       (render-one-dir (->complete-path path)))))))]
         [path-args ;; path mode
          (message (format "rendering ~a" (string-join (map ->string path-args) " ")))
-         (handle-batch-render (map very-nice-path path-args))]))))
+         (handle-batch-render path-args)]))))
 
 (define (handle-start)
   (define launch-wanted #f)

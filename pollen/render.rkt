@@ -48,15 +48,7 @@
 
 (define (list-of-pathish? x) (and (list? x) (andmap pathish? x)))
 
-(define (parallel-render paths-in job-count-arg)
-  (define source-paths
-    (let loop ([paths paths-in] [acc null])
-      (match (and (pair? paths) (->complete-path (car paths)))
-        [#false (remove-duplicates acc)]
-        [(? pagetree-source? pt) (loop (append (pagetree->paths pt) (cdr paths)) acc)]
-        [(app ->source-path (and (not #false) (? file-exists?) sp)) (loop (cdr paths) (cons sp acc))]
-        [_ (loop (cdr paths) acc)])))
-  
+(define (parallel-render source-paths job-count-arg)
   (define job-count
     (min
      (length source-paths)
@@ -78,7 +70,7 @@
                                     ;; otherwise, a crashed rendering place can't recover, and the parallel job will be stuck.
                                     (with-handlers ([exn:fail? (λ (e) (place-channel-put ch (list 'crashed-job path #f)))])
                                       (match-define-values (_ _ ms _)
-                                        (time-apply render-from-source-or-output-path (list path)))
+                                        (time-apply render-to-file-if-needed (list path)))
                                       (place-channel-put ch (list 'finished-job path ms))))
                                   (loop))))
               (handle-evt wp (λ (val) (list* wpidx wp val)))))
@@ -86,8 +78,7 @@
   (define poly-target (current-poly-target))
 
   ;; `locks` and `blocks` are (listof (cons/c evt? path?))
-  (define starting-source-paths (sort source-paths string<? #:key path->string))
-  (let loop ([source-paths starting-source-paths]
+  (let loop ([source-paths source-paths]
              [locks-in null]
              [blocks-in null]
              ;; `completed-jobs` is (listof (cons/c path? boolean?))
@@ -106,7 +97,7 @@
            (place-channel-put wp 'lock-approved)
            (values (cons block locks) blocks)])))  
     (cond
-      [(eq? completed-job-count (length starting-source-paths))
+      [(eq? completed-job-count (length source-paths))
        ;; second bite at the apple for crashed jobs.
        ;; 1) many crashes that arise in parallel rendering are
        ;; a result of concurrency issues (e.g. shared files not being readable at the right moment).
@@ -152,17 +143,30 @@
          [(list wpidx wp 'wants-lock path)
           (loop source-paths locks (append blocks (list (cons wp path))) completed-jobs completed-job-count)])])))
 
-(define+provide/contract (render-batch #:parallel [wants-parallel-render #false] . paths-in)
-  ((#:parallel any/c) #:rest list-of-pathish? . ->* . void?)
+(define+provide/contract (render-batch #:parallel [wants-parallel-render? #false]
+                                       #:dry-run [wants-dry-run? #false] . paths-in)
+  ((#:parallel any/c) (#:dry-run boolean?) #:rest list-of-pathish? . ->* . void?)
   ;; Why not just (for-each render ...)?
   ;; Because certain files will pass through multiple times (e.g., templates)
   ;; And with render, they would be rendered repeatedly.
   ;; Using reset-modification-dates is sort of like session control.
   (reset-mod-date-hash!)
-  (for-each render-from-source-or-output-path (if wants-parallel-render
-                                                  ;; returns crashed jobs for serial rendering
-                                                  (parallel-render paths-in wants-parallel-render)
-                                                  paths-in)))
+  (define expanded-source-paths
+    (let loop ([paths paths-in] [acc null])
+      (match (and (pair? paths) (->complete-path (car paths)))
+        [#false (sort (remove-duplicates acc) string<? #:key path->string)]
+        [(? pagetree-source? pt) (loop (append (pagetree->paths pt) (cdr paths)) acc)]
+        [(app ->source-path (and (not #false) (? file-exists?) sp)) (loop (cdr paths) (cons sp acc))]
+        [_ (loop (cdr paths) acc)])))
+  (cond 
+    [wants-dry-run? (if (null? expanded-source-paths)
+                        (message "[no paths to render]")
+                        (for-each message expanded-source-paths))]
+    [else (for-each render-to-file-if-needed
+                    (match wants-parallel-render?
+                      ;; returns crashed jobs for serial rendering
+                      [#false expanded-source-paths]
+                      [jobs-arg (parallel-render expanded-source-paths jobs-arg)]))]))
 
 (define (pagetree->paths pagetree-or-path)
   (define pagetree (if (pagetree? pagetree-or-path)
@@ -177,18 +181,9 @@
 
 (define+provide/contract (render-from-source-or-output-path so-pathish)
   (pathish? . -> . void?)
-  (define so-path (->complete-path so-pathish)) ; so-path = source or output path (could be either) 
-  (cond
-    [(for/or ([pred (in-list (list has/is-null-source?
-                                   has/is-preproc-source?
-                                   has/is-markup-source?
-                                   has/is-scribble-source?
-                                   has/is-markdown-source?))])
-             (pred so-path))
-     (define-values (source-path output-path) (->source+output-paths so-path))
-     (render-to-file-if-needed source-path #f output-path)]
-    [(pagetree-source? so-path) (render-pagenodes so-path)])
-  (void))
+  (match (->complete-path so-pathish)
+    [(app ->source-path (and (not #false) source-path)) (render-to-file-if-needed source-path)]
+    [(? pagetree-source? pt) (render-pagenodes pt)]))
 
 (define render-ram-cache (make-hash))
 
