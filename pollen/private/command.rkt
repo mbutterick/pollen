@@ -28,22 +28,22 @@
 
 (define (dispatch command-name)
   (with-logging-to-port
-      (current-error-port)
-    (λ ()
-      (case command-name
-        [("test" "xyzzy") (handle-test)]
-        [(#f "help") (handle-help)]
-        [("start") (handle-start)] ; parses its own args
-        ;; "second" arg is actually third in command line args, so use cddr not cdr
-        [("render") (handle-render)] ; render parses its own args from current-command-line-arguments
-        [("version") (handle-version)]
-        [("reset") (handle-reset (get-first-arg-or-current-dir))]
-        [("setup") (handle-setup)]
-        [("clone" "publish") (handle-publish)]
-        [else (handle-unknown command-name)]))
-    #:logger pollen-logger
-    'info
-    'pollen))
+   (current-error-port)
+   (λ ()
+     (case command-name
+       [("test" "xyzzy") (handle-test)]
+       [(#f "help") (handle-help)]
+       [("start") (handle-start)] ; parses its own args
+       ;; "second" arg is actually third in command line args, so use cddr not cdr
+       [("render") (handle-render)] ; render parses its own args from current-command-line-arguments
+       [("version") (handle-version)]
+       [("reset") (handle-reset (get-first-arg-or-current-dir))]
+       [("setup") (handle-setup)]
+       [("clone" "publish") (handle-publish)]
+       [else (handle-unknown command-name)]))
+   #:logger pollen-logger
+   'info
+   'pollen))
 
 (define (very-nice-path x)
   (path->complete-path (simplify-path (cleanse-path (->path x)))))
@@ -76,18 +76,20 @@ version                print the version" (current-server-port) (make-publish-di
 (define (handle-setup)
   (message "preheating cache ...")
   (define setup-parallel? (make-parameter #false))
+  (define dry-run? (make-parameter #false))
   (define parsed-args
     (command-line #:program "raco pollen setup"
                   #:argv (vector-drop (current-command-line-arguments) 1) ; snip the 'setup' from the front
                   #:once-any
                   [("-p" "--parallel") "Setup in parallel using all cores" (setup-parallel? #true)]
                   [("-j" "--jobs") job-count "Setup in parallel using <job-count> jobs" (setup-parallel? (or (string->number job-count) (raise-argument-error 'handle-setup "exact positive integer" job-count)))]
+                  [("-d" "--dry-run") "Print paths that would be compiled" (dry-run? #true)]
                   #:args other-args
                   other-args))
   (define starting-dir (match parsed-args
                          [(list dir) dir]
                          [_  (current-directory)]))
-  ((dynamic-require 'pollen/private/preheat-cache 'preheat-cache) starting-dir (setup-parallel?)))
+  ((dynamic-require 'pollen/private/preheat-cache 'preheat-cache) starting-dir (setup-parallel?) (dry-run?)))
 
 (define (handle-render)
   (define render-batch (dynamic-require 'pollen/render 'render-batch))
@@ -96,6 +98,7 @@ version                print the version" (current-server-port) (make-publish-di
   (define render-target-wanted (make-parameter (current-poly-target)))
   (define render-with-subdirs? (make-parameter #f))
   (define render-parallel? (make-parameter #f))
+  (define dry-run? (make-parameter #f))
   (define parsed-args
     (command-line #:program "raco pollen render"
                   #:argv (vector-drop (current-command-line-arguments) 1) ; snip the 'render' from the front
@@ -105,11 +108,18 @@ version                print the version" (current-server-port) (make-publish-di
                   [("-r" "--recursive") "Render subdirectories recursively"
                                         (render-with-subdirs? 'recursive)]
                   [("-s" "--subdir") "Render subdirectories nonrecursively" (render-with-subdirs? 'include)]
+                  [("-d" "--dry-run") "Print paths that would be rendered" (dry-run? #true)]
                   #:once-any
                   [("-p" "--parallel") "Render in parallel using all cores" (render-parallel? #true)]
                   [("-j" "--jobs") job-count "Render in parallel using <job-count> jobs" (render-parallel? (or (string->number job-count) (raise-argument-error 'handle-render "exact positive integer" job-count)))]
                   #:args other-args
-                  other-args)) 
+                  other-args))
+
+  (define (handle-batch-render paths)
+    (if (dry-run?)
+        (for-each message paths)
+        (apply render-batch paths #:parallel (render-parallel?))))
+  
   (parameterize ([current-poly-target (render-target-wanted)]) ;; applies to both cases
     (let loop ([args parsed-args])
       (match args
@@ -137,14 +147,14 @@ version                print the version" (current-server-port) (make-publish-di
                         [_
                          (message (format "rendering preproc & pagetree files in directory ~a" dir))
                          (append preprocs static-pagetrees)])))
-               (apply render-batch paths-to-render #:parallel (render-parallel?))
+               (handle-batch-render paths-to-render)
                (when (render-with-subdirs?)
                  (for ([path (in-list dirlist)]
                        #:when (directory-exists? path))
-                   (render-one-dir (->complete-path path)))))))]
+                      (render-one-dir (->complete-path path)))))))]
         [path-args ;; path mode
          (message (format "rendering ~a" (string-join (map ->string path-args) " ")))
-         (apply render-batch (map very-nice-path path-args) #:parallel (render-parallel?))]))))
+         (handle-batch-render (map very-nice-path path-args))]))))
 
 (define (handle-start)
   (define launch-wanted #f)
@@ -193,7 +203,7 @@ version                print the version" (current-server-port) (make-publish-di
     (and (>= (length xs) (length prefix))
          (andmap equal? prefix (for/list ([(x idx) (in-indexed xs)]
                                           #:break (= idx (length prefix)))
-                                 x))))
+                                         x))))
   ((explode-path possible-subdir) . has-prefix? . (explode-path possible-superdir)))
 
 (define (handle-publish)

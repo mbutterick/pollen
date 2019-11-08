@@ -49,7 +49,7 @@ Displays a list of available commands.
 
 Start the project server from the current directory using the default port, which is the value of the parameter @racket[current-server-port] (by default, port @id[default-project-server-port]).
 
-This command can be invoked with two optional arguments, and one optional switch.
+This command can be invoked with two optional arguments, and several optional switches.
 
 @racket[raco pollen start _path] will start the project server from @racket[_path] rather than the current directory (making @racket[_path] its root directory).
 
@@ -115,6 +115,8 @@ As a rule of thumb, parallel rendering works best if you do @exec{raco setup} fi
 > raco pollen render -p 
 }
 
+The optional @exec{--dry-run} or @exec{-d} switch prints the paths that would be rendered by this command without actually doing so.
+
 
 @italic{Warning}: In all cases, the newly rendered output file will overwrite any previous output file.
 
@@ -166,6 +168,8 @@ The alternative @exec{--jobs <count>} or @exec{-j <count>} switch does the same 
 @terminal{
 > raco pollen setup -j 4
 }
+
+The optional @exec{--dry-run} or @exec{-d} switch prints the paths that would be compiled by this command without actually doing so.
 
 
 @section{@exec{raco pollen reset}}

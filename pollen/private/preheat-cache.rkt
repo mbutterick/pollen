@@ -16,7 +16,7 @@
   (and (file-exists? cache-db-file)
        (hash-has-key? (file->value cache-db-file) (paths->key path))))
 
-(define (preheat-cache starting-dir [wants-parallel-setup #false])
+(define (preheat-cache starting-dir [wants-parallel-setup? #false] [wants-dry-run? #false])
   (unless (and (path-string? starting-dir) (directory-exists? starting-dir))
     (raise-argument-error 'preheat-cache "directory" starting-dir))
   
@@ -33,17 +33,17 @@
               (path->complete-path path)))
 
   (cond
-    [(null? uncached-paths)
-     (message "all cached files are up to date")]
-    [wants-parallel-setup
+    [wants-dry-run? (for-each message uncached-paths)]
+    [(null? uncached-paths) (message "all cached files are up to date")]
+    [wants-parallel-setup?
      
      (define job-count
        (min
         (length uncached-paths)
-        (match wants-parallel-setup
+        (match wants-parallel-setup?
           [#true (processor-count)]
           [(? exact-positive-integer? count) count]
-          [_ (raise-argument-error 'preheat-cache "exact positive integer" wants-parallel-setup)])))    
+          [_ (raise-argument-error 'preheat-cache "exact positive integer" wants-parallel-setup?)])))    
 
      (define worker-evts
        (for/list ([wpidx (in-range job-count)])
