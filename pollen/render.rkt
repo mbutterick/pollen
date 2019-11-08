@@ -245,23 +245,15 @@
   (define output-path (or maybe-output-path (->output-path source-path)))
   (unless output-path
     (raise-argument-error 'render "valid output path" output-path))
-  
-  (define tests (list has/is-null-source?
-                      has/is-preproc-source?
-                      has/is-markup-source?
-                      has/is-scribble-source?
-                      has/is-markdown-source?))
-  (define render-procs (list render-null-source
-                             render-preproc-source
-                             render-markup-or-markdown-source
-                             render-scribble-source
-                             render-markup-or-markdown-source))
-  (define render-proc (for/first ([test (in-list tests)]
-                                  [render-proc (in-list render-procs)]
-                                  #:when (test source-path))
-                                 render-proc))
-  (unless render-proc
-    (raise-argument-error 'render (format "valid rendering function for ~a" source-path) render-proc))
+
+  (define render-proc
+    (match source-path
+      [(? has/is-null-source?) render-null-source]
+      [(? has/is-preproc-source?) render-preproc-source]
+      [(? has/is-markup-source?) render-markup-or-markdown-source]
+      [(? has/is-scribble-source?) render-scribble-source]
+      [(? has/is-markdown-source?) render-markup-or-markdown-source]
+      [_ (raise-argument-error 'render (format "valid rendering function for ~a" source-path) #false)]))
   
   (define template-path (or maybe-template-path (get-template-for source-path output-path)))
   
