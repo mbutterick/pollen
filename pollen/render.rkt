@@ -183,7 +183,8 @@
   (pathish? . -> . void?)
   (match (->complete-path so-pathish)
     [(app ->source-path (and (not #false) source-path)) (render-to-file-if-needed source-path)]
-    [(? pagetree-source? pt) (render-pagenodes pt)]))
+    [(? pagetree-source? pt) (render-pagenodes pt)]
+    [_ (void)]))
 
 (define render-ram-cache (make-hash))
 
