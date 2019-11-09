@@ -21,11 +21,12 @@
          "setup.rkt")
 
 ;; used to track renders according to modification dates of component files
-(define mod-date-hash (make-hash))
+(define mod-date-hash #false)
 
 ;; when you want to generate everything fresh. 
 ;; render functions will always go when no mod-date is found.
 (define (reset-mod-date-hash!) (set! mod-date-hash (make-hash)))
+(reset-mod-date-hash!)
 
 (module-test-internal
  (require racket/runtime-path)
@@ -46,8 +47,6 @@
 (define (mod-date-missing-or-changed? source-path template-path)
   (not (hash-has-key? mod-date-hash (paths->key source-path template-path))))
 
-(define (list-of-pathish? x) (and (list? x) (andmap pathish? x)))
-
 (define (parallel-render source-paths job-count-arg)
   (define job-count
     (min
@@ -60,20 +59,20 @@
   ;; initialize the workers
   (define worker-evts
     (for/list ([wpidx (in-range job-count)])
-              (define wp (place ch
-                                (let loop ()
-                                  (match-define (cons path poly-target)
-                                    (place-channel-put/get ch (list 'wants-job)))
-                                  (parameterize ([current-poly-target poly-target])
-                                    (place-channel-put/get ch (list 'wants-lock (->output-path path)))
-                                    ;; trap any exceptions and pass them back as crashed jobs.
-                                    ;; otherwise, a crashed rendering place can't recover, and the parallel job will be stuck.
-                                    (with-handlers ([exn:fail? (λ (e) (place-channel-put ch (list 'crashed-job path #f)))])
-                                      (match-define-values (_ _ ms _)
-                                        (time-apply render-to-file-if-needed (list path)))
-                                      (place-channel-put ch (list 'finished-job path ms))))
-                                  (loop))))
-              (handle-evt wp (λ (val) (list* wpidx wp val)))))
+      (define wp (place ch
+                        (let loop ()
+                          (match-define (cons path poly-target)
+                            (place-channel-put/get ch (list 'wants-job)))
+                          (parameterize ([current-poly-target poly-target])
+                            (place-channel-put/get ch (list 'wants-lock (->output-path path)))
+                            ;; trap any exceptions and pass them back as crashed jobs.
+                            ;; otherwise, a crashed rendering place can't recover, and the parallel job will be stuck.
+                            (with-handlers ([exn:fail? (λ (e) (place-channel-put ch (list 'crashed-job path #f)))])
+                              (match-define-values (_ _ ms _)
+                                (time-apply render-to-file-if-needed (list path)))
+                              (place-channel-put ch (list 'finished-job path ms))))
+                          (loop))))
+      (handle-evt wp (λ (val) (list* wpidx wp val)))))
      
   (define poly-target (current-poly-target))
 
@@ -111,7 +110,7 @@
        ;; crashed jobs are completed jobs that weren't finished
        (for/list ([(path finished?) (in-dict completed-jobs)]
                   #:unless finished?)
-                 path)]
+         path)]
       [else
        (match (apply sync worker-evts)
          [(list wpidx wp 'wants-job)
@@ -145,7 +144,7 @@
 
 (define+provide/contract (render-batch #:parallel [wants-parallel-render? #false]
                                        #:dry-run [wants-dry-run? #false] . paths-in)
-  ((#:parallel any/c) (#:dry-run boolean?) #:rest list-of-pathish? . ->* . void?)
+  ((#:parallel any/c) (#:dry-run boolean?) #:rest (listof pathish?) . ->* . void?)
   ;; Why not just (for-each render ...)?
   ;; Because certain files will pass through multiple times (e.g., templates)
   ;; And with render, they would be rendered repeatedly.
@@ -167,12 +166,11 @@
                       [#false expanded-source-paths]
                       [jobs-arg (parallel-render expanded-source-paths jobs-arg)]))]))
 
-(define (pagetree->paths pagetree-or-path)
-  (define pagetree (if (pagetree? pagetree-or-path)
-                       pagetree-or-path
-                       (cached-doc pagetree-or-path)))
+(define (pagetree->paths pagetree-or-path)    
   (parameterize ([current-directory (current-project-root)])
-    (map ->complete-path (pagetree->list pagetree))))
+    (map ->complete-path (pagetree->list (match pagetree-or-path
+                                           [(? pagetree? pt) pt]
+                                           [_ (cached-doc pagetree-or-path)])))))
 
 (define+provide/contract (render-pagenodes pagetree-or-path)
   ((or/c pagetree? pathish?) . -> . void?)
@@ -195,10 +193,14 @@
                              maybe-template-path)
   (unless (file-exists? source-path)
     (raise-argument-error caller "existing source path" source-path))
-  (define output-path (or maybe-output-path (->output-path source-path)))
-  (unless output-path
-    (raise-argument-error caller "valid output path" output-path))
-  (define template-path (or maybe-template-path (get-template-for source-path output-path)))
+  (define output-path (cond
+                        [maybe-output-path]
+                        [(->output-path source-path)]
+                        [else (raise-argument-error caller "valid output path" output-path)]))
+  (define template-path (cond
+                          [maybe-template-path]
+                          [(get-template-for source-path output-path)]
+                          [else #false]))
   (define render-cache-activated? (setup:render-cache-active source-path))
   (define render-needed?
     (cond
@@ -208,22 +210,23 @@
       [(not render-cache-activated?) 'render-cache-deactivated]
       [else #false]))
   (when render-needed?
+    (define render-thunk (λ () (render source-path template-path output-path))) ; returns either string or bytes
     (define render-result
-      (let ([key (paths->key source-path template-path output-path)]
-            [render-thunk (λ () (render source-path template-path output-path))]) ; returns either string or bytes
-        (if render-cache-activated?
-            (hash-ref! render-ram-cache
-                       ;; within a session, this will prevent repeat players like "template.html.p"
-                       ;; from hitting the file cache repeatedly
-                       key
-                       (cache-ref! key
-                                   render-thunk
-                                   #:dest-path 'output
-                                   #:notify-cache-use
-                                   (λ (str)
-                                     (message (format "from cache /~a"
-                                                      (find-relative-path (current-project-root) output-path))))))
-            (render-thunk))))
+      (cond
+        [render-cache-activated?
+         (define key (paths->key source-path template-path output-path))
+         (hash-ref! render-ram-cache
+                    ;; within a session, this will prevent repeat players like "template.html.p"
+                    ;; from hitting the file cache repeatedly
+                    key
+                    (cache-ref! key
+                                render-thunk
+                                #:dest-path 'output
+                                #:notify-cache-use
+                                (λ (str)
+                                  (message (format "from cache /~a"
+                                                   (find-relative-path (current-project-root) output-path))))))]
+        [else (render-thunk)]))
     (display-to-file render-result
                      output-path
                      #:exists 'replace
@@ -241,10 +244,10 @@
   ((complete-path?) ((or/c #f complete-path?) (or/c #f complete-path?)) . ->* . (or/c string? bytes?))
   (unless (file-exists? source-path)
     (raise-argument-error 'render "existing source path" source-path))
-  (define output-path (or maybe-output-path (->output-path source-path)))
-  (unless output-path
-    (raise-argument-error 'render "valid output path" output-path))
-
+  (define output-path (cond
+                        [maybe-output-path]
+                        [(->output-path source-path)]
+                        [else (raise-argument-error 'render "valid output path" output-path)]))
   (define render-proc
     (match source-path
       [(? has/is-null-source?) render-null-source]
@@ -254,11 +257,14 @@
       [(? has/is-markdown-source?) render-markup-or-markdown-source]
       [_ (raise-argument-error 'render (format "valid rendering function for ~a" source-path) #false)]))
   
-  (define template-path (or maybe-template-path (get-template-for source-path output-path)))
+  (define template-path (cond
+                          [maybe-template-path]
+                          [(get-template-for source-path output-path)]
+                          [else #false]))
   
   ;; output-path and template-path may not have an extension, so check them in order with fallback
 
-  (match-define-values ((cons render-result _) _ real _)
+  (match-define-values ((cons render-result _) _ ms _)
     (parameterize ([current-directory (->complete-path (dirname source-path))]
                    [current-poly-target (->symbol (or (get-ext output-path)
                                                       (and template-path (get-ext template-path))
@@ -270,11 +276,9 @@
       (time-apply render-proc (list source-path template-path output-path))))
   ;; wait till last possible moment to store mod dates, because render-proc may also trigger its own subrenders
   ;; e.g., of a template.
-  (message (format "rendered /~a ~a"
-                   (find-relative-path (current-project-root) output-path)
-                   (if (< real 1000)
-                       (format "(~a ms)" real)
-                       (format "(~a s)" (/ real 1000.0)))))
+  (message (apply format "rendered /~a (~a ~a)"
+                  (find-relative-path (current-project-root) output-path)
+                  (if (< ms 1000) (list ms "ms") (list (/ ms 1000.0) "s"))))
   (update-mod-date-hash! source-path template-path) 
   render-result)
 
@@ -303,25 +307,37 @@
       ;; BTW this next action has side effects: scribble will copy in its core files if they don't exist.
       [(? part? doc) (scribble-render (list doc) (list source-path))]
       [_ (void)]))
+  (define op (->output-path source-path))
   (begin0 ; because render promises the data, not the side effect
-    (file->string (->output-path source-path))
-    (delete-file (->output-path source-path))))
+    (file->string op)
+    (delete-file op)))
 
 (define (render-preproc-source source-path . _)
-  (cached-doc (->string source-path)))
+  (cached-doc source-path))
 
 (define (render-markup-or-markdown-source source-path [maybe-template-path #f] [maybe-output-path #f])
-  (define output-path (or maybe-output-path (->output-path source-path)))
-  (unless output-path
-    (raise-argument-error 'render-markup-or-markdown-source "valid output path" output-path))
-  (define template-path (or maybe-template-path (get-template-for source-path output-path)))
-  (unless template-path
-    (raise-argument-error 'render-markup-or-markdown-source (format "valid template path~a" (if (has-inner-poly-ext? source-path) (format " for target ~a" (current-poly-target)) "")) template-path))
+  (define output-path
+    (cond
+      [maybe-output-path]
+      [(->output-path source-path)]
+      [else (raise-argument-error 'render-markup-or-markdown-source "valid output path" output-path)]))
+  (define template-path
+    (cond
+      [maybe-template-path]
+      [(get-template-for source-path output-path)]
+      [else (raise-argument-error 'render-markup-or-markdown-source
+                                  (format "valid template path~a"
+                                          (if (has-inner-poly-ext? source-path)
+                                              (format " for target ~a" (current-poly-target))
+                                              ""))
+                                  template-path)]))
 
   ;; use a temp file so that multiple (possibly parallel) renders
   ;; do not compete for write access to the same template
-  (define temp-template (make-temporary-file "pollentmp~a"
-                                             (or (->source-path template-path) template-path)))
+  (define temp-template (make-temporary-file "pollentmp~a" (cond
+                                                             [(->source-path template-path)]
+                                                             [template-path]
+                                                             [else #false])))
   (render-from-source-or-output-path temp-template) ; because template might have its own preprocessor source
   (parameterize ([current-output-port (current-error-port)]
                  [current-namespace (make-base-namespace)])
@@ -340,13 +356,10 @@
                   result)))
       (delete-file temp-template))))
 
-(define (templated-source? path)
-  (or (markup-source? path) (markdown-source? path)))
-
 (define (file-exists-or-has-source? path) ; path could be #f
   (and path (for/first ([proc (in-list (list values ->preproc-source-path ->null-source-path))]
                         #:when (file-exists? (proc path)))
-                       path)))
+              path)))
 
 (define (get-template-from-metas source-path output-path-ext)
   (with-handlers ([exn:fail:contract? (λ (e) #f)]) ; in case source-path doesn't work with cached-require
@@ -371,13 +384,20 @@
 
 (define+provide/contract (get-template-for source-path [maybe-output-path #f])
   ((complete-path?)((or/c #f complete-path?)) . ->* . (or/c #f complete-path?))
-  (and (templated-source? source-path)
-       (let ()
-         (define output-path (or maybe-output-path (->output-path source-path)))
-         ;; output-path may not have an extension
-         (define output-path-ext (or (get-ext output-path) (current-poly-target)))
-         (for/or ([proc (list get-template-from-metas get-default-template get-fallback-template)])
-                 (file-exists-or-has-source? (proc source-path output-path-ext))))))
+  (match source-path
+    [(or (? markup-source?) (? markdown-source?))
+     (define output-path (cond
+                           [maybe-output-path]
+                           [(->output-path source-path)]
+                           [else #false]))
+     ;; output-path may not have an extension
+     (define output-path-ext (cond
+                               [(get-ext output-path)]
+                               [(current-poly-target)]
+                               [else #false]))
+     (for/or ([proc (list get-template-from-metas get-default-template get-fallback-template)])
+       (file-exists-or-has-source? (proc source-path output-path-ext)))]
+    [_ #false]))
 
 (module-test-external
  (require pollen/setup sugar/file sugar/coerce)
