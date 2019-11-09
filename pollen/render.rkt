@@ -158,10 +158,9 @@
         [(? pagetree-source? pt) (loop (append (pagetree->paths pt) (cdr paths)) acc)]
         [(app ->source-path (and (not #false) (? file-exists?) sp)) (loop (cdr paths) (cons sp acc))]
         [_ (loop (cdr paths) acc)])))
-  (cond 
-    [wants-dry-run? (if (null? expanded-source-paths)
-                        (message "[no paths to render]")
-                        (for-each message expanded-source-paths))]
+  (cond
+    [(null? expanded-source-paths) (message "[no paths to render]")]
+    [wants-dry-run? (for-each message expanded-source-paths)]
     [else (for-each render-to-file-if-needed
                     (match wants-parallel-render?
                       ;; returns crashed jobs for serial rendering
