@@ -54,7 +54,7 @@
      (match job-count-arg
        [#true (processor-count)]
        [(? exact-positive-integer? count) count]
-       [_ (raise-argument-error 'render-batch "exact positive integer" job-count-arg)])))
+       [_ (raise-user-error 'render-batch "~a is not an exact positive integer or #true" job-count-arg)])))
   
   ;; initialize the workers
   (define worker-evts
@@ -199,11 +199,11 @@
                              maybe-output-path
                              maybe-template-path)
   (unless (file-exists? source-path)
-    (raise-argument-error caller "existing source path" source-path))
+    (raise-user-error caller "~a is not an existing source path" source-path))
   (define output-path (cond
                         [maybe-output-path]
                         [(->output-path source-path)]
-                        [else (raise-argument-error caller "valid output path" maybe-output-path)]))
+                        [else (raise-user-error caller "~a is not a valid output path" maybe-output-path)]))
   (define template-path (cond
                           [maybe-template-path]
                           [(get-template-for source-path output-path)]
@@ -250,11 +250,11 @@
 (define+provide/contract (render source-path [maybe-template-path #f] [maybe-output-path #f])
   ((complete-path?) ((or/c #f complete-path?) (or/c #f complete-path?)) . ->* . (or/c string? bytes?))
   (unless (file-exists? source-path)
-    (raise-argument-error 'render "existing source path" source-path))
+    (raise-user-error 'render "~a is not an existing source path" source-path))
   (define output-path (cond
                         [maybe-output-path]
                         [(->output-path source-path)]
-                        [else (raise-argument-error 'render "valid output path" output-path)]))
+                        [else (raise-user-error 'render "~a is not a valid output path" maybe-output-path)]))
   (define render-proc
     (match source-path
       [(? has/is-null-source?) render-null-source]
@@ -262,7 +262,7 @@
       [(? has/is-markup-source?) render-markup-or-markdown-source]
       [(? has/is-scribble-source?) render-scribble-source]
       [(? has/is-markdown-source?) render-markup-or-markdown-source]
-      [_ (raise-argument-error 'render (format "valid rendering function for ~a" source-path) #false)]))
+      [_ (raise-user-error 'render "valid rendering function for ~a" source-path)]))
   
   (define template-path (cond
                           [maybe-template-path]
@@ -327,7 +327,7 @@
     (cond
       [maybe-output-path]
       [(->output-path source-path)]
-      [else (raise-argument-error 'render-markup-or-markdown-source "valid output path" maybe-output-path)]))
+      [else (raise-user-error 'render-markup-or-markdown-source "~a is not a valid output path" maybe-output-path)]))
   (define template-path
     (cond
       [maybe-template-path]
