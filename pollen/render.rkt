@@ -59,20 +59,20 @@
   ;; initialize the workers
   (define worker-evts
     (for/list ([wpidx (in-range job-count)])
-      (define wp (place ch
-                        (let loop ()
-                          (match-define (cons path poly-target)
-                            (place-channel-put/get ch (list 'wants-job)))
-                          (parameterize ([current-poly-target poly-target])
-                            (place-channel-put/get ch (list 'wants-lock (->output-path path)))
-                            ;; trap any exceptions and pass them back as crashed jobs.
-                            ;; otherwise, a crashed rendering place can't recover, and the parallel job will be stuck.
-                            (with-handlers ([exn:fail? (λ (e) (place-channel-put ch (list 'crashed-job path #f)))])
-                              (match-define-values (_ _ ms _)
-                                (time-apply render-to-file-if-needed (list path)))
-                              (place-channel-put ch (list 'finished-job path ms))))
-                          (loop))))
-      (handle-evt wp (λ (val) (list* wpidx wp val)))))
+              (define wp (place ch
+                                (let loop ()
+                                  (match-define (cons path poly-target)
+                                    (place-channel-put/get ch (list 'wants-job)))
+                                  (parameterize ([current-poly-target poly-target])
+                                    (place-channel-put/get ch (list 'wants-lock (->output-path path)))
+                                    ;; trap any exceptions and pass them back as crashed jobs.
+                                    ;; otherwise, a crashed rendering place can't recover, and the parallel job will be stuck.
+                                    (with-handlers ([exn:fail? (λ (e) (place-channel-put ch (list 'crashed-job path #f)))])
+                                      (match-define-values (_ _ ms _)
+                                        (time-apply render-to-file-if-needed (list path)))
+                                      (place-channel-put ch (list 'finished-job path ms))))
+                                  (loop))))
+              (handle-evt wp (λ (val) (list* wpidx wp val)))))
      
   (define poly-target (current-poly-target))
 
@@ -110,7 +110,7 @@
        ;; crashed jobs are completed jobs that weren't finished
        (for/list ([(path finished?) (in-dict completed-jobs)]
                   #:unless finished?)
-         path)]
+                 path)]
       [else
        (match (apply sync worker-evts)
          [(list wpidx wp 'wants-job)
@@ -152,11 +152,18 @@
   (reset-mod-date-hash!)
   (define expanded-source-paths
     (let loop ([paths paths-in] [acc null])
-      (match (and (pair? paths) (->complete-path (car paths)))
-        [#false (sort (remove-duplicates acc) string<? #:key path->string)]
-        [(? pagetree-source? pt) (loop (append (pagetree->paths pt) (cdr paths)) acc)]
-        [(app ->source-path (and (not #false) (? file-exists?) sp)) (loop (cdr paths) (cons sp acc))]
-        [_ (loop (cdr paths) acc)])))
+      (match paths
+        [(? null?) (sort (remove-duplicates acc) string<? #:key path->string)]
+        [(cons path rest)
+         (match (->complete-path path)
+           [(? pagetree-source? pt)
+            (loop (append (pagetree->paths pt) rest) acc)]
+           [(app ->source-path (and (not #false) (? file-exists?) sp))
+            (loop rest (cons sp acc))]
+           [(or (? file-exists?) (? directory-exists?)) (loop rest acc)]
+           [unknown (raise-user-error 'render-batch
+                                      "~a is not a source path, directory, or output path"
+                                      unknown)])])))
   (cond
     [(null? expanded-source-paths) (message "[no paths to render]")]
     [wants-dry-run? (for-each message expanded-source-paths)]
@@ -196,7 +203,7 @@
   (define output-path (cond
                         [maybe-output-path]
                         [(->output-path source-path)]
-                        [else (raise-argument-error caller "valid output path" output-path)]))
+                        [else (raise-argument-error caller "valid output path" maybe-output-path)]))
   (define template-path (cond
                           [maybe-template-path]
                           [(get-template-for source-path output-path)]
@@ -320,17 +327,16 @@
     (cond
       [maybe-output-path]
       [(->output-path source-path)]
-      [else (raise-argument-error 'render-markup-or-markdown-source "valid output path" output-path)]))
+      [else (raise-argument-error 'render-markup-or-markdown-source "valid output path" maybe-output-path)]))
   (define template-path
     (cond
       [maybe-template-path]
       [(get-template-for source-path output-path)]
-      [else (raise-argument-error 'render-markup-or-markdown-source
-                                  (format "valid template path~a"
-                                          (if (has-inner-poly-ext? source-path)
-                                              (format " for target ~a" (current-poly-target))
-                                              ""))
-                                  template-path)]))
+      [else (raise-user-error 'render-markup-or-markdown-source
+                              "couldn't find template~a"
+                              (if (has-inner-poly-ext? source-path)
+                                  (format " for target .~a" (current-poly-target))
+                                  ""))]))
 
   ;; use a temp file so that multiple (possibly parallel) renders
   ;; do not compete for write access to the same template
@@ -359,7 +365,7 @@
 (define (file-exists-or-has-source? path) ; path could be #f
   (and path (for/first ([proc (in-list (list values ->preproc-source-path ->null-source-path))]
                         #:when (file-exists? (proc path)))
-              path)))
+                       path)))
 
 (define (get-template-from-metas source-path output-path-ext)
   (with-handlers ([exn:fail:contract? (λ (e) #f)]) ; in case source-path doesn't work with cached-require
@@ -396,7 +402,7 @@
                                [(current-poly-target)]
                                [else #false]))
      (for/or ([proc (list get-template-from-metas get-default-template get-fallback-template)])
-       (file-exists-or-has-source? (proc source-path output-path-ext)))]
+             (file-exists-or-has-source? (proc source-path output-path-ext)))]
     [_ #false]))
 
 (module-test-external
