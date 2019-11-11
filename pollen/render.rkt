@@ -47,10 +47,21 @@
 (define (mod-date-missing-or-changed? source-path template-path)
   (not (hash-has-key? mod-date-hash (paths->key source-path template-path))))
 
-(define (parallel-render source-paths job-count-arg)
+(define (parallel-render source-paths-in job-count-arg)
+  ;; if jobs are already in the cache, pull them out before assigning workers
+  ;; using worker to fetch from cache is slower
+  (define-values (uncached-source-paths previously-cached-jobs)
+    (for/fold ([usps null]
+               [pcjs null])
+              ([path (in-list source-paths-in)])
+      (match (with-handlers ([(λ (x) (eq? x 'cache-miss)) values])
+               (render-to-file-if-needed path #f #f (λ () (raise 'cache-miss))))
+        ['cache-miss (values (cons path usps) pcjs)]
+        [_ (values usps (cons (cons path #true) pcjs))])))
+  
   (define job-count
     (min
-     (length source-paths)
+     (length uncached-source-paths)
      (match job-count-arg
        [#true (processor-count)]
        [(? exact-positive-integer? count) count]
@@ -69,7 +80,9 @@
                                     ;; otherwise, a crashed rendering place can't recover, and the parallel job will be stuck.
                                     (with-handlers ([exn:fail? (λ (e) (place-channel-put ch (list 'crashed-job path #f)))])
                                       (match-define-values (_ _ ms _)
-                                        (time-apply render-to-file-if-needed (list path)))
+                                        ;; we don't use `render-to-file-if-needed` because we've already checked the render cache
+                                        ;; if we reached this point, we know we need a render
+                                        (time-apply render-to-file (list path)))
                                       (place-channel-put ch (list 'finished-job path ms))))
                                   (loop))))
               (handle-evt wp (λ (val) (list* wpidx wp val)))))
@@ -77,12 +90,12 @@
   (define poly-target (current-poly-target))
 
   ;; `locks` and `blocks` are (listof (cons/c evt? path?))
-  (let loop ([source-paths source-paths]
+  (let loop ([source-paths (reverse uncached-source-paths)]
              [locks-in null]
              [blocks-in null]
              ;; `completed-jobs` is (listof (cons/c path? boolean?))
-             [completed-jobs null]
-             [completed-job-count 0])
+             [completed-jobs previously-cached-jobs]
+             [completed-job-count (length previously-cached-jobs)])
     ;; try to unblock blocked workers
     (define-values (locks blocks)
       (for/fold ([locks locks-in]
@@ -94,9 +107,9 @@
            (values locks (cons block blocks))]
           [else
            (place-channel-put wp 'lock-approved)
-           (values (cons block locks) blocks)])))  
+           (values (cons block locks) blocks)])))
     (cond
-      [(eq? completed-job-count (length source-paths))
+      [(eq? completed-job-count (length source-paths-in))
        ;; second bite at the apple for crashed jobs.
        ;; 1) many crashes that arise in parallel rendering are
        ;; a result of concurrency issues (e.g. shared files not being readable at the right moment).
@@ -194,7 +207,8 @@
                              force?
                              source-path
                              maybe-output-path
-                             maybe-template-path)
+                             maybe-template-path
+                             maybe-render-thunk)
   (unless (file-exists? source-path)
     (raise-user-error caller "~a is not an existing source path" source-path))
   (define output-path (cond
@@ -214,7 +228,7 @@
       [(not render-cache-activated?) 'render-cache-deactivated]
       [else #false]))
   (when render-needed?
-    (define render-thunk (λ () (render source-path template-path output-path))) ; returns either string or bytes
+    (define render-thunk (or maybe-render-thunk (λ () (render source-path template-path output-path)))) ; returns either string or bytes
     (define render-result
       (cond
         [render-cache-activated?
@@ -236,13 +250,13 @@
                      #:exists 'replace
                      #:mode (if (string? render-result) 'text 'binary))))
 
-(define+provide/contract (render-to-file-if-needed source-path [maybe-template-path #f] [maybe-output-path #f])
-  ((complete-path?) ((or/c #f complete-path?) (or/c #f complete-path?)) . ->* . void?)
-  (render-to-file-base 'render-to-file-if-needed #f source-path maybe-output-path maybe-template-path))
+(define+provide/contract (render-to-file-if-needed source-path [maybe-template-path #f] [maybe-output-path #f] [maybe-render-thunk #f])
+  ((complete-path?) ((or/c #f complete-path?) (or/c #f complete-path?) (or/c #f procedure?)) . ->* . void?)
+  (render-to-file-base 'render-to-file-if-needed #f source-path maybe-output-path maybe-template-path maybe-render-thunk))
 
-(define+provide/contract (render-to-file source-path [maybe-template-path #f] [maybe-output-path #f])
-  ((complete-path?) ((or/c #f complete-path?) (or/c #f complete-path?)) . ->* . void?)
-  (render-to-file-base 'render-to-file #t source-path maybe-output-path maybe-template-path))
+(define+provide/contract (render-to-file source-path [maybe-template-path #f] [maybe-output-path #f] [maybe-render-thunk #f])
+  ((complete-path?) ((or/c #f complete-path?) (or/c #f complete-path?) (or/c #f procedure?)) . ->* . void?)
+  (render-to-file-base 'render-to-file #t source-path maybe-output-path maybe-template-path maybe-render-thunk))
 
 (define+provide/contract (render source-path [maybe-template-path #f] [maybe-output-path #f])
   ((complete-path?) ((or/c #f complete-path?) (or/c #f complete-path?)) . ->* . (or/c string? bytes?))
