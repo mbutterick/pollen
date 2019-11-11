@@ -160,10 +160,7 @@
             (loop (append (pagetree->paths pt) rest) acc)]
            [(app ->source-path (and (not #false) (? file-exists?) sp))
             (loop rest (cons sp acc))]
-           [(or (? file-exists?) (? directory-exists?)) (loop rest acc)]
-           [unknown (raise-user-error 'render-batch
-                                      "~a is not a source path, directory, or output path"
-                                      unknown)])])))
+           [_ (loop rest acc)])])))
   (cond
     [(null? expanded-source-paths) (message "[no paths to render]")]
     [wants-dry-run? (for-each message expanded-source-paths)]
