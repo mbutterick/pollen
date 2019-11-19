@@ -1,6 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base racket/syntax))
-(require racket/path)
+(require racket/path racket/match)
 (require "../setup.rkt" sugar/define sugar/file sugar/coerce sugar/test)
 
 
@@ -221,21 +221,14 @@
 (define+provide (->source+output-paths source-or-output-path)
   ;(complete-path? . -> . (values complete-path? complete-path?))
   ;; file-proc returns two values, but ormap only wants one
-  (define tests (list
-                 has/is-null-source?
-                 has/is-preproc-source?
-                 has/is-markup-source?
-                 has/is-scribble-source?
-                 has/is-markdown-source?))
-  (define file-procs (list ->null-source+output-paths
-                           ->preproc-source+output-paths
-                           ->markup-source+output-paths
-                           ->scribble-source+output-paths
-                           ->markdown-source+output-paths))  
-  (define file-proc (for/first ([test (in-list tests)]
-                                [file-proc (in-list file-procs)]
-                                #:when (test source-or-output-path))
-                               file-proc))
+  (define file-proc
+    (match source-or-output-path
+      [(? has/is-null-source?) ->null-source+output-paths]
+      [(? has/is-preproc-source?) ->preproc-source+output-paths]
+      [(? has/is-markup-source?) ->markup-source+output-paths]
+      [(? has/is-scribble-source?) ->scribble-source+output-paths]
+      [(? has/is-markdown-source?) ->markdown-source+output-paths]
+      [_ (λ (x) (values #false #false))]))
   (file-proc source-or-output-path))
 
 

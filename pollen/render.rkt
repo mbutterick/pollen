@@ -195,10 +195,11 @@
 
 (define+provide/contract (render-from-source-or-output-path so-pathish)
   (pathish? . -> . void?)
-  (match (->complete-path so-pathish)
-    [(app ->source-path (and (not #false) source-path)) (render-to-file-if-needed source-path)]
-    [(? pagetree-source? pt) (render-pagenodes pt)]
-    [_ (void)]))
+  (define so-path (->complete-path so-pathish))
+  (define-values (sp op) (->source+output-paths so-path))
+  (cond
+    [(and sp op) (render-to-file-if-needed sp #false op)]
+    [(pagetree-source? so-path) (render-pagenodes so-path)]))
 
 (define render-ram-cache (make-hash))
 
