@@ -29,6 +29,8 @@ You need a GitHub account to post. If you don't have one, don't panic — they'
 
 @link["https://github.com/lijunsong/pollen-rock"]{Pollen Rock}: rendering server and an in-browser editor for Pollen
 
+@link["https://github.com/appliedsciencestudio/talks/tree/master/mxnet"]{Polllen as a front end for Reveal.js} by Dave Liepmann. Reveal.js is a library that allows you to create slide presentations in pure HTML/CSS that run in the browser.
+
 
 @section{Can I see the source for Practical Typography or Typography for Lawyers?}
 
