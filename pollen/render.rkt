@@ -345,10 +345,8 @@
       [maybe-template-path]
       [(get-template-for source-path output-path)]
       [else (raise-user-error 'render-markup-or-markdown-source
-                              "couldn't find template~a"
-                              (if (has-inner-poly-ext? source-path)
-                                  (format " for target .~a" (current-poly-target))
-                                  ""))]))
+                              "couldn't find template for target .~a"
+                              (current-poly-target))]))
 
   ;; use a temp file so that multiple (possibly parallel) renders
   ;; do not compete for write access to the same template
