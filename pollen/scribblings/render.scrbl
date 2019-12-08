@@ -15,7 +15,7 @@
 (render
 [source-path complete-path?]
 [template-path (or/c #f complete-path?) #f]) 
-bytes?]
+(or/c string? bytes?)]
 Renders @racket[_source-path]. The rendering behavior depends on the type of source file (for details, see @secref["File_formats" #:doc '(lib "pollen/scribblings/pollen.scrbl")]):
 
 A @racketmodname[pollen/pre] file is rendered without a template.
