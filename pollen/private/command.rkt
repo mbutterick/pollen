@@ -98,7 +98,7 @@ version                print the version" (current-server-port) (make-publish-di
   (define render-target-wanted (make-parameter (current-poly-target)))
   (define render-with-subdirs? (make-parameter #f))
   (define render-parallel? (make-parameter #f))
-  (define dry-run? (make-parameter #f))
+  (define special-output? (make-parameter #f))
   (define parsed-args
     (command-line #:program "raco pollen render"
                   #:argv (vector-drop (current-command-line-arguments) 1) ; snip the 'render' from the front
@@ -108,7 +108,9 @@ version                print the version" (current-server-port) (make-publish-di
                   [("-r" "--recursive") "Render subdirectories recursively"
                                         (render-with-subdirs? 'recursive)]
                   [("-s" "--subdir") "Render subdirectories nonrecursively" (render-with-subdirs? 'include)]
-                  [("-d" "--dry-run") "Print paths that would be rendered" (dry-run? #true)]
+                  #:once-any
+                  [("-d" "--dry-run") "Print paths that would be rendered" (special-output? 'dry-run)]
+                  [("-n" "--null") "Suppress file output" (special-output? 'null)]
                   #:once-any
                   [("-p" "--parallel") "Render in parallel using all cores" (render-parallel? #true)]
                   [("-j" "--jobs") job-count "Render in parallel using <job-count> jobs" (render-parallel? (or (string->number job-count) (raise-argument-error 'handle-render "exact positive integer" job-count)))]
@@ -116,7 +118,7 @@ version                print the version" (current-server-port) (make-publish-di
                   other-args))
 
   (define (handle-batch-render paths)
-    (apply render-batch (map very-nice-path paths) #:parallel (render-parallel?) #:dry-run (dry-run?)))
+    (apply render-batch (map very-nice-path paths) #:parallel (render-parallel?) #:special (special-output?)))
   
   (parameterize ([current-poly-target (render-target-wanted)]) ;; applies to both cases
     (let loop ([args parsed-args])

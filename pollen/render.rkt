@@ -155,9 +155,11 @@
          [(list wpidx wp 'wants-lock path)
           (loop source-paths locks (append blocks (list (cons wp path))) completed-jobs completed-job-count)])])))
 
+(define current-null-output? (make-parameter #f))
+
 (define+provide/contract (render-batch #:parallel [wants-parallel-render? #false]
-                                       #:dry-run [wants-dry-run? #false] . paths-in)
-  ((#:parallel any/c) (#:dry-run boolean?) #:rest (listof pathish?) . ->* . void?)
+                                       #:special [special-output #false] . paths-in)
+  ((#:parallel any/c) (#:special (or/c boolean? symbol?)) #:rest (listof pathish?) . ->* . void?)
   ;; Why not just (for-each render ...)?
   ;; Because certain files will pass through multiple times (e.g., templates)
   ;; And with render, they would be rendered repeatedly.
@@ -176,12 +178,13 @@
            [_ (loop rest acc)])])))
   (cond
     [(null? expanded-source-paths) (message "[no paths to render]")]
-    [wants-dry-run? (for-each message expanded-source-paths)]
-    [else (for-each render-to-file-if-needed
-                    (match wants-parallel-render?
-                      ;; returns crashed jobs for serial rendering
-                      [#false expanded-source-paths]
-                      [jobs-arg (parallel-render expanded-source-paths jobs-arg)]))]))
+    [(eq? special-output 'dry-run) (for-each message expanded-source-paths)]
+    [else (parameterize ([current-null-output? (eq? special-output 'null)])
+            (for-each render-to-file-if-needed
+                      (match wants-parallel-render?
+                        ;; returns crashed jobs for serial rendering
+                        [#false expanded-source-paths]
+                        [jobs-arg (parallel-render expanded-source-paths jobs-arg)])))]))
 
 (define (pagetree->paths pagetree-or-path)    
   (parameterize ([current-directory (current-project-root)])
@@ -246,10 +249,11 @@
                                   (message (format "from cache /~a"
                                                    (find-relative-path (current-project-root) output-path))))))]
         [else (render-thunk)]))
-    (display-to-file render-result
-                     output-path
-                     #:exists 'replace
-                     #:mode (if (string? render-result) 'text 'binary))))
+    (unless (current-null-output?)
+      (display-to-file render-result
+                       output-path
+                       #:exists 'replace
+                       #:mode (if (string? render-result) 'text 'binary)))))
 
 (define+provide/contract (render-to-file-if-needed source-path [maybe-template-path #f] [maybe-output-path #f] [maybe-render-thunk #f])
   ((complete-path?) ((or/c #f complete-path?) (or/c #f complete-path?) (or/c #f procedure?)) . ->* . void?)
