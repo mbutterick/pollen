@@ -27,4 +27,4 @@ Official discussion area: https://github.com/mbutterick/pollen-users
 
 ## License
 
-LGPL
+MIT
