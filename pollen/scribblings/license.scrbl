@@ -8,6 +8,6 @@
 
 @title{License & source code}
 
-This module is licensed under the LGPL.
+This module is licensed under the MIT License.
 
 Source repository at @link["http://github.com/mbutterick/pollen"]{http://github.com/mbutterick/pollen}. Suggestions & corrections welcome.
