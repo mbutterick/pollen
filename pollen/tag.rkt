@@ -1,4 +1,4 @@
-#lang pollen/mode debug racket/base
+#lang pollen/mode racket/base
 (require (for-syntax
           racket/base
           syntax/parse)
