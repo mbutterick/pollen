@@ -53,7 +53,7 @@
   (make-keyword-procedure
    (λ (outer-kws outer-kw-args . ids)
      (define tag-proc (apply compose1 (for/list ([id (in-list ids)])
-                                        (make-one-tag-function outer-kws outer-kw-args id))))
+                                                (make-one-tag-function outer-kws outer-kw-args id))))
      (define tag-proc-name (string->symbol (format "pollen-tag:~a" (string-join (map symbol->string ids) "+"))))
      (procedure-rename tag-proc tag-proc-name))))
 
@@ -87,21 +87,24 @@
      ;; the srcloc of the `lambda` expression determines the srcloc of errors raised within its body
      #`(define ID
          (make-keyword-procedure
-          #,(syntax/loc #'ID (lambda (kws kwargs attrs . elems)
+          #,(syntax/loc #'ID (lambda (kws kwargs . args)
+                               (let ([elems (match args
+                                              [(list* _ elems) elems]
+                                              [_ #false])])
+                                 (when elems
+                                   (unless (and (list? elems) (andmap txexpr-element? elems))
+                                     (raise-argument-error 'ID (format "elements need to be passed to tag function as individual trailing arguments (or, if you want to pass them as a single list, use `(apply ~a ···)` here instead of `(~a ···)`)" 'ID 'ID) (car elems)))))
                                (define tx-proc (keyword-apply default-tag-function kws kwargs (list 'ID)))
-                               (unless (and (list? elems) (andmap txexpr-element? elems))
-                                 (raise-argument-error 'ID (format "elements need to be passed to tag function as individual trailing arguments (or, if you want to pass them as a single list, use `(apply ~a ···)` here instead of `(~a ···)`)" 'ID 'ID) (car elems)))
-                               (define tx (apply tx-proc attrs elems))
+                               (define tx (apply tx-proc args))
                                (define-values (_ ATTRS ELEMS) (txexpr->values tx))
                                EXPR ...))))]))
 
 
 (module+ test
-  (require)
   (define foo2 (default-tag-function 'foo))
-  
   (define-tag-function (foo attrs elems)
     `(foo ,(reverse attrs) ,@elems))
+  (check-txexprs-equal? ◊(foo) ◊(foo2))
   (check-txexprs-equal? ◊foo[#:zim "zam"]{hello}  ◊foo2[#:zim "zam"]{hello})
   (check-txexprs-equal? ◊foo[#:ding "dong" '((zim "zam"))]{hello}  ◊foo2[#:ding "dong" '((zim "zam"))]{hello})
   (check-txexprs-equal? ◊foo['zim: "zam" #:ding "dong" ]{hello} ◊foo2['zim: "zam" #:ding "dong" ]{hello})
