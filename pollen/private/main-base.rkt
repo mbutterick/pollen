@@ -45,12 +45,16 @@
                    [ALL-DEFINED-OUT (datum->syntax #'EXPRS '(all-defined-out))])
        #'(doclang:#%module-begin
           DOC-ID ; positional arg for doclang-raw: name of export
-          (λ (xs)
+          (λ (xs) ;  positional arg for doclang-raw: post-processor
             (define proc (make-parse-proc PARSER-MODE ROOT-ID))
             (define trimmed-xs (strip-leading-newlines xs))
             (define doc-elements (splice trimmed-xs (setup:splicing-tag)))
-            (parameterize ([current-metas METAS-ID-CALLER])
-              (proc doc-elements))) ;  positional arg for doclang-raw: post-processor
+            (begin0
+              (proc doc-elements)
+              ;; wait till the end to restore prev-metas
+              ;; because tag functions may edit current-metas
+              ;; and we want root to see those changes
+              (current-metas prev-metas))) 
           (module METAS-ID racket/base
             (provide METAS-ID)
             (define METAS-ID META-HASH))
@@ -60,5 +64,6 @@
           (define prev-metas (current-metas))
           (define METAS-ID-CALLER METAS-ID)
           (and (current-metas METAS-ID) "") ; because empty strings get stripped, voids don't
-          (begin . EXPRS)
-          (and (current-metas prev-metas) "")))])) ; leave behind empty string, not void
+          ;; we set current-metas imperatively rather than using `splicing-parameterize`
+          ;; so that we can unset it in the post processor, rather than out here
+          (begin . EXPRS)))])) 
