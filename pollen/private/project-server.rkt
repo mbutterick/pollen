@@ -1,15 +1,16 @@
 #lang web-server/base
-(require racket/list
+(require racket/runtime-path
          web-server/servlet-env 
          web-server/dispatch
          "project-server-routes.rkt" 
          "log.rkt" 
          "../setup.rkt"
          "../file.rkt"
-         "../cache.rkt"
          "version.rkt")
 
 (provide start-server)
+
+(define-runtime-path mime-types "server-extras/mime.types")
 
 (define (start-server servlet-path [open-browser-window? #f])
   (define-values (pollen-servlet _)
@@ -35,6 +36,7 @@
                    #:port (current-server-port)
                    #:listen-ip (current-server-listen-ip)
                    #:servlet-regexp #rx"" ; respond to top level
-                   #:command-line? #t
+                   #:command-line? #true
                    #:file-not-found-responder route-404
+                   #:mime-types-path mime-types
                    #:extra-files-paths (list (current-server-extras-path) (current-project-root)))))
