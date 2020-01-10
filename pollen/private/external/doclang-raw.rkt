@@ -11,6 +11,7 @@
 (define-syntax (*module-begin stx)
   (syntax-case stx ()
     [(_ id post-process . body)
+     ;; unlike regular doclang, don't accept a third positional argument (just pass dummy `exprs`)
      (with-syntax ([exprs #'()])
        #'(#%module-begin
           (doc-begin id post-process exprs . body)))]))
