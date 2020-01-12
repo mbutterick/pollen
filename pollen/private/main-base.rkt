@@ -18,9 +18,9 @@
 (define ((make-parse-proc parser-mode root-proc) xs)
   (define (stringify xs) (apply string-append (map to-string xs)))
   (match parser-mode
-    [(== default-mode-pagetree) (decode-pagetree xs)]
-    [(== default-mode-markup) (apply root-proc (remove-voids xs))] 
-    [(== default-mode-markdown)
+    [(== default-mode-pagetree eq?) (decode-pagetree xs)]
+    [(== default-mode-markup eq?) (apply root-proc (remove-voids xs))] 
+    [(== default-mode-markdown eq?)
      (let* ([xs (stringify xs)]
             [xs ((dynamic-require 'markdown 'parse-markdown) xs)]
             [xs (map strip-empty-attrs xs)])

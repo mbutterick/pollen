@@ -20,11 +20,11 @@
 
 (define (infer-parser-mode reader-mode reader-here-path)
   (match reader-mode
-    [(== default-mode-auto)
+    [(== default-mode-auto eq?)
      (match (cond [(get-ext reader-here-path) => string->symbol])
-       [(== (setup:pagetree-source-ext)) default-mode-pagetree]
-       [(== (setup:markup-source-ext)) default-mode-markup]
-       [(== (setup:markdown-source-ext)) default-mode-markdown]
+       [(== (setup:pagetree-source-ext) eq?) default-mode-pagetree]
+       [(== (setup:markup-source-ext) eq?) default-mode-markup]
+       [(== (setup:markdown-source-ext) eq?) default-mode-markdown]
        [_ default-mode-preproc])]
     [_ reader-mode]))
 
@@ -115,11 +115,11 @@
       [(drracket:default-extension)
        (symbol->string
         (match mode
-          [(== default-mode-auto) (setup:preproc-source-ext)]
-          [(== default-mode-preproc) (setup:preproc-source-ext)]
-          [(== default-mode-markdown) (setup:markdown-source-ext)]
-          [(== default-mode-markup) (setup:markup-source-ext)]
-          [(== default-mode-pagetree) (setup:pagetree-source-ext)]))]
+          [(== default-mode-auto eq?) (setup:preproc-source-ext)]
+          [(== default-mode-preproc eq?) (setup:preproc-source-ext)]
+          [(== default-mode-markdown eq?) (setup:markdown-source-ext)]
+          [(== default-mode-markup eq?) (setup:markup-source-ext)]
+          [(== default-mode-pagetree eq?) (setup:pagetree-source-ext)]))]
       [else default])))
 
 (define-syntax-rule (reader-module-begin mode . _)
