@@ -16,10 +16,11 @@
   (let-values ([(dir name dir?) (split-path path)])
     dir))
 
-(define (get-path-to-override [file-or-dir (current-directory)])
-  (define starting-dir (if (directory-exists? file-or-dir)
-                           file-or-dir
-                           (dirname file-or-dir)))
+(define (get-path-to-override maybe-dir)
+  (define starting-dir (cond
+                         [(not maybe-dir) (current-directory)]
+                         [(directory-exists? maybe-dir) maybe-dir]
+                         [else (dirname maybe-dir)]))
   (let loop ([dir starting-dir][path default-directory-require])
     (and dir ; dir is #f when it hits the top of the filesystem
          (let ([simplified-path (simplify-path (path->complete-path path starting-dir))])
@@ -40,11 +41,12 @@
        #'(begin
            (provide (prefix-out setup: NAME-THUNKED) DEFAULT-NAME)
            (define DEFAULT-NAME DEFAULT-VALUE)
-           (define NAME-FAIL-THUNKED (λ _ DEFAULT-NAME))
            ;; can take a dir argument that sets start point for (get-path-to-override) search.
-           (define NAME-THUNKED (λ get-path-args
-                                  (with-handlers ([exn:fail? NAME-FAIL-THUNKED])
-                                    (dynamic-require `(submod ,(apply get-path-to-override get-path-args) WORLD-SUBMOD) 'NAME NAME-FAIL-THUNKED))))))]))
+           (define (NAME-THUNKED [dir #false])
+             (with-handlers ([exn:fail? (λ (exn) DEFAULT-NAME)])
+               (dynamic-require `(submod ,(get-path-to-override dir) WORLD-SUBMOD)
+                                'NAME
+                                (λ () DEFAULT-NAME))))))]))
 
 (define-settable cache-watchlist null)
 (define-settable envvar-watchlist null)
