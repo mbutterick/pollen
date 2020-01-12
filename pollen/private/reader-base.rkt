@@ -126,5 +126,6 @@
   (#%module-begin
    (define cgi (custom-get-info mode)) ; stash hygienic references to local funcs with macro-introduced identifiers
    (define cr custom-read) ; so they can be provided out
-   (define (crs ps p) (custom-read-syntax #:reader-mode mode ps p))
+   ;; allow six-argument arity to be compatible with `debug`
+   (define (crs ps p . _) (custom-read-syntax #:reader-mode mode ps p))
    (provide (rename-out [cr read][crs read-syntax][cgi get-info]))))
