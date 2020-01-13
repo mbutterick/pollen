@@ -53,16 +53,19 @@
             ;; and we want root to see those changes
             (begin0
               (parse xs PARSER-MODE ROOT-ID)
+              ;; pick up any imperative changes to current-metas by tag functions
+              (set! METAS-ID-CALLER (current-metas))
+              ;; restore previous value of metas
               (current-metas prev-metas))) 
           (module METAS-ID racket/base
             (provide METAS-ID)
             (define METAS-ID META-HASH))
           (require POLLEN/TOP (submod "." METAS-ID))
-          (provide ALL-DEFINED-OUT ; implicitly picks up METAS-ID-CALLER
+          (provide ALL-DEFINED-OUT; implicitly picks up METAS-ID-CALLER
                    DOC-ID)
-          (define prev-metas (current-metas))
-          (define METAS-ID-CALLER METAS-ID)
-          (and (current-metas METAS-ID) "") ; because empty strings get stripped, voids don't
           ;; we set current-metas imperatively rather than using `splicing-parameterize`
-          ;; so that we can unset it in the post processor, rather than out here
+          ;; so that we can restore it in the post-processor, rather than out here
+          (define METAS-ID-CALLER METAS-ID) ; grab the new metas
+          (define prev-metas (current-metas)) ; stash the old metas
+          (and (current-metas METAS-ID-CALLER) "") ; because empty strings get stripped, voids don't
           (begin . EXPRS)))])) 
