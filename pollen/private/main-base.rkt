@@ -15,8 +15,16 @@
          (rename-out [pollen-module-begin #%module-begin])
          (all-from-out "../core.rkt" "../setup.rkt"))
 
-(define ((make-parse-proc parser-mode root-proc) xs)
-  (define (stringify xs) (apply string-append (map to-string xs)))
+(define (strip-leading-newlines doc)
+  ;; drop leading newlines, as they're often the result of `defines` and `requires`
+  (if (setup:trim-whitespace?)
+      (dropf doc (λ (ln) (member ln (list (setup:newline) ""))))
+      doc))
+
+(define (stringify xs) (apply string-append (map to-string xs)))
+
+(define (parse xs-in parser-mode root-proc)
+  (define xs (splice (strip-leading-newlines xs-in) (setup:splicing-tag)))
   (match parser-mode
     [(== default-mode-pagetree eq?) (decode-pagetree xs)]
     [(== default-mode-markup eq?) (apply root-proc (remove-voids xs))] 
@@ -26,12 +34,6 @@
             [xs (map strip-empty-attrs xs)])
        (apply root-proc xs))]
     [_ (stringify xs)])) ; preprocessor mode
-
-(define (strip-leading-newlines doc)
-  ;; drop leading newlines, as they're often the result of `defines` and `requires`
-  (if (setup:trim-whitespace?)
-      (dropf doc (λ (ln) (member ln (list (setup:newline) ""))))
-      doc))
 
 (define-syntax (pollen-module-begin stx)
   (syntax-case stx ()
@@ -45,15 +47,12 @@
                    [ALL-DEFINED-OUT (datum->syntax #'EXPRS '(all-defined-out))])
        #'(doclang:#%module-begin
           DOC-ID ; positional arg for doclang-raw: name of export
-          (λ (xs) ;  positional arg for doclang-raw: post-processor
-            (define proc (make-parse-proc PARSER-MODE ROOT-ID))
-            (define trimmed-xs (strip-leading-newlines xs))
-            (define doc-elements (splice trimmed-xs (setup:splicing-tag)))
+          (λ (xs) ; positional arg for doclang-raw: post-processor
+            ;; wait till the end to restore prev-metas
+            ;; because tag functions may edit current-metas
+            ;; and we want root to see those changes
             (begin0
-              (proc doc-elements)
-              ;; wait till the end to restore prev-metas
-              ;; because tag functions may edit current-metas
-              ;; and we want root to see those changes
+              (parse xs PARSER-MODE ROOT-ID)
               (current-metas prev-metas))) 
           (module METAS-ID racket/base
             (provide METAS-ID)
