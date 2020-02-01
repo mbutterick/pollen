@@ -54,8 +54,12 @@
     (for/fold ([usps null]
                [pcjs null])
               ([path (in-list source-paths-in)])
-      (match (with-handlers ([(λ (x) (eq? x 'cache-miss)) values])
-               (render-to-file-if-needed path #f #f (λ () (raise 'cache-miss))))
+      (match (let/ec exit
+               ;; todo: faster test
+               ;; the problem with this test is that it's not cheap for uncached files:
+               ;; it ultimatedly calls get-template-for,
+               ;; which looks in metas, so the file ends up being compiled anyhow.
+               (render-to-file-if-needed path #f #f (λ () (exit 'cache-miss))))
         ['cache-miss (values (cons path usps) pcjs)]
         [_ (values usps (cons (cons path #true) pcjs))])))
   
