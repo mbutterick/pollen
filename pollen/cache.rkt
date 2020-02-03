@@ -46,7 +46,7 @@
         (raise-argument-error caller-name "path to existing file" path-or-path-string))
       (cond
         [(setup:compile-cache-active path)
-         (define key (paths->key path))
+         (define key (paths->key 'source path))
          (define (convert-path-to-cache-record)
            (when (let ([crs (current-render-source)])
                    (and crs (not (equal? crs path))))

@@ -42,10 +42,10 @@
 ;; create a new key with current files. If the key is in the hash, the render has happened.
 ;; if not, a new render is needed.
 (define (update-mod-date-hash! source-path template-path)
-  (hash-set! mod-date-hash (paths->key source-path template-path) #true))
+  (hash-set! mod-date-hash (paths->key 'output source-path template-path) #true))
 
 (define (mod-date-missing-or-changed? source-path template-path)
-  (not (hash-has-key? mod-date-hash (paths->key source-path template-path))))
+  (not (hash-has-key? mod-date-hash (paths->key 'output source-path template-path))))
 
 (define (parallel-render source-paths-in job-count-arg)
   ;; if jobs are already in the cache, pull them out before assigning workers
@@ -53,15 +53,15 @@
   (define-values (uncached-source-paths previously-cached-jobs)
     (for/fold ([usps null]
                [pcjs null])
-              ([path (in-list source-paths-in)])
+              ([source-path (in-list source-paths-in)])
       (match (let/ec exit
-               ;; todo: faster test
-               ;; the problem with this test is that it's not cheap for uncached files:
-               ;; it ultimatedly calls get-template-for,
-               ;; which looks in metas, so the file ends up being compiled anyhow.
-               (render-to-file-if-needed path #f #f (λ () (exit 'cache-miss))))
-        ['cache-miss (values (cons path usps) pcjs)]
-        [_ (values usps (cons (cons path #true) pcjs))])))
+               (define exiter (λ () (exit 'cache-miss)))
+               (define output-path (or (->output-path source-path) #false))
+               (define template-path
+                 (cache-ref! (template-cache-key source-path output-path) exiter))
+               (render-to-file-if-needed source-path template-path output-path exiter))
+        ['cache-miss (values (cons source-path usps) pcjs)]
+        [_ (values usps (cons (cons source-path #true) pcjs))])))
   
   (define job-count
     (min
@@ -74,22 +74,22 @@
   ;; initialize the workers
   (define worker-evts
     (for/list ([wpidx (in-range job-count)])
-              (define wp (place ch
-                                (let loop ()
-                                  (match-define (cons path poly-target)
-                                    (place-channel-put/get ch (list 'wants-job)))
-                                  (parameterize ([current-poly-target poly-target])
-                                    (place-channel-put/get ch (list 'wants-lock (->output-path path)))
-                                    ;; trap any exceptions and pass them back as crashed jobs.
-                                    ;; otherwise, a crashed rendering place can't recover, and the parallel job will be stuck.
-                                    (with-handlers ([exn:fail? (λ (e) (place-channel-put ch (list 'crashed-job path #f)))])
-                                      (match-define-values (_ _ ms _)
-                                        ;; we don't use `render-to-file-if-needed` because we've already checked the render cache
-                                        ;; if we reached this point, we know we need a render
-                                        (time-apply render-to-file (list path)))
-                                      (place-channel-put ch (list 'finished-job path ms))))
-                                  (loop))))
-              (handle-evt wp (λ (val) (list* wpidx wp val)))))
+      (define wp (place ch
+                        (let loop ()
+                          (match-define (cons path poly-target)
+                            (place-channel-put/get ch (list 'wants-job)))
+                          (parameterize ([current-poly-target poly-target])
+                            (place-channel-put/get ch (list 'wants-lock (->output-path path)))
+                            ;; trap any exceptions and pass them back as crashed jobs.
+                            ;; otherwise, a crashed rendering place can't recover, and the parallel job will be stuck.
+                            (with-handlers ([exn:fail? (λ (e) (place-channel-put ch (list 'crashed-job path #f)))])
+                              (match-define-values (_ _ ms _)
+                                ;; we don't use `render-to-file-if-needed` because we've already checked the render cache
+                                ;; if we reached this point, we know we need a render
+                                (time-apply render-to-file (list path)))
+                              (place-channel-put ch (list 'finished-job path ms))))
+                          (loop))))
+      (handle-evt wp (λ (val) (list* wpidx wp val)))))
      
   (define poly-target (current-poly-target))
 
@@ -127,7 +127,7 @@
        ;; crashed jobs are completed jobs that weren't finished
        (for/list ([(path finished?) (in-dict completed-jobs)]
                   #:unless finished?)
-                 path)]
+         path)]
       [else
        (match (apply sync worker-evts)
          [(list wpidx wp 'wants-job)
@@ -240,14 +240,13 @@
     (define render-result
       (cond
         [render-cache-activated?
-         (define key (paths->key source-path template-path output-path))
+         (define key (paths->key 'output source-path template-path output-path))
          (hash-ref! render-ram-cache
                     ;; within a session, this will prevent repeat players like "template.html.p"
                     ;; from hitting the file cache repeatedly
                     key
                     (cache-ref! key
                                 render-thunk
-                                #:dest-path 'output
                                 #:notify-cache-use
                                 (λ (str)
                                   (message (format "from cache /~a"
@@ -312,7 +311,6 @@
 (define (render-null-source source-path . ignored-paths)
   ;((complete-path?) #:rest any/c . ->* . bytes?)
   ;; All this does is copy the source. Hence, "null".
-  ;; todo: add test to avoid copying if unnecessary (good idea in case the file is large)
   (file->bytes source-path))
 
 (define-namespace-anchor render-module-ns)
@@ -383,7 +381,7 @@
 (define (file-exists-or-has-source? path) ; path could be #f
   (and path (for/first ([proc (in-list (list values ->preproc-source-path ->null-source-path))]
                         #:when (file-exists? (proc path)))
-                       path)))
+              path)))
 
 (define (get-template-from-metas source-path output-path-ext)
   (with-handlers ([exn:fail:contract? (λ (e) #f)]) ; in case source-path doesn't work with cached-require
@@ -406,22 +404,35 @@
        (build-path (current-server-extras-path)
                    (add-ext (setup:fallback-template-prefix source-path) output-path-ext))))
 
+(define template-ram-cache (make-hash))
+(define (template-cache-key source-path output-path)
+  (paths->key 'template source-path (current-poly-target) output-path))
+  
 (define+provide/contract (get-template-for source-path [maybe-output-path #f])
   ((complete-path?)((or/c #f complete-path?)) . ->* . (or/c #f complete-path?))
-  (match source-path
-    [(or (? markup-source?) (? markdown-source?))
-     (define output-path (cond
-                           [maybe-output-path]
-                           [(->output-path source-path)]
-                           [else #false]))
-     ;; output-path may not have an extension
-     (define output-path-ext (cond
-                               [(get-ext output-path)]
-                               [(current-poly-target)]
-                               [else #false]))
-     (for/or ([proc (list get-template-from-metas get-default-template get-fallback-template)])
-             (file-exists-or-has-source? (proc source-path output-path-ext)))]
-    [_ #false]))
+  (define output-path (cond
+                        [maybe-output-path]
+                        [(->output-path source-path)]
+                        [else #false]))
+  (define key (template-cache-key source-path output-path))
+  (hash-ref! template-ram-cache
+             ;; within a session, this will prevent repeat players like "template.html.p"
+             ;; from hitting the file cache repeatedly
+             key
+             (cache-ref! key
+                         (λ ()  
+                           (match source-path
+                             [(or (? markup-source?) (? markdown-source?))
+                              ;; output-path may not have an extension
+                              (define output-path-ext (cond
+                                                        [(get-ext output-path)]
+                                                        [(current-poly-target)]
+                                                        [else #false]))
+                              (for/or ([proc (list get-template-from-metas
+                                                   get-default-template
+                                                   get-fallback-template)])
+                                (file-exists-or-has-source? (proc source-path output-path-ext)))]
+                             [_ #false])))))
 
 (module-test-external
  (require pollen/setup sugar/file sugar/coerce)

@@ -14,7 +14,7 @@
   (define-values (_ private-cache-dir) (make-cache-dirs path))
   (define cache-db-file (build-path private-cache-dir "cache.rktd"))
   (and (file-exists? cache-db-file)
-       (hash-has-key? (file->value cache-db-file) (paths->key path))))
+       (hash-has-key? (file->value cache-db-file) (paths->key 'source path))))
 
 (define (preheat-cache starting-dir [wants-parallel-setup? #false] [wants-dry-run? #false])
   (unless (and (path-string? starting-dir) (directory-exists? starting-dir))
@@ -69,11 +69,11 @@
                (loop rest (cons wpidx actives))])]
            [(list wpidx wp 'job-finished path result)
             (if result
-                (cache-ref! (paths->key path) (λ () result))
+                (cache-ref! (paths->key 'source path) (λ () result))
                 (message (format "caching failed on job ~a: ~a" (add1 wpidx) (find-relative-path starting-dir path))))
             (loop paths (remq wpidx actives))])))]
     [else (for ([path (in-list uncached-paths)])
                (message (format "caching: ~a" (find-relative-path starting-dir path)))
                (match (with-handlers ([exn:fail? (λ (e) #f)]) (path->hash path))
                  [#false (message (format "caching failed: ~a" (find-relative-path starting-dir path)))]
-                 [result (cache-ref! (paths->key path) (λ () result))]))]))
+                 [result (cache-ref! (paths->key 'source path) (λ () result))]))]))

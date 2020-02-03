@@ -22,7 +22,9 @@
 ;; because we don't want to attach a mod date
 ;; because cache validity is not sensitive to mod date of output path
 ;; (in fact we would expect it to be earlier, since we want to rely on an earlier version)
-(define (paths->key source-path [template-path #false] [output-path #false])
+(define (paths->key cache-type source-path [template-path #false] [output-path #false])
+  (unless (symbol? cache-type)
+    (raise-argument-error 'paths->key "symbol" cache-type))
   (define path-strings-to-track
     (list* source-path
            ;; if template has a source file, track that instead
@@ -38,20 +40,22 @@
   (define poly-flag (and (has-inner-poly-ext? source-path) (current-poly-target)))
   (define path+mod-time-pairs
     (for/list ([ps (in-list path-strings-to-track)])
-              (cond
-                [ps (define cp (->complete-path ps))
+              (match ps
+                [(? symbol? sym) sym]
+                [#false #false]
+                [_ (define cp (->complete-path ps))
                     (unless (file-exists? cp)
                       (message (format "watchlist file /~a does not exist" (find-relative-path (current-project-root) cp))))
-                    (cons (path->string cp) (file-or-directory-modify-seconds cp #false (λ () 0)))]
-                [else #false])))
-  (list* env-rec poly-flag (and output-path (path->string output-path)) path+mod-time-pairs))
+                    (cons (path->string cp) (file-or-directory-modify-seconds cp #false (λ () 0)))])))
+  (list* cache-type env-rec poly-flag (and output-path (path->string output-path)) path+mod-time-pairs))
 
-(define (key->source-path key) (car (fourth key)))
-(define (key->output-path key) (third key))
+(define (key->source-path key) (car (fifth key)))
+(define (key->output-path key) (fourth key))
+(define (key->type key) (car key))
 
 (module-test-internal
  (define ps "/users/nobody/project/source.html.pm")
- (check-equal? (key->source-path (paths->key ps)) ps))
+ (check-equal? (key->source-path (paths->key 'source ps)) ps))
 
 (define-namespace-anchor cache-utils-module-ns)
 
@@ -94,11 +98,11 @@
   (values cache-dir private-cache-dir))
 
 (define (cache-ref! key path-hash-thunk
-                    #:dest-path [path-for-dest 'source]
                     #:notify-cache-use [notify-proc void])
-  (define dest-path ((case path-for-dest
-                       [(source) key->source-path]
-                       [(output) key->output-path]) key))
+  (define dest-path ((match (key->type key)
+                       ['source key->source-path]
+                       ['output key->output-path]
+                       ['template (λ (k) (path-add-extension  (key->source-path key) (string->bytes/utf-8 (format ".~a-template" (current-poly-target)))))]) key))
   (define-values (cache-dir private-cache-dir) (make-cache-dirs dest-path))
   (define-values (dest-path-dir dest-path-filename _) (split-path dest-path))
   (define dest-file (build-path cache-dir (format "~a.rktd" dest-path-filename)))
