@@ -102,7 +102,8 @@
   (define dest-path ((match (key->type key)
                        ['source key->source-path]
                        ['output key->output-path]
-                       ['template (λ (k) (path-add-extension  (key->source-path key) (string->bytes/utf-8 (format ".~a-template" (current-poly-target)))))]) key))
+                       ;; path-add-suffix is deprecated since 6.5.0.3 but we still need compatibility with 6.3
+                       ['template (λ (k) (path-add-suffix  (key->source-path key) (string->bytes/utf-8 (format ".~a-template" (current-poly-target)))))]) key))
   (define-values (cache-dir private-cache-dir) (make-cache-dirs dest-path))
   (define-values (dest-path-dir dest-path-filename _) (split-path dest-path))
   (define dest-file (build-path cache-dir (format "~a.rktd" dest-path-filename)))
