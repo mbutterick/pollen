@@ -121,6 +121,7 @@
               private-cache-dir
               generate-dest-file
               #:notify-cache-use notify-proc
+              #:max-cache-files +inf.0
               #:max-cache-size (setup:compile-cache-max-size)
               #:log-error-string
               (λ (str)
