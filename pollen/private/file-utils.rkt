@@ -223,11 +223,12 @@
   ;; file-proc returns two values, but ormap only wants one
   (define file-proc
     (match source-or-output-path
-      [(? has/is-null-source?) ->null-source+output-paths]
-      [(? has/is-preproc-source?) ->preproc-source+output-paths]
-      [(? has/is-markup-source?) ->markup-source+output-paths]
-      [(? has/is-scribble-source?) ->scribble-source+output-paths]
-      [(? has/is-markdown-source?) ->markdown-source+output-paths]
+      ;; resolve these in alphabetical order, because project server gives priority to alphabetic order
+      [(? has/is-null-source?) ->null-source+output-paths] ; .p
+      [(? has/is-markup-source?) ->markup-source+output-paths] ; .pm
+      [(? has/is-markdown-source?) ->markdown-source+output-paths] ; .pmd
+      [(? has/is-preproc-source?) ->preproc-source+output-paths] ; .pp
+      [(? has/is-scribble-source?) ->scribble-source+output-paths] ; . scrbl
       [_ (λ (x) (values #false #false))]))
   (file-proc source-or-output-path))
 
