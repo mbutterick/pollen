@@ -3,7 +3,6 @@
                      syntax/strip-context
                      "../setup.rkt"
                      "split-metas.rkt")
-         racket/match
          racket/list
          "to-string.rkt"
          "../pagetree.rkt"
@@ -25,15 +24,15 @@
 
 (define (parse xs-in parser-mode root-proc)
   (define xs (splice (strip-leading-newlines xs-in) (setup:splicing-tag)))
-  (match parser-mode
-    [(== default-mode-pagetree eq?) (decode-pagetree xs)]
-    [(== default-mode-markup eq?) (apply root-proc (remove-voids xs))] 
-    [(== default-mode-markdown eq?)
+  (cond
+    [(eq? parser-mode default-mode-pagetree) (decode-pagetree xs)]
+    [(eq? parser-mode default-mode-markup) (apply root-proc (remove-voids xs))] 
+    [(eq? parser-mode default-mode-markdown)
      (let* ([xs (stringify xs)]
             [xs ((dynamic-require 'markdown 'parse-markdown) xs)]
             [xs (map strip-empty-attrs xs)])
        (apply root-proc xs))]
-    [_ (stringify xs)])) ; preprocessor mode
+    [else (stringify xs)])) ; preprocessor mode
 
 (define-syntax (pollen-module-begin stx)
   (syntax-case stx ()

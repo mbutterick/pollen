@@ -661,6 +661,32 @@ The title is ◊(select-from-metas 'title metas)
 @repl-output{'(root "The title is " "Conclusion to " (em "Infinity War"))}
 
 
+To save a few keystrokes, you can consolidate multiple key–value pairs into one @racket[define-meta] form. So this:
+
+@codeblock{
+#lang pollen
+◊(define-meta dog "Roxy")
+◊(define-meta cat "Chopper")
+◊(define-meta ape "Koko") 
+}
+
+Is the same as this:
+
+@codeblock{
+#lang pollen
+◊(define-meta dog "Roxy"
+              cat "Chopper"
+              ape "Koko")
+}
+
+In both cases, the resulting metas look like this:
+
+@terminal{
+> metas
+'#hasheq((ape . "Koko") (cat . "Chopper") (dog . "Roxy") (here-path . "unsaved editor"))
+}
+
+
 @subsubsection{Retrieving metas}
 
 The @id{metas} hashtable is available immediately within the body of your source file. You can use @racket[select] to get values out of @id{metas}.
