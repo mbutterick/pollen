@@ -24,6 +24,16 @@ Beyond keeping the commit history available, I make no promise to maintain the p
 
 @section{Changelog}
 
+@subsection{Version 2.2}
+
+Added @racket[--null] and @racket[--dry-run] switches to @secref["raco_pollen_render" #:doc '(lib "pollen/scribblings/pollen.scrbl")].
+
+Extended the @racket[define-meta] form to allow multiple key–value pairs.
+
+Changed handling of @racket[current-metas] so that values can be updated by tag functions during the evaluation of a source file.
+
+Switched to MIT license.
+
 @subsection{Version 2.1}
 
 Added @racket[setup:envvar-watchlist].
