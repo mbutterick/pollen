@@ -246,7 +246,7 @@ version                print the version" (current-server-port) (make-publish-di
             [(y yes) #true]
             [else #false]))))
   (cond
-    [dry-run?
+    [(dry-run?)
      (message "publish: start dry run")
      (message (format "would publish from ~a to ~a" source-dir dest-dir))
      (cond
