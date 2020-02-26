@@ -136,14 +136,14 @@ version                print the version" (current-server-port) (make-publish-di
                (define dirlist (directory-list dir))
                (define paths-to-render
                  (match (filter pagetree-source? dirlist)
-                        ;; if there are no static pagetrees, use make-project-pagetree
-                        ;; (which will synthesize a pagetree if needed, which includes all sources)
-                        [(? null?)
-                         (message (format "rendering generated pagetree for directory ~a" dir))
-                         (cdr (make-project-pagetree dir))]
-                        [pagetree-sources
-                         (message (format "rendering preproc & pagetree files in directory ~a" dir))
-                         (append (filter preproc-source? dirlist) pagetree-sources)]))
+                   ;; if there are no static pagetrees, use make-project-pagetree
+                   ;; (which will synthesize a pagetree if needed, which includes all sources)
+                   [(? null?)
+                    (message (format "rendering generated pagetree for directory ~a" dir))
+                    (cdr (make-project-pagetree dir))]
+                   [pagetree-sources
+                    (message (format "rendering preproc & pagetree files in directory ~a" dir))
+                    (append (filter preproc-source? dirlist) pagetree-sources)]))
                (handle-batch-render paths-to-render)
                (when (render-with-subdirs?)
                  (for ([path (in-list dirlist)]
@@ -207,12 +207,14 @@ version                print the version" (current-server-port) (make-publish-di
   (define command-name ; either "publish" or "clone"
     (vector-ref (current-command-line-arguments) 0))
   (define force-target-overwrite? (make-parameter #true))
+  (define dry-run? (make-parameter #false))
   (define other-args (command-line
                       ;; drop command name
                       #:argv (vector-drop (current-command-line-arguments) 1)
                       #:once-each
                       [("-c" "--confirm") "Confirm overwrite of existing dest dir"
                                           (force-target-overwrite? #f)]
+                      [("-d" "--dry-run") "Check paths that would be published" (dry-run? #true)]
                       #:args other-args
                       other-args))
   ;; other-args looks like (list [maybe-source-dir-arg] [maybe-dest-dir-arg])
@@ -235,7 +237,6 @@ version                print the version" (current-server-port) (make-publish-di
   (when (equal? dest-dir (current-directory))
     (error 'publish "aborted because destination directory for publishing (~a) can't be the same as current directory (~a)" dest-dir (current-directory)))
   
-  (message (string-append (format "publishing from ~a to ~a ..." source-dir dest-dir)))
   (define do-publish-operation?
     (or (not (directory-exists? dest-dir))
         (force-target-overwrite?)
@@ -245,20 +246,34 @@ version                print the version" (current-server-port) (make-publish-di
             [(y yes) #true]
             [else #false]))))
   (cond
-    [do-publish-operation?
-     (when (directory-exists? dest-dir)
-       (delete-directory/files dest-dir))
-     (copy-directory/files source-dir dest-dir)
-     ;; if source-dir is provided, we want it to be treated as current-directory.
-     ;; if no source-dir is provided, it is set to current-directory,
-     ;; so the parameterize is a no-op.
-     (parameterize* ([current-directory source-dir]
-                     [current-project-root (current-directory)])
-       (define (delete-from-publish-dir? p)
-         (and (omitted-path? p) (not (extra-path? p))))
-       (for-each delete-it! (find-files delete-from-publish-dir? dest-dir)))
-     (message "publish completed")]
-    [else (message "publish aborted")]))
+    [dry-run?
+     (message "publish: start dry run")
+     (message (format "would publish from ~a to ~a" source-dir dest-dir))
+     (cond
+       [(directory-exists? dest-dir)
+        (message (string-append (format "directory ~a exists (but can be overwritten)" dest-dir)))]
+       [(directory-exists? (simplify-path (build-path dest-dir "..")))
+        (message (string-append (format "directory ~a does not exist (but can be created)" dest-dir)))]
+       [else
+        (raise-user-error 'publish "dry run failure: directory path ~a is defective (neither directory nor parent directory exists)" dest-dir)])
+     (message "publish: end dry run")]
+    [else
+     (message (string-append (format "publishing from ~a to ~a ..." source-dir dest-dir)))
+     (cond
+       [do-publish-operation?
+        (when (directory-exists? dest-dir)
+          (delete-directory/files dest-dir))
+        (copy-directory/files source-dir dest-dir)
+        ;; if source-dir is provided, we want it to be treated as current-directory.
+        ;; if no source-dir is provided, it is set to current-directory,
+        ;; so the parameterize is a no-op.
+        (parameterize* ([current-directory source-dir]
+                        [current-project-root (current-directory)])
+          (define (delete-from-publish-dir? p)
+            (and (omitted-path? p) (not (extra-path? p))))
+          (for-each delete-it! (find-files delete-from-publish-dir? dest-dir)))
+        (message "publish completed")]
+       [else (message "publish aborted")])]))
 
 (define (handle-unknown command)
   (match command

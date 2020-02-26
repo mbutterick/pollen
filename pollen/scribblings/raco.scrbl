@@ -159,6 +159,7 @@ You can determine the default publishing destination for a project by overriding
 
 Certain files and directories are automatically omitted from the published directory, including Racket and Pollen sources, Pollen caches, and source-control directories (like @tt{.git} and @tt{.svn}). You can omit other files by overriding @racket[default-omitted-path?]. You can override these omissions — that is, force a path to be published — by overriding @racket[default-extra-path?].
 
+The optional @exec{--dry-run} or @exec{-d} switch prints the source and destination directories for publishing without actually doing so. If the destination-directory path cannot be created, an error will arise.
 
 @section{@exec{raco pollen setup}}
 
