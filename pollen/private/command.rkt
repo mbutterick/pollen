@@ -27,23 +27,28 @@
      (very-nice-path (car args)))))
 
 (define (dispatch command-name)
-  (with-logging-to-port
-   (current-error-port)
-   (λ ()
-     (case command-name
-       [("test" "xyzzy") (handle-test)]
-       [(#f "help") (handle-help)]
-       [("start") (handle-start)] ; parses its own args
-       ;; "second" arg is actually third in command line args, so use cddr not cdr
-       [("render") (handle-render)] ; render parses its own args from current-command-line-arguments
-       [("version") (handle-version)]
-       [("reset") (handle-reset (get-first-arg-or-current-dir))]
-       [("setup") (handle-setup)]
-       [("clone" "publish") (handle-publish)]
-       [else (handle-unknown command-name)]))
-   #:logger pollen-logger
-   'info
-   'pollen))
+  (define dispatch-thunk
+    (λ ()
+      (case command-name
+        [("test" "xyzzy") (handle-test)]
+        [(#f "help") (handle-help)]
+        [("start") (handle-start)] ; parses its own args
+        ;; "second" arg is actually third in command line args, so use cddr not cdr
+        [("render") (handle-render)] ; render parses its own args from current-command-line-arguments
+        [("version") (handle-version)]
+        [("reset") (handle-reset (get-first-arg-or-current-dir))]
+        [("setup") (handle-setup)]
+        [("clone" "publish") (handle-publish)]
+        [else (handle-unknown command-name)])))
+  (cond
+    [(let ([str (getenv "PLTSTDERR")])
+       (and str (regexp-match "@pollen" str))) (dispatch-thunk)]
+    [else (with-logging-to-port
+           (current-error-port)
+           dispatch-thunk
+           #:logger pollen-logger
+           'info
+           'pollen)]))
 
 (define (very-nice-path x)
   (path->complete-path (simplify-path (cleanse-path (->path x)))))
