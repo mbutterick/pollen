@@ -216,4 +216,37 @@ Result is DEBUG
 
 }
 
+@section{Logging & the @exec{PLTSTDERR} environment variable}
+
+@margin-note{See @secref["logging" #:doc '(lib "scribblings/reference/reference.scrbl")] for an introduction to Racket's logging system.}
+
+By default, Pollen will log messages at the @racket['info] level or above to the console during any terminal session (e.g., project server or rendering job). So if you start the project server like so:
+
+@terminal{
+> raco pollen start
+} 
+
+You will see log messages starting with:
+
+@terminal{
+pollen: starting project server ...
+}
+
+And so forth.
+
+You can use Racket's @racket[PLTSTDERR] environment variable to adjust the level of logging. If you provide an explicit log level for Pollen, it will override this default behavior. So if you only want to see messages at the @racket['error] level or above, you would invoke the project server like so:
+
+@terminal|{
+> PLTSTDERR=error@pollen raco pollen start
+}|
+
+After this, the project server will work normally, but you won't see the usual @racket['info]-level messages, and instead will only see @racket['error] messages or above.
+
+Conversely, if you want more detailed logging, you can invoke the @racket['debug] log level like so:
+
+@terminal|{
+> PLTSTDERR=debug@pollen raco pollen start
+}|
+
+Then you'll see the usual @racket['info] messages, plus a bunch more.
 
