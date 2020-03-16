@@ -108,6 +108,7 @@
   (define-values (dest-path-dir dest-path-filename _) (split-path dest-path))
   (define dest-file (build-path cache-dir (format "~a.rktd" dest-path-filename)))
   (define (generate-dest-file)
+    (message-debug (format "cache miss for ~a" dest-file))
     (write-to-file (serialize (path-hash-thunk)) dest-file #:exists 'replace))
 
   ;; `cache-file` looks for a file in private-cache-dir previously cached with key
@@ -123,6 +124,7 @@
               #:notify-cache-use notify-proc
               #:max-cache-files +inf.0
               #:max-cache-size (setup:compile-cache-max-size)
+              #:log-debug-string message-debug
               #:log-error-string
               (λ (str)
                 (match str
