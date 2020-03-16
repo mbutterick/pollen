@@ -12,3 +12,6 @@
 
 (define (message . items)
   (log-pollen-info (string-join (map ~a items) " ")))
+
+(define (message-debug . items)
+  (log-pollen-debug (string-join (map ~a items) " ")))
