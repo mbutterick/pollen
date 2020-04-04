@@ -117,12 +117,11 @@
 (define+provide load-pagetree get-pagetree) ; bw compat
 
 
-;; Try loading from pagetree file, or failing that, synthesize pagetree.
 (define+provide/contract (make-project-pagetree project-dir)
   (pathish? . -> . pagetree?)
-  (with-handlers ([exn:fail? (λ (exn) (directory->pagetree project-dir))])
-    (define pagetree-source (build-path project-dir (setup:main-pagetree)))
-    (load-pagetree pagetree-source)))
+  (match (build-path project-dir (setup:main-pagetree))
+    [(and (? file-exists?) pagetree-source) (load-pagetree pagetree-source)]
+    [_ (directory->pagetree project-dir)]))
 
 
 (define (topmost-node x) (first (->list x)))
