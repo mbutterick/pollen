@@ -107,7 +107,11 @@ The old @filepath{hello.txt} will be replaced with a new one showing your change
 
 You just saw two ways to view the output of a Pollen source file — first, you ran it in DrRacket. Second, you rendered it to an output file. 
 
-Now here's a third: the Pollen project server. To start the project server, return to your terminal and issue two commands:
+Now here's a third: the Pollen project server. 
+
+@margin-note{The project server is a real web server running on your machine. By default it will respond to requests from any computer. Use the @exec{--local} switch with this command to restrict the project server to responding to requests from localhost. See @secref["raco_pollen_start"].}
+
+To start the project server, return to your terminal and issue two commands:
 
 @terminal{
 > cd /directory/containing/your/hello-file
