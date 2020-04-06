@@ -134,4 +134,5 @@
                   [(or "cache attempt failed: could not acquire exclusive lock"
                        "cache attempt failed: could not acquire shared lock") (void)]
                   [_ (log-pollen-error str)])))
-  (fasl->s-exp (open-input-file dest-file)))
+  (with-input-from-file dest-file
+    (λ () (fasl->s-exp (current-input-port)))))
