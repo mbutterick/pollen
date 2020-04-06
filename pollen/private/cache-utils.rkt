@@ -1,4 +1,4 @@
-#lang debug racket/base
+#lang racket/base
 (require "file-utils.rkt"
          "../setup.rkt"
          "project.rkt"
@@ -109,9 +109,8 @@
   (define dest-file (build-path cache-dir (format "~a.rktd" dest-path-filename)))
   (define (generate-dest-file)
     (message-debug (format "cache miss for ~a" dest-file))
-    (define op (open-output-file dest-file))
-    (with-output-to-file op
-      (λ () #R 'whee (s-exp->fasl #R (path-hash-thunk) (current-output-port)))
+    (with-output-to-file dest-file
+      (λ () (s-exp->fasl (path-hash-thunk) (current-output-port)))
       #:exists 'replace))
 
   ;; `cache-file` looks for a file in private-cache-dir previously cached with key
