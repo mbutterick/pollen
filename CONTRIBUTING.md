@@ -20,6 +20,8 @@ I welcome pull requests. But accepting a PR obligates me to maintain that code f
 
 * PRs should avoid reinventing features that already exist in Racket. (= Principle of Economy)
 
+* PRs should fix real problems that have arisen in actual use, not theoretical or conjectural problems. (= Principle of Practical Justification)
+
 * I follow these principles too, because they’re virtuous habits. Still, I created Pollen as a tool for my writing and typography work. If a certain PR would negatively impact that work, I can’t accept it. (= Principle of Royalty)
 
 * If you’re new to Pollen or Racket, your PR is more likely to be declined, because certain things you perceive as bugs are actually features, certain things you perceive as missing are actually present, and certain limitations you perceive as surmountable are actually not. (See also point #1 re: backdrop of ignorance.) (= Principle of Novelty)
