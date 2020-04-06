@@ -1,4 +1,4 @@
-#lang racket/base
+#lang debug racket/base
 (require "file-utils.rkt"
          "../setup.rkt"
          "project.rkt"
@@ -8,9 +8,9 @@
          racket/path
          racket/list
          racket/match
-         racket/serialize
          sugar/coerce
          sugar/test
+         racket/fasl
          compiler/cm)
 (provide (all-defined-out))
 
@@ -109,7 +109,10 @@
   (define dest-file (build-path cache-dir (format "~a.rktd" dest-path-filename)))
   (define (generate-dest-file)
     (message-debug (format "cache miss for ~a" dest-file))
-    (write-to-file (serialize (path-hash-thunk)) dest-file #:exists 'replace))
+    (define op (open-output-file dest-file))
+    (with-output-to-file op
+      (λ () #R 'whee (s-exp->fasl #R (path-hash-thunk) (current-output-port)))
+      #:exists 'replace))
 
   ;; `cache-file` looks for a file in private-cache-dir previously cached with key
   ;; (which in this case carries modification dates and POLLEN env).
@@ -132,4 +135,4 @@
                   [(or "cache attempt failed: could not acquire exclusive lock"
                        "cache attempt failed: could not acquire shared lock") (void)]
                   [_ (log-pollen-error str)])))
-  (deserialize (file->value dest-file)))
+  (fasl->s-exp (open-input-file dest-file)))
