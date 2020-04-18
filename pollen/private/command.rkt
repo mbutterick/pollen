@@ -8,6 +8,7 @@
          "file-utils.rkt"
          "log.rkt"
          "../setup.rkt")
+(provide start-project-server)
 
 ;; The use of dynamic-require throughout this file is intentional:
 ;; this way, low-dependency raco commands (like "version") are faster.
@@ -44,11 +45,11 @@
     [(let ([str (getenv "PLTSTDERR")])
        (and str (regexp-match "@pollen" str))) (dispatch-thunk)]
     [else (with-logging-to-port
-           (current-error-port)
-           dispatch-thunk
-           #:logger pollen-logger
-           'info
-           'pollen)]))
+              (current-error-port)
+            dispatch-thunk
+            #:logger pollen-logger
+            'info
+            'pollen)]))
 
 (define (very-nice-path x)
   (path->complete-path (simplify-path (cleanse-path (->path x)))))
@@ -153,10 +154,21 @@ version                print the version" (current-server-port) (make-publish-di
                (when (render-with-subdirs?)
                  (for ([path (in-list dirlist)]
                        #:when (directory-exists? path))
-                      (render-one-dir (->complete-path path)))))))]
+                   (render-one-dir (->complete-path path)))))))]
         [path-args ;; path mode
          (message (format "rendering ~a" (string-join (map ->string path-args) " ")))
          (handle-batch-render path-args)]))))
+
+(define (start-project-server dir
+                              [http-port 8080]
+                              [launch-wanted #false]
+                              [localhost-wanted #false])
+  (when dir
+    (parameterize ([current-project-root dir]
+                   [current-server-port (or http-port (setup:project-server-port))]
+                   [current-server-listen-ip (and localhost-wanted "127.0.0.1")])
+      (message "starting project server ...")
+      ((dynamic-require 'pollen/private/project-server 'start-server) (format "/~a" (setup:main-pagetree dir)) launch-wanted))))
 
 (define (handle-start)
   (define launch-wanted #f)
@@ -176,11 +188,7 @@ version                print the version" (current-server-port) (make-publish-di
                       (string->number (cadr clargs))))
   (when (and http-port (not (exact-positive-integer? http-port)))
     (error (format "~a is not a valid port number" http-port)))
-  (parameterize ([current-project-root dir]
-                 [current-server-port (or http-port (setup:project-server-port))]
-                 [current-server-listen-ip (and localhost-wanted "127.0.0.1")])
-    (message "starting project server ...")
-    ((dynamic-require 'pollen/private/project-server 'start-server) (format "/~a" (setup:main-pagetree dir)) launch-wanted)))
+  (start-project-server dir http-port launch-wanted localhost-wanted))
 
 (define (make-publish-dir-name [project-root (current-directory)] [arg-command-name #f])
   (define user-publish-path
@@ -205,7 +213,7 @@ version                print the version" (current-server-port) (make-publish-di
     (and (>= (length xs) (length prefix))
          (andmap equal? prefix (for/list ([(x idx) (in-indexed xs)]
                                           #:break (= idx (length prefix)))
-                                         x))))
+                                 x))))
   ((explode-path possible-subdir) . has-prefix? . (explode-path possible-superdir)))
 
 (define (handle-publish)
