@@ -36,6 +36,9 @@
   (current-manager-directory val)
   (send directory-msg set-label (if val (path->string val) "")))
 
+(module+ main
+(set-current-manager-directory (expand-user-path "~/git/bpt/")))
+
 (define button-directory
   (let ([str "Select project directory"])
     (new button%	 
@@ -123,10 +126,8 @@
                         (thread (λ ()
                                   (parameterize ([current-project-root dir])
                                     (define stop
-                                      (start-server (format "/~a" (setup:main-pagetree dir)) #:serve-only #true))
-                                    (thread-send cthd stop)
-                                    (with-handlers ([exn:break? (λ (e) (stop))])
-                                      (sync/enable-break never-evt))))))
+                                      (start-server (setup:main-pagetree dir) #:serve-only #true))
+                                    (thread-send cthd stop)))))
                       (current-server-stopper (thread-receive))]))]))
 
 (define button-stop
