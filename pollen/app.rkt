@@ -2,7 +2,8 @@
 (require pollen/private/log
          pollen/private/command
          pollen/setup
-         pollen/private/project-server)
+         pollen/private/project-server
+         net/sendurl)
 
 (define app-mono-fam
   (for*/first ([preferred
@@ -37,7 +38,7 @@
   (send directory-msg set-label (if val (path->string val) "")))
 
 (module+ main
-(set-current-manager-directory (expand-user-path "~/git/bpt/")))
+  (set-current-manager-directory (expand-user-path "~/git/bpt/")))
 
 (define button-directory
   (let ([str "Select project directory"])
@@ -111,24 +112,23 @@
   (send dialog-message set-label str)
   (send dialog-alert show #t))
 
-
 (define button-start
   (new button%	 
        [label "Start project server"]	 
        [parent hpanel-server-controls]
        [callback (λ (button evt)
-                   (match (current-manager-directory)
-                     [#false (make-alert "No project directory selected.")]
-                     [dir 
-                      (message "starting project server")
-                      (define cthd (current-thread))
-                      (define server-thd
-                        (thread (λ ()
-                                  (parameterize ([current-project-root dir])
-                                    (define stop
-                                      (start-server (setup:main-pagetree dir) #:serve-only #true))
-                                    (thread-send cthd stop)))))
-                      (current-server-stopper (thread-receive))]))]))
+                   (if (current-server-stopper)
+                       (make-alert "Project server already running.")
+                       (match (current-manager-directory)
+                         [#false (make-alert "No project directory selected.")]
+                         [dir 
+                          (message "starting project server")
+                          ;; stopper is a function that sends a break signal
+                          ;; to the web server thread, wherever it is
+                          (define stopper
+                            (parameterize ([current-project-root dir])
+                              (start-server (setup:main-pagetree dir) #:return #true)))
+                          (current-server-stopper stopper)])))]))
 
 (define button-stop
   (new button%	 
@@ -147,9 +147,14 @@
        [label "Launch browser"]	 
        [parent hpanel-server-controls]
        [callback (λ (button evt)
-                   (match (current-server-stopper)
-                     [#false (make-alert "Project server not running.")]
-                     [dir #R 'wish-i-could-launch]))]))
+                   (cond
+                     [(current-server-stopper)
+                      (send-url
+                       (format "http://localhost:~a/~a"
+                               (current-server-port)
+                               (setup:main-pagetree (current-manager-directory)))
+                       #false)]
+                     [else (make-alert "Project server not running.")]))]))
 
 (define status-box
   (let* ([wb (new text-field%
@@ -170,8 +175,6 @@
             (for ([vec (in-producer (λ () (sync rcvr)))])
               (match-define (vector _ msg _ _) vec)
               (send status-box-ed insert msg)
-              (send status-box-ed insert "\n")
-              (sleep 0)))))
-
+              (send status-box-ed insert "\n")))))
 
 (send window show #t)
