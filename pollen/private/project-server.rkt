@@ -1,5 +1,6 @@
 #lang racket/base
 (require racket/runtime-path
+         racket/match
          web-server/servlet-env 
          web-server/dispatch
          web-server/web-server
@@ -44,12 +45,13 @@
   (message (format "project root is ~a" (current-project-root)))
   (message (format "project server is ~a (Ctrl+C to exit)" server-name))
   (message (format "project dashboard is ~a/~a" server-name (setup:main-pagetree)))
-  (message (if (current-server-listen-ip)
-               (format "project server permitting access only to ~a"
-                       (case (current-server-listen-ip)
-                         [("127.0.0.1") "localhost"]
-                         [else (current-server-listen-ip)]))
-               "project server permitting access to all clients"))
+  (message (let ([clsi (current-server-listen-ip)])
+             (if clsi
+                 (format "project server permitting access only to ~a"
+                         (case clsi
+                           [("127.0.0.1") "localhost"]
+                           [else clsi]))
+                 "project server permitting access to all clients")))
   (message "ready to rock")
   
   (define stop-func
