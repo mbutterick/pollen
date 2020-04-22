@@ -39,4 +39,4 @@
                    #:command-line? #true
                    #:file-not-found-responder route-404
                    #:mime-types-path mime-types
-                   #:extra-files-paths (list (current-server-extras-path) (current-project-root)))))
+                   #:extra-files-paths (list (current-project-root) (current-server-extras-path)))))
