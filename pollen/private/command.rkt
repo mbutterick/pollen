@@ -267,7 +267,8 @@ version                print the version" (current-server-port) (make-publish-di
      (cond
        [do-publish-operation?
         (when (directory-exists? dest-dir)
-          (delete-directory/files dest-dir))
+          (with-handlers ([exn:fail:filesystem? (λ (exn) (raise-user-error 'publish (format "operation failed: could not delete ~a" dest-dir)))])
+          (delete-directory/files dest-dir)))
         (copy-directory/files source-dir dest-dir)
         ;; if source-dir is provided, we want it to be treated as current-directory.
         ;; if no source-dir is provided, it is set to current-directory,
