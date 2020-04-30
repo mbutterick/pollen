@@ -15,7 +15,8 @@
                "scribble-text-lib"
                "rackunit-lib"
                "gui-lib"
-               "string-constants-lib"))
+               "string-constants-lib"
+               "net-lib"))
 (define build-deps '("plot-gui-lib"
                      "scribble-lib"
                      "racket-doc"
