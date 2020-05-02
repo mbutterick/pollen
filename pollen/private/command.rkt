@@ -104,7 +104,6 @@ version                print the version" (current-server-port) (make-publish-di
   (define render-with-subdirs? (make-parameter #f))
   (define render-parallel? (make-parameter #f))
   (define special-output? (make-parameter #f))
-  (define force-render? (make-parameter #f))
   (define parsed-args
     (command-line #:program "raco pollen render"
                   #:argv (vector-drop (current-command-line-arguments) 1) ; snip the 'render' from the front
@@ -114,7 +113,6 @@ version                print the version" (current-server-port) (make-publish-di
                   [("-r" "--recursive") "Render subdirectories recursively"
                                         (render-with-subdirs? 'recursive)]
                   [("-s" "--subdir") "Render subdirectories nonrecursively" (render-with-subdirs? 'include)]
-                  [("-f" "--force") "Force render" (force-render? #true)]
                   #:once-any
                   [("-d" "--dry-run") "Print paths that would be rendered" (special-output? 'dry-run)]
                   [("-n" "--null") "Suppress file output" (special-output? 'null)]
@@ -125,9 +123,7 @@ version                print the version" (current-server-port) (make-publish-di
                   other-args))
 
   (define (handle-batch-render paths)
-    (apply render-batch (map very-nice-path paths) #:parallel (render-parallel?)
-           #:special (special-output?)
-           #:force (force-render?)))
+    (apply render-batch (map very-nice-path paths) #:parallel (render-parallel?) #:special (special-output?)))
   
   (parameterize ([current-poly-target (render-target-wanted)]) ;; applies to both cases
     (let loop ([args parsed-args])

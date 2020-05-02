@@ -161,10 +161,8 @@
 (define current-null-output? (make-parameter #f))
 
 (define+provide/contract (render-batch #:parallel [wants-parallel-render? #false]
-                                       #:special [special-output #false]
-                                       #:force [force-render? #false]. paths-in)
-  ((#:parallel any/c) (#:special (or/c boolean? symbol?)
-                       #:force boolean?) #:rest (listof pathish?) . ->* . void?)
+                                       #:special [special-output #false] . paths-in)
+  ((#:parallel any/c) (#:special (or/c boolean? symbol?)) #:rest (listof pathish?) . ->* . void?)
   ;; Why not just (for-each render ...)?
   ;; Because certain files will pass through multiple times (e.g., templates)
   ;; And with render, they would be rendered repeatedly.
@@ -185,10 +183,10 @@
     [(null? expanded-source-paths) (message "[no paths to render]")]
     [(eq? special-output 'dry-run) (for-each message expanded-source-paths)]
     [else (parameterize ([current-null-output? (eq? special-output 'null)])
-            (for-each (λ (sp) (render-to-file-if-needed sp #:force force-render?))
+            (for-each render-to-file-if-needed
                       (match wants-parallel-render?
+                        ;; returns crashed jobs for serial rendering
                         [#false expanded-source-paths]
-                        ;; `parallel-render` returns crashed jobs for serial rendering
                         [jobs-arg (parallel-render expanded-source-paths jobs-arg)])))]))
 
 (define (pagetree->paths pagetree-or-path)    
@@ -240,7 +238,7 @@
     (define render-thunk (or maybe-render-thunk (λ () (render source-path template-path output-path)))) ; returns either string or bytes
     (define render-result
       (cond
-        [(and render-cache-activated? (not force?))
+        [render-cache-activated?
          (define key (paths->key 'output source-path template-path output-path))
          (hash-ref! ram-cache
                     ;; within a session, this will prevent repeat players like "template.html.p"
@@ -260,9 +258,9 @@
                        #:exists 'replace
                        #:mode (if (string? render-result) 'text 'binary)))))
 
-(define+provide/contract (render-to-file-if-needed source-path [maybe-template-path #f] [maybe-output-path #f] [maybe-render-thunk #f] #:force [force-render? #false])
-  ((complete-path?) ((or/c #f complete-path?) (or/c #f complete-path?) (or/c #f procedure?) #:force boolean?) . ->* . void?)
-  (render-to-file-base 'render-to-file-if-needed force-render? source-path maybe-output-path maybe-template-path maybe-render-thunk))
+(define+provide/contract (render-to-file-if-needed source-path [maybe-template-path #f] [maybe-output-path #f] [maybe-render-thunk #f])
+  ((complete-path?) ((or/c #f complete-path?) (or/c #f complete-path?) (or/c #f procedure?)) . ->* . void?)
+  (render-to-file-base 'render-to-file-if-needed #f source-path maybe-output-path maybe-template-path maybe-render-thunk))
 
 (define+provide/contract (render-to-file source-path [maybe-template-path #f] [maybe-output-path #f] [maybe-render-thunk #f])
   ((complete-path?) ((or/c #f complete-path?) (or/c #f complete-path?) (or/c #f procedure?)) . ->* . void?)
