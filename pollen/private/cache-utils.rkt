@@ -59,8 +59,9 @@
 
 (define-namespace-anchor cache-utils-module-ns)
 
+(define my-caching-compile-proc (make-caching-managed-compile-zo))
 (define (path->hash path)
-  (for-each managed-compile-zo (or (get-directory-require-files path) null))
+  (for-each my-caching-compile-proc (or (get-directory-require-files path) null))
   (apply hasheq
          (let ([doc-key (setup:main-export)] [meta-key (setup:meta-export)])
            (unless (and (symbol? doc-key) (symbol? meta-key))
