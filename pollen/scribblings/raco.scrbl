@@ -83,6 +83,8 @@ This command can be invoked two ways: in source mode or directory mode.
 
 In both modes, the optional @exec{--dry-run} or @exec{-d} switch prints the paths that would be rendered by this command without actually doing so. 
 
+In both modes, the optional @exec{--force} or @exec{-f} switch forces a fresh render from source, even if the file is already cached, by updating the modification date of the file (à la @exec{touch}). Thus, if modification dates are important to you, don't use this option.
+
 In both modes, the optional @exec{--null} or @exec{-n} switch renders as usual, but doesn't write any files. (Convenient if you're arranging special render behavior, for instance writing to a database or network server.)
 
 

@@ -1,4 +1,4 @@
-#lang racket/base
+#lang debug racket/base
 (require racket/file
          racket/path
          racket/vector
@@ -44,11 +44,11 @@
     [(let ([str (getenv "PLTSTDERR")])
        (and str (regexp-match "@pollen" str))) (dispatch-thunk)]
     [else (with-logging-to-port
-           (current-error-port)
-           dispatch-thunk
-           #:logger pollen-logger
-           'info
-           'pollen)]))
+              (current-error-port)
+            dispatch-thunk
+            #:logger pollen-logger
+            'info
+            'pollen)]))
 
 (define (very-nice-path x)
   (path->complete-path (simplify-path (cleanse-path (->path x)))))
@@ -104,6 +104,7 @@ version                print the version" (current-server-port) (make-publish-di
   (define render-with-subdirs? (make-parameter #f))
   (define render-parallel? (make-parameter #f))
   (define special-output? (make-parameter #f))
+  (define force-render? (make-parameter #f))
   (define parsed-args
     (command-line #:program "raco pollen render"
                   #:argv (vector-drop (current-command-line-arguments) 1) ; snip the 'render' from the front
@@ -113,6 +114,7 @@ version                print the version" (current-server-port) (make-publish-di
                   [("-r" "--recursive") "Render subdirectories recursively"
                                         (render-with-subdirs? 'recursive)]
                   [("-s" "--subdir") "Render subdirectories nonrecursively" (render-with-subdirs? 'include)]
+                  [("-f" "--force") "Force render" (force-render? #true)]
                   #:once-any
                   [("-d" "--dry-run") "Print paths that would be rendered" (special-output? 'dry-run)]
                   [("-n" "--null") "Suppress file output" (special-output? 'null)]
@@ -122,7 +124,15 @@ version                print the version" (current-server-port) (make-publish-di
                   #:args other-args
                   other-args))
 
+  (define timestamp (current-seconds)) ; keeps timestamp consistent through whole render
   (define (handle-batch-render paths)
+    (when (force-render?)
+      ;; forcing works like `touch`: updates the mod date of the files,
+      ;; which invalidates any cached results.
+      (for* ([path (in-list paths)]
+             [sp (in-value (get-source path))]
+             #:when sp)
+        (file-or-directory-modify-seconds sp timestamp)))
     (apply render-batch (map very-nice-path paths) #:parallel (render-parallel?) #:special (special-output?)))
   
   (parameterize ([current-poly-target (render-target-wanted)]) ;; applies to both cases
@@ -153,7 +163,7 @@ version                print the version" (current-server-port) (make-publish-di
                (when (render-with-subdirs?)
                  (for ([path (in-list dirlist)]
                        #:when (directory-exists? path))
-                      (render-one-dir (->complete-path path)))))))]
+                   (render-one-dir (->complete-path path)))))))]
         [path-args ;; path mode
          (message (format "rendering ~a" (string-join (map ->string path-args) " ")))
          (handle-batch-render path-args)]))))
@@ -205,7 +215,7 @@ version                print the version" (current-server-port) (make-publish-di
     (and (>= (length xs) (length prefix))
          (andmap equal? prefix (for/list ([(x idx) (in-indexed xs)]
                                           #:break (= idx (length prefix)))
-                                         x))))
+                                 x))))
   ((explode-path possible-subdir) . has-prefix? . (explode-path possible-superdir)))
 
 (define (handle-publish)
@@ -268,7 +278,7 @@ version                print the version" (current-server-port) (make-publish-di
        [do-publish-operation?
         (when (directory-exists? dest-dir)
           (with-handlers ([exn:fail:filesystem? (λ (exn) (raise-user-error 'publish (format "operation failed: could not delete ~a" dest-dir)))])
-          (delete-directory/files dest-dir)))
+            (delete-directory/files dest-dir)))
         (copy-directory/files source-dir dest-dir)
         ;; if source-dir is provided, we want it to be treated as current-directory.
         ;; if no source-dir is provided, it is set to current-directory,
