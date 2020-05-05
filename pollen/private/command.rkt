@@ -7,7 +7,8 @@
          sugar/coerce
          "file-utils.rkt"
          "log.rkt"
-         "../setup.rkt")
+         "../setup.rkt"
+         "../pagetree.rkt")
 
 ;; The use of dynamic-require throughout this file is intentional:
 ;; this way, low-dependency raco commands (like "version") are faster.
@@ -44,11 +45,11 @@
     [(let ([str (getenv "PLTSTDERR")])
        (and str (regexp-match "@pollen" str))) (dispatch-thunk)]
     [else (with-logging-to-port
-              (current-error-port)
-            dispatch-thunk
-            #:logger pollen-logger
-            'info
-            'pollen)]))
+           (current-error-port)
+           dispatch-thunk
+           #:logger pollen-logger
+           'info
+           'pollen)]))
 
 (define (very-nice-path x)
   (path->complete-path (simplify-path (cleanse-path (->path x)))))
@@ -129,10 +130,13 @@ version                print the version" (current-server-port) (make-publish-di
     (when (force-render?)
       ;; forcing works like `touch`: updates the mod date of the files,
       ;; which invalidates any cached results.
-      (for* ([path (in-list paths)]
-             [sp (in-value (get-source path))]
-             #:when sp)
-        (file-or-directory-modify-seconds sp timestamp)))
+      (let force-paths ([paths paths])
+        (for* ([path (in-list paths)]
+               [sp (in-value (if (pagetree-source? path) path (get-source path)))]
+               #:when sp)
+              (file-or-directory-modify-seconds sp timestamp)
+              (when (pagetree-source? sp)
+                (force-paths (pagetree->paths sp))))))
     (apply render-batch (map very-nice-path paths) #:parallel (render-parallel?) #:special (special-output?)))
   
   (parameterize ([current-poly-target (render-target-wanted)]) ;; applies to both cases
@@ -163,7 +167,7 @@ version                print the version" (current-server-port) (make-publish-di
                (when (render-with-subdirs?)
                  (for ([path (in-list dirlist)]
                        #:when (directory-exists? path))
-                   (render-one-dir (->complete-path path)))))))]
+                      (render-one-dir (->complete-path path)))))))]
         [path-args ;; path mode
          (message (format "rendering ~a" (string-join (map ->string path-args) " ")))
          (handle-batch-render path-args)]))))
@@ -215,7 +219,7 @@ version                print the version" (current-server-port) (make-publish-di
     (and (>= (length xs) (length prefix))
          (andmap equal? prefix (for/list ([(x idx) (in-indexed xs)]
                                           #:break (= idx (length prefix)))
-                                 x))))
+                                         x))))
   ((explode-path possible-subdir) . has-prefix? . (explode-path possible-superdir)))
 
 (define (handle-publish)

@@ -48,9 +48,9 @@
   (define pt-root-tag (setup:pagetree-root-node))
   (define (splice-nested-pagetree xs)
     (apply append (for/list ([x (in-list xs)])
-                    (if (and (txexpr? x) (eq? (get-tag x) pt-root-tag))
-                        (get-elements x)
-                        (list x)))))
+                            (if (and (txexpr? x) (eq? (get-tag x) pt-root-tag))
+                                (get-elements x)
+                                (list x)))))
   (validate-pagetree 
    (decode (cons pt-root-tag xs)
            #:txexpr-elements-proc (compose1 splice-nested-pagetree (λ (xs) (filter-not whitespace? xs))) 
@@ -63,7 +63,7 @@
          (define pagenodes (pagetree-strict->list x))
          (for ([p (in-list pagenodes)]
                #:unless (pagenode? p))
-           (raise-argument-error 'validate-pagetree "valid pagenodes" p))
+              (raise-argument-error 'validate-pagetree "valid pagenodes" p))
          (with-handlers ([exn:fail? (λ (e) (error 'validate-pagetree "~a" (exn-message e)))])
            (members-unique?/error pagenodes))
          x)))
@@ -137,7 +137,7 @@
            (if (memq pagenode (map topmost-node current-children))
                current-parent
                (for/or ([st (in-list (filter list? current-children))])
-                 (loop pagenode st))))))
+                       (loop pagenode st))))))
   (if (eq? result (first pt))
       (and allow-root? result)
       result))
@@ -159,7 +159,7 @@
          (match pagenode
            [(== (first pt) eq?) (map topmost-node (rest pt))]
            [_ (for/or ([subtree (in-list (filter pair? pt))])
-                (loop pagenode subtree))]))))
+                      (loop pagenode subtree))]))))
 
 
 (module-test-external
@@ -190,7 +190,7 @@
   (((or/c #f pagenodeish?)) ((or/c pagetree? pathish?)) . ->* . (or/c #f pagenodes?))  
   (match (for/list ([sib (in-list (or (siblings pnish pt-or-path) empty))]
                     #:unless (eq? sib (->pagenode pnish)))
-           sib)
+                   sib)
     [(? pair? sibs) sibs]
     [_ #false]))
 
@@ -215,7 +215,15 @@
 (define+provide/contract (pagetree->list pt-or-path)
   ((or/c pagetree? pathish?) . -> . pagenodes?)
   ; use rest to get rid of root tag at front
-  (pagetree-strict->list (get-pagetree pt-or-path))) 
+  (pagetree-strict->list (get-pagetree pt-or-path)))
+
+
+(define+provide/contract (pagetree->paths pt-or-path)
+  ((or/c pagetree? pathish?) . -> . (listof complete-path?))
+  (parameterize ([current-directory (current-project-root)])
+    (map ->complete-path (pagetree->list (match pt-or-path
+                                           [(? pagetree? pt) pt]
+                                           [_ (cached-doc pt-or-path)])))))
 
 
 (module-test-external

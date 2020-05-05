@@ -189,12 +189,6 @@
                         [#false expanded-source-paths]
                         [jobs-arg (parallel-render expanded-source-paths jobs-arg)])))]))
 
-(define (pagetree->paths pagetree-or-path)    
-  (parameterize ([current-directory (current-project-root)])
-    (map ->complete-path (pagetree->list (match pagetree-or-path
-                                           [(? pagetree? pt) pt]
-                                           [_ (cached-doc pagetree-or-path)])))))
-
 (define+provide/contract (render-pagenodes pagetree-or-path)
   ((or/c pagetree? pathish?) . -> . void?)
   (apply render-batch (pagetree->paths pagetree-or-path)))
