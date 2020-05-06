@@ -34,19 +34,19 @@
                    ;; user-designated files to track
                    (map ->string (setup:cache-watchlist source-path)))))
   (define env-rec (for/list ([env-name (in-list (cons default-env-name (sort (setup:envvar-watchlist source-path) bytes<?)))])
-                            (cons env-name (match (getenv (string-downcase (->string env-name)))
-                                             [#false #false]
-                                             [str (string-downcase (->string str))]))))
+                    (cons env-name (match (getenv (string-downcase (->string env-name)))
+                                     [#false #false]
+                                     [str (string-downcase (->string str))]))))
   (define poly-flag (and (has-inner-poly-ext? source-path) (current-poly-target)))
   (define path+mod-time-pairs
     (for/list ([ps (in-list path-strings-to-track)])
-              (match ps
-                [(? symbol? sym) sym]
-                [#false #false]
-                [_ (define cp (->complete-path ps))
-                    (unless (file-exists? cp)
-                      (message (format "watchlist file /~a does not exist" (find-relative-path (current-project-root) cp))))
-                    (cons (path->string cp) (file-or-directory-modify-seconds cp #false (λ () 0)))])))
+      (match ps
+        [(? symbol? sym) sym]
+        [#false #false]
+        [_ (define cp (->complete-path ps))
+           (unless (file-exists? cp)
+             (message (format "watchlist file /~a does not exist" (find-relative-path (current-project-root) cp))))
+           (cons (path->string cp) (file-or-directory-modify-seconds cp #false (λ () 0)))])))
   (list* cache-type env-rec poly-flag (and output-path (path->string output-path)) path+mod-time-pairs))
 
 (define (key->source-path key) (car (fifth key)))
@@ -61,7 +61,12 @@
 
 (define my-caching-compile-proc (make-caching-managed-compile-zo))
 (define (path->hash path)
-  (for-each my-caching-compile-proc (or (get-directory-require-files path) null))
+  (for ([p (in-list (or (get-directory-require-files path) null))])
+    (my-caching-compile-proc p))
+  (when (eq? (system-type 'vm) 'chez-scheme)
+    ;; this makes builds faster, but a bytecode-caching bug in Racket BC
+    ;; restricts it to CS for now
+    (my-caching-compile-proc path))
   (apply hasheq
          (let ([doc-key (setup:main-export)] [meta-key (setup:meta-export)])
            (unless (and (symbol? doc-key) (symbol? meta-key))
