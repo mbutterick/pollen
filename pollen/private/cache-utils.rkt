@@ -7,10 +7,12 @@
          racket/file
          racket/path
          racket/list
+         racket/port
          racket/match
          sugar/coerce
          sugar/test
          racket/fasl
+         racket/serialize
          compiler/cm)
 (provide (all-defined-out))
 
@@ -34,19 +36,19 @@
                    ;; user-designated files to track
                    (map ->string (setup:cache-watchlist source-path)))))
   (define env-rec (for/list ([env-name (in-list (cons default-env-name (sort (setup:envvar-watchlist source-path) bytes<?)))])
-                    (cons env-name (match (getenv (string-downcase (->string env-name)))
-                                     [#false #false]
-                                     [str (string-downcase (->string str))]))))
+                            (cons env-name (match (getenv (string-downcase (->string env-name)))
+                                             [#false #false]
+                                             [str (string-downcase (->string str))]))))
   (define poly-flag (and (has-inner-poly-ext? source-path) (current-poly-target)))
   (define path+mod-time-pairs
     (for/list ([ps (in-list path-strings-to-track)])
-      (match ps
-        [(? symbol? sym) sym]
-        [#false #false]
-        [_ (define cp (->complete-path ps))
-           (unless (file-exists? cp)
-             (message (format "watchlist file /~a does not exist" (find-relative-path (current-project-root) cp))))
-           (cons (path->string cp) (file-or-directory-modify-seconds cp #false (λ () 0)))])))
+              (match ps
+                [(? symbol? sym) sym]
+                [#false #false]
+                [_ (define cp (->complete-path ps))
+                   (unless (file-exists? cp)
+                     (message (format "watchlist file /~a does not exist" (find-relative-path (current-project-root) cp))))
+                   (cons (path->string cp) (file-or-directory-modify-seconds cp #false (λ () 0)))])))
   (list* cache-type env-rec poly-flag (and output-path (path->string output-path)) path+mod-time-pairs))
 
 (define (key->source-path key) (car (fifth key)))
@@ -65,7 +67,7 @@
 
 (define (path->hash path)
   (for ([p (in-list (or (get-directory-require-files path) null))])
-    (my-caching-compile-proc p))
+       (my-caching-compile-proc p))
   (when running-on-cs?
     ;; this makes builds faster,
     ;; but a bytecode-caching bug in Racket BC
@@ -119,9 +121,13 @@
   (define dest-file (build-path cache-dir (format "~a.rktd" dest-path-filename)))
   (define (generate-dest-file)
     (message-debug (format "cache miss for ~a" dest-file))
-    (with-output-to-file dest-file
-      (λ () (s-exp->fasl (path-hash-thunk) (current-output-port)))
-      #:exists 'replace))
+    #;(with-output-to-file dest-file
+        (λ ()
+          (define op (open-output-bytes))
+          (s-exp->fasl (path-hash-thunk) op)
+          (write-bytes (get-output-bytes op)))
+        #:exists 'replace)
+    (write-to-file (serialize (path-hash-thunk)) dest-file #:exists 'replace))
 
   ;; `cache-file` looks for a file in private-cache-dir previously cached with key
   ;; (which in this case carries modification dates and POLLEN env).
@@ -144,5 +150,6 @@
                   [(or "cache attempt failed: could not acquire exclusive lock"
                        "cache attempt failed: could not acquire shared lock") (void)]
                   [_ (log-pollen-error str)])))
-  (with-input-from-file dest-file
-    (λ () (fasl->s-exp (current-input-port)))))
+  #;(with-input-from-file dest-file
+    (λ () (fasl->s-exp (port->bytes))))
+  (deserialize (file->value dest-file)))
