@@ -60,11 +60,15 @@
 (define-namespace-anchor cache-utils-module-ns)
 
 (define my-caching-compile-proc (make-caching-managed-compile-zo))
+;; check 'gc not 'vm because 'gc is supported before 6.7
+(define running-on-cs? (eq? (system-type 'gc) 'cs))
+
 (define (path->hash path)
   (for ([p (in-list (or (get-directory-require-files path) null))])
     (my-caching-compile-proc p))
-  (when (eq? (system-type 'vm) 'chez-scheme)
-    ;; this makes builds faster, but a bytecode-caching bug in Racket BC
+  (when running-on-cs?
+    ;; this makes builds faster,
+    ;; but a bytecode-caching bug in Racket BC
     ;; restricts it to CS for now
     (my-caching-compile-proc path))
   (apply hasheq
