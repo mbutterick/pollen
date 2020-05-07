@@ -140,7 +140,7 @@
           (match tag
             ['finished-job
              (message
-              (format "rendered parallel @ job ~a /~a ~a"
+              (format "rendered @ job ~a /~a ~a"
                       (~r (add1 wpidx) #:min-width (string-length (~r job-count)) #:pad-string " ")
                       (find-relative-path (current-project-root) (->output-path path))
                       (if (< ms 1000) (format "(~a ms)" ms) (format "(~a s)" (/ ms 1000.0)))))]
