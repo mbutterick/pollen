@@ -61,38 +61,44 @@
 
 (define-namespace-anchor cache-utils-module-ns)
 
-(define my-caching-compile-proc (make-caching-managed-compile-zo))
-;; check 'gc not 'vm because 'gc is supported before 6.7
-(define running-on-cs? (eq? (system-type 'gc) 'cs))
+;; faster than the usual `managed-compile-zo`
+(define caching-zo-compiler (make-caching-managed-compile-zo))
 
 (define (path->hash path)
-  (for ([p (in-list (or (get-directory-require-files path) null))])
-       (my-caching-compile-proc p))
-  (when running-on-cs?
-    ;; this makes builds faster,
-    ;; but a bytecode-caching bug in Racket BC
-    ;; restricts it to CS for now
-    (my-caching-compile-proc path))
-  (apply hasheq
-         (let ([doc-key (setup:main-export)] [meta-key (setup:meta-export)])
-           (unless (and (symbol? doc-key) (symbol? meta-key))
-             (raise-argument-error 'path->hash "symbols for doc and meta key" (cons doc-key meta-key)))
-           ;; I monkeyed around with using the metas submodule to pull out the metas (for speed)
-           ;; but in practice most files get their doc requested too.
-           ;; so it's just simpler to get both at once and be done with it.
-           ;; the savings of avoiding two cache fetches at the outset outweighs
-           ;; the benefit of not reloading doc when you just need metas.
-           ;; new namespace forces `dynamic-require` to re-instantiate `path`
-           ;; otherwise it gets cached in current namespace.
-           (parameterize ([current-namespace (make-base-namespace)]
-                          [current-directory (dirname path)])
-             ;; brings in currently instantiated params (unlike namespace-require)
-             (define outer-ns (namespace-anchor->namespace cache-utils-module-ns))
-             (namespace-attach-module outer-ns 'pollen/setup) 
-             (define doc-missing-thunk (λ () ""))
-             (define metas-missing-thunk (λ () (hasheq)))
-             (list doc-key (dynamic-require path doc-key doc-missing-thunk)
-                   meta-key (dynamic-require path meta-key metas-missing-thunk))))))
+  (define compilation-namespace
+    (cond
+      [(current-session-interactive?)
+       ;; in interactive mode, we need a fresh namespace every time
+       ;; and can't use bytecode, because it's possible that path
+       ;; or any dependency (say, "pollen.rkt") has changed
+       (define bns (make-base-namespace))
+       (define outer-ns (namespace-anchor->namespace cache-utils-module-ns))
+       ;; bring in currently instantiated params (unlike namespace-require)
+       (namespace-attach-module outer-ns 'pollen/setup bns)
+       bns]
+      [else
+       ;; make bytecode, because we know that in a non-interactive sesssion
+       ;; the sources won't change in the midst
+       (for-each caching-zo-compiler (cons path (or (get-directory-require-files path) null)))
+       ; recycle namespace
+       (current-namespace)]))
+  (define doc-key (setup:main-export))
+  (define meta-key (setup:meta-export))
+  (unless (and (symbol? doc-key) (symbol? meta-key))
+    (raise-argument-error 'path->hash "symbols for doc and meta key" (cons doc-key meta-key)))
+  ;; I monkeyed around with using the metas submodule to pull out the metas (for speed)
+  ;; but in practice most files get their doc requested too.
+  ;; so it's just simpler to get both at once and be done with it.
+  ;; the savings of avoiding two cache fetches at the outset outweighs
+  ;; the benefit of not reloading doc when you just need metas.
+  ;; new namespace forces `dynamic-require` to re-instantiate `path`
+  ;; otherwise it gets cached in current namespace.
+  (define doc-missing-thunk (λ () ""))
+  (define metas-missing-thunk (λ () (hasheq)))
+  (parameterize ([current-namespace compilation-namespace]
+                 [current-directory (dirname path)])
+    (hasheq doc-key (dynamic-require path doc-key doc-missing-thunk)
+            meta-key (dynamic-require path meta-key metas-missing-thunk))))
 
 (define (my-make-directory* dir)
   (define base (dirname dir))
@@ -151,5 +157,5 @@
                        "cache attempt failed: could not acquire shared lock") (void)]
                   [_ (log-pollen-error str)])))
   #;(with-input-from-file dest-file
-    (λ () (fasl->s-exp (port->bytes))))
+      (λ () (fasl->s-exp (port->bytes))))
   (deserialize (file->value dest-file)))

@@ -106,6 +106,11 @@
 
 (define+provide current-render-source (make-parameter #f))
 
+;; used to distinguish one-shot rendering (e.g., using `raco pollen setup` or `render`
+;; from an interactive session with the project server (using `raco pollen start`)
+;; in one-shot mode, certain features needed for dynamic recompilation are disabled for speed.
+(define+provide current-session-interactive? (make-parameter #false))
+
 (define-settable dashboard-css "poldash.css")
 
 (define-runtime-path server-extras-dir "private/server-extras")

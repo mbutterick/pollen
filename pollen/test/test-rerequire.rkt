@@ -16,7 +16,8 @@
 ;; test makes sure that file render changes after pollen.rkt changes
 (parameterize ([current-output-port (open-output-string)]
                [current-directory rerequire-dir]
-               [current-project-root rerequire-dir])
+               [current-project-root rerequire-dir]
+               [current-session-interactive? #true])
   
   (display-to-file @string-append{#lang racket/base
  (provide id)

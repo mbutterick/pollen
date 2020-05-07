@@ -192,7 +192,8 @@ version                print the version" (current-server-port) (make-publish-di
     (error (format "~a is not a valid port number" http-port)))
   (parameterize ([current-project-root dir]
                  [current-server-port (or http-port (setup:project-server-port))]
-                 [current-server-listen-ip (and localhost-wanted "127.0.0.1")])
+                 [current-server-listen-ip (and localhost-wanted "127.0.0.1")]
+                 [current-session-interactive? #true])
     (message "starting project server ...")
     ((dynamic-require 'pollen/private/project-server 'start-server) (format "/~a" (setup:main-pagetree dir)) launch-wanted)))
 
