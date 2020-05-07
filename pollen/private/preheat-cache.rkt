@@ -3,6 +3,7 @@
          racket/path
          racket/place
          racket/match
+         racket/format
          "file-utils.rkt"
          "cache-utils.rkt"
          "log.rkt")
@@ -65,7 +66,7 @@
               [(? null?) (loop null actives)]
               [(cons path rest)
                (place-channel-put wp path)
-               (message (format "caching @ job ~a: ~a" (add1 wpidx) (find-relative-path starting-dir path)))
+               (message (format "caching @ job ~a: ~a" (~r (add1 wpidx) #:min-width (string-length (~r job-count)) #:pad-string " ") (find-relative-path starting-dir path)))
                (loop rest (cons wpidx actives))])]
            [(list wpidx wp 'job-finished path result)
             (if result

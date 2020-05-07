@@ -2,6 +2,7 @@
 (require racket/file
          racket/path
          racket/match
+         racket/format
          racket/place
          racket/list
          racket/dict
@@ -140,7 +141,7 @@
             ['finished-job
              (message
               (format "rendered parallel @ job ~a /~a ~a"
-                      (add1 wpidx)
+                      (~r (add1 wpidx) #:min-width (string-length (~r job-count)) #:pad-string " ")
                       (find-relative-path (current-project-root) (->output-path path))
                       (if (< ms 1000) (format "(~a ms)" ms) (format "(~a s)" (/ ms 1000.0)))))]
             [_
