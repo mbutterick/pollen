@@ -17,6 +17,7 @@ Start a new document. Change the top line to:
 
 The first line of every Pollen source file will start with @code{#lang pollen}.
 
+@margin-note{If you prefer to use the command line and an editor other than DrRacket, equivalent command-line instructions follow at the end of each section. If you're using DrRacket, you can ignore these.}
 
 @section{Running a source file}
 
@@ -59,6 +60,11 @@ document.write('Hello world');
 printf("Hello world");
 }
 
+@bold{Command line}: save the file as @filepath{hello.txt.pp} and then run:
+
+@terminal{
+> racket hello.txt.pp
+}
 
 @section{Naming, saving, and rendering a source file}
 
@@ -155,6 +161,12 @@ Paradise Theatre}
 
 Notice what happened — the Pollen project server dynamically regenerated the output file (@filepath{hello.txt}) from the source file (@filepath{hello.txt.pp}) after you edited the source. If you like, try making some more changes to @filepath{hello.txt.pp}, and reloading the browser to see the updates in @filepath{hello.txt}. The project server will regenerate the file whenever it changes.
 
+@bold{Command line}: to see the changes after each edit, run:
+
+@terminal{
+> raco pollen render hello.txt.pp
+> cat hello.txt
+}
 
 @section{Intermission}
 
@@ -211,6 +223,8 @@ Now you can insert the variable into the HTML, this time using the special ◊ c
 In your web browser, reload @link["http://localhost:8080/margin.html"]{@filepath{margin.html}}. You'll see that the size of the margin has changed (because of the change to the @code{style} attribute) and so has the text of the HTML. If you like, try editing @code{my-inset} with different values and reloading the page. You can also try using @racket[define] to create another variable (for instance, to change the color of the box border).
 
 Still, this is the tiniest tip of the iceberg. The Pollen preprocessor gives you access to everything in the Racket programming language — including string manipulation, math functions, and so on.
+
+@bold{Command line}: type the lozenge using whatever keyboard method you prefer (see @secref["the-lozenge"] for suggestions).
 
 @section{Markdown mode}
 
@@ -277,6 +291,13 @@ Pollen is handling three tasks here: interpreting the commands in the source, co
 
 But what if you wanted to use Pollen as a preprocessor that outputs a Markdown file? No problem — just change the source name from @filepath{downtown.html.pmd} to @filepath{downtown.md.pp}. Changing the extension from @filepath{.pmd} to @filepath{.pp} switches Pollen from Markdown mode back to preprocessor mode. And changing the base name from @filepath{downtown.html} to @filepath{downtown.md} updates the name of the output file (and thereby skips the HTML conversion).
 
+@bold{Command line}: to render the new source file after each edit, run:
+
+@terminal{
+> raco pollen render downtown.html.pmd
+}
+
+And then view the resulting @filepath{downtown.html} file however you like.
 
 @section{Pollen markup}
 
@@ -337,6 +358,14 @@ Return to the @link["http://localhost:8080/index.ptree"]{project dashboard} and 
 Pollen markup takes a little more effort to set up. But it also allows you more flexibility. If you want to do semantic markup, or convert your source into @seclink["fourth-tutorial"]{multiple output formats}, or handle complex page layouts — it's the way to go. (For more, see @seclink["Writing_with_Pollen_markup"
          #:doc '(lib "pollen/scribblings/pollen.scrbl")].)
 
+@bold{Command line}: to render the new source file after each edit, run:
+
+@terminal{
+> raco pollen render uptown.html.pm
+}
+
+And then view the resulting @filepath{uptown.html} file however you like.
+
 @section{Templates}
 
 The HTML pages we just made looked pretty dull. For the last stop on the quick tour, let's fix that.
@@ -362,6 +391,14 @@ This file is ◊here
 This is a simple HTML file that should look familiar, except for the two template variables. The first, @code{here}, contains the name of the current source file. As before, the lozenge character marks it as a Pollen command rather than text, so you write it as @code{◊here}. The other command, @code{◊(->html ◊doc)}, takes the content from the source file, which is contained in a variable called @code{doc}, and converts it to HTML with @racket[->html].
 
 Return to your web browser and reload @link["http://localhost:8080/uptown.html"]{@filepath{uptown.html}}. (Or @link["http://localhost:8080/downtown.html"]{@filepath{downtown.html}} — both will work.) The page will be rendered with the new @filepath{template.html}. As before, you can edit the template or the source and the project server will dynamically update the output file. 
+
+@bold{Command line}: to refresh the output after each edit of @filepath{template.html}, run:
+
+@terminal{
+> raco pollen render uptown.html.pm downtown.html.pm
+}
+
+And then view the resulting @filepath{uptown.html} and @filepath{downtown.html} files however you like.
 
 @section{PS for Scribble users}
 
