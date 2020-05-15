@@ -195,7 +195,7 @@ Then you have two options for adding attributes. The verbose way corresponds to 
 
 Each key–value pair is in parentheses, and then the list of pairs is within parentheses, with a @racket[quote] (@litchar{'}) at the front that signals that the text should be used literally.
 
-But this is boring to type out, so Pollen also allows you to specify attributes with Racket-style @seclink["keyword-args" #:doc '(lib "scribblings/guide/guide.scrbl")]{keyword arguments}:
+But this is boring to type out, so Pollen also allows you to specify attributes in tag functions with Racket-style @seclink["keyword-args" #:doc '(lib "scribblings/guide/guide.scrbl")]{keyword arguments}:
 
 @fileblock["article.html.pm" @codeblock{
 #lang pollen
@@ -204,6 +204,8 @@ But this is boring to type out, so Pollen also allows you to specify attributes 
 }]
 
 In this form, each attribute name is prefixed with @litchar{#:}, indicating a keyword argument. As before, the attribute value is in quotation marks following the keyword name.
+
+@margin-note{This keyword notation will work by default with any tag. When you're making a custom tag function, use @racket[define-tag-function] (rather than the usual @racket[define]) if you want your tag function to support keyword notation the same way.}
 
 Both of these forms will produce the same X-expression:
 
