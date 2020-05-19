@@ -199,11 +199,11 @@ The goal of this whole endeavor was to derive multiple output files from one sou
 @seclink["Templates" #:tag-prefixes '("tutorial-2")] should be familiar to you by now. As usual, the name of the template is @tt{template} plus the relevant file extension, so in this case @filepath{template.txt.p}. Add the file as follows:
 
 @fileblock["template.txt.p" @codeblock|{
-◊(local-require racket/list)
+◊(require racket/list)
 ◊(apply string-append (filter string? (flatten doc)))
 }|]
 
-What we're doing here is converting the X-expression to text in a smarter way. Because we're in a template, we use @racket[local-require] (rather than plain @racket[require]) to bring in @racketmodname[racket/list] so we can use the @racket[flatten] function. 
+What we're doing here is converting the X-expression to text in a smarter way. We use @racket[require] to bring in @racketmodname[racket/list] so we can use the @racket[flatten] function. 
 
 To understand what the next line does, just read it from the inside out: ``Take the @racket[doc] export from the source file (which is an X-expression), @racket[flatten] it into a list, @racket[filter] with @racket[string?] (creating a list that's only strings) and @racket[apply] the @racket[string-append] function to these, resulting in one big string.'' Which is exactly what we need for a plain-text file.
 
@@ -304,7 +304,7 @@ Then a @filepath{template.ltx.p}:
 @fileblock["template.ltx.p" @codeblock|{
 \documentclass[a4paper,12pt]{letter}
 \begin{document}
-◊(local-require racket/list)
+◊(require racket/list)
 ◊(apply string-append (filter string? (flatten doc)))
 \end{document}
 }|]
@@ -366,7 +366,7 @@ The template, not as easy:
 
 
 @fileblock["template.pdf.p" @codeblock|{
-◊(local-require racket/file racket/system)
+◊(require racket/file racket/system)
 ◊(define latex-source ◊string-append{
     \documentclass[a4paper,12pt]{letter}
     \begin{document}
@@ -391,7 +391,7 @@ First, we use @filepath{template.pdf.p} rather than @filepath{template.pdf} for 
 A quick narrative of the rest:
 
 @codeblock|{
-◊(local-require racket/file racket/system)
+◊(require racket/file racket/system)
 }|
 
 We need @racketmodname[racket/file] for @racket[display-to-file] and @racket[file->bytes]; we need @racketmodname[racket/system] for @racket[system] (to use the command line).

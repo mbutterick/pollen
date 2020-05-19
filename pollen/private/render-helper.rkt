@@ -47,5 +47,6 @@
                                 (or (select-from-metas (setup:here-path-key SOURCE-PATH-STRING) metas) 'unknown)))
                   (if (bytes? doc) ; if main export is binary, just pass it through
                       doc
-                      (include-template #:command-char COMMAND-CHAR (file TEMPLATE-PATH-STRING)))))
+                      (splicing-let-syntax ([require (make-rename-transformer #'local-require)])
+                        (include-template #:command-char COMMAND-CHAR (file TEMPLATE-PATH-STRING))))))
               (provide result)))))]))

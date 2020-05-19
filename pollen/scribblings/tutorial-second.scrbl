@@ -298,7 +298,7 @@ And two major differences:
 
 
 
-@margin-note{``So a template is also a Pollen source file?'' Not quite. More accurately, it's a fragment of Pollen source that is completed by adding the X-expression that comes out of one of your source files. Because of this, there are a few extra limitations on the code you can put in a template, though with easy workarounds (for instance, you can't use @racket[require] in a template, but you can use @racket[local-require], which accomplishes the same thing).}
+@margin-note{``So a template is also a Pollen source file?'' Not quite. More accurately, it's a fragment of Pollen source that is completed by adding the X-expression that comes out of one of your source files. Because of this, there are a few extra limitations on the code you can put in a template, though with easy workarounds.}
 
 
 To see how this works, let's return to the source file we started in the last section:
