@@ -23,10 +23,6 @@
   
   ;; if a file is already in the cache, no need to hit it again.
   ;; this allows partially completed preheat jobs to resume.
-  (define to-thd (thread (λ ()
-                           (sleep 4)
-                           (message "preheat is taking a suspicious amount of time to start")
-                           (message "commonly caused by a \"pollen.rkt\" file that doesn't work")))) 
   (define uncached-paths
     (for/list ([path (in-directory starting-dir (λ (p) (not (special-path? p))))]
                #:when (for/or ([proc (in-list (list preproc-source?
@@ -36,8 +32,6 @@
                               (proc path))
                #:unless (path-cached? path))
               (path->complete-path path)))
-
-  (kill-thread to-thd)
 
   (cond
     [wants-dry-run? (for-each message uncached-paths)]
