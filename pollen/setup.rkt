@@ -20,7 +20,8 @@
   (define starting-dir (cond
                          [(not maybe-dir) (current-directory)]
                          [(directory-exists? maybe-dir) maybe-dir]
-                         [else (dirname maybe-dir)]))
+                         [else (define dir (dirname maybe-dir))
+                               (and (not (eq? 'relative dir)) dir)]))
   (let loop ([dir starting-dir][path default-directory-require])
     (and dir ; dir is #f when it hits the top of the filesystem
          (let ([simplified-path (simplify-path (path->complete-path path starting-dir))])
@@ -43,10 +44,16 @@
            (define DEFAULT-NAME DEFAULT-VALUE)
            ;; can take a dir argument that sets start point for (get-path-to-override) search.
            (define (NAME-THUNKED [dir #false])
-             (with-handlers ([exn:fail? (λ (exn) DEFAULT-NAME)])
-               (dynamic-require `(submod ,(get-path-to-override dir) WORLD-SUBMOD)
-                                'NAME
-                                (λ () DEFAULT-NAME))))))]))
+             ;; exn:fail:contract? is raised if setup submodule doesn't exist
+             ;; in which case we use the default value.
+             ;; but if something else is amiss, we want to let it bubble up
+             (define setup-module-path (get-path-to-override dir))
+             (with-handlers ([exn:fail:contract? (λ (exn) DEFAULT-NAME)]
+                             [exn? (λ (exn) (raise-user-error 'pollen/setup
+                                                              (format "defective `setup` submodule in ~v\n~a" setup-module-path (exn-message exn))))])
+               (dynamic-require `(submod ,setup-module-path WORLD-SUBMOD)
+                                   'NAME
+                                   (λ () DEFAULT-NAME))))))]))
 
 (define-settable cache-watchlist null)
 (define-settable envvar-watchlist null)
@@ -134,7 +141,7 @@
 
 (define-settable here-path-key 'here-path)
 
-(define-settable splicing-tag '@)
+(define+provide splicing-tag '@)
 
 (define-settable poly-source-ext 'poly) ; extension that signals source can be used for multiple output targets
 (define-settable poly-targets '(html)) ; current target applied to multi-output source files
