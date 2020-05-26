@@ -50,7 +50,7 @@
              (define setup-module-path (get-path-to-override dir))
              (with-handlers ([exn:fail:contract? (λ (exn) DEFAULT-NAME)]
                              [exn? (λ (exn) (raise-user-error 'pollen/setup
-                                                              (format "defective `setup` submodule in ~v\n~a" setup-module-path (exn-message exn))))])
+                                                              (format "defective `setup` submodule in ~v\n~a" (path->string setup-module-path) (exn-message exn))))])
                (dynamic-require `(submod ,setup-module-path WORLD-SUBMOD)
                                    'NAME
                                    (λ () DEFAULT-NAME))))))]))
