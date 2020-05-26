@@ -55,22 +55,8 @@ Every @racket[setup:]@racket[_name] function will resolve the current value of t
 Determines the default HTTP port for the project server.}
 
 
-@defoverridable[main-export symbol?]{The main X-expression exported from a compiled Pollen source file.}
-
-@defoverridable[meta-export symbol?]{The meta hashtable exported from a compiled Pollen source file.}
 
 @defoverridable[extension-escape-char char?]{Character for escaping output-file extensions within source-file names.}
-
-
-@deftogether[(
-@defoverridable[preproc-source-ext symbol?]
-@defoverridable[markup-source-ext symbol?]
-@defoverridable[markdown-source-ext symbol?]
-@defoverridable[null-source-ext symbol?]
-@defoverridable[pagetree-source-ext symbol?]
-@defoverridable[template-source-ext symbol?]
-@defoverridable[scribble-source-ext symbol?]
-)]{File extensions for Pollen source files.}
 
 
 @defoverridable[main-pagetree string?]{Pagetree that Pollen dashboard loads by default in each directory.}
@@ -88,8 +74,6 @@ Determines the default HTTP port for the project server.}
 
 
 @defoverridable[command-char char?]{The magic character that indicates a Pollen command, function, or variable.}
-
-@defoverridable[template-prefix string?]{Prefix of the default template.}
 
 
 @deftogether[(
@@ -145,9 +129,6 @@ Both the names and the values of environment variables are case-insensitive, so 
 @defoverridable[extra-path? (path? . -> . boolean?)]{Predicate that determines if path is rendered & published, overriding @racket[(setup:omitted-path?)] above, and Pollen's default publish settings. For instance, Pollen automatically omits files with a @racket[.rkt] extension. If you wanted to force a @racket[.rkt] file to be published, you could include it here.
 
 @history[#:added "1.1"]}
-
-
-@defoverridable[poly-source-ext symbol?]{Extension that indicates a source file can target multiple output types.}
 
 
 @defoverridable[poly-targets (listof symbol?)]{List of symbols that denotes the possible targets of a @racket['poly] source file.}

@@ -24,6 +24,10 @@ Beyond keeping the commit history available, I make no promise to maintain the p
 
 @section{Changelog}
 
+@subsection{Version 3.0}
+ 
+Downgraded the following @racket[pollen/setup] values from configurable to fixed: @racket[splicing-tag], @racket[preproc-source-ext], @racket[markup-source-ext], @racket[markdown-source-ext], @racket[null-source-ext], @racket[pagetree-source-ext], @racket[template-source-ext], @racket[scribble-source-ext], @racket[poly-source-ext], @racket[cache-dir-name], @racket[cache-subdir-name], @racket[template-prefix], @racket[fallback-template-prefix], @racket[template-meta-key], @racket[main-export], @racket[meta-export], @racket[meta-tag-name], @racket[define-meta-name].
+
 @subsection{Version 2.2}
 
 Added @racket[--null] and @racket[--dry-run] switches to @secref["raco_pollen_render" #:doc '(lib "pollen/scribblings/pollen.scrbl")].
