@@ -6,7 +6,7 @@
   (define paren-match (cadr matches))
   paren-match)
 
-(define splicing-tag (setup:splicing-tag))
+(define splicing-tag splice-signal-tag)
 
 (define (has-outer-splice-tag? x)
   (and (pair? x) (eq? (get-tag x) splicing-tag)))

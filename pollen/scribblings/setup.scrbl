@@ -147,9 +147,6 @@ Both the names and the values of environment variables are case-insensitive, so 
 @history[#:added "1.1"]}
 
 
-@defoverridable[splicing-tag symbol?]{Key used to signal that an X-expression should be spliced into its containing X-expression.}
-
-
 @defoverridable[poly-source-ext symbol?]{Extension that indicates a source file can target multiple output types.}
 
 
