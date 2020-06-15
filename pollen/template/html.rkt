@@ -6,10 +6,8 @@
   (define paren-match (cadr matches))
   paren-match)
 
-(define splicing-tag (setup:splicing-tag))
-
 (define (has-outer-splice-tag? x)
-  (and (pair? x) (eq? (get-tag x) splicing-tag)))
+  (and (pair? x) (eq? (get-tag x) pollen-splicing-tag)))
 
 (define+provide/contract (->html x-arg-maybe-spliced
                                  #:tag [tag #f]
@@ -31,7 +29,7 @@
   (define x (if (list? x-arg)
                 (splice (if (txexpr? x-arg)
                             x-arg
-                            (cons 'html x-arg)) splicing-tag) ; list of txexpr-elements
+                            (cons 'html x-arg)) pollen-splicing-tag) ; list of txexpr-elements
                 x-arg))
   
   (when (and (not (txexpr? x)) attrs (not tag))

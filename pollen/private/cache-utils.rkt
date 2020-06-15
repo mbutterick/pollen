@@ -82,10 +82,6 @@
        (for-each caching-zo-compiler (cons path (or (get-directory-require-files path) null)))
        ; recycle namespace
        (current-namespace)]))
-  (define doc-key (setup:main-export))
-  (define meta-key (setup:meta-export))
-  (unless (and (symbol? doc-key) (symbol? meta-key))
-    (raise-argument-error 'path->hash "symbols for doc and meta key" (cons doc-key meta-key)))
   ;; I monkeyed around with using the metas submodule to pull out the metas (for speed)
   ;; but in practice most files get their doc requested too.
   ;; so it's just simpler to get both at once and be done with it.
@@ -97,8 +93,8 @@
   (define metas-missing-thunk (λ () (hasheq)))
   (parameterize ([current-namespace compilation-namespace]
                  [current-directory (dirname path)])
-    (hasheq doc-key (dynamic-require path doc-key doc-missing-thunk)
-            meta-key (dynamic-require path meta-key metas-missing-thunk))))
+    (hasheq pollen-main-export (dynamic-require path pollen-main-export doc-missing-thunk)
+            pollen-meta-export (dynamic-require path pollen-meta-export metas-missing-thunk))))
 
 (define (my-make-directory* dir)
   (define base (dirname dir))
@@ -110,7 +106,7 @@
 
 (define (make-cache-dirs path)
   (define path-dir (dirname path))
-  (define cache-dir (build-path path-dir (setup:cache-dir-name) (setup:cache-subdir-name)))
+  (define cache-dir (build-path path-dir pollen-cache-dir-name pollen-cache-subdir-name))
   (define private-cache-dir (build-path cache-dir "private"))
   (my-make-directory* private-cache-dir) ; will also make cache-dir, if needed
   (values cache-dir private-cache-dir))

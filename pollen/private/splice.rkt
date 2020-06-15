@@ -1,10 +1,10 @@
 #lang racket/base
 (require racket/match
-         racket/list)
+         racket/list
+         "constants.rkt")
 (provide (all-defined-out))
 
 ;; (string->symbol (format "~a" #\u200B))
-(define splice-signal-tag '@)
 
 (define (attrs? x)
   (match x
@@ -18,7 +18,7 @@
     [(cons (== splicing-tag eq?) _) #true]
     [_ #false]))
 
-(define (splice x [splicing-tag splice-signal-tag])
+(define (splice x [splicing-tag pollen-splicing-tag])
   ;  (listof txexpr-elements?) . -> . (listof txexpr-elements?))
   (let loop ([x x])
     (if (list? x) ; don't exclude `attrs?` here, because it will exclude valid splice input like '((@ "foo"))
@@ -32,14 +32,14 @@
 
 (module+ test
   (require rackunit)
-  (check-equal? (splice `((div 1 (,splice-signal-tag 2 "" (,splice-signal-tag 3 (div 4 (,splice-signal-tag 5))) 6) "" 7)))
+  (check-equal? (splice `((div 1 (,pollen-splicing-tag 2 "" (,pollen-splicing-tag 3 (div 4 (,pollen-splicing-tag 5))) 6) "" 7)))
                 '((div 1 2 3 (div 4 5) 6 7)))
-  (check-equal? (splice `((,splice-signal-tag 1 (,splice-signal-tag 2 "" (,splice-signal-tag 3 (div 4 (,splice-signal-tag 5))) 6) "" 7)))
+  (check-equal? (splice `((,pollen-splicing-tag 1 (,pollen-splicing-tag 2 "" (,pollen-splicing-tag 3 (div 4 (,pollen-splicing-tag 5))) 6) "" 7)))
                 '(1 2 3 (div 4 5) 6 7))
-  (check-equal? (splice `((,splice-signal-tag "foo" "" "bar"))) '("foo" "bar"))
+  (check-equal? (splice `((,pollen-splicing-tag "foo" "" "bar"))) '("foo" "bar"))
   (check-equal? (splice null) null)
   (check-equal? (splice '(a ((href "")(foo "bar")) "zam")) '(a ((href "")(foo "bar")) "zam"))
-  (check-equal? (splice `((,splice-signal-tag "str"))) '("str")))
+  (check-equal? (splice `((,pollen-splicing-tag "str"))) '("str")))
 
 
 ;; this will strip all empty lists.

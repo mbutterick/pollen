@@ -193,7 +193,7 @@
                                               (define source-minus-ext (unescape-ext (remove-ext source)))
                                               (define source-second-ext (get-ext source-minus-ext))
                                               (cond ; multi source. expand to multiple output files.
-                                                [(and source-second-ext (equal? source-second-ext (->string (setup:poly-source-ext (->complete-path source)))))
+                                                [(and source-second-ext (equal? source-second-ext (->string pollen-poly-source-ext)))
                                                  (define source-base (remove-ext source-minus-ext))
                                                  (define output-names (map (λ (ext) (->string (add-ext source-base ext))) (setup:poly-targets (->complete-path source))))
                                                  (cons #f `(div ,@(map (λ (on) `(a ((href ,on)) ,on (span ((class "file-ext")) "." ,source-first-ext ,(format " (from ~a)" (->string (find-relative-path dashboard-dir source)))))) output-names)))]

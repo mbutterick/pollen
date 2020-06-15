@@ -16,8 +16,8 @@
  (check-equal? (->preproc-source-path "foo") (->path "foo.pp"))
  (check-equal? (->preproc-source-path 'foo) (->path "foo.pp"))
  
- (check-true (pagetree-source? (format "foo.~a" (setup:pagetree-source-ext))))
- (check-false (pagetree-source? (format "~a.foo" (setup:pagetree-source-ext))))
+ (check-true (pagetree-source? (format "foo.~a" pollen-pagetree-source-ext)))
+ (check-false (pagetree-source? (format "~a.foo" pollen-pagetree-source-ext)))
  (check-false (pagetree-source? #f))
  
  (check-true (markup-source? "foo.pm"))

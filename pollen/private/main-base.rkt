@@ -2,6 +2,7 @@
 (require (for-syntax racket/base
                      syntax/strip-context
                      "../setup.rkt"
+                     "splice.rkt"
                      "split-metas.rkt")
          racket/list
          "to-string.rkt"
@@ -23,7 +24,7 @@
 (define (stringify xs) (apply string-append (map to-string xs)))
 
 (define (parse xs-in parser-mode root-proc)
-  (define xs (splice (strip-leading-newlines xs-in) (setup:splicing-tag)))
+  (define xs (splice (strip-leading-newlines xs-in) splice-signal-tag))
   (cond
     [(eq? parser-mode default-mode-pagetree) (decode-pagetree xs)]
     [(eq? parser-mode default-mode-markup) (apply root-proc (remove-voids xs))] 
@@ -37,12 +38,12 @@
 (define-syntax (pollen-module-begin stx)
   (syntax-case stx ()
     [(_ PARSER-MODE . EXPRS)
-     (with-syntax ([META-HASH (split-metas #'EXPRS (setup:define-meta-name))]
-                   [METAS-ID (setup:meta-export)]
-                   [METAS-ID-CALLER (datum->syntax #'EXPRS (setup:meta-export))]
+     (with-syntax ([META-HASH (split-metas #'EXPRS pollen-define-meta-name)]
+                   [METAS-ID pollen-meta-export]
+                   [METAS-ID-CALLER (datum->syntax #'EXPRS pollen-meta-export)]
                    [ROOT-ID (datum->syntax #'EXPRS (setup:main-root-node))]
                    [POLLEN/TOP (datum->syntax #'EXPRS 'pollen/top)]
-                   [DOC-ID (setup:main-export)]
+                   [DOC-ID pollen-main-export]
                    [ALL-DEFINED-OUT (datum->syntax #'EXPRS '(all-defined-out))])
        #'(doclang:#%module-begin
           DOC-ID ; positional arg for doclang-raw: name of export

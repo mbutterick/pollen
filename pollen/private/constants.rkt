@@ -1,0 +1,21 @@
+#lang racket/base
+(provide (prefix-out pollen- (all-defined-out)))
+(define main-export 'doc) ; don't forget to change fallback template too
+(define meta-export 'metas)
+(define meta-tag-name 'meta)
+(define define-meta-name 'define-meta)
+(define preproc-source-ext 'pp)
+(define markup-source-ext 'pm)
+(define markdown-source-ext 'pmd)
+(define null-source-ext 'p)
+(define pagetree-source-ext 'ptree)
+(define template-source-ext 'pt)
+(define scribble-source-ext 'scrbl)
+(define poly-source-ext 'poly) ; extension that signals source can be used for multiple output targets
+(define cache-dir-name "compiled")
+(define cache-subdir-name "pollen")
+(define template-prefix "template")
+(define fallback-template-prefix "fallback")
+(define template-meta-key "template")
+(define old-cache-names '("pollen.cache" "pollen-cache"))
+(define splicing-tag '@)

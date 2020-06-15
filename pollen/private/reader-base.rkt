@@ -22,9 +22,9 @@
     [(eq? reader-mode default-mode-auto)
      (let ([val (cond [(get-ext reader-here-path) => string->symbol])])
        (cond
-         [(eq? val (setup:pagetree-source-ext)) default-mode-pagetree]
-         [(eq? val (setup:markup-source-ext)) default-mode-markup]
-         [(eq? val (setup:markdown-source-ext)) default-mode-markdown]
+         [(eq? val pollen-pagetree-source-ext) default-mode-pagetree]
+         [(eq? val pollen-markup-source-ext) default-mode-markup]
+         [(eq? val pollen-markdown-source-ext) default-mode-markdown]
          [else default-mode-preproc]))]
     [else reader-mode]))
 
@@ -48,9 +48,9 @@
                   [HERE-PATH reader-here-path]
                   [HERE-KEY (setup:here-path-key)]
                   [SOURCE-LINES source-stx]
-                  [DOC (setup:main-export)]
-                  [META-MOD (setup:meta-export)]
-                  [METAS-ID (setup:meta-export)]
+                  [DOC pollen-main-export]
+                  [META-MOD pollen-meta-export]
+                  [METAS-ID pollen-meta-export]
                   [PARSER-MODE-FROM-READER parser-mode-from-reader])
      #'(module runtime-wrapper racket/base
          (module configure-runtime racket/base
@@ -119,11 +119,11 @@
       [(drracket:default-extension)
        (symbol->string
         (cond
-          [(eq? mode default-mode-auto) (setup:preproc-source-ext)]
-          [(eq? mode default-mode-preproc) (setup:preproc-source-ext)]
-          [(eq? mode default-mode-markdown) (setup:markdown-source-ext)]
-          [(eq? mode default-mode-markup) (setup:markup-source-ext)]
-          [(eq? mode default-mode-pagetree) (setup:pagetree-source-ext)]))]
+          [(eq? mode default-mode-auto) pollen-preproc-source-ext]
+          [(eq? mode default-mode-preproc) pollen-preproc-source-ext]
+          [(eq? mode default-mode-markdown) pollen-markdown-source-ext]
+          [(eq? mode default-mode-markup) pollen-markup-source-ext]
+          [(eq? mode default-mode-pagetree) pollen-pagetree-source-ext]))]
       [else default])))
 
 (define-syntax-rule (reader-module-begin mode . _)
