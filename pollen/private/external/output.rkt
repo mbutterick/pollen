@@ -1,7 +1,7 @@
 #lang racket/base
 (require racket/promise
          racket/contract/base
-         pollen/private/splice) ; to get splicing char
+         "../constants.rkt") ; to get splicing char
 #|
 161017:
 This is a slightly amended version of scribble/text/output
@@ -129,7 +129,7 @@ This version will also splice lists that begin with the splicing char.
     (define npfx (pfx+col (pfx+ pfx lpfx)))
     (set-mcar! pfxs npfx) (set-mcdr! pfxs 0)
     (if (list? c)
-        (let ([c (if (eq? splice-signal-tag (car c)) ; patch to cooperate with splicing char
+        (let ([c (if (eq? pollen-splicing-tag (car c)) ; patch to cooperate with splicing char
                      (cdr c)
                      c)])
           (for ([c (in-list c)]) (loop c)))

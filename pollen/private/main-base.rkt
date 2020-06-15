@@ -24,7 +24,7 @@
 (define (stringify xs) (apply string-append (map to-string xs)))
 
 (define (parse xs-in parser-mode root-proc)
-  (define xs (splice (strip-leading-newlines xs-in) splice-signal-tag))
+  (define xs (splice (strip-leading-newlines xs-in) pollen-splicing-tag))
   (cond
     [(eq? parser-mode default-mode-pagetree) (decode-pagetree xs)]
     [(eq? parser-mode default-mode-markup) (apply root-proc (remove-voids xs))] 
