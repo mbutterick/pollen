@@ -15,17 +15,17 @@ Pollen handles six kinds of source files:
 
 
 @itemlist[
-@item{@bold{Preprocessor}, with file extension @ext[default-preproc-source-ext]}
+@item{@bold{Preprocessor}, with file extension @ext[pollen-preproc-source-ext]}
 
-@item{@bold{Markup}, with file extension @ext[default-markup-source-ext]} 
+@item{@bold{Markup}, with file extension @ext[pollen-markup-source-ext]} 
 
-@item{@bold{Markdown}, with file extension @ext[default-markdown-source-ext]} 
+@item{@bold{Markdown}, with file extension @ext[pollen-markdown-source-ext]} 
 
-@item{@bold{Null}, with file extension @ext[default-null-source-ext]}
+@item{@bold{Null}, with file extension @ext[pollen-null-source-ext]}
 
-@item{@bold{Scribble}, with file extension @ext[default-scribble-source-ext]}
+@item{@bold{Scribble}, with file extension @ext[pollen-scribble-source-ext]}
 
-@item{@bold{Pagetree}, with file extension @ext[default-pagetree-source-ext]. This is the only source type that does not produce an output file.}
+@item{@bold{Pagetree}, with file extension @ext[pollen-pagetree-source-ext]. This is the only source type that does not produce an output file.}
 
 ]
 
@@ -170,7 +170,7 @@ In all cases, if there is no corresponding source, return @racket[#f].
 path?]
 Convert a source path @racket[_p] into its corresponding output path. This function simply generates a path for a file — it does not ask whether the file exists.
 
-If @racket[_p] has a @seclink["The_poly_output_type"]{@id[default-poly-source-ext] output type}, then @racket[->output-path] uses @racket[current-poly-target] as the output-path extension.
+If @racket[_p] has a @seclink["The_poly_output_type"]{@id[pollen-poly-source-ext] output type}, then @racket[->output-path] uses @racket[current-poly-target] as the output-path extension.
 
 Otherwise, there are no type-specific variants for this function because the output path of a Pollen source file is @seclink["Saving___naming_your_source_file"]{determined by its name}.
 

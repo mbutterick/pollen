@@ -27,7 +27,7 @@ For ease of use, the behavior of the Pollen language departs from the standard R
 
 Commands must start with the special lozenge character @litchar{◊}. Other material is interpreted as plain text. See @secref["pollen-command-syntax"] for more.
 
-You can change the command character for a project by overriding @racket[default-command-char].
+You can change the command character for a project by overriding @racket[pollen-command-char].
 
 @bold{How is this different from Racket?} In Racket, everything is a command, and plain text must be quoted.
 
@@ -52,8 +52,6 @@ As usual, you can use @racket[require], @racket[local-require], or @racket[dynam
 
 Pollen source files also make the @racket[metas] hashtable available through a submodule, unsurprisingly called @racket[metas]. So rather than importing a source file with @racket[(require "source.html.pm")], you can @racket[(require (submod "source.html.pm" metas))]. Accessing the metas this way avoids fully compiling the source file, and thus will usually be faster.
 
-The names @racket[doc] and @racket[metas] can be changed for a project by overriding @racket[default-main-export] and @racket[default-meta-export].
-
 @margin-note{The Pollen rendering system relies on these two exported identifiers, but otherwise doesn't care how they're generated. Thus, the code inside your Pollen source file could be written in @tt{#lang racket} or @tt{#lang whatever}. As long as you @racket[provide] those two identifiers and follow Pollen's file-naming conventions, your source file will be renderable.}
 
 @bold{How is this different from Racket?} In Racket, you must explicitly @racket[define] and then @racket[provide] any values you want to export.
@@ -71,9 +69,9 @@ If a file called @filepath{pollen.rkt} exists in the same directory with a sourc
 
 @bold{How is this different from Racket?} In Racket, you must explicitly import files using @racket[require].
 
-@subsection{Preprocessor (@(format ".~a" default-preproc-source-ext) extension)}
+@subsection{Preprocessor (@(format ".~a" pollen-preproc-source-ext) extension)}
 
-Invoke the preprocessor dialect by using @code{#lang pollen/pre} as the first line of your source file, or by using @code{#lang pollen} with a file extension of @code{@(format ".~a" default-preproc-source-ext)}. These forms are equivalent:
+Invoke the preprocessor dialect by using @code{#lang pollen/pre} as the first line of your source file, or by using @code{#lang pollen} with a file extension of @code{@(format ".~a" pollen-preproc-source-ext)}. These forms are equivalent:
 
 
 @racketmod[#:file "sample.css.pp" pollen
@@ -96,9 +94,9 @@ The output of the preprocessor dialect, provided by @racket[doc], is plain text.
 
 
 
-@subsection{Markdown (@(format ".~a" default-markdown-source-ext) extension)}
+@subsection{Markdown (@(format ".~a" pollen-markdown-source-ext) extension)}
 
-Invoke the Markdown dialect by using @code{#lang pollen/markdown} as the first line of your source file, or by using @code{#lang pollen} with a file extension of @code{@(format ".~a" default-markdown-source-ext)}. These forms are equivalent:
+Invoke the Markdown dialect by using @code{#lang pollen/markdown} as the first line of your source file, or by using @code{#lang pollen} with a file extension of @code{@(format ".~a" pollen-markdown-source-ext)}. These forms are equivalent:
 
 
 @racketmod[#:file "sample.txt.pmd" pollen
@@ -112,9 +110,9 @@ _...source...
 The output of the Markdown dialect, provided by @racket[doc], is a tagged X-expression.
 
 
-@subsection{Markup (@(format ".~a" default-markup-source-ext) extension)}
+@subsection{Markup (@(format ".~a" pollen-markup-source-ext) extension)}
 
-Invoke the Pollen markup dialect by using @code{#lang pollen/markup} as the first line of your source file, or by using @code{#lang pollen} with a file extension of @code{@(format ".~a" default-markup-source-ext)}. These forms are equivalent:
+Invoke the Pollen markup dialect by using @code{#lang pollen/markup} as the first line of your source file, or by using @code{#lang pollen} with a file extension of @code{@(format ".~a" pollen-markup-source-ext)}. These forms are equivalent:
 
 
 @racketmod[#:file "about.html.pm" pollen
@@ -127,10 +125,10 @@ _...source...
 
 The output of the Pollen markup dialect, provided by @racket[doc], is a tagged X-expression.
 
-@subsection{Pagetree  (@(format ".~a" default-pagetree-source-ext) extension)}
+@subsection{Pagetree  (@(format ".~a" pollen-pagetree-source-ext) extension)}
 
 
-Invoke the pagetree dialect by using @code{#lang pollen/ptree} as the first line of your source file, or by using @code{#lang pollen} with a file extension of @code{@(format ".~a" default-pagetree-source-ext)}. These forms are equivalent:
+Invoke the pagetree dialect by using @code{#lang pollen/ptree} as the first line of your source file, or by using @code{#lang pollen} with a file extension of @code{@(format ".~a" pollen-pagetree-source-ext)}. These forms are equivalent:
 
 
 @racketmod[#:file "main.ptree" pollen
@@ -154,12 +152,12 @@ These aren't source formats because they don't contain a @tt{#lang pollen} line.
 
 
 
-@subsection{Scribble  (@(format ".~a" default-scribble-source-ext) extension)}
+@subsection{Scribble  (@(format ".~a" pollen-scribble-source-ext) extension)}
 
 Scribble files are recognized by the project server and can be compiled and previewed in single-page mode.
 
 
-@subsection{Null (@(format ".~a" default-null-source-ext) extension)}
+@subsection{Null (@(format ".~a" pollen-null-source-ext) extension)}
 
 Files with the null extension are simply rendered as a copy of the file without the extension, so @filepath{index.html.p} becomes @filepath{index.html}. 
 

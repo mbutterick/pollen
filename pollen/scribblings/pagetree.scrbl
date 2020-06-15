@@ -24,7 +24,7 @@ Pagetrees surface throughout the Pollen system. They're primarily used for navig
 
 @section{Making pagetrees with a source file}
 
-A pagetree source file either starts with @code{#lang pollen} and uses the @racketfont{@(format ".~a" default-pagetree-source-ext)} extension, or starts with @code{#lang pollen/ptree} and then can have any file extension. 
+A pagetree source file either starts with @code{#lang pollen} and uses the @racketfont{@(format ".~a" pollen-pagetree-source-ext)} extension, or starts with @code{#lang pollen/ptree} and then can have any file extension. 
 
 Unlike other Pollen source files, since the pagetree source is not rendered into an output format, the rest of the filename is up to you.
 
@@ -436,7 +436,7 @@ Return the pagenode immediately after @racket[_p]. For @racket[next*], return al
 [pagetree-source (or/c pagetree? pathish?)])
 pagetree?
 ]
-Get a pagetree from a @ext[default-pagetree-source-ext] source file, namely @racket[_pagetree-source]. If @racket[_pagetree-source] is already a pagetree, just pass it through.
+Get a pagetree from a @ext[pollen-pagetree-source-ext] source file, namely @racket[_pagetree-source]. If @racket[_pagetree-source] is already a pagetree, just pass it through.
 
 
 @defproc[
