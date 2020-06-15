@@ -61,7 +61,7 @@
   (cached-require-base path-string subkey 'cached-require))
 
 (define+provide (cached-doc path-string)
-  (cached-require-base path-string (setup:main-export) 'cached-doc))
+  (cached-require-base path-string pollen-main-export 'cached-doc))
 
 (define+provide (cached-metas path-string)
-  (cached-require-base path-string (setup:meta-export) 'cached-metas))
+  (cached-require-base path-string pollen-meta-export 'cached-metas))

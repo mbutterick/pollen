@@ -29,8 +29,8 @@
      (let ([source-path (syntax->datum #'SOURCE-PATH-STRING)])
        (with-syntax ([DIRECTORY-REQUIRE-FILES
                       (replace-context #'here (require-directory-require-files source-path))]
-                     [DOC-ID (setup:main-export source-path)]
-                     [METAS-ID (setup:meta-export source-path)]
+                     [DOC-ID pollen-main-export]
+                     [METAS-ID pollen-meta-export]
                      [COMMAND-CHAR (setup:command-char source-path)])
          #'(#%module-begin 
             DIRECTORY-REQUIRE-FILES

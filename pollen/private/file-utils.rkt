@@ -128,7 +128,7 @@
 
 
 (define+provide (has-poly-ext? x)
-  (equal? (get-ext x) (->string (setup:poly-source-ext))))
+  (equal? (get-ext x) (->string pollen-poly-source-ext)))
 
 (module-test-external
  (check-true (has-poly-ext? "foo.poly"))
@@ -147,7 +147,7 @@
 (define-syntax (define-utility-functions stx)
   (syntax-case stx ()
     [(_ STEM)
-     (with-syntax ([SETUP:STEM-SOURCE-EXT (format-id stx "setup:~a-source-ext" #'STEM)]
+     (with-syntax ([STEM-SOURCE-EXT (format-id stx "pollen-~a-source-ext" #'STEM)]
                    [STEM-SOURCE? (format-id stx "~a-source?" #'STEM)]
                    [GET-STEM-SOURCE (format-id stx "get-~a-source" #'STEM)]
                    [HAS/IS-STEM-SOURCE? (format-id stx "has/is-~a-source?" #'STEM)]
@@ -158,7 +158,7 @@
            ;; does file have particular extension
            (define+provide (STEM-SOURCE? x)
              #;(any/c . -> . boolean?)
-             (and (pathish? x) (has-ext? (->path x) (SETUP:STEM-SOURCE-EXT)) #true))
+             (and (pathish? x) (has-ext? (->path x) STEM-SOURCE-EXT) #true))
            
            ;; non-theoretical: want the first possible source that exists in the filesystem
            (define+provide (GET-STEM-SOURCE x)
@@ -185,19 +185,19 @@
                    (list x) ; already has the source extension
                    #,(if (eq? (syntax->datum #'STEM) 'scribble)
                          #'(if (x . has-ext? . 'html) ; different logic for scribble sources
-                               (list (add-ext (remove-ext* x) (SETUP:STEM-SOURCE-EXT)))
+                               (list (add-ext (remove-ext* x) STEM-SOURCE-EXT))
                                #false)
                          #'(let ([x-ext (get-ext x)]
-                                 [source-ext (SETUP:STEM-SOURCE-EXT)])
+                                 [source-ext STEM-SOURCE-EXT])
                              (cons
                               (add-ext x source-ext) ; standard
                               (if x-ext ; has existing ext, therefore needs escaped version
                                   (cons
                                    (add-ext (escape-last-ext x) source-ext)
                                    (if (ext-in-poly-targets? x-ext x) ; needs multi + escaped multi
-                                       (let ([x-multi (add-ext (remove-ext x) (setup:poly-source-ext))])
+                                       (let ([x-multi (add-ext (remove-ext x) pollen-poly-source-ext)])
                                          (list
-                                          (add-ext x-multi (SETUP:STEM-SOURCE-EXT))
+                                          (add-ext x-multi STEM-SOURCE-EXT)
                                           (add-ext (escape-last-ext x-multi) source-ext)))
                                        null))
                                   null))))))

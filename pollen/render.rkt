@@ -383,7 +383,7 @@
     (parameterize ([current-directory (current-project-root)])
       (define source-metas (cached-metas source-path))
       (define template-name-or-names ; #f or atom or list
-        (select-from-metas (setup:template-meta-key source-path) source-metas)) 
+        (select-from-metas pollen-template-meta-key source-metas)) 
       (define template-name (if (list? template-name-or-names)
                                 (findf (λ (tn) (eq? (get-ext tn) output-path-ext)) template-name-or-names)
                                 template-name-or-names))
@@ -391,13 +391,13 @@
 
 (define (get-default-template source-path output-path-ext)
   (and output-path-ext
-       (let ([default-template-filename (add-ext (setup:template-prefix source-path) output-path-ext)])
+       (let ([default-template-filename (add-ext pollen-template-prefix output-path-ext)])
          (find-upward-from source-path default-template-filename file-exists-or-has-source?))))
 
 (define (get-fallback-template source-path output-path-ext)
   (and output-path-ext
        (build-path (current-server-extras-path)
-                   (add-ext (setup:fallback-template-prefix source-path) output-path-ext))))
+                   (add-ext pollen-fallback-template-prefix output-path-ext))))
 
 (define (template-cache-key source-path output-path)
   (paths->key 'template source-path (current-poly-target) output-path))
@@ -432,18 +432,18 @@
 (module-test-external
  (require pollen/setup sugar/file sugar/coerce)
  (define fallback.html (build-path (current-server-extras-path)
-                                   (add-ext (setup:fallback-template-prefix) 'html)))
+                                   (add-ext pollen-fallback-template-prefix 'html)))
  (check-equal? (get-template-for (->complete-path "foo.poly.pm")) fallback.html)
  (check-equal? (get-template-for (->complete-path "foo.html.pm")) fallback.html)
  
  (define fallback.svg (build-path (current-server-extras-path)
-                                  (add-ext (setup:fallback-template-prefix) 'svg)))
+                                  (add-ext pollen-fallback-template-prefix 'svg)))
  (parameterize ([current-poly-target 'svg])
    (check-equal? (get-template-for (->complete-path "foo.poly.pm")) fallback.svg)
    (check-equal? (get-template-for (->complete-path "foo.html.pm")) fallback.html))
  
  (define fallback.missing (build-path (current-server-extras-path)
-                                      (add-ext (setup:fallback-template-prefix) 'missing)))
+                                      (add-ext pollen-fallback-template-prefix 'missing)))
  (parameterize ([current-poly-target 'missing])
    (check-false (get-template-for (->complete-path "foo.poly.pm")))
    (check-equal? (get-template-for (->complete-path "foo.html.pm")) fallback.html)))

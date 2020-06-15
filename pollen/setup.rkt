@@ -1,6 +1,8 @@
 #lang racket/base
 (require (for-syntax racket/base racket/syntax)
-         racket/runtime-path)
+         racket/runtime-path
+         "private/constants.rkt")
+(provide (all-from-out "private/constants.rkt"))
 
 (define-syntax-rule (define+provide ID EXPR ...)
   (begin
@@ -55,27 +57,10 @@
                                    'NAME
                                    (λ () DEFAULT-NAME))))))]))
 
-(define-syntax (define-settable-not stx)
-  (syntax-case stx ()
-    [(_ NAME DEFAULT-VALUE)
-     (with-syntax ([DEFAULT-NAME (format-id stx "default-~a" #'NAME)]
-                   [NAME-THUNKED (format-id stx "~a" #'NAME)])
-       #'(begin
-           (provide (prefix-out setup: NAME-THUNKED) DEFAULT-NAME)
-           (define DEFAULT-NAME DEFAULT-VALUE)
-           ;; can take a dir argument that sets start point for (get-path-to-override) search.
-           (define (NAME-THUNKED [dir #false]) DEFAULT-NAME)))]))
+
 
 (define-settable cache-watchlist null)
 (define-settable envvar-watchlist null)
-
-(define-settable-not preproc-source-ext 'pp)
-(define-settable-not markup-source-ext 'pm)
-(define-settable-not markdown-source-ext 'pmd)
-(define-settable-not null-source-ext 'p)
-(define-settable-not pagetree-source-ext 'ptree)
-(define-settable-not template-source-ext 'pt)
-(define-settable-not scribble-source-ext 'scrbl)
 
 ;; these are deliberately not settable because they're just internal signalers, no effect on external interface
 (define+provide default-mode-auto 'auto)
@@ -85,28 +70,16 @@
 (define+provide default-mode-pagetree 'ptree)
 (define+provide default-mode-template 'template)
 
-(define-settable old-cache-names '("pollen.cache" "pollen-cache"))
-(define-settable-not cache-dir-name "compiled")
-(define-settable-not cache-subdir-name "pollen")
-(define+provide default-cache-names (list* (cache-dir-name) (old-cache-names)))
+(define+provide default-cache-names (cons pollen-cache-dir-name pollen-old-cache-names))
 
-(define-settable decodable-extensions (list (markup-source-ext) (pagetree-source-ext)))
+(define-settable decodable-extensions (list pollen-markup-source-ext pollen-pagetree-source-ext))
 
-(define-settable main-pagetree (format "index.~a" (pagetree-source-ext)))
+(define-settable main-pagetree (format "index.~a" pollen-pagetree-source-ext))
 (define-settable pagetree-root-node 'pagetree-root)
 (define-settable main-root-node 'root)
 
 (define-settable command-char #\◊)
 (define-settable template-command-char #\∂)
-
-(define-settable-not template-prefix "template")
-(define-settable-not fallback-template-prefix "fallback")
-(define-settable-not template-meta-key "template")
-
-(define-settable-not main-export 'doc) ; don't forget to change fallback template too
-(define-settable-not meta-export 'metas)
-(define-settable-not meta-tag-name 'meta)
-(define-settable-not define-meta-name 'define-meta)
 
 ;; tags from https://developer.mozilla.org/en-US/docs/Web/HTML/Block-level_elements
 (define-settable block-tags (cons (main-root-node) '(address article aside blockquote body canvas dd div dl fieldset figcaption figure footer form  h1 h2 h3 h4 h5 h6 header hgroup hr li main nav noscript ol output p pre section table tfoot ul video)))
@@ -152,7 +125,6 @@
 
 (define-settable here-path-key 'here-path)
 
-(define-settable-not poly-source-ext 'poly) ; extension that signals source can be used for multiple output targets
 (define-settable poly-targets '(html)) ; current target applied to multi-output source files
 (define+provide current-poly-target (make-parameter (car (poly-targets))))
 

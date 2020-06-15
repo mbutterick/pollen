@@ -25,8 +25,15 @@ Beyond keeping the commit history available, I make no promise to maintain the p
 @section{Changelog}
 
 @subsection{Version 3.0}
+
+Changed rendering model to share a namespace between sequential renders, improving speed.
  
+Added @racket[--force] switch to @secref["raco_pollen_render" #:doc '(lib "pollen/scribblings/pollen.scrbl")].
+
+Added @racket[--dry-run] switch to @secref["raco_pollen_publish" #:doc '(lib "pollen/scribblings/pollen.scrbl")].
+
 Downgraded the following @racket[pollen/setup] values from configurable to fixed: @racket[splicing-tag], @racket[preproc-source-ext], @racket[markup-source-ext], @racket[markdown-source-ext], @racket[null-source-ext], @racket[pagetree-source-ext], @racket[template-source-ext], @racket[scribble-source-ext], @racket[poly-source-ext], @racket[cache-dir-name], @racket[cache-subdir-name], @racket[template-prefix], @racket[fallback-template-prefix], @racket[template-meta-key], @racket[main-export], @racket[meta-export], @racket[meta-tag-name], @racket[define-meta-name].
+
 
 @subsection{Version 2.2}
 

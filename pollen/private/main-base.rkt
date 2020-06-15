@@ -38,12 +38,12 @@
 (define-syntax (pollen-module-begin stx)
   (syntax-case stx ()
     [(_ PARSER-MODE . EXPRS)
-     (with-syntax ([META-HASH (split-metas #'EXPRS (setup:define-meta-name))]
-                   [METAS-ID (setup:meta-export)]
-                   [METAS-ID-CALLER (datum->syntax #'EXPRS (setup:meta-export))]
+     (with-syntax ([META-HASH (split-metas #'EXPRS pollen-define-meta-name)]
+                   [METAS-ID pollen-meta-export]
+                   [METAS-ID-CALLER (datum->syntax #'EXPRS pollen-meta-export)]
                    [ROOT-ID (datum->syntax #'EXPRS (setup:main-root-node))]
                    [POLLEN/TOP (datum->syntax #'EXPRS 'pollen/top)]
-                   [DOC-ID (setup:main-export)]
+                   [DOC-ID pollen-main-export]
                    [ALL-DEFINED-OUT (datum->syntax #'EXPRS '(all-defined-out))])
        #'(doclang:#%module-begin
           DOC-ID ; positional arg for doclang-raw: name of export
