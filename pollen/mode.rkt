@@ -8,8 +8,9 @@ a) adapts the at-exp metalang from 6.2
 b) incorporates the scribble/reader from 6.2
 so that everything will work correctly in 6.0.
 
-Note that pollen/mode uses default-command-char, NOT (setup:command-char),
-because doing so would create a loading loop if pollen/mode were used in "pollen.rkt" (which is a likely place to use it)
+Note that pollen/mode uses a hardcoded #\◊, as the command char, NOT (setup:command-char),
+because importing `pollen/setup` will create a loading loop
+if pollen/mode were used in "pollen.rkt" (which is a likely place to use it)
 Intractable problem; unavoidable limitation.
 |#
 
@@ -58,7 +59,7 @@ Intractable problem; unavoidable limitation.
     (λ args
       (parameterize ([current-readtable (make-at-readtable #:datum-readtable 'dynamic
                                                            #:command-readtable 'dynamic
-                                                           #:command-char (dynamic-require 'pollen/setup 'default-command-char))])
+                                                           #:command-char #\◊)])
         (apply p args))))
   
   (define-values (at-read at-read-syntax at-get-info)
