@@ -371,9 +371,6 @@ Finally, we need to include the X-expression from our source file. By convention
 ◊(->html (html (head (meta #:charset "UTF-8")) (body doc)))
 }
 
-
-@margin-note{You can change the name of @code{doc} by overriding @racket[default-main-export].}
-
 To summarize: this template contains a skeletal HTML page (in X-expression format). We drop @code{doc} into the template to indicate where the X-expression of our source file should be inserted. Finally, we convert the whole X-expression to HTML with @racket[->html].
 
 ``So I have to convert my HTML template to an X-expression?'' No. That's optional. You can also put hard-coded HTML in your template. Here's an equivalent way of writing @filepath{fallback.html.p}, with explicit HTML:
