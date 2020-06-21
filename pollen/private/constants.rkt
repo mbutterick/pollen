@@ -19,3 +19,5 @@
 (define template-meta-key "template")
 (define old-cache-names '("pollen.cache" "pollen-cache"))
 (define splicing-tag '@)
+(define here-path-key 'here-path)
+(define extension-escape-char #\_)

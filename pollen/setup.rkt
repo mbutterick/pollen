@@ -109,8 +109,6 @@
 
 (define-settable publish-directory "publish")
 
-(define-settable extension-escape-char #\_)
-
 (define-settable compile-cache-active #t)
 (define-settable render-cache-active #t)
 (define-settable compile-cache-max-size (* 10 1024 1024)) ; = 10 megabytes
@@ -122,8 +120,6 @@
 (define-settable extra-path? (λ (path) #f))
 
 (define-settable trim-whitespace? #t)
-
-(define-settable here-path-key 'here-path)
 
 (define-settable poly-targets '(html)) ; current target applied to multi-output source files
 (define+provide current-poly-target (make-parameter (car (poly-targets))))

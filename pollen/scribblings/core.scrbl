@@ -16,8 +16,7 @@ These functions are automatically imported into every Pollen source file (meanin
 
 @section{Metas}
 
-The only key that's automatically defined in every meta table is @racket['#,(setup:here-path-key)], which holds the absolute path to the source file. For instance, you could retrieve this value with @racket[(select-from-metas '#,(setup:here-path-key) metas)]. You can use something other than @racket['#,(setup:here-path-key)] as the key by overriding @racket[setup:here-path-key].
-
+The only key that's automatically defined in every meta table is @racket['#,pollen-here-path-key], which holds the absolute path to the source file. For instance, you could retrieve this value with @racket[(select-from-metas '#,pollen-here-path-key metas)].
 For a full introduction to metas, see @secref["Inserting_metas"].
 
 
@@ -32,7 +31,7 @@ You can retrieve a meta value — even in the same document where you define it
 @section{Splicing}
 
 @defform[(\@ arg ...)]
-Splicing tag: signals that a list should be merged into its containing expression. You can use something other than @racket[\@] by overriding @racket[setup:splicing-tag].
+Splicing tag: signals that a list should be merged into its containing expression. The splicing tag is @racket[setup:splicing-tag].
 
 @examples[#:eval my-eval
 (module splicer pollen/markup

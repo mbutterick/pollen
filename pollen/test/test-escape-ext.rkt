@@ -3,7 +3,7 @@
 
 ;; define-runtime-path only allowed at top level
 (define-runtime-path test-dir "data/escape-ext")
-(define-runtime-path test-file "data/escape-ext/test$html.pp")
+(define-runtime-path test-file "data/escape-ext/test_html.pp")
 (define-runtime-path result-file "data/escape-ext/test.html")
 
 ;; `find-exe` avoids reliance on $PATH of the host system

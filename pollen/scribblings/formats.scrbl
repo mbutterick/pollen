@@ -46,7 +46,7 @@ By default, every Pollen source file exports two identifiers:
 Contains the output of the file. The type of output depends on the source format (about which, more below).}
 
 @defthing[metas hasheq?]{
-A table of key–value pairs with extra information that is extracted from the source. These @racket[metas] will always contain the key @racket['#,(setup:here-path-key)], which returns a string representation of the full path to the source file. Beyond that, the only @racket[metas] are the ones that are specified within the source file (see the source formats below for more detail on how to specify metas).}
+A table of key–value pairs with extra information that is extracted from the source. These @racket[metas] will always contain the key @racket['#,pollen-here-path-key], which returns a string representation of the full path to the source file. Beyond that, the only @racket[metas] are the ones that are specified within the source file (see the source formats below for more detail on how to specify metas).}
 
 As usual, you can use @racket[require], @racket[local-require], or @racket[dynamic-require] to retrieve these values. But within a Pollen project, the faster way is to use @racket[get-doc] and @racket[get-metas].
 

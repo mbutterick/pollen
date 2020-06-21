@@ -44,7 +44,7 @@
                   (define doc (cached-doc SOURCE-PATH-STRING))
                   (define metas (current-metas))
                   (define here (path->pagenode
-                                (or (select-from-metas (setup:here-path-key SOURCE-PATH-STRING) metas) 'unknown)))
+                                (or (select-from-metas pollen-here-path-key metas) 'unknown)))
                   (if (bytes? doc) ; if main export is binary, just pass it through
                       doc
                       ;; allows `require` in a template

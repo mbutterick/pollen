@@ -57,7 +57,7 @@
   (not (regexp-match #rx"^\\." (path->string path))))
 
 
-(define+provide (escape-last-ext x [escape-char (setup:extension-escape-char)])
+(define+provide (escape-last-ext x [escape-char pollen-extension-escape-char])
   ;((pathish?) (char?) . ->* . coerce/path?)
   ;; if x has a file extension, reattach it with the escape char
   (define current-ext (get-ext x))
@@ -76,7 +76,7 @@
 (define second cadr)
 (define third caddr)
 (define (last x) (car (reverse x)))
-(define+provide (unescape-ext x [escape-char (setup:extension-escape-char)])
+(define+provide (unescape-ext x [escape-char pollen-extension-escape-char])
   ;((coerce/string?) (char?) . ->* . coerce/path?)
   ;; if x has an escaped extension, unescape it.
   (define-values (base _ dir?) (split-path x))

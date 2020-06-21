@@ -46,7 +46,7 @@
                   ;; an inline Pollen submodule doesn't have "pollen.rkt" or `here-path` 
                   [POLLEN-REQUIRE-AND-PROVIDES (require+provide-directory-require-files pollen-require-path)]
                   [HERE-PATH reader-here-path]
-                  [HERE-KEY (setup:here-path-key)]
+                  [HERE-KEY pollen-here-path-key]
                   [SOURCE-LINES source-stx]
                   [DOC pollen-main-export]
                   [META-MOD pollen-meta-export]

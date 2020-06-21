@@ -614,7 +614,7 @@ Second, the metas are collected into a hash table that is exported with the name
 '#hasheq((dog . "Roxy") (cat . "Chopper") (here-path . "unsaved-editor"))
 }
 
-The only key that's automatically defined in every meta table is @racket['#,(setup:here-path-key)], which is the absolute path to the source file. (In this case, because the file hasn't been saved, you'll see the @val{unsaved-editor} name instead.) 
+The only key that's automatically defined in every meta table is @racket['#,pollen-here-path-key], which is the absolute path to the source file. (In this case, because the file hasn't been saved, you'll see the @val{unsaved-editor} name instead.) 
 
 Still, you can override this too:
 

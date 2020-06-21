@@ -56,9 +56,6 @@ Determines the default HTTP port for the project server.}
 
 
 
-@defoverridable[extension-escape-char char?]{Character for escaping output-file extensions within source-file names.}
-
-
 @defoverridable[main-pagetree string?]{Pagetree that Pollen dashboard loads by default in each directory.}
 
 
@@ -143,8 +140,6 @@ Both the names and the values of environment variables are case-insensitive, so 
   @defoverridable[allow-unbound-ids? boolean?]{Predicate that controls whether Pollen converts unbound identifiers into default tags by altering the behavior of @racket[#%top] in @racketmodname[pollen/top].
 
  @history[#:added "2.0"]}
-
-@defoverridable[here-path-key 'symbol]{Key used to store the path of the source file in its metas table. No idea why you'd want to change this.}
 
 
 @section{Parameters}
