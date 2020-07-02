@@ -4,7 +4,7 @@ I welcome pull requests. But accepting a PR obligates me to maintain that code f
 
 * There’s plenty of room for improvement in the Pollen code, because every line of it has been written against the backdrop of ignorance and fallibility, mostly my own. (= Principle of Prior Ignorance)
 
-* I don’t necessarily prefer PRs to issues or feature requests. A good description of the problem with a working example is better than a half-baked PR. I can often fix it in less time than it would take to review the PR. (= Principle of Efficiency)
+* PRs for simple documentation fixes (e.g., spelling and grammar corrections) are always welcome. For more substantial changes, I don’t necessarily prefer PRs to issues or feature requests. A good description of the problem with a working example is better than a half-baked PR. I can often fix it in less time than it would take to review the PR. (= Principle of Efficiency)
 
 * If you want feedback on a potential PR, I recommend posting to the [Pollen mailing list](http://groups.google.com/forum/#!forum/pollenpub) rather than here. Because more people will see it. (= Principle of Exposure)
 
