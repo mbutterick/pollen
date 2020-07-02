@@ -1,4 +1,4 @@
-#lang debug racket/base
+#lang racket/base
 (require (for-syntax racket/base racket/syntax)
          racket/runtime-path
          "private/constants.rkt")
