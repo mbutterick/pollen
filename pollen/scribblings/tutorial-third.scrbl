@@ -515,7 +515,7 @@ This will produce an error in DrRacket:
 @errorblock{
 pollen markup error: in '(root "Pi is close to " 3.141592653589793 "." "\n" "The hyperbolic sine of pi is close to " 11.548739357257748 "."), 3.141592653589793 is not a valid element (must be txexpr, string, symbol, XML char, or cdata)}
 
-This code would not, however, produce an error if it were being run as a Pollen preprocessor file, because the prepreocessor automatically converts numbers to strings. If you'd like to verify this, change the suffix to @code{.pp} and run the file again.
+This code would not, however, produce an error if it were being run as a Pollen preprocessor file, because the preprocessor automatically converts numbers to strings. If you'd like to verify this, change the suffix to @code{.pp} and run the file again.
 
 
 @subsection[#:tag-prefix "tutorial-3"]{Introducing @filepath{pollen.rkt}}
