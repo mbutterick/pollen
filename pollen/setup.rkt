@@ -1,4 +1,4 @@
-#lang racket/base
+#lang debug racket/base
 (require (for-syntax racket/base racket/syntax)
          racket/runtime-path
          "private/constants.rkt")
@@ -23,7 +23,7 @@
                          [(not maybe-dir) (current-directory)]
                          [(directory-exists? maybe-dir) maybe-dir]
                          [else (define dir (dirname maybe-dir))
-                               (and (not (eq? 'relative dir)) dir)]))
+                               (and (not (eq? 'relative dir)) (path->complete-path dir (current-directory)))]))
   (let loop ([dir starting-dir][path default-directory-require])
     (and dir ; dir is #f when it hits the top of the filesystem
          (let ([simplified-path (simplify-path (path->complete-path path starting-dir))])
