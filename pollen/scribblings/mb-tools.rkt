@@ -1,5 +1,5 @@
 #lang at-exp racket/base
-(require (for-syntax racket/base racket/syntax pollen/setup) scribble/core scribble/manual scribble/private/manual-sprop scribble/decode scribble/html-properties racket/runtime-path racket/format  pollen/setup)
+(require (for-syntax racket/base racket/syntax) scribble/core scribble/manual scribble/private/manual-sprop scribble/decode scribble/html-properties racket/runtime-path racket/format)
 
 (provide (all-defined-out) (all-from-out racket/runtime-path))
 
