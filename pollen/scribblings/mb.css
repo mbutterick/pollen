@@ -26,7 +26,7 @@
     width: 90%;
 }
 
-.fileblock_filetitle{
+.fileblockFiletitle{
     background: #eee;
     text-align:right;
     padding: 0.15em;
@@ -42,13 +42,13 @@
     color: #666;
 }
 
-.foreign-code {
+.foreignCode {
     margin-bottom: 1em;
     padding: 0.5em;
     background: #fcfcfc;
     color: #666;
 }
 
-.terminal .SIntrapara, .browser .SIntrapara, .foreign-code .SIntrapara {
+.terminal .SIntrapara, .browser .SIntrapara, .foreignCode .SIntrapara {
     margin: 0 0 0 0;
 }

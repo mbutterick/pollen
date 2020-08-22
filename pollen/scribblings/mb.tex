@@ -1,0 +1,28 @@
+\newcommand{\terminal}[1]{#1}
+\newcommand{\browser}[1]{#1}
+\newcommand{\foreignCode}[1]{#1}
+
+\newenvironment{fileblock}{}{}
+
+\definecolor{fileboxborder}{gray}{0.5}
+\definecolor{fileboxbackground}{gray}{0.9}
+\definecolor{noskipbackground}{gray}{0.5}
+\definecolor{noskipforeground}{gray}{1}
+
+\newcommand{\fileblockFiletitle}[1]{\fcolorbox{fileboxborder}{fileboxbackground}{\makebox[\textwidth][r]{#1}}}
+\newcommand{\fileblockFilename}[1]{#1}
+
+\newenvironment{fileblockFilecontent}{}{}
+
+\newsavebox{\noskipbox}
+\newenvironment{noskip}
+  {
+   \begin{lrbox}{\noskipbox}%
+   \begin{minipage}{\dimexpr\columnwidth-2\fboxsep\relax}
+   \bfseries
+   \begingroup\color{noskipforeground}}
+  {\endgroup\upshape\end{minipage}\end{lrbox}%
+   \medskip
+   \begin{center}
+   \colorbox{noskipbackground}{\usebox{\noskipbox}}
+   \end{center}\medskip}
