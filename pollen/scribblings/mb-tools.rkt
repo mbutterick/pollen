@@ -1,5 +1,5 @@
 #lang at-exp racket/base
-(require (for-syntax racket/base racket/syntax pollen/setup) scribble/core scribble/manual scribble/private/manual-sprop scribble/decode scribble/html-properties racket/runtime-path racket/format  pollen/setup)
+(require (for-syntax racket/base racket/syntax) scribble/core scribble/manual scribble/private/manual-sprop scribble/decode scribble/html-properties racket/runtime-path racket/format)
 
 (provide (all-defined-out) (all-from-out racket/runtime-path))
 
@@ -58,20 +58,6 @@
            (define-runtime-path id name)
            (image id xs ...)))]))
 
-(define-syntax (defoverridable stx)
-  (syntax-case stx ()
-    [(_ name predicate? desc ...)
-     (with-syntax* ([default-name (format-id #'here "default-~a" #'name)]
-                   [value (let ([v (syntax-local-eval #'default-name)])
-                            (cond
-                              [(and (list? v) (andmap symbol? v) (> (length v) 5)) #`'#,'(see below)]
-                              [(or (symbol? v) (list? v)) #`'#,v]
-                              [(procedure? v) '(λ (path) #f)]
-                              [else v]))]
-                   [setup:name (format-id stx "setup:~a" #'name)])
-       #`(deftogether ((defproc (setup:name) predicate?)
-                       (defthing default-name predicate? #:value value))
-           desc ...))]))
 
 (define (val . args)
   (racketvalfont (element 'tt (map ~v args))))
