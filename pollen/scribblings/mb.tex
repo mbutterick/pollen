@@ -15,14 +15,7 @@
 \newenvironment{fileblockFilecontent}{}{}
 
 \newsavebox{\noskipbox}
-\newenvironment{noskip}
-  {
-   \begin{lrbox}{\noskipbox}%
-   \begin{minipage}{\dimexpr\columnwidth-2\fboxsep\relax}
-   \bfseries
-   \begingroup\color{noskipforeground}}
-  {\endgroup\upshape\end{minipage}\end{lrbox}%
-   \medskip
-   \begin{center}
-   \colorbox{noskipbackground}{\usebox{\noskipbox}}
-   \end{center}\medskip}
+\newenvironment{noskip}{}{}
+
+% pdflatex chokes on emoji
+\DeclareUnicodeCharacter{1F3B8}{}
