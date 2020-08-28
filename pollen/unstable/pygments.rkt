@@ -130,11 +130,18 @@ if zero is False:
   (unless (running?)
     (start python-executable line-numbers? css-class))
   (cond [(running?)
-         ;; order of writing arguments is significant: cooperates with pipe.py
-         (displayln lang pyg-out)
-         (displayln (string-join (map number->string hl-lines) " ") pyg-out)
+         ;; This works with a simple wrapper around Pygments defined in pipe.py.
+         ;; First send over the configuration options, then code to highlight.
+         ;; pipe.py also supports an encoding option, but seems unnecessary to
+         ;; use at this point.
+         (fprintf pyg-out "__LANG__ ~a~n" lang)
+         (fprintf pyg-out "__LINES__ ~a~n" (string-join (map number->string hl-lines) " "))
+         (fprintf pyg-out "__LINENOS__ ~a~n"
+                  (if line-numbers? "true" "false"))
          (displayln code pyg-out)
          (displayln "__END__" pyg-out)
+
+         ;; Read back the highlighted code
          (let loop ([s ""])
            (match (read-line pyg-in 'any)
              ["__END__" (with-input-from-string s read-html-as-xexprs)]
