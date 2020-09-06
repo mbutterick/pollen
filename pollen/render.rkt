@@ -409,25 +409,26 @@
                         [(->output-path source-path)]
                         [else #false]))
   (define key (template-cache-key source-path output-path))
-  (hash-ref! ram-cache
-             ;; within a session, this will prevent repeat players like "template.html.p"
-             ;; from hitting the file cache repeatedly
-             key
-             (λ ()
-               (cache-ref! key
-                           (λ ()  
-                             (match source-path
-                               [(or (? markup-source?) (? markdown-source?))
-                                ;; output-path may not have an extension
-                                (define output-path-ext (cond
-                                                          [(get-ext output-path)]
-                                                          [(current-poly-target)]
-                                                          [else #false]))
-                                (for/or ([proc (list get-template-from-metas
-                                                     get-default-template
-                                                     get-fallback-template)])
-                                        (file-exists-or-has-source? (proc source-path output-path-ext)))]
-                               [_ #false]))))))
+  (define (cache-thunk)
+    (match source-path
+      [(or (? markup-source?) (? markdown-source?))
+       ;; output-path may not have an extension
+       (define output-path-ext (cond
+                                 [(get-ext output-path)]
+                                 [(current-poly-target)]
+                                 [else #false]))
+       (for/or ([proc (list get-template-from-metas
+                            get-default-template
+                            get-fallback-template)])
+               (file-exists-or-has-source? (proc source-path output-path-ext)))]
+      [_ #false]))
+  (if (current-session-interactive?)
+      ;; don't cache templates in interactive session, for fresher reloads
+      ;; this makes it possible to add template and have it show up in next render
+      (cache-thunk)
+      ;; otherwise, within a rendering session, this will prevent repeat players like "template.html.p"
+      ;; from hitting the file cache repeatedly
+      (hash-ref! ram-cache key (λ () (cache-ref! key cache-thunk)))))
 
 (module-test-external
  (require pollen/setup sugar/file sugar/coerce)
