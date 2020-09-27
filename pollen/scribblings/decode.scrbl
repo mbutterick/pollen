@@ -302,9 +302,9 @@ The @racket[_linebreaker] argument can either be @racket[#f] (which will delete 
 (decode-paragraphs
 [elements (listof xexpr?)]
 [paragraph-wrapper (or/c txexpr-tag? ((listof xexpr?) . -> . txexpr?)) 'p]
-[#:linebreak-proc linebreak-proc ((listof xexpr?) . -> . (listof xexpr?)) decode-linebreaks]
+[#:linebreak-proc linebreak-proc (txexpr-elements? . -> . txexpr-elements?) decode-linebreaks]
 [#:force? force-paragraph? boolean? #f])
-(listof xexpr?)]
+txexpr-elements?]
 Find paragraphs within @racket[_elements] and wrap them with @racket[_paragraph-wrapper]. Also handle linebreaks using @racket[decode-linebreaks].
 
 What counts as a paragraph? Any @racket[_elements] that are either a) explicitly set apart with a paragraph separator, or b) adjacent to a @racket[block-txexpr?] (in which case the paragraph-ness is implied).
