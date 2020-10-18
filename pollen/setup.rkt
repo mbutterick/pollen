@@ -82,7 +82,7 @@
 (define-settable template-command-char #\∂)
 
 ;; tags from https://developer.mozilla.org/en-US/docs/Web/HTML/Block-level_elements
-(define-settable block-tags (cons (main-root-node) '(address article aside blockquote body canvas dd div dl fieldset figcaption figure footer form  h1 h2 h3 h4 h5 h6 header hgroup hr li main nav noscript ol output p pre section table tfoot ul video)))
+(define-settable block-tags (cons (main-root-node) '(address article aside blockquote body canvas dd div dl dt fieldset figcaption figure footer form  h1 h2 h3 h4 h5 h6 header hgroup hr li main nav noscript ol output p pre section table tfoot ul video)))
 
 (define-settable newline "\n")
 (define-settable linebreak-separator (newline))
