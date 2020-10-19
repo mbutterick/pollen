@@ -14,7 +14,7 @@
                [current-project-root poly-output-path-dir])
 
   (for ([parallel? (list #true #false)])
-       ;; passing "text.txt" as argument should force use of txt rendering
+       ;; passing "text.txt" as argument should force use of `txt` rendering
        (render-batch #:parallel parallel? test.txt)
        (check-equal? (file->string test.txt) "(root hello world)")
        (delete-file test.txt)
