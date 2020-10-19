@@ -1,4 +1,4 @@
-#lang racket/base
+#lang debug racket/base
 (require racket/file
          racket/path
          racket/match
@@ -180,6 +180,15 @@
            [(app ->source-path (and (not #false) (? file-exists?) sp))
             (loop rest (cons sp acc))]
            [_ (loop rest acc)])])))
+  #R paths-in
+  #R expanded-source-paths
+  (define expanded-output-paths
+    (for/list ([path (in-list paths-in)]
+          [sp (in-list expanded-source-paths)])
+      (if (equal? (->output-path path) path)
+          path
+          (->output-path sp))))
+  #R expanded-output-paths
   (cond
     [(null? expanded-source-paths) (message "[no paths to render]")]
     [(eq? special-output 'dry-run) (for-each message expanded-source-paths)]
