@@ -1,4 +1,4 @@
-#lang debug racket/base
+#lang racket/base
 (require racket/file
          racket/path
          racket/match
@@ -48,15 +48,16 @@
 (define (mod-date-missing-or-changed? source-path template-path)
   (not (hash-has-key? mod-date-hash (paths->key 'output source-path template-path))))
 
-(define (parallel-render source-paths-in job-count-arg)
+(define (parallel-render source-paths-in output-paths-in job-count-arg)
   ;; if jobs are already in the cache, pull them out before assigning workers
   ;; using worker to fetch from cache is slower
+  (define source-to-output-path-table (map cons source-paths-in output-paths-in))
   (define-values (uncached-source-paths previously-cached-jobs)
     (for/fold ([usps null]
                [pcjs null])
-              ([source-path (in-list source-paths-in)])
+              ([source-path (in-list source-paths-in)]
+               [output-path (in-list output-paths-in)])
       (match (let/ec exit
-               (define output-path (or (->output-path source-path) #false))
                (define template-path
                  (cache-ref! (template-cache-key source-path output-path) (λ () (exit 'template-miss))))
                (render-to-file-if-needed source-path template-path output-path (λ () (exit 'render-miss))))
@@ -76,17 +77,17 @@
     (for/list ([wpidx (in-range job-count)])
               (define wp (place ch
                                 (let loop ()
-                                  (match-define (cons path poly-target)
+                                  (match-define (list path output-path poly-target)
                                     (place-channel-put/get ch (list 'wants-job)))
                                   (parameterize ([current-poly-target poly-target])
-                                    (place-channel-put/get ch (list 'wants-lock (->output-path path)))
+                                    (place-channel-put/get ch (list 'wants-lock output-path))
                                     ;; trap any exceptions and pass them back as crashed jobs.
                                     ;; otherwise, a crashed rendering place can't recover, and the parallel job will be stuck.
                                     (with-handlers ([exn:fail? (λ (e) (place-channel-put ch (list 'crashed-job path #f)))])
                                       (match-define-values (_ _ ms _)
                                         ;; we don't use `render-to-file-if-needed` because we've already checked the render cache
                                         ;; if we reached this point, we know we need a render
-                                        (time-apply render-to-file (list path)))
+                                        (time-apply render-to-file (list path #f output-path)))
                                       (place-channel-put ch (list 'finished-job path ms))))
                                   (loop))))
               (handle-evt wp (λ (val) (list* wpidx wp val)))))
@@ -125,36 +126,39 @@
        ;; if it was a concurrency-related error, it will disappear.
        ;; if it was a legit error, the render will stop and print a trace.
        ;; crashed jobs are completed jobs that weren't finished
-       (for/list ([(path finished?) (in-dict completed-jobs)]
-                  #:unless finished?)
-                 path)]
+       (define failed-source-paths (for/list ([(path finished?) (in-dict completed-jobs)]
+                                     #:unless finished?)
+                                    path))
+       (define failed-output-paths (for/list ([source-path (in-list failed-source-paths)])
+                                    (dict-ref source-to-output-path-table source-path)))
+       (list failed-source-paths failed-output-paths)]
       [else
        (match (apply sync worker-evts)
          [(list wpidx wp 'wants-job)
           (match source-paths
             [(? null?) (loop null locks blocks completed-jobs completed-job-count)]
-            [(cons path rest)
-             (place-channel-put wp (cons path poly-target))
+            [(cons source-path rest)
+             (place-channel-put wp (list source-path (dict-ref source-to-output-path-table source-path) poly-target))
              (loop rest locks blocks completed-jobs completed-job-count)])]
-         [(list wpidx wp (and (or 'finished-job 'crashed-job) tag) path ms)
+         [(list wpidx wp (and (or 'finished-job 'crashed-job) tag) source-path ms)
           (match tag
             ['finished-job
              (message
               (format "rendered @ job ~a /~a ~a"
                       (~r (add1 wpidx) #:min-width (string-length (~r job-count)) #:pad-string " ")
-                      (find-relative-path (current-project-root) (->output-path path))
+                      (find-relative-path (current-project-root) (dict-ref source-to-output-path-table source-path))
                       (if (< ms 1000) (format "(~a ms)" ms) (format "(~a s)" (/ ms 1000.0)))))]
             [_
              (message
               (format "render crash @ job ~a /~a (retry pending)"
                       (add1 wpidx)
-                      (find-relative-path (current-project-root) (->output-path path))))])
+                      (find-relative-path (current-project-root) (dict-ref source-to-output-path-table source-path))))])
           (loop source-paths
                 (match (assoc wp locks)
                   [#false locks]
                   [lock (remove lock locks)])
                 blocks
-                (cons (cons path (eq? tag 'finished-job)) completed-jobs)
+                (cons (cons source-path (eq? tag 'finished-job)) completed-jobs)
                 (add1 completed-job-count))]
          [(list wpidx wp 'wants-lock path)
           (loop source-paths locks (append blocks (list (cons wp path))) completed-jobs completed-job-count)])])))
@@ -169,6 +173,11 @@
   ;; And with render, they would be rendered repeatedly.
   ;; Using reset-modification-dates is sort of like session control.
   (reset-mod-date-hash!)
+  ;; we need to handle output-paths in parallel
+  ;; because `raco pollen render` can take an output path for poly source.
+  ;; meaning, if source is "test.poly.pm" and we get `raco pollen render test.txt`,
+  ;; then the output path argument should force .txt rendering, regardless of `current-poly-target` setting
+  ;; so the output path may contain information we need that we can't necessarily derive from the source path.
   (define expanded-source-paths
     (let loop ([paths paths-in] [acc null])
       (match paths
@@ -180,24 +189,21 @@
            [(app ->source-path (and (not #false) (? file-exists?) sp))
             (loop rest (cons sp acc))]
            [_ (loop rest acc)])])))
-  #R paths-in
-  #R expanded-source-paths
   (define expanded-output-paths
     (for/list ([path (in-list paths-in)]
-          [sp (in-list expanded-source-paths)])
-      (if (equal? (->output-path path) path)
-          path
-          (->output-path sp))))
-  #R expanded-output-paths
+               [sp (in-list expanded-source-paths)])
+              (if (equal? (->output-path path) path)
+                  path
+                  (->output-path sp))))
   (cond
     [(null? expanded-source-paths) (message "[no paths to render]")]
     [(eq? special-output 'dry-run) (for-each message expanded-source-paths)]
     [else (parameterize ([current-null-output? (eq? special-output 'null)])
-            (for-each render-to-file-if-needed
-                      (match wants-parallel-render?
-                        ;; returns crashed jobs for serial rendering
-                        [#false expanded-source-paths]
-                        [jobs-arg (parallel-render expanded-source-paths jobs-arg)])))]))
+            (apply for-each (λ (sp op) (render-to-file-if-needed sp #f op))
+                   (match wants-parallel-render?
+                     ;; returns crashed jobs for serial rendering
+                     [#false (list expanded-source-paths expanded-output-paths)]
+                     [jobs-arg (parallel-render expanded-source-paths expanded-output-paths jobs-arg)])))]))
 
 (define+provide/contract (render-pagenodes pagetree-or-path)
   ((or/c pagetree? pathish?) . -> . void?)
