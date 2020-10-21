@@ -127,10 +127,10 @@
        ;; if it was a legit error, the render will stop and print a trace.
        ;; crashed jobs are completed jobs that weren't finished
        (define failed-source-paths (for/list ([(path finished?) (in-dict completed-jobs)]
-                                     #:unless finished?)
-                                    path))
+                                              #:unless finished?)
+                                             path))
        (define failed-output-paths (for/list ([source-path (in-list failed-source-paths)])
-                                    (dict-ref source-to-output-path-table source-path)))
+                                             (dict-ref source-to-output-path-table source-path)))
        (list failed-source-paths failed-output-paths)]
       [else
        (match (apply sync worker-evts)
@@ -178,23 +178,31 @@
   ;; meaning, if source is "test.poly.pm" and we get `raco pollen render test.txt`,
   ;; then the output path argument should force .txt rendering, regardless of `current-poly-target` setting
   ;; so the output path may contain information we need that we can't necessarily derive from the source path.
-  (define expanded-source-paths
-    (let loop ([paths paths-in] [acc null])
+  
+  (define-values (expanded-source-paths expanded-output-paths)
+    ;; we generate the output paths in parallel with the source paths
+    ;; rather than afterward, because
+    ;; for poly files we want to be able to look at
+    ;; the original path provided as an argument
+    ;; but the path arguments might also include pagetrees,
+    ;; which expand to multiple files.
+    ;; so this keeps everything correlated correctly.
+    (let loop ([paths paths-in] [sps null] [ops null]) 
       (match paths
-        [(? null?) (sort (remove-duplicates acc) string<? #:key path->string)]
+        [(? null?)
+         (define (cleanup paths)
+           (sort (remove-duplicates paths) string<? #:key path->string))
+         (apply values (map cleanup (list sps ops)))]
         [(cons path rest)
          (match (->complete-path path)
            [(? pagetree-source? pt)
-            (loop (append (pagetree->paths pt) rest) acc)]
+            (loop (append (pagetree->paths pt) rest) sps ops)]
            [(app ->source-path (and (not #false) (? file-exists?) sp))
-            (loop rest (cons sp acc))]
-           [_ (loop rest acc)])])))
-  (define expanded-output-paths
-    (for/list ([path (in-list paths-in)]
-               [sp (in-list expanded-source-paths)])
-              (if (equal? (->output-path path) path)
-                  path
-                  (->output-path sp))))
+            (define op (match path
+                         [(== (->output-path path)) path]
+                         [_ (->output-path sp)]))
+            (loop rest (cons sp sps) (cons op ops))]
+           [_ (loop rest sps ops)])])))
   (cond
     [(null? expanded-source-paths) (message "[no paths to render]")]
     [(eq? special-output 'dry-run) (for-each message expanded-source-paths)]

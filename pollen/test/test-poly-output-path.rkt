@@ -1,5 +1,5 @@
 #lang at-exp racket/base
-(require rackunit racket/runtime-path pollen/render racket/file racket/system pollen/setup txexpr xml)
+(require rackunit racket/runtime-path pollen/render racket/file pollen/setup txexpr xml)
 
 ;; define-runtime-path only allowed at top level
 (define-runtime-path poly-output-path-dir "data/poly-output-path")
