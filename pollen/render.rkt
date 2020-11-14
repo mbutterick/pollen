@@ -48,73 +48,74 @@
 (define (mod-date-missing-or-changed? source-path template-path)
   (not (hash-has-key? mod-date-hash (paths->key 'output source-path template-path))))
 
-(define (parallel-render source-paths-in output-paths-in job-count-arg)
+(struct $job (source output) #:transparent)
+(struct $jobresult (job finished-successfully) #:transparent)
+(define (parallel-render jobs-in worker-count-arg)
   ;; if jobs are already in the cache, pull them out before assigning workers
   ;; using worker to fetch from cache is slower
-  (define source-to-output-path-table (map cons source-paths-in output-paths-in))
-  (define-values (uncached-source-paths previously-cached-jobs)
-    (for/fold ([usps null]
-               [pcjs null])
-              ([source-path (in-list source-paths-in)]
-               [output-path (in-list output-paths-in)])
+  (define-values (uncached-jobs previously-cached-jobs)
+    (for/fold ([ujobs null]
+               [pcjobs null])
+              ([job (in-list jobs-in)])
       (match (let/ec exit
                (define template-path
-                 (cache-ref! (template-cache-key source-path output-path) (λ () (exit 'template-miss))))
-               (render-to-file-if-needed source-path template-path output-path (λ () (exit 'render-miss))))
-        [(? symbol? sym) (values (cons source-path usps) pcjs)]
-        [_ (values usps (cons (cons source-path #true) pcjs))])))
-  
-  (define job-count
+                 (cache-ref! (template-cache-key ($job-source job) ($job-output job)) (λ () (exit 'template-miss))))
+               (render-to-file-if-needed ($job-source job) template-path ($job-output job) (λ () (exit 'render-miss))))
+        [(? symbol? sym) (values (cons job ujobs) pcjobs)]
+        [_ (values ujobs (cons ($jobresult job #true) pcjobs))])))
+
+  (define worker-count
     (min
-     (length uncached-source-paths)
-     (match job-count-arg
+     (length uncached-jobs)
+     (match worker-count-arg
        [#true (processor-count)]
        [(? exact-positive-integer? count) count]
-       [_ (raise-user-error 'render-batch "~a is not an exact positive integer or #true" job-count-arg)])))
+       [_ (raise-user-error 'render-batch "~a is not an exact positive integer or #true" worker-count-arg)])))
   
   ;; initialize the workers
   (define worker-evts
-    (for/list ([wpidx (in-range job-count)])
-              (define wp (place ch
-                                (let loop ()
-                                  (match-define (list path output-path poly-target)
-                                    (place-channel-put/get ch (list 'wants-job)))
-                                  (parameterize ([current-poly-target poly-target])
-                                    (place-channel-put/get ch (list 'wants-lock output-path))
-                                    ;; trap any exceptions and pass them back as crashed jobs.
-                                    ;; otherwise, a crashed rendering place can't recover, and the parallel job will be stuck.
-                                    (with-handlers ([exn:fail? (λ (e) (place-channel-put ch (list 'crashed-job path #f)))])
-                                      (match-define-values (_ _ ms _)
-                                        ;; we don't use `render-to-file-if-needed` because we've already checked the render cache
-                                        ;; if we reached this point, we know we need a render
-                                        (time-apply render-to-file (list path #f output-path)))
-                                      (place-channel-put ch (list 'finished-job path ms))))
-                                  (loop))))
-              (handle-evt wp (λ (val) (list* wpidx wp val)))))
+    (for/list ([wpidx (in-range worker-count)])
+      (define wp
+        (place ch
+               (let loop ()
+                 (match-define (list source-path output-path poly-target)
+                   (place-channel-put/get ch (list 'wants-job)))
+                 (parameterize ([current-poly-target poly-target])
+                   (place-channel-put/get ch (list 'wants-lock output-path))
+                   ;; trap any exceptions and pass them back as crashed jobs.
+                   ;; otherwise, a crashed rendering place can't recover, and the parallel job will be stuck.
+                   (with-handlers ([exn:fail? (λ (e) (place-channel-put ch (list 'crashed-job source-path output-path #f)))])
+                     (match-define-values (_ _ ms _)
+                       ;; we don't use `render-to-file-if-needed` because we've already checked the render cache
+                       ;; if we reached this point, we know we need a render
+                       (time-apply render-to-file (list source-path #f output-path)))
+                     (place-channel-put ch (list 'finished-job source-path output-path ms))))
+                 (loop))))
+      (handle-evt wp (λ (val) (list* wpidx wp val)))))
      
   (define poly-target (current-poly-target))
 
-  ;; `locks` and `blocks` are (listof (cons/c evt? path?))
-  (let loop ([source-paths (reverse uncached-source-paths)]
+  (struct $lock (worker path) #:transparent)
+  ;; `locks` and `blocks` are (listof $lock)
+  (let loop ([jobs (reverse uncached-jobs)]
              [locks-in null]
              [blocks-in null]
-             ;; `completed-jobs` is (listof (cons/c path? boolean?))
-             [completed-jobs previously-cached-jobs]
+             [completed-job-results previously-cached-jobs] ; (listof jobresult)
              [completed-job-count (length previously-cached-jobs)])
     ;; try to unblock blocked workers
     (define-values (locks blocks)
       (for/fold ([locks locks-in]
                  [blocks null])
                 ([block (in-list blocks-in)])
-        (match-define (cons wp path) block)
+        (match-define ($lock wp path) block)
         (cond
-          [(member path (dict-values locks))
+          [(member path (map $lock-path locks))
            (values locks (cons block blocks))]
           [else
            (place-channel-put wp 'lock-approved)
            (values (cons block locks) blocks)])))
     (cond
-      [(eq? completed-job-count (length source-paths-in))
+      [(eq? completed-job-count (length jobs-in))
        ;; second bite at the apple for crashed jobs.
        ;; 1) many crashes that arise in parallel rendering are
        ;; a result of concurrency issues (e.g. shared files not being readable at the right moment).
@@ -126,42 +127,41 @@
        ;; if it was a concurrency-related error, it will disappear.
        ;; if it was a legit error, the render will stop and print a trace.
        ;; crashed jobs are completed jobs that weren't finished
-       (define failed-source-paths (for/list ([(path finished?) (in-dict completed-jobs)]
-                                              #:unless finished?)
-                                             path))
-       (define failed-output-paths (for/list ([source-path (in-list failed-source-paths)])
-                                             (dict-ref source-to-output-path-table source-path)))
-       (list failed-source-paths failed-output-paths)]
+       (for/list ([jr (in-list completed-job-results)]
+                  #:unless ($jobresult-finished-successfully jr))
+         ($jobresult-job jr))]
       [else
        (match (apply sync worker-evts)
          [(list wpidx wp 'wants-job)
-          (match source-paths
-            [(? null?) (loop null locks blocks completed-jobs completed-job-count)]
-            [(cons source-path rest)
-             (place-channel-put wp (list source-path (dict-ref source-to-output-path-table source-path) poly-target))
-             (loop rest locks blocks completed-jobs completed-job-count)])]
-         [(list wpidx wp (and (or 'finished-job 'crashed-job) tag) source-path ms)
+          (match jobs
+            [(? null?) (loop null locks blocks completed-job-results completed-job-count)]
+            [(cons ($job source-path output-path) rest)
+             (place-channel-put wp (list source-path output-path poly-target))
+             (loop rest locks blocks completed-job-results completed-job-count)])]
+         [(list wpidx wp (and (or 'finished-job 'crashed-job) tag) source-path output-path ms)
           (match tag
             ['finished-job
              (message
               (format "rendered @ job ~a /~a ~a"
-                      (~r (add1 wpidx) #:min-width (string-length (~r job-count)) #:pad-string " ")
-                      (find-relative-path (current-project-root) (dict-ref source-to-output-path-table source-path))
+                      (~r (add1 wpidx) #:min-width (string-length (~r worker-count)) #:pad-string " ")
+                      (find-relative-path (current-project-root) output-path)
                       (if (< ms 1000) (format "(~a ms)" ms) (format "(~a s)" (/ ms 1000.0)))))]
             [_
              (message
               (format "render crash @ job ~a /~a (retry pending)"
                       (add1 wpidx)
-                      (find-relative-path (current-project-root) (dict-ref source-to-output-path-table source-path))))])
-          (loop source-paths
-                (match (assoc wp locks)
+                      (find-relative-path (current-project-root) output-path)))])
+          (loop jobs
+                (match (findf (λ (lock) (equal? ($lock-worker lock) wp)) locks)
                   [#false locks]
                   [lock (remove lock locks)])
                 blocks
-                (cons (cons source-path (eq? tag 'finished-job)) completed-jobs)
+                (let* ([job-finished? (eq? tag 'finished-job)]
+                       [jr ($jobresult ($job source-path output-path) job-finished?)])
+                  (cons jr completed-job-results))
                 (add1 completed-job-count))]
-         [(list wpidx wp 'wants-lock path)
-          (loop source-paths locks (append blocks (list (cons wp path))) completed-jobs completed-job-count)])])))
+         [(list wpidx wp 'wants-lock output-path)
+          (loop jobs locks (append blocks (list ($lock wp output-path))) completed-job-results completed-job-count)])])))
 
 (define current-null-output? (make-parameter #f))
 
@@ -178,7 +178,7 @@
   ;; meaning, if source is "test.poly.pm" and we get `raco pollen render test.txt`,
   ;; then the output path argument should force .txt rendering, regardless of `current-poly-target` setting
   ;; so the output path may contain information we need that we can't necessarily derive from the source path.
-  
+
   (define-values (expanded-source-paths expanded-output-paths)
     ;; we generate the output paths in parallel with the source paths
     ;; rather than afterward, because
@@ -190,9 +190,15 @@
     (let loop ([paths paths-in] [sps null] [ops null]) 
       (match paths
         [(? null?)
-         (define (cleanup paths)
-           (sort (remove-duplicates paths) string<? #:key path->string))
-         (apply values (map cleanup (list sps ops)))]
+         ;; it's possible that we have multiple output names for one poly file
+         ;; so after we expand, we only remove duplicates where both the source and dest in the pair
+         ;; are the same
+         (let* ([pairs (remove-duplicates (map cons sps ops))]
+                [pairs (sort pairs string<? #:key (compose1 path->string car))]
+                [pairs (sort pairs string<? #:key (compose1 path->string cdr))])
+           (for/lists (sps ops)
+                      ([pr (in-list pairs)])
+             (values (car pr) (cdr pr))))]
         [(cons path rest)
          (match (->complete-path path)
            [(? pagetree-source? pt)
@@ -206,12 +212,14 @@
   (cond
     [(null? expanded-source-paths) (message "[no paths to render]")]
     [(eq? special-output 'dry-run) (for-each message expanded-source-paths)]
-    [else (parameterize ([current-null-output? (eq? special-output 'null)])
-            (apply for-each (λ (sp op) (render-to-file-if-needed sp #f op))
-                   (match wants-parallel-render?
-                     ;; returns crashed jobs for serial rendering
-                     [#false (list expanded-source-paths expanded-output-paths)]
-                     [jobs-arg (parallel-render expanded-source-paths expanded-output-paths jobs-arg)])))]))
+    [else
+     (define all-jobs (map $job expanded-source-paths expanded-output-paths))
+     (parameterize ([current-null-output? (eq? special-output 'null)])
+       (for-each (λ (job) (render-to-file-if-needed ($job-source job) #f ($job-output job)))
+                 (match wants-parallel-render?
+                   ;; returns crashed jobs for serial rendering
+                   [#false all-jobs]
+                   [worker-count-arg (parallel-render all-jobs worker-count-arg)])))]))
 
 (define+provide/contract (render-pagenodes pagetree-or-path)
   ((or/c pagetree? pathish?) . -> . void?)
@@ -399,7 +407,7 @@
 (define (file-exists-or-has-source? path) ; path could be #f
   (and path (for/first ([proc (in-list (list values ->preproc-source-path ->null-source-path))]
                         #:when (file-exists? (proc path)))
-                       path)))
+              path)))
 
 (define (get-template-from-metas source-path output-path-ext)
   (with-handlers ([exn:fail:contract? (λ (e) #f)]) ; in case source-path doesn't work with cached-require
@@ -443,7 +451,7 @@
        (for/or ([proc (list get-template-from-metas
                             get-default-template
                             get-fallback-template)])
-               (file-exists-or-has-source? (proc source-path output-path-ext)))]
+         (file-exists-or-has-source? (proc source-path output-path-ext)))]
       [_ #false]))
   (if (current-session-interactive?)
       ;; don't cache templates in interactive session, for fresher reloads
