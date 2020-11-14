@@ -1,4 +1,4 @@
-#lang racket/base
+#lang debug racket/base
 (require racket/file
          racket/path
          racket/match
@@ -51,6 +51,8 @@
 (define (parallel-render source-paths-in output-paths-in job-count-arg)
   ;; if jobs are already in the cache, pull them out before assigning workers
   ;; using worker to fetch from cache is slower
+  #R source-paths-in
+  #R output-paths-in
   (define source-to-output-path-table (map cons source-paths-in output-paths-in))
   (define-values (uncached-source-paths previously-cached-jobs)
     (for/fold ([usps null]
@@ -178,7 +180,7 @@
   ;; meaning, if source is "test.poly.pm" and we get `raco pollen render test.txt`,
   ;; then the output path argument should force .txt rendering, regardless of `current-poly-target` setting
   ;; so the output path may contain information we need that we can't necessarily derive from the source path.
-  
+
   (define-values (expanded-source-paths expanded-output-paths)
     ;; we generate the output paths in parallel with the source paths
     ;; rather than afterward, because
@@ -190,9 +192,15 @@
     (let loop ([paths paths-in] [sps null] [ops null]) 
       (match paths
         [(? null?)
-         (define (cleanup paths)
-           (sort (remove-duplicates paths) string<? #:key path->string))
-         (apply values (map cleanup (list sps ops)))]
+         ;; it's possible that we have multiple output names for one poly file
+         ;; so after we expand, we only remove duplicates where both the source and dest in the pair
+         ;; are the same
+         (let* ([pairs (remove-duplicates (map cons sps ops))]
+                [pairs (sort pairs string<? #:key (compose1 path->string car))]
+                [pairs (sort pairs string<? #:key (compose1 path->string cdr))])
+           (for/lists (sps ops)
+                      ([pr (in-list pairs)])
+             (values (car pr) (cdr pr))))]
         [(cons path rest)
          (match (->complete-path path)
            [(? pagetree-source? pt)
