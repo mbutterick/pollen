@@ -53,6 +53,10 @@
   ;; using worker to fetch from cache is slower
   #R source-paths-in
   #R output-paths-in
+  ;; 201114
+  ;; the problem here is that poly sources might appear multiple times,
+  ;; related to more than one output file
+  ;; so assuming a one-to-one directory won't work.
   (define source-to-output-path-table (map cons source-paths-in output-paths-in))
   (define-values (uncached-source-paths previously-cached-jobs)
     (for/fold ([usps null]
