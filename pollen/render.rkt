@@ -179,7 +179,7 @@
   ;; then the output path argument should force .txt rendering, regardless of `current-poly-target` setting
   ;; so the output path may contain information we need that we can't necessarily derive from the source path.
 
-  (define-values (expanded-source-paths expanded-output-paths)
+  (define all-jobs
     ;; we generate the output paths in parallel with the source paths
     ;; rather than afterward, because
     ;; for poly files we want to be able to look at
@@ -194,26 +194,24 @@
          ;; so after we expand, we only remove duplicates where both the source and dest in the pair
          ;; are the same
          (let* ([pairs (remove-duplicates (map cons sps ops))]
-                [pairs (sort pairs string<? #:key (compose1 path->string car))]
-                [pairs (sort pairs string<? #:key (compose1 path->string cdr))])
-           (for/lists (sps ops)
-                      ([pr (in-list pairs)])
-             (values (car pr) (cdr pr))))]
+                [pairs (sort pairs path<? #:key car)]
+                [pairs (sort pairs path<? #:key cdr)])
+           (for/list ([pr (in-list pairs)])
+             ($job (car pr) (cdr pr))))]
         [(cons path rest)
          (match (->complete-path path)
            [(? pagetree-source? pt)
             (loop (append (pagetree->paths pt) rest) sps ops)]
-           [(app ->source-path (and (not #false) (? file-exists?) sp))
+           [(app ->source-path sp) #:when (and sp (file-exists? sp))
             (define op (match path
                          [(== (->output-path path)) path]
                          [_ (->output-path sp)]))
             (loop rest (cons sp sps) (cons op ops))]
            [_ (loop rest sps ops)])])))
   (cond
-    [(null? expanded-source-paths) (message "[no paths to render]")]
-    [(eq? special-output 'dry-run) (for-each message expanded-source-paths)]
+    [(null? all-jobs) (message "[no paths to render]")]
+    [(eq? special-output 'dry-run) (for-each message (map $job-source all-jobs))]
     [else
-     (define all-jobs (map $job expanded-source-paths expanded-output-paths))
      (parameterize ([current-null-output? (eq? special-output 'null)])
        (for-each (λ (job) (render-to-file-if-needed ($job-source job) #f ($job-output job)))
                  (match wants-parallel-render?
