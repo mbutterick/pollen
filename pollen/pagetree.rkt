@@ -304,7 +304,17 @@
   (define starting-dir (match starting-path
                          [(? directory-exists?) starting-path]
                          [_ (dirname starting-path)]))
-  (->output-path (find-relative-path (->complete-path starting-dir) (->complete-path path))))
+  (define relpath (if (eq? starting-dir 'relative)
+                      path
+                      (find-relative-path (->complete-path starting-dir) (->complete-path path))))
+  (->output-path relpath))
+
+(module-test-external
+ (check-equal? (path->pagenode "/foo/bar/index.html" "/foo") 'foo/bar/index.html)
+ (check-equal? (path->pagenode "/foo/bar/index.html" "/foo/bar") 'bar/index.html)
+ (check-equal? (path->pagenode "/foo/bar/index.html" (string->path "/foo/bar")) 'bar/index.html)
+ (check-equal? (path->pagenode "/foo/bar/index.html" "/foo/bar/other.html") 'index.html)
+ (check-equal? (path->pagenode "assets" 'index.html) 'assets))
 
 
 (define+provide/contract (in-pagetree? pnish [pt-or-path (current-pagetree)])
