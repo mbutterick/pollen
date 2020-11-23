@@ -31,7 +31,7 @@
                                                     pagetree-source?))])
                               (proc path))
                #:unless (path-cached? path))
-              (path->complete-path path)))
+              (simple-form-path path)))
 
   (cond
     [wants-dry-run? (for-each message uncached-paths)]

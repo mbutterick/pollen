@@ -39,7 +39,7 @@
     (λ (path-or-path-string subkey caller-name)
       (define path
         (with-handlers ([exn:fail? (path-error-handler caller-name path-or-path-string)])
-          (path->complete-path (if (path? path-or-path-string)
+          (simple-form-path (if (path? path-or-path-string)
                                    path-or-path-string
                                    (string->path path-or-path-string)))))
       (unless (file-exists? path)

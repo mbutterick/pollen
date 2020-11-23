@@ -52,7 +52,7 @@
            'pollen)]))
 
 (define (very-nice-path x)
-  (path->complete-path (simplify-path (cleanse-path (->path x)))))
+  (simple-form-path (cleanse-path (->path x))))
 
 (define (handle-test)
   (displayln "raco pollen is installed correctly"))

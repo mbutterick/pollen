@@ -19,10 +19,9 @@
   (parameterize ([current-directory (dirname (->complete-path starting-path))])
     (let loop ([dir (current-directory)][path filename-to-find])
       (and dir ; dir is #f when it hits the top of the filesystem
-           (let ([completed-path (path->complete-path path)]) 
-             (if (exists-proc completed-path)
-                 (simplify-path completed-path)
-                 (loop (dirname dir) (build-path 'up path))))))))
+           (match (simple-form-path path)
+             [(? exists-proc sfp) sfp]
+             [_ (loop (dirname dir) (build-path 'up path))])))))
 
 
 ;; for files like svg that are not source in pollen terms,
