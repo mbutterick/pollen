@@ -175,21 +175,23 @@ version                print the version" (current-server-port) (make-publish-di
 (define (handle-start)
   (define launch-wanted #f)
   (define localhost-wanted #f)
-  (define clargs
-    (command-line #:program "raco pollen start"
-                  #:argv (vector-drop (current-command-line-arguments) 1) ; snip the 'start' from the front
-                  #:once-each
-                  [("--launch" "-l") "Launch browser after start" (set! launch-wanted #t)]
-                  [("--local") "Restrict access to localhost" (set! localhost-wanted #t)]
-                  #:args other-args
-                  other-args))
-  (define dir (path->directory-path (get-first-arg-or-current-dir clargs)))
-  (unless (directory-exists? dir)
-    (error (format "~a is not a directory" dir)))
-  (define http-port (with-handlers ([exn:fail? (λ (e) #f)])
-                      (string->number (cadr clargs))))
-  (when (and http-port (not (exact-positive-integer? http-port)))
-    (error (format "~a is not a valid port number" http-port)))
+  (define-values (dir http-port)
+    (command-line
+     #:program "raco pollen start"
+     #:argv (vector-drop (current-command-line-arguments) 1) ; snip the 'start' from the front
+     #:once-each
+     [("--launch" "-l") "Launch browser after start" (set! launch-wanted #t)]
+     [("--local") "Restrict access to localhost" (set! localhost-wanted #t)]
+     #:args ([dir (current-directory)] [port "8080"])
+     (define parsed-dir
+       (path->directory-path (normalize-path (very-nice-path dir))))
+     (unless (directory-exists? parsed-dir)
+       (error (format "~a is not a directory" parsed-dir)))
+
+     (define parsed-port (string->number port))
+     (when (and parsed-port (not (exact-positive-integer? parsed-port)))
+       (error (format "~a is not a valid port number" parsed-port)))
+     (values parsed-dir parsed-port)))
   (parameterize ([current-project-root dir]
                  [current-server-port (or http-port (setup:project-server-port))]
                  [current-server-listen-ip (and localhost-wanted "127.0.0.1")]
