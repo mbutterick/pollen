@@ -1,0 +1,28 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  run:
+    name: "Build using Racket '${{ matrix.racket-version }}' (${{ matrix.racket-variant }})"
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        racket-version: ["7.4", "7.5", "7.6", "7.7", "7.8", "7.9", "current"]
+        racket-variant: ["BC", "CS"]
+    steps:
+    - name: Checkout
+      uses: actions/checkout@master
+
+    - uses: Bogdanp/setup-racket@v0.11
+      with:
+        distribution: 'full'
+        version: ${{ matrix.racket-version }}
+        variant: ${{ matrix.racket-variant }}
+
+    - name: Install Pollen and its dependencies
+      run: raco pkg install --auto --batch
+
+    - name: Run the tests
+      run: xvfb-run raco test -j 4 -p pollen
