@@ -1,5 +1,6 @@
 #lang racket/base
-(require racket/runtime-path 
+(require racket/async-channel
+         racket/runtime-path
          web-server/dispatch
          web-server/web-server
          web-server/servlet-dispatch
@@ -49,11 +50,11 @@
                            [("127.0.0.1") "localhost"]
                            [else clsi]))
                  "project server permitting access to all clients")))
-  (message "ready to rock")
-  
+  (define ch (make-async-channel))
   (define stop-func
     (parameterize ([error-print-width 1000])
       (serve
+       #:confirmation-channel ch
        #:dispatch (sequencer:make
                    (dispatch/servlet pollen-servlet)
                    (make-static-dispatcher-sequence
@@ -62,6 +63,13 @@
                    (dispatch/servlet route-404))
        #:listen-ip (current-server-listen-ip)
        #:port (current-server-port))))
+  (define exn-or-port
+    (sync ch))
+  (when (exn? exn-or-port)
+    (message "project server failed to start")
+    (sync (system-idle-evt))
+    (exit 1))
+  (message "ready to rock")
   (when open-browser-window?
     (send-url (string-append server-name servlet-path)))
   (if return?
