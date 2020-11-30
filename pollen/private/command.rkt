@@ -182,13 +182,13 @@ version                print the version" (current-server-port) (make-publish-di
      #:once-each
      [("--launch" "-l") "Launch browser after start" (set! launch-wanted #t)]
      [("--local") "Restrict access to localhost" (set! localhost-wanted #t)]
-     #:args ([dir (current-directory)] [port "8080"])
+     #:args ([dir (current-directory)] [port #f])
      (define parsed-dir
        (path->directory-path (normalize-path (very-nice-path dir))))
      (unless (directory-exists? parsed-dir)
        (error (format "~a is not a directory" parsed-dir)))
 
-     (define parsed-port (string->number port))
+     (define parsed-port (and port (string->number port)))
      (when (and parsed-port (not (exact-positive-integer? parsed-port)))
        (error (format "~a is not a valid port number" parsed-port)))
      (values parsed-dir parsed-port)))
