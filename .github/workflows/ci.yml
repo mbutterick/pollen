@@ -9,8 +9,23 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        racket-version: ["7.4", "7.5", "7.6", "7.7", "7.8", "7.9", "current"]
+        racket-version: ["6.6", "6.7", "6.8", "6.9", "6.10.1", "6.11", "6.12", "7.0", "7.1", "7.2", "7.3", "7.4", "7.5", "7.6", "7.7", "7.8", "7.9", "current"]
         racket-variant: ["BC", "CS"]
+        # CS builds are only provided for versions 7.4 and up so avoid
+        # running the job for prior versions.
+        exclude:
+          - {racket-version: "6.6",    racket-variant: "CS"}
+          - {racket-version: "6.7",    racket-variant: "CS"}
+          - {racket-version: "6.8",    racket-variant: "CS"}
+          - {racket-version: "6.9",    racket-variant: "CS"}
+          - {racket-version: "6.10.1", racket-variant: "CS"}
+          - {racket-version: "6.11",   racket-variant: "CS"}
+          - {racket-version: "6.12",   racket-variant: "CS"}
+          - {racket-version: "7.0",    racket-variant: "CS"}
+          - {racket-version: "7.1",    racket-variant: "CS"}
+          - {racket-version: "7.2",    racket-variant: "CS"}
+          - {racket-version: "7.3",    racket-variant: "CS"}
+
     steps:
     - name: Checkout
       uses: actions/checkout@master
