@@ -293,7 +293,7 @@
 
 
 (define+provide (special-path? path)
-  (define special-paths (append default-cache-names '("compiled" ".git" ".gitignore" ".hg" ".svn" "CVS" "Makefile")))
+  (define special-paths (append default-cache-names '("compiled" ".git" ".gitignore" ".hg" ".svn" "CVS" "Makefile" ".DS_Store")))
   (and (member (path->string (last (explode-path path))) special-paths) #t))
 
 (module-test-internal
