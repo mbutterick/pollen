@@ -6,7 +6,9 @@
          framework)
 
 #|
-Identical to scribble/private/indentation except it uses #\◊ rather than #\@ as the command char.
+Identical to scribble/private/indentation except it uses #\◊ rather than #\@ as the command char, because these values are hard-coded within the indentation module.
+
+https://github.com/racket/gui/blob/master/gui-lib/scribble/private/indentation.rkt
 
 In the unit tests, `scribble/base` became `pollen/markup`
 and `scribble/manual` became `pollen/markdown`
