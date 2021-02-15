@@ -44,7 +44,7 @@ This function doesn't do much on its own. Rather, it provides the hooks upon whi
 
 Recall that in Pollen, all @secref["tags-are-functions"]. By default, the @racket[_tagged-xexpr] from a source file is tagged with @racket[root]. So the typical way to use @racket[decode] is to attach your decoding functions to it, and then define @racket[root] to invoke your @racket[decode] function. Then it will be automatically applied to every @racket[doc] during compile. 
 
-@margin-note{The @racket[hyphenate] function is not part of Pollen, but rather the @link["http://github.com/mbutterick/hyphenate"]{@racket[hyphenate] package}, which you can install separately.}
+@margin-note{@link["https://docs.racket-lang.org/pollen-tfl/_pollen_rkt_.html#%28def._%28%28lib._pollen-tfl%2Fpollen..rkt%29._root%29%29"]{Here's an example} of invoking @racket[decode] via the @racket[root] tag. That example is part of the @racket[pollen-tfl] sample project, which you can install & study separately.}
 
 This illustrates another important point: even though @racket[decode] presents an imposing list of arguments, you're unlikely to use all of them at once. These represent possibilities, not requirements. For instance, let's see what happens when @racket[decode] is invoked without any of its optional arguments.
 
