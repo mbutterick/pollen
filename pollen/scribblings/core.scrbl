@@ -31,7 +31,7 @@ You can retrieve a meta value — even in the same document where you define it
 @section{Splicing}
 
 @defform[(\@ arg ...)]
-Splicing tag: signals that a list should be merged into its containing expression. The splicing tag is @racket[setup:splicing-tag].
+The splicing tag signals that a list should be merged into its containing expression. The splicing tag is @racket['\@].
 
 @examples[#:eval my-eval
 (module splicer pollen/markup
@@ -39,6 +39,24 @@ Splicing tag: signals that a list should be merged into its containing expressio
 (require 'splicer)
 doc
 ]
+
+The splicing tag is useful when you want to return a list of X-expressions in a situation where you can only return one. For instance, @secref["Tag_functions"] can only return one X-expression. But if we wrap the list of X-expressions in a splicing tag, they behave like a single X-expression. Later, Pollen will merge the list elements into the surrounding expression (as shown above).
+
+@examples[#:eval my-eval
+(require pollen/tag)
+
+(code:comment @#,t{wrong: function returns a list of X-expressions})
+(define-tag-function (multi attrs elems)
+  '("foo" "bar"))
+
+(code:comment @#,t{right: function returns a list of X-expressions})
+(code:comment @#,t{as elements inside a splicing tag})
+(define-tag-function (multi2 attrs elems)
+  '(\@ "foo" "bar"))
+]
+
+
+Though the splicing tag is cosmetically identical to the abbreviated notation of @litchar{@"@"} for @racket[unquote-splicing], and has a similar purpose, it's not the same thing. The splicing tag isn't a variable — it's just a symbol that Pollen treats specially when generating output.
 
 
 @defform[(when/splice condition pollen-args)]
