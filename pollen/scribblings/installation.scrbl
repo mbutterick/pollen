@@ -98,5 +98,60 @@ In general, I subscribe to the view that software should let you do what you wan
 
 I've been using Pollen daily for several years (and will continue to do so, because my main work is writing). I've made Pollen available because a) I'm certain that others have had the same frustrations that I have, and b) feature suggestions and bug reports make it more useful for everyone.
 
-I hope you enjoy using it. If you get stuck on something not covered here, see @secref["Getting_more_help" #:doc '(lib "pollen/scribblings/pollen.scrbl")].
+I hope you enjoy using it.
+
+
+@section{Getting more help}
+
+
+@subsection{Bugs and feature requests}
+
+Can be submitted as @link["https://github.com/mbutterick/pollen/issues"]{GitHub issues} at the main Pollen source repository.
+
+@subsection{Questions & discussion}
+
+For general tips and how-to questions, use the @link["https://github.com/mbutterick/pollen-users/issues"]{pollen-users discussion group} (on GitHub). I'll also use that list to post major changes and new features. 
+
+You need a GitHub account to post. If you don't have one, don't panic — they're free and easy to set up with an email address. @link["https://github.com/mbutterick/pollen-users"]{Instructions here}.
+
+(BTW, the former ``pollenpub'' Google Group is now deprecated.)
+
+
+
+@subsection{Can I see the source for @italic{Practical Typography} or @italic{Typography for Lawyers}?}
+
+Yes, a tutorial project based on the previous version of @link["http://typographyforlawyers.com/"]{@italic{Typography for Lawyers}} is available by installing the @link["https://docs.racket-lang.org/pollen-tfl/"]{pollen-tfl} package the same way you installed Pollen. 
+
+The current versions of @italic{Practical Typography} & @italic{Typography for Lawyers} are generated from a single set of Pollen source files, which is a complication that makes them less suitable for an introductory tutorial. Still, even though this tutorial project is based on an earlier version, the coding techniques are very close to what I still use. Learn with confidence.
+
+
+@subsection{Utilities & libraries}
+
+@link["https://github.com/malcolmstill/pollen-count"]{pollen-count}: enumeration and cross-referencing library by Malcolm Still
+
+@link["https://github.com/lijunsong/pollen-mode"]{pollen-mode}: Emacs mode for Pollen by Junsong Li
+
+@link["https://github.com/basus/pollen-mode"]{Pollen mode}: Emacs mode for Pollen by Shrutarshi Basu
+
+@link["https://docs.racket-lang.org/pollen-component/"]{Pollen Component}: Component-based development for Pollen by Leandro Facchinetti
+
+@link["https://docs.racket-lang.org/css-expr/"]{CSS-expressions}: S-expression-based CSS by Leandro Facchinetti
+
+@link["https://github.com/lijunsong/pollen-rock"]{Pollen Rock}: rendering server and an in-browser editor for Pollen
+
+@link["https://github.com/appliedsciencestudio/talks/tree/master/mxnet"]{Polllen as a front end for Reveal.js} by Dave Liepmann. Reveal.js is a library that allows you to create slide presentations in pure HTML/CSS that run in the browser.
+
+
+@subsection{More projects & guides}
+
+@link["https://digitalwords.net"]{Digital Words} by Júda Ronén [@link["https://gitlab.com/rwmpelstilzchen/digitalwords.net"]{source}]
+
+@link["https://thelocalyarn.com/excursus/secretary"]{Secretary of Foreign Relations} by Joel Dueck [@link["https://github.com/otherjoel/try-pollen"]{source}]
+
+@link["https://github.com/fasiha/pollen-guide"]{A Poor Guide to Pollen} by Ahmed Fasih
+
+@link["https://youtu.be/20GGVNBykaw"]{The World's Most Dangerous Racket Programmer} and @link["https://youtu.be/IMz09jYOgoc"]{Like a Blind Squirrel in a Ferrari}: short talks about Pollen that I gave at RacketCons 2013 and 2014, respectively.
+
+@link["http://mstill.io"]{mstill.io blog} by Malcolm Still [@link["https://github.com/malcolmstill/mstill.io"]{source}]
+
 
