@@ -19,7 +19,8 @@
   (let-values ([(dir name dir?) (split-path path)])
     dir))
 
-(define (get-path-to-override maybe-dir)
+(provide find-nearest-default-directory-require)
+(define (find-nearest-default-directory-require maybe-dir)
   (define starting-dir (cond
                          [(not maybe-dir) (current-directory)]
                          [(directory-exists? maybe-dir) maybe-dir]
@@ -50,7 +51,7 @@
              ;; exn:fail:contract? is raised if setup submodule doesn't exist
              ;; in which case we use the default value.
              ;; but if something else is amiss, we want to let it bubble up
-             (define setup-module-path (get-path-to-override dir))
+             (define setup-module-path (find-nearest-default-directory-require dir))
              (with-handlers ([exn:fail:contract? (λ (exn) DEFAULT-NAME)]
                              ;; a syntax error in pollen.rkt will arrive here
                              ;; exn:fail:read? for a syntactic failure (e.g., missing paren)
