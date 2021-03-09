@@ -30,7 +30,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@master
 
-    - uses: Bogdanp/setup-racket@v0.11
+    - uses: Bogdanp/setup-racket@v1.1
       with:
         distribution: 'full'
         version: ${{ matrix.racket-version }}
