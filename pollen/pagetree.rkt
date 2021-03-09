@@ -223,7 +223,10 @@
   (define-values (dir-for-resolving-paths pt)
     (match pt-or-path
       [(? pagetree?) (values (current-project-root) pt-or-path)]
-      [_ (values (dirname (->path pt-or-path)) (cached-doc pt-or-path))]))
+      [_ (define dir (match (dirname (->path pt-or-path))
+                       ['relative (current-project-root)]
+                       [dir dir]))
+         (values dir (cached-doc pt-or-path))]))
   (parameterize ([current-directory dir-for-resolving-paths])
     (map ->complete-path (pagetree->list pt))))
 
