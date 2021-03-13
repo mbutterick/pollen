@@ -53,13 +53,11 @@
              ;; but if something else is amiss, we want to let it bubble up
              (define setup-module-path (find-nearest-default-directory-require dir))
              (with-handlers ([exn:fail:contract? (λ (exn) DEFAULT-NAME)]
-                             ;; a syntax error in pollen.rkt will arrive here
-                             ;; exn:fail:read? for a syntactic failure (e.g., missing paren)
-                             ;; exn:fail:syntax? for a semantic failure, (e.g., unbound identifier)
-                             ;; it does not indicate a defective setup module,
-                             ;; so pass it through
-                             [exn:fail:read? raise]
-                             [exn:fail:syntax? raise]
+                             ;; certain errors in pollen.rkt will arrive here
+                             ;; they do not indicate a defective setup module, so pass them through
+                             [exn:fail:read? raise] ; syntactic failure (e.g., missing paren)
+                             [exn:fail:syntax? raise] ; semantic failure (e.g., unbound identifier)
+                             [exn:fail:filesystem? raise] ; filesystem failure (e.g., too many open files)
                              [exn? (λ (exn) (raise-user-error 'pollen/setup
                                                               (format "defective `setup` submodule in ~v\n~a" (path->string setup-module-path) (exn-message exn))))])
                (dynamic-require `(submod ,setup-module-path WORLD-SUBMOD)
