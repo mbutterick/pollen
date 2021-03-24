@@ -75,23 +75,23 @@
   ;; initialize the workers
   (define worker-evts
     (for/list ([wpidx (in-range worker-count)])
-      (define wp
-        (place ch
-               (let loop ()
-                 (match-define (list source-path output-path poly-target)
-                   (place-channel-put/get ch (list 'wants-job)))
-                 (parameterize ([current-poly-target poly-target])
-                   (place-channel-put/get ch (list 'wants-lock output-path))
-                   ;; trap any exceptions and pass them back as crashed jobs.
-                   ;; otherwise, a crashed rendering place can't recover, and the parallel job will be stuck.
-                   (with-handlers ([exn:fail? (λ (e) (place-channel-put ch (list 'crashed-job source-path output-path #f)))])
-                     (match-define-values (_ _ ms _)
-                       ;; we don't use `render-to-file-if-needed` because we've already checked the render cache
-                       ;; if we reached this point, we know we need a render
-                       (time-apply render-to-file (list source-path #f output-path)))
-                     (place-channel-put ch (list 'finished-job source-path output-path ms))))
-                 (loop))))
-      (handle-evt wp (λ (val) (list* wpidx wp val)))))
+              (define wp
+                (place ch
+                       (let loop ()
+                         (match-define (list source-path output-path poly-target)
+                           (place-channel-put/get ch (list 'wants-job)))
+                         (parameterize ([current-poly-target poly-target])
+                           (place-channel-put/get ch (list 'wants-lock output-path))
+                           ;; trap any exceptions and pass them back as crashed jobs.
+                           ;; otherwise, a crashed rendering place can't recover, and the parallel job will be stuck.
+                           (with-handlers ([exn:fail? (λ (e) (place-channel-put ch (list 'crashed-job source-path output-path #f)))])
+                             (match-define-values (_ _ ms _)
+                               ;; we don't use `render-to-file-if-needed` because we've already checked the render cache
+                               ;; if we reached this point, we know we need a render
+                               (time-apply render-to-file (list source-path #f output-path)))
+                             (place-channel-put ch (list 'finished-job source-path output-path ms))))
+                         (loop))))
+              (handle-evt wp (λ (val) (list* wpidx wp val)))))
      
   (define poly-target (current-poly-target))
 
@@ -129,7 +129,7 @@
        ;; crashed jobs are completed jobs that weren't finished
        (for/list ([jr (in-list completed-job-results)]
                   #:unless ($jobresult-finished-successfully jr))
-         ($jobresult-job jr))]
+                 ($jobresult-job jr))]
       [else
        (match (apply sync worker-evts)
          [(list wpidx wp 'wants-job)
@@ -197,16 +197,16 @@
                 [pairs (sort pairs path<? #:key car)]
                 [pairs (sort pairs path<? #:key cdr)])
            (for/list ([pr (in-list pairs)])
-             ($job (car pr) (cdr pr))))]
+                     ($job (car pr) (cdr pr))))]
         [(cons path rest)
          (match (->complete-path path)
            [(? pagetree-source? pt)
             (loop (append (pagetree->paths pt) rest) sps ops)]
            [(app ->source-path sp) #:when (and sp (file-exists? sp))
-            (define op (match path
-                         [(== (->output-path path)) path]
-                         [_ (->output-path sp)]))
-            (loop rest (cons sp sps) (cons op ops))]
+                                   (define op (match path
+                                                [(== (->output-path path)) path]
+                                                [_ (->output-path sp)]))
+                                   (loop rest (cons sp sps) (cons op ops))]
            [_ (loop rest sps ops)])])))
   (cond
     [(null? all-jobs) (message "[no paths to render]")]
@@ -259,7 +259,7 @@
       [(not render-cache-activated?) 'render-cache-deactivated]
       [else #false]))
   (when render-needed?
-    (define render-thunk (or maybe-render-thunk (λ () (render source-path template-path output-path)))) ; returns either string or bytes
+    (define render-thunk (or maybe-render-thunk (λ () ((or (setup:external-renderer) render) source-path template-path output-path)))) ; returns either string or bytes
     (define render-result
       (cond
         [render-cache-activated?
@@ -405,7 +405,7 @@
 (define (file-exists-or-has-source? path) ; path could be #f
   (and path (for/first ([proc (in-list (list values ->preproc-source-path ->null-source-path))]
                         #:when (file-exists? (proc path)))
-              path)))
+                       path)))
 
 (define (get-template-from-metas source-path output-path-ext)
   (with-handlers ([exn:fail:contract? (λ (e) #f)]) ; in case source-path doesn't work with cached-require
@@ -449,7 +449,7 @@
        (for/or ([proc (list get-template-from-metas
                             get-default-template
                             get-fallback-template)])
-         (file-exists-or-has-source? (proc source-path output-path-ext)))]
+               (file-exists-or-has-source? (proc source-path output-path-ext)))]
       [_ #false]))
   (if (current-session-interactive?)
       ;; don't cache templates in interactive session, for fresher reloads

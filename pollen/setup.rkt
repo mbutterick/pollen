@@ -134,3 +134,5 @@
 (define-settable index-pages '("index.html"))
 
 (define-settable allow-unbound-ids? #true)
+
+(define-settable external-renderer #false)
