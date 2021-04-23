@@ -233,6 +233,17 @@
 
 (define ram-cache (make-hash))
 
+(define (external-renderer)
+  (match  (setup:external-renderer)
+    [(list (? module-path? mod) (? symbol? render-proc-id))
+     (with-handlers ([exn:fail:filesystem:missing-module?
+                      (lambda (e) (error 'external-renderer "cannot open module ~a" mod))])
+       (dynamic-require mod
+                        render-proc-id
+                        (lambda () (error 'external-renderer "~a is not provided by ~a" render-proc-id mod))))]
+    [#f #f]
+    [(var v) (error 'setup:external-renderer "Value is not in the form '(module-path proc-id): ~a" v)]))
+
 ;; note that output and template order is reversed from typical
 (define (render-to-file-base caller
                              force?
@@ -259,7 +270,7 @@
       [(not render-cache-activated?) 'render-cache-deactivated]
       [else #false]))
   (when render-needed?
-    (define render-thunk (or maybe-render-thunk (λ () ((or (setup:external-renderer) render) source-path template-path output-path)))) ; returns either string or bytes
+    (define render-thunk (or maybe-render-thunk (λ () ((or (external-renderer) render) source-path template-path output-path)))) ; returns either string or bytes
     (define render-result
       (cond
         [render-cache-activated?
