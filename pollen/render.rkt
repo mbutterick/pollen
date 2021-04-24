@@ -2,6 +2,7 @@
 (require racket/file
          racket/path
          racket/match
+         racket/string
          racket/format
          racket/place
          racket/list
