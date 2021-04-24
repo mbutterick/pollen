@@ -233,6 +233,20 @@
 
 (define ram-cache (make-hash))
 
+(define (get-external-render-proc v)
+  (match v
+    [(list (? module-path? mod) (? symbol? render-proc-id))
+     (with-handlers ([exn:fail:filesystem:missing-module?
+                      (λ (e) (raise
+                              (exn:fail:contract (string-replace (exn-message e) "standard-module-name-resolver" "external-renderer")
+                                                 (exn-continuation-marks e))))]
+                     [exn:fail:contract? ;; raised if dynamic-require can't find render-proc-id
+                      (λ (e) (raise
+                              (exn:fail:contract (string-replace (exn-message e) "dynamic-require" "external-renderer")
+                                                 (exn-continuation-marks e))))])
+       (dynamic-require mod render-proc-id))]
+    [_ (raise-argument-error 'external-renderer "value in the form '(module-path proc-id)" v)]))
+
 ;; note that output and template order is reversed from typical
 (define (render-to-file-base caller
                              force?
@@ -259,7 +273,11 @@
       [(not render-cache-activated?) 'render-cache-deactivated]
       [else #false]))
   (when render-needed?
-    (define render-thunk (or maybe-render-thunk (λ () ((or (setup:external-renderer) render) source-path template-path output-path)))) ; returns either string or bytes
+    (define render-thunk (or maybe-render-thunk
+                             (λ () ((or (let ([val (setup:external-renderer)])
+                                          (and val (get-external-render-proc val)))
+                                        render)
+                                    source-path template-path output-path)))) ; returns either string or bytes
     (define render-result
       (cond
         [render-cache-activated?
