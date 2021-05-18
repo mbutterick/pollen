@@ -28,3 +28,7 @@ Official discussion area: https://github.com/mbutterick/pollen-users
 ## License
 
 MIT
+
+## Project status
+
+Actively developed, though the pace has slowed now that Pollen is arguably feature complete and stable. I use it almost every day so it's not going anywhere. But I have no plans to substantially enlarge or extend it.
