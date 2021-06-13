@@ -748,11 +748,13 @@ And the metas:
 
 @codeblock{
 #lang racket/base
-(require "pollen-source.rkt") ; doc and metas and everything else
-(require (submod "pollen-source.rkt" metas)) ; just metas
+(require "path/to/your-pollen-source") ; doc and metas and everything else
+(require (submod "path/to/your-pollen-source" metas)) ; just metas
 }
 
 The @id{metas} submodule gives you access to the @id{metas} hashtable @italic{without} compiling the rest of the file. So if you need to harvest metas from a set of source files — for instance, page titles (for a table of contents) or categories — using @racket[require] with the submodule will be faster.
+
+@bold{Pro tip #3}: Within a tag function, you can access the metas of the source currently being evaluated with @racket[current-metas].
 
 @subsubsection{Inserting a comment}
 
