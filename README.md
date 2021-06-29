@@ -1,4 +1,4 @@
-## Pollen: the book is a program [![Build Status](https://github.com/mbutterick/pollen/workflows/CI/badge.svg)](https://github.com/mbutterick/pollen/actions) [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.0-4baaaa.svg)](code_of_conduct.md) 
+## Pollen: the book is a program [![Build Status](https://github.com/mbutterick/pollen/workflows/CI/badge.svg)](https://github.com/mbutterick/pollen/actions) [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.0-4baaaa.svg)](CODE_OF_CONDUCT.md) 
 
 A book-publishing system written in [Racket](http://racket-lang.org). This is the software I use to publish & maintain my web-based books [Beautiful Racket](http://beautifulracket.com), [Practical Typography](http://practicaltypography.com), and [Typography for Lawyers](http://typographyforlawyers.com).
 
