@@ -79,9 +79,14 @@
               (define wp
                 (place ch
                        (let loop ()
-                         (match-define (list source-path output-path poly-target)
+                         (match-define (list project-root source-path output-path poly-target)
                            (place-channel-put/get ch (list 'wants-job)))
-                         (parameterize ([current-poly-target poly-target])
+                         ;; we manually propagate our parameter values for
+                         ;; current-project-root and current-poly-target
+                         ;; because parameter values are not automatically shared
+                         ;; between parallel threads.
+                         (parameterize ([current-project-root project-root]
+                                        [current-poly-target poly-target])
                            (place-channel-put/get ch (list 'wants-lock output-path))
                            ;; trap any exceptions and pass them back as crashed jobs.
                            ;; otherwise, a crashed rendering place can't recover, and the parallel job will be stuck.
@@ -137,7 +142,7 @@
           (match jobs
             [(? null?) (loop null locks blocks completed-job-results completed-job-count)]
             [(cons ($job source-path output-path) rest)
-             (place-channel-put wp (list source-path output-path poly-target))
+             (place-channel-put wp (list (current-project-root) source-path output-path poly-target))
              (loop rest locks blocks completed-job-results completed-job-count)])]
          [(list wpidx wp (and (or 'finished-job 'crashed-job) tag) source-path output-path ms)
           (match tag
