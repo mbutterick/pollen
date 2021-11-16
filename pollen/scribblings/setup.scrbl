@@ -153,15 +153,15 @@ Both the names and the values of environment variables are case-insensitive, so 
 
  @history[#:added "1.5"]}
 
-  @defoverridable[allow-unbound-ids? boolean?]{Predicate that controls whether Pollen converts unbound identifiers into default tags by altering the behavior of @racket[#%top] in @racketmodname[pollen/top].
+@defoverridable[allow-unbound-ids? boolean?]{Predicate that controls whether Pollen converts unbound identifiers into default tags by altering the behavior of @racket[#%top] in @racketmodname[pollen/top].
 
- @history[#:added "2.0"]}
+@history[#:added "2.0"]}
 
-  @defoverridable[external-renderer (or/c (list/c module-path? symbol?) #f)]{A module path and identifier (suitable for use with @racket[dynamic-require]) that provide a function for Pollen to call instead of @racket[render] when rendering files needed by the @seclink["Using_the_project_server"]{project server} or when running @secref["raco_pollen_render"]. The function must accept the same arguments as @racket[render-to-file] and should return the final output as a @tech[#:doc '(lib "scribblings/reference/reference.scrbl")]{string} or @tech[#:doc '(lib "scribblings/reference/reference.scrbl")]{byte string}. Pollen will always write this return value out to the output file for you.
+@defoverridable[external-renderer (or/c (list/c module-path? symbol?) #f)]{A module path and identifier (suitable for use with @racket[dynamic-require]) that provide a function for Pollen to call instead of @racket[render] when rendering files needed by the @seclink["Using_the_project_server"]{project server} or when running @secref["raco_pollen_render"]. The function must accept the same arguments as @racket[render-to-file] and should return the final output as a @tech[#:doc '(lib "scribblings/reference/reference.scrbl")]{string} or @tech[#:doc '(lib "scribblings/reference/reference.scrbl")]{byte string}. Pollen will always write this return value out to the output file for you.
 
 Setting this value gives you full control over (and responsibility for) how Pollen converts the compiled @racketidfont{doc} and @racketidfont{metas} from source files into their final output. Your renderer should be able to handle any of Pollen’s @seclink["Source_formats"]{source formats} or @seclink["Utility_formats"]{utility formats}. The operation of Pollen’s @racket[render] function is not affected by setting this value, so your renderer can use it as a fallback.
 
- @history[#:added "3.1"]}
+ @history[#:added "3.2"]}
   
 @section{Parameters}
 

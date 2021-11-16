@@ -24,6 +24,10 @@ Beyond keeping the commit history available, I make no promise to maintain the p
 
 @section{Changelog}
 
+@subsection{Version 3.2}
+
+Added the @racket[external-renderer] setup value.
+
 @subsection{Version 3.1}
 
 Downgraded the following @racket[pollen/setup] values from configurable to fixed: @racket[here-path-key], @racket[extension-escape-char].
