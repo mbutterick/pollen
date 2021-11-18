@@ -405,6 +405,9 @@ Beyond that, all we need to do make sure our template has the three key ingredie
 
 In your project directory, create a new file called @filepath{template.html.p}:
 
+@margin-note{If you're using DrRacket on Mac OS to save this file, it may insist on adding a @filepath{rkt} extension to the filename. If so, you can either correct the filename after you save the file, or instead use a different text editor to create @filepath{template.html.p}.} 
+
+
 @fileblock["template.html.p"
 @codeblock[#:keep-lang-line? #f]{
 #lang pollen
