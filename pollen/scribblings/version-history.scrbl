@@ -26,7 +26,7 @@ Beyond keeping the commit history available, I make no promise to maintain the p
 
 @subsection{Version 3.2}
 
-Added the @racket[external-renderer] setup value.
+Added @racket[setup:external-renderer].
 
 @subsection{Version 3.1}
 
