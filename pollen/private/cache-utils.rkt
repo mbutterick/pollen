@@ -36,7 +36,7 @@
                    ;; user-designated files to track
                    (map ->string (setup:cache-watchlist source-path)))))
   (define env-rec (for/list ([env-name (in-list (cons default-env-name (sort (setup:envvar-watchlist source-path) bytes<?)))])
-                            (cons env-name (match (getenv (string-downcase (->string env-name)))
+                            (cons env-name (match (getenv (->string env-name))
                                              [#false #false]
                                              [str (string-downcase (->string str))]))))
   (define poly-flag (and (has-inner-poly-ext? source-path) (current-poly-target)))
