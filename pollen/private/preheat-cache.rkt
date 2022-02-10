@@ -53,7 +53,7 @@
                           (let loop ()
                             (define path (place-channel-put/get ch (list 'want-job)))
                             (place-channel-put ch (list 'job-finished path 
-                                                        (with-handlers ([exn:fail? (λ (e) #f)])
+                                                        (with-handlers ([exn:fail? (λ (e) (cons #false (exn-message e)))])
                                                           (path->hash path))))
                             (loop))))
                  (handle-evt wp (λ (val) (list* wpidx wp val)))))
@@ -69,12 +69,12 @@
                (message (format "caching @ job ~a: ~a" (~r (add1 wpidx) #:min-width (string-length (~r job-count)) #:pad-string " ") (find-relative-path starting-dir path)))
                (loop rest (cons wpidx actives))])]
            [(list wpidx wp 'job-finished path result)
-            (if result
-                (cache-ref! (paths->key 'source path) (λ () result))
-                (message (format "caching failed on job ~a: ~a" (add1 wpidx) (find-relative-path starting-dir path))))
+            (match result
+              [(cons #false exn-msg) (message (format "caching failed on job ~a: ~a\n  because ~a" (add1 wpidx) (find-relative-path starting-dir path) exn-msg))]
+              [_ (cache-ref! (paths->key 'source path) (λ () result))])
             (loop paths (remq wpidx actives))])))]
     [else (for ([path (in-list uncached-paths)])
                (message (format "caching: ~a" (find-relative-path starting-dir path)))
-               (match (with-handlers ([exn:fail? (λ (e) #f)]) (path->hash path))
-                 [#false (message (format "caching failed: ~a" (find-relative-path starting-dir path)))]
+               (match (with-handlers ([exn:fail? (λ (e) (cons #false (exn-message e)))]) (path->hash path))
+                 [(cons #false exn-msg) (message (format "caching failed: ~a\n  because ~a" (find-relative-path starting-dir path) exn-msg))]
                  [result (cache-ref! (paths->key 'source path) (λ () result))]))]))

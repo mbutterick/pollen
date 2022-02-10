@@ -90,12 +90,17 @@
                            (place-channel-put/get ch (list 'wants-lock output-path))
                            ;; trap any exceptions and pass them back as crashed jobs.
                            ;; otherwise, a crashed rendering place can't recover, and the parallel job will be stuck.
-                           (with-handlers ([exn:fail? (λ (e) (place-channel-put ch (list 'crashed-job source-path output-path #f)))])
-                             (match-define-values (_ _ ms _)
-                               ;; we don't use `render-to-file-if-needed` because we've already checked the render cache
-                               ;; if we reached this point, we know we need a render
-                               (time-apply render-to-file (list source-path #f output-path)))
-                             (place-channel-put ch (list 'finished-job source-path output-path ms))))
+                           (place-channel-put ch
+                                              (cons
+                                               ;; when rendering fails, first argument is the exception message
+                                               (with-handlers ([exn:fail? (λ (e) (exn-message e))])
+                                                 (match-define-values (_ _ ms _)
+                                                   ;; we don't use `render-to-file-if-needed` because we've already checked the render cache
+                                                   ;; if we reached this point, we know we need a render
+                                                   (time-apply render-to-file (list source-path #f output-path)))
+                                                 ;; when rendering succeeds, first argument is rendering time in ms
+                                                 ms)
+                                               (list source-path output-path))))
                          (loop))))
               (handle-evt wp (λ (val) (list* wpidx wp val)))))
      
@@ -144,26 +149,30 @@
             [(cons ($job source-path output-path) rest)
              (place-channel-put wp (list (current-project-root) source-path output-path poly-target))
              (loop rest locks blocks completed-job-results completed-job-count)])]
-         [(list wpidx wp (and (or 'finished-job 'crashed-job) tag) source-path output-path ms)
-          (match tag
-            ['finished-job
+         [(list wpidx wp status-arg source-path output-path)
+          ;; if the render was successful, the status arg is a number representing milliseconds spent rendering.
+          ;; if not, the status argument is the exception message.
+          (define job-finished? (exact-nonnegative-integer? status-arg))
+          (match status-arg
+            [ms #:when job-finished?
+                (message
+                 (format "rendered @ job ~a /~a ~a"
+                         (~r (add1 wpidx) #:min-width (string-length (~r worker-count)) #:pad-string " ")
+                         (find-relative-path (current-project-root) output-path)
+                         (if (< ms 1000) (format "(~a ms)" ms) (format "(~a s)" (/ ms 1000.0)))))]
+            [(? string? exn-msg)
              (message
-              (format "rendered @ job ~a /~a ~a"
-                      (~r (add1 wpidx) #:min-width (string-length (~r worker-count)) #:pad-string " ")
-                      (find-relative-path (current-project-root) output-path)
-                      (if (< ms 1000) (format "(~a ms)" ms) (format "(~a s)" (/ ms 1000.0)))))]
-            [_
-             (message
-              (format "render crash @ job ~a /~a (retry pending)"
+              (format "render crash @ job ~a /~a (retry pending)\n  because ~a"
                       (add1 wpidx)
-                      (find-relative-path (current-project-root) output-path)))])
+                      (find-relative-path (current-project-root) output-path)
+                      exn-msg))]
+            [_ (raise-result-error 'render "exact-nonnegative-integer or string" status-arg)])
           (loop jobs
                 (match (findf (λ (lock) (equal? ($lock-worker lock) wp)) locks)
                   [#false locks]
                   [lock (remove lock locks)])
                 blocks
-                (let* ([job-finished? (eq? tag 'finished-job)]
-                       [jr ($jobresult ($job source-path output-path) job-finished?)])
+                (let ([jr ($jobresult ($job source-path output-path) job-finished?)])
                   (cons jr completed-job-results))
                 (add1 completed-job-count))]
          [(list wpidx wp 'wants-lock output-path)
