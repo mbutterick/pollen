@@ -181,8 +181,12 @@
 (define current-null-output? (make-parameter #f))
 
 (define+provide/contract (render-batch #:parallel [wants-parallel-render? #false]
-                                       #:special [special-output #false] . paths-in)
-  ((#:parallel any/c) (#:special (or/c boolean? symbol?)) #:rest (listof pathish?) . ->* . void?)
+                                       #:special [special-output #false]
+                                       #:output-paths [output-paths-in #false] . paths-in)
+  (() (#:parallel any/c
+    #:special (or/c boolean? symbol?)
+    #:output-paths (or/c #false (listof pathish?)))
+   #:rest (listof pathish?) . ->* . void?)
   ;; Why not just (for-each render ...)?
   ;; Because certain files will pass through multiple times (e.g., templates)
   ;; And with render, they would be rendered repeatedly.
@@ -202,27 +206,34 @@
     ;; but the path arguments might also include pagetrees,
     ;; which expand to multiple files.
     ;; so this keeps everything correlated correctly.
-    (let loop ([paths paths-in] [sps null] [ops null]) 
-      (match paths
-        [(? null?)
-         ;; it's possible that we have multiple output names for one poly file
-         ;; so after we expand, we only remove duplicates where both the source and dest in the pair
-         ;; are the same
-         (let* ([pairs (remove-duplicates (map cons sps ops))]
-                [pairs (sort pairs path<? #:key car)]
-                [pairs (sort pairs path<? #:key cdr)])
-           (for/list ([pr (in-list pairs)])
-                     ($job (car pr) (cdr pr))))]
-        [(cons path rest)
-         (match (->complete-path path)
-           [(? pagetree-source? pt)
-            (loop (append (pagetree->paths pt) rest) sps ops)]
-           [(app ->source-path sp) #:when (and sp (file-exists? sp))
-                                   (define op (match path
-                                                [(== (->output-path path)) path]
-                                                [_ (->output-path sp)]))
-                                   (loop rest (cons sp sps) (cons op ops))]
-           [_ (loop rest sps ops)])])))
+    (cond
+      [(and output-paths-in (= (length paths-in) (length output-paths-in)))
+       ;; explicit list of paths: create jobs directly
+       (for/list ([path (in-list paths-in)]
+                  [output-path (in-list output-paths-in)])
+                 ($job path output-path))]
+      [else
+       (let loop ([paths paths-in] [sps null] [ops null]) 
+         (match paths
+           [(? null?)
+            ;; it's possible that we have multiple output names for one poly file
+            ;; so after we expand, we only remove duplicates where both the source and dest in the pair
+            ;; are the same
+            (let* ([pairs (remove-duplicates (map cons sps ops))]
+                   [pairs (sort pairs path<? #:key car)]
+                   [pairs (sort pairs path<? #:key cdr)])
+              (for/list ([pr (in-list pairs)])
+                        ($job (car pr) (cdr pr))))]
+           [(cons path rest)
+            (match (->complete-path path)
+              [(? pagetree-source? pt)
+               (loop (append (pagetree->paths pt) rest) sps ops)]
+              [(app ->source-path sp) #:when (and sp (file-exists? sp))
+                                      (define op (match path
+                                                   [(== (->output-path path)) path]
+                                                   [_ (->output-path sp)]))
+                                      (loop rest (cons sp sps) (cons op ops))]
+              [_ (loop rest sps ops)])]))]))
   (cond
     [(null? all-jobs) (message "[no paths to render]")]
     [(eq? special-output 'dry-run) (for-each message (map $job-source all-jobs))]
