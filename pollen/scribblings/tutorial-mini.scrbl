@@ -21,7 +21,7 @@ Pygments is a Python library (though you don't need to know any Python to use it
 
 @subsection[#:tag "pygments-with-pollen"]{Using Pygments with Pollen}
 
-I used @link["http://pygments.org/"]{Pygments} for syntax highlighting in @link["http://unitscale.com/mb/technique/dual-typed-untyped-library.html"]{this article made with Pollen}. Links to the source are available at the bottom of the article.
+I used @link["http://pygments.org/"]{Pygments} for syntax highlighting in @link["https://beautifulracket.com/"]{@italic{Beautiful Racket}}. Links to the source are available at the bottom of the article.
 
 @itemlist[#:style 'ordered
 
