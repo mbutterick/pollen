@@ -481,7 +481,6 @@
                         [maybe-output-path]
                         [(->output-path source-path)]
                         [else #false]))
-  (define key (template-cache-key source-path output-path))
   (define (cache-thunk)
     (match source-path
       [(or (? markup-source?) (? markdown-source?))
@@ -495,13 +494,16 @@
                             get-fallback-template)])
                (file-exists-or-has-source? (proc source-path output-path-ext)))]
       [_ #false]))
-  (if (current-session-interactive?)
-      ;; don't cache templates in interactive session, for fresher reloads
-      ;; this makes it possible to add template and have it show up in next render
-      (cache-thunk)
-      ;; otherwise, within a rendering session, this will prevent repeat players like "template.html.p"
-      ;; from hitting the file cache repeatedly
-      (hash-ref! ram-cache key (λ () (cache-ref! key cache-thunk)))))
+  (cond
+    [(or (current-session-interactive?) (not (setup:render-cache-active source-path)))
+     ;; don't cache templates in interactive session, for fresher reloads
+     ;; this makes it possible to add template and have it show up in next render
+     (cache-thunk)]
+     ;; otherwise, within a rendering session, this will prevent repeat players like "template.html.p"
+     ;; from hitting the file cache repeatedly
+     [else 
+      (define key (template-cache-key source-path output-path))
+      (hash-ref! ram-cache key (λ () (cache-ref! key cache-thunk)))]))
 
 (module-test-external
  (require pollen/setup sugar/file sugar/coerce)
