@@ -505,7 +505,7 @@
       (define key (template-cache-key source-path output-path))
       (hash-ref! ram-cache key (λ () (cache-ref! key cache-thunk)))]))
 
-(module-test-external
+#;(module-test-external
  (require pollen/setup sugar/file sugar/coerce)
  (define fallback.html (build-path (current-server-extras-path)
                                    (add-ext pollen-fallback-template-prefix 'html)))
