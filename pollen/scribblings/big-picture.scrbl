@@ -15,7 +15,7 @@ This is the core design principle of Pollen. Consistent with this principle, Pol
 
 @item{@bold{A Pollen project consists of source files + static files.} A @italic{source file} is a file that can be compiled to produce certain output. A @italic{static file} is usable as it stands (e.g., an SVG file or webfont). Generally, the textual content of your book will live in source files, and other elements will be static files.}
 
-@item{@bold{Source control is a good idea.} Because Pollen projects are software projects, they can be easily managed with systems for source control and collaboration, like @link["http://github.com"]{GitHub}. If you're a writer at heart, don't fear these systems — the learning curve is repaid by revision & edit tracking that's much easier than it is with Word or PDF files.}
+@item{@bold{Source control is a good idea.} Because Pollen projects are software projects, they can be easily managed with systems for source control and collaboration. If you're a writer at heart, don't fear these systems — the learning curve is repaid by revision & edit tracking that's much easier than it is with Word or PDF files.}
 
 ]
 

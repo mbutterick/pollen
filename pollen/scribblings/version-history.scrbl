@@ -12,7 +12,7 @@ Inconsistent with this system, Pollen's version also appends a build number, whi
 
 @section{Source code}
 
-Pollen's source code is @link["http://github.com/mbutterick/pollen"]{available from this Git repo}. The @tt{MASTER} branch of the repo will always contain the most recent stable version. 
+Pollen's source code is @link["https://git.matthewbutterick.com/mbutterick/pollen/"]{available from this Git repo}. The @tt{MASTER} branch of the repo will always contain the most recent stable version. 
 
 Racket's @link["http://pkg.racket-lang.org"]{package catalog} relies on this branch, so if you get your updates with @tt{raco pkg update pollen}, you'll get the most recent updates from this branch. 
 

@@ -10,4 +10,4 @@
 
 This module is licensed under the MIT License.
 
-Source repository at @link["http://github.com/mbutterick/pollen"]{http://github.com/mbutterick/pollen}. Suggestions & corrections welcome.
+Source repository at @link["https://git.matthewbutterick.com/mbutterick/pollen/"]{https://git.matthewbutterick.com/mbutterick/pollen/}. Suggestions & corrections welcome.

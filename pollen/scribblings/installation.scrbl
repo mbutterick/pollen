@@ -106,15 +106,13 @@ I hope you enjoy using it.
 
 @subsection{Bugs and feature requests}
 
-Can be submitted as @link["https://github.com/mbutterick/pollen/issues"]{GitHub issues} at the main Pollen source repository.
+Can be submitted as @link["https://git.matthewbutterick.com/mbutterick/pollen/issues"]{issues} at the main Pollen source repository.
 
 @subsection{Questions & discussion}
 
-For general tips and how-to questions, use the @link["https://github.com/mbutterick/pollen-users/issues"]{pollen-users discussion group} (on GitHub). I'll also use that list to post major changes and new features. 
+For general tips and how-to questions, use the @link["https://forums.matthewbutterick.com/c/pollen/"]{Pollen discussion forum}. I'll also use that list to post major changes and new features. You need an account to post (free and easy to set up with an email address).
 
-You need a GitHub account to post. If you don't have one, don't panic — they're free and easy to set up with an email address. @link["https://github.com/mbutterick/pollen-users"]{Instructions here}.
-
-(BTW, the former ``pollenpub'' Google Group is now deprecated.)
+(BTW, the former ``pollenpub'' Google Group and the ``pollen-users'' GitHub repo are now deprecated.)
 
 
 
